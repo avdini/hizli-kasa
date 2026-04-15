@@ -66,13 +66,15 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-modal-manager', $js_base . 'modules/modal-manager.js', array('kasa-cart-manager', 'kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-order-processor', $js_base . 'modules/order-processor.js', array('kasa-cart-manager', 'kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-receipt-printer', $js_base . 'modules/receipt-printer.js', array('kasa-order-processor'), $pos_version, true);
+    wp_enqueue_script('kasa-day-end-report', $js_base . 'modules/day-end-report.js', array('kasa-cart-manager'), $pos_version, true);
     wp_enqueue_script('kasa-js', $js_base . 'kasa.js', array(
         'kasa-cart-manager',
         'kasa-ui-renderer',
         'kasa-barcode-scanner',
         'kasa-modal-manager',
         'kasa-order-processor',
-        'kasa-receipt-printer'
+        'kasa-receipt-printer',
+        'kasa-day-end-report'
     ), $pos_version, true);
 
     // JavaScript'e veri aktarımı
@@ -80,7 +82,7 @@ function hizli_kasa_uygulamasi()
     $full_name = trim($user->first_name . ' ' . $user->last_name);
     $display_name = !empty($full_name) ? $full_name : $user->display_name;
 
-    wp_localize_script('kasa-js', 'kasaAyar', array(
+    wp_localize_script('kasa-cart-manager', 'kasaAyar', array(
         'apiUrl' => rest_url('wc/v3/'),
         'nonce' => wp_create_nonce('wp_rest'),
         'siparisDurumu' => $guncel_durum,

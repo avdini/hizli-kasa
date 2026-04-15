@@ -102,6 +102,9 @@
             var els = this.els;
 
             els.fisYazdirTetik.addEventListener("click", function() {
+                // Gün sonu şablonunu gizle (çakışma önleme)
+                var gsSablon = document.getElementById("gun-sonu-sablon");
+                if (gsSablon) gsSablon.style.display = "none";
                 window.print();
             });
 

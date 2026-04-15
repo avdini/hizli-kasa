@@ -19,7 +19,189 @@ add_action('rest_api_init', function () {
             return current_user_can('edit_posts');
         }
     ));
+
+    register_rest_route('hizli-kasa/v1', '/gun-sonu-raporu', array(
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_gun_sonu_raporu',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
 });
+
+/**
+ * Gün Sonu Raporu API endpoint'i.
+ *
+ * Belirli bir kasanın belirli bir gündeki tüm siparişlerini
+ * özetleyerek döner. Termal fiş yazdırma için kullanılır.
+ *
+ * @param WP_REST_Request $request İstek verisi (kasa_no, tarih)
+ * @return array|WP_Error Gün sonu rapor özeti
+ */
+function hizli_kasa_gun_sonu_raporu($request) {
+    $kasa_no = sanitize_text_field($request->get_param('kasa_no'));
+    $tarih   = sanitize_text_field($request->get_param('tarih'));
+
+    if (empty($kasa_no)) {
+        return new WP_Error('missing_param', 'kasa_no parametresi gerekli.', array('status' => 400));
+    }
+
+    // Tarih verilmezse bugünü kullan
+    if (empty($tarih)) {
+        $tarih = current_time('Y-m-d');
+    }
+
+    $tarih_baslangic = $tarih . ' 00:00:00';
+    $tarih_bitis     = $tarih . ' 23:59:59';
+
+    // Bu kasaya ait siparişleri çek
+    $args = array(
+        'limit'        => -1,
+        'status'       => array('processing', 'completed', 'on-hold'),
+        'date_created' => $tarih_baslangic . '...' . $tarih_bitis,
+        'meta_key'     => '_hizli_kasa_kasa_no',
+        'meta_value'   => $kasa_no,
+        'orderby'      => 'date',
+        'order'        => 'ASC',
+    );
+
+    $orders = wc_get_orders($args);
+
+    if (empty($orders)) {
+        return array(
+            'kasa_no'        => $kasa_no,
+            'tarih'          => $tarih,
+            'siparis_sayisi' => 0,
+            'siparisler'     => array(),
+            'ozet'           => array(
+                'toplam_ciro'       => 0,
+                'toplam_iskonto'    => 0,
+                'nakit_toplam'      => 0,
+                'kart_toplam'       => 0,
+                'iban_toplam'       => 0,
+                'urun_adet_toplam'  => 0,
+            ),
+            'urun_dagilimi'  => array(),
+            'kasiyerler'     => array(),
+        );
+    }
+
+    $siparisler    = array();
+    $nakit_toplam  = 0;
+    $kart_toplam   = 0;
+    $iban_toplam   = 0;
+    $toplam_ciro   = 0;
+    $toplam_iskonto = 0;
+    $urun_adet     = 0;
+    $urun_map      = array(); // SKU => { name, qty, total }
+    $kasiyer_map   = array(); // Kasiyer adı => sipariş sayısı
+    $saat_map      = array(); // Saat => sipariş sayısı
+
+    foreach ($orders as $order) {
+        $order_id    = $order->get_id();
+        $order_total = (float) $order->get_total();
+        $toplam_ciro += $order_total;
+
+        // Ödeme bilgileri (custom meta)
+        $o_nakit = (float) $order->get_meta('_odeme_nakit');
+        $o_kart  = (float) $order->get_meta('_odeme_kart');
+        $o_iban  = (float) $order->get_meta('_odeme_iban');
+        $nakit_toplam += $o_nakit;
+        $kart_toplam  += $o_kart;
+        $iban_toplam  += $o_iban;
+
+        // Kasiyer
+        $kasiyer = $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmeyen';
+        if (!isset($kasiyer_map[$kasiyer])) $kasiyer_map[$kasiyer] = 0;
+        $kasiyer_map[$kasiyer]++;
+
+        // Saat dağılımı
+        $saat = $order->get_date_created()->date('H:00');
+        if (!isset($saat_map[$saat])) $saat_map[$saat] = 0;
+        $saat_map[$saat]++;
+
+        // İskonto (fee_lines)
+        $iskonto = 0;
+        foreach ($order->get_fees() as $fee) {
+            if (strpos(strtolower($fee->get_name()), 'iskonto') !== false) {
+                $iskonto += abs((float) $fee->get_total());
+            }
+        }
+        $toplam_iskonto += $iskonto;
+
+        // Ürün detayları
+        $urunler = array();
+        foreach ($order->get_items() as $item) {
+            $qty   = $item->get_quantity();
+            $total = (float) $item->get_total();
+            $name  = $item->get_name();
+            $sku   = '';
+
+            $product = $item->get_product();
+            if ($product) {
+                $sku = $product->get_sku();
+            }
+
+            $urun_adet += $qty;
+
+            // Ürün haritası (benzersiz ürün dağılımı)
+            $key = $sku ?: sanitize_title($name);
+            if (!isset($urun_map[$key])) {
+                $urun_map[$key] = array('name' => $name, 'sku' => $sku, 'qty' => 0, 'total' => 0);
+            }
+            $urun_map[$key]['qty']   += $qty;
+            $urun_map[$key]['total'] += $total;
+
+            $urunler[] = array(
+                'name'  => $name,
+                'sku'   => $sku,
+                'qty'   => $qty,
+                'total' => $total,
+            );
+        }
+
+        // Ödeme tipi etiketi
+        $odeme_tipi = $order->get_payment_method_title();
+
+        $siparisler[] = array(
+            'id'         => $order_id,
+            'saat'       => $order->get_date_created()->date('H:i'),
+            'toplam'     => $order_total,
+            'odeme_tipi' => $odeme_tipi,
+            'nakit'      => $o_nakit,
+            'kart'       => $o_kart,
+            'iban'       => $o_iban,
+            'iskonto'    => $iskonto,
+            'kasiyer'    => $kasiyer,
+            'urunler'    => $urunler,
+        );
+    }
+
+    // Ürün dağılımını sırala (en çok satılandan)
+    uasort($urun_map, function($a, $b) {
+        return $b['qty'] - $a['qty'];
+    });
+
+    return array(
+        'kasa_no'        => $kasa_no,
+        'tarih'          => $tarih,
+        'tarih_okunabilir' => date_i18n('d.m.Y l', strtotime($tarih)),
+        'rapor_zamani'   => current_time('d.m.Y H:i:s'),
+        'siparis_sayisi' => count($orders),
+        'siparisler'     => $siparisler,
+        'ozet'           => array(
+            'toplam_ciro'       => round($toplam_ciro, 2),
+            'toplam_iskonto'    => round($toplam_iskonto, 2),
+            'nakit_toplam'      => round($nakit_toplam, 2),
+            'kart_toplam'       => round($kart_toplam, 2),
+            'iban_toplam'       => round($iban_toplam, 2),
+            'urun_adet_toplam'  => $urun_adet,
+        ),
+        'urun_dagilimi'  => array_values($urun_map),
+        'kasiyerler'     => $kasiyer_map,
+        'saat_dagilimi'  => $saat_map,
+    );
+}
 
 /**
  * Özel ürün arama fonksiyonu.

@@ -20,6 +20,8 @@ if (!defined('ABSPATH'))
             <div class="sidebar-btn" data-id="2"><span>📠</span> Kasa 2</div>
             <div class="sidebar-btn" data-id="3"><span>📠</span> Kasa 3</div>
             <div class="sidebar-btn" data-id="4"><span>📠</span> Kasa 4</div>
+            <div class="sidebar-divider"></div>
+            <div id="gun-sonu-buton" class="sidebar-btn gun-sonu"><span>📋</span> Gün Sonu</div>
         </div>
 
         <!-- Ana Kasa Konteyner -->
@@ -220,5 +222,32 @@ if (!defined('ABSPATH'))
         <div style="text-align:center; margin-top:20px; font-size:11px; border-top:1px solid #000; padding-top:10px;">
             Bizi tercih ettiğiniz için teşekkür ederiz.
         </div>
+    </div>
+
+    <!-- ==================== GÜN SONU RAPORU ==================== -->
+
+    <!-- Gün Sonu Raporu Modalı -->
+    <div id="gun-sonu-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10002; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); align-items:center; justify-content:center;">
+        <div class="modal-icerik" style="width:600px !important; max-height:85vh; display:flex; flex-direction:column;">
+            <!-- Yükleniyor Durumu -->
+            <div id="gun-sonu-yukleniyor" style="text-align:center; padding:40px;">
+                <div style="font-size:36px; margin-bottom:15px; animation: gs-spin 1s linear infinite;">⏳</div>
+                <p style="margin:0; color:#666;">Günün raporu hazırlanıyor...</p>
+            </div>
+
+            <!-- Rapor İçeriği -->
+            <div id="gun-sonu-icerik" style="display:none; overflow-y:auto; flex:1;"></div>
+
+            <!-- Butonlar -->
+            <div class="modal-butonlar" style="margin-top:15px; flex-shrink:0;">
+                <button id="gun-sonu-kapat" style="background:#eee; color:#333;">Kapat</button>
+                <button id="gun-sonu-yazdir" style="background:#2c3e50; color:white; display:none;">🖨️ Fiş Yazdır</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gün Sonu Fiş Şablonu (Sadece Yazdırma İçin) -->
+    <div id="gun-sonu-sablon">
+        <!-- JS tarafından doldurulacak -->
     </div>
 </div>

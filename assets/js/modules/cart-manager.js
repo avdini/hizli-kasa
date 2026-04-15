@@ -18,7 +18,7 @@ window.HizliKasa = window.HizliKasa || {};
         sepet: [],
         iskontoTutar: 0,
         odemeTipi: "card",
-        CURRENT_VERSION: typeof kasaAyar !== 'undefined' && kasaAyar.version ? kasaAyar.version : "2.6",
+        CURRENT_VERSION: typeof kasaAyar !== 'undefined' && kasaAyar.version ? kasaAyar.version : "2.8.8",
         MAX_KASA: 4
     };
 

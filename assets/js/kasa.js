@@ -31,7 +31,10 @@ document.addEventListener("DOMContentLoaded", function() {
     // 5. Fiş yazıcıyı başlat
     HK.ReceiptPrinter.init();
 
-    // 6. Sekmeler arası canlı senkronizasyon
+    // 6. Gün sonu raporu modülünü başlat
+    HK.DayEndReport.init();
+
+    // 7. Sekmeler arası canlı senkronizasyon
     window.addEventListener('storage', function(e) {
         var state = HK.State;
         // Eğer değişiklik bizim aktif kasa slotumuzdaysa sepeti yenile
@@ -42,7 +45,7 @@ document.addEventListener("DOMContentLoaded", function() {
         HK.UIRenderer.sidebarGuncelle();
     });
 
-    // 7. Başlangıç yüklemesi — kayıtlı sepeti yükle
+    // 8. Başlangıç yüklemesi — kayıtlı sepeti yükle
     HK.CartManager.sepetiYukle(localStorage.getItem('hizli_kasa_aktif_id') || 1);
 
     console.log("Hızlı Kasa v" + HK.State.CURRENT_VERSION + " başlatıldı.");
