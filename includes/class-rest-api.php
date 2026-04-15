@@ -63,11 +63,22 @@ function hizli_kasa_ozel_arama($data) {
         // 1. Advanced Woo Search Entegrasyonu (Eğer kuruluysa)
         if (class_exists('AWS_Search')) {
             $aws_search = new AWS_Search();
-            // AWS 'search' metodu ürün ID'lerini içeren bir dizi döner.
             $aws_results = $aws_search->search($s);
             if (!empty($aws_results['products'])) {
                 foreach ($aws_results['products'] as $p_item) {
-                     $found_ids[] = $p_item['id'];
+                     $pid = $p_item['id'];
+                     $found_ids[] = $pid;
+                     
+                     // Değişiklik: Her ana ürünün varyasyonlarını da ekle
+                     $product = wc_get_product($pid);
+                     if ($product && $product->is_type('variable')) {
+                         $children = $product->get_children();
+                         foreach($children as $child_id) {
+                             if (get_post_status($child_id) === 'publish') {
+                                 $found_ids[] = $child_id;
+                             }
+                         }
+                     }
                 }
             }
         }
@@ -84,7 +95,7 @@ function hizli_kasa_ozel_arama($data) {
             $where_clause = implode(' AND ', $where_parts);
 
             $fallback_results = $wpdb->get_results("
-                SELECT p.ID
+                SELECT p.ID, p.post_type
                 FROM {$wpdb->posts} p
                 LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_sku'
                 WHERE p.post_status = 'publish'
@@ -96,8 +107,24 @@ function hizli_kasa_ozel_arama($data) {
             
             foreach ($fallback_results as $fr) {
                 $found_ids[] = $fr->ID;
+                
+                // Değişiklik: Fallback sonuçlarında da varyasyonları ekle (eğer ana ürünse)
+                if ($fr->post_type === 'product') {
+                    $product = wc_get_product($fr->ID);
+                    if ($product && $product->is_type('variable')) {
+                        $children = $product->get_children();
+                        foreach($children as $child_id) {
+                            if (get_post_status($child_id) === 'publish') {
+                                $found_ids[] = $child_id;
+                            }
+                        }
+                    }
+                }
             }
         }
+
+        // Tekrarları temizle (hem varyant hem ana ürün bulunduysa)
+        $found_ids = array_unique($found_ids);
 
         // 3. Bulunan ID'lerin detaylarını getir (Hydration)
         if (!empty($found_ids)) {

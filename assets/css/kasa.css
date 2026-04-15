@@ -625,6 +625,50 @@ html, body {
     margin-top: 2px;
 }
 
+/* --- Akordiyon ve Varyasyon Stilleri --- */
+.parent-row {
+    background: #f8f9fa !important;
+    border-bottom: 2px solid #eee !important;
+    position: relative;
+}
+
+.parent-row::after {
+    content: '\203A'; /* Chevron icon */
+    font-size: 24px;
+    color: #95a5a6;
+    margin-left: 10px;
+    transition: transform 0.2s;
+    font-weight: bold;
+}
+
+.parent-row.is-open::after {
+    transform: rotate(90deg);
+}
+
+.variation-container {
+    display: none;
+    background: #ffffff;
+    padding-left: 30px !important;
+    border-bottom: 1px solid #eee;
+}
+
+.variation-container.is-open {
+    display: block;
+}
+
+.variation-row {
+    border-bottom: 1px solid #f9f9f9 !important;
+    font-size: 13px !important;
+}
+
+.variation-row:last-child {
+    border-bottom: none !important;
+}
+
+.variation-row:hover {
+    background: #f0f7ff !important;
+}
+
 /* =============================================
    ÜST BUTONLAR
    ============================================= */

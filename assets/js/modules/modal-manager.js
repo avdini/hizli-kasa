@@ -127,6 +127,7 @@
          * @param {Array} urunler Ürün listesi
          */
         _sonuclariGoster: function(urunler) {
+            var self = this;
             var els = this.els;
             els.aramaSonuclariListe.innerHTML = "";
 
@@ -135,58 +136,103 @@
                 return;
             }
 
+            // Ürünleri gruplayalım (Parent -> Variations)
+            var gruplar = [];
+            var sonGrup = null;
+
             urunler.forEach(function(urun) {
-                var regularPrice = parseFloat(urun.regular_price || 0);
-                var salePrice = parseFloat(urun.price || 0);
-
-                // Stok Durumu Kontrolü
-                var outOfStock = urun.stock_status === 'outofstock' || (urun.manage_stock && urun.stock_quantity !== null && urun.stock_quantity <= 0);
-                var isVariableParent = urun.is_variable;
-
-                var fiyatHTML = '<span class="sonuc-fiyat">' + salePrice.toFixed(2) + ' TL</span>';
-                if (regularPrice > salePrice && salePrice > 0) {
-                    fiyatHTML = '<div style="display:flex; flex-direction:column; align-items:flex-end; margin-left:auto;">' +
-                        '<span style="text-decoration:line-through; color:#999; font-size:12px;">' + regularPrice.toFixed(2) + ' TL</span>' +
-                        '<span class="sonuc-fiyat">' + salePrice.toFixed(2) + ' TL</span>' +
-                    '</div>';
+                if (urun.is_variable) {
+                    sonGrup = { parent: urun, variations: [] };
+                    gruplar.push(sonGrup);
+                } else if (urun.parent_id && sonGrup && urun.parent_id === sonGrup.parent.id) {
+                    sonGrup.variations.push(urun);
+                } else {
+                    gruplar.push({ parent: urun, variations: [] });
                 }
+            });
 
-                var li = document.createElement("li");
+            gruplar.forEach(function(grup) {
+                var anaUrun = grup.parent;
+                var varyasyonlar = grup.variations;
+                
+                // --- ANA SATIR (Veya Basit Ürün) ---
+                var li = self._urunSatiriOlustur(anaUrun, true);
+                els.aramaSonuclariListe.appendChild(li);
 
-                // Stil Belirleme
-                if (outOfStock) {
-                    li.style.backgroundColor = "#fff5f5";
-                    li.style.opacity = "0.7";
-                    li.style.cursor = "not-allowed";
-                    li.style.borderLeft = "4px solid #e74c3c";
-                } else if (isVariableParent) {
-                    li.style.backgroundColor = "#fafafa";
-                    li.style.cursor = "default";
-                }
+                // Eğer varyasyonlar varsa konteyner oluştur
+                if (varyasyonlar.length > 0) {
+                    li.classList.add("parent-row");
+                    
+                    var vContainer = document.createElement("div");
+                    vContainer.className = "variation-container";
+                    
+                    varyasyonlar.forEach(function(v) {
+                        var vLi = self._urunSatiriOlustur(v, false);
+                        vLi.classList.add("variation-row");
+                        vContainer.appendChild(vLi);
+                    });
 
-                li.innerHTML =
-                    (urun.images.length > 0
-                        ? '<img src="' + urun.images[0].src + '" style="width:30px; height:30px; object-fit:cover; border-radius:3px; ' + ((isVariableParent || outOfStock) ? 'filter:grayscale(1); opacity:0.5;' : '') + '">'
-                        : '<div style="width:30px; height:30px; background:#f0f0f0; border-radius:3px;"></div>') +
-                    '<div style="display:flex; flex-direction:column; flex:1; ' + ((isVariableParent || outOfStock) ? 'opacity:0.6;' : '') + '">' +
-                        '<span style="font-weight:bold; font-size:14px; color: ' + (outOfStock ? '#c0392b' : 'inherit') + '">' +
-                            urun.name +
-                            (isVariableParent ? ' <small style="color:#7f8c8d;">(Ana Ürün - Satılamaz)</small>' : '') +
-                            (outOfStock ? ' <small style="color:#e74c3c; font-weight:bold;">(STOKTA YOK)</small>' : '') +
-                        '</span>' +
-                        '<span class="sonuc-sku">' + (urun.sku || 'SKU yok') + (urun.manage_stock ? ' <small style="color:#95a5a6;">(Stok: ' + (urun.stock_quantity || 0) + ')</small>' : '') + '</span>' +
-                    '</div>' +
-                    ((isVariableParent || outOfStock) ? '' : (regularPrice > salePrice && salePrice > 0 ? fiyatHTML : '<span class="sonuc-fiyat" style="margin-left:auto;">' + salePrice.toFixed(2) + ' TL</span>'));
+                    els.aramaSonuclariListe.appendChild(vContainer);
 
-                if (!isVariableParent && !outOfStock) {
-                    li.addEventListener("click", function() {
-                        HK.CartManager.ekleUrunObjesiyle(urun);
-                        els.urunAramaModal.style.display = "none";
+                    // Tıklama ile aç/kapat
+                    li.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        var isOpen = li.classList.toggle("is-open");
+                        vContainer.classList.toggle("is-open", isOpen);
                     });
                 }
-
-                els.aramaSonuclariListe.appendChild(li);
             });
+        },
+
+        /**
+         * Tekil ürün satırı DOM öğesi oluşturur
+         */
+        _urunSatiriOlustur: function(urun, isMain) {
+            var regularPrice = parseFloat(urun.regular_price || 0);
+            var salePrice = parseFloat(urun.price || 0);
+            var outOfStock = urun.stock_status === 'outofstock' || (urun.manage_stock && urun.stock_quantity !== null && urun.stock_quantity <= 0);
+            var isVariableParent = urun.is_variable;
+
+            var li = document.createElement("li");
+            
+            var fiyatHTML = '<span class="sonuc-fiyat">' + salePrice.toFixed(2) + ' TL</span>';
+            if (regularPrice > salePrice && salePrice > 0) {
+                fiyatHTML = '<div style="display:flex; flex-direction:column; align-items:flex-end; margin-left:auto;">' +
+                    '<span style="text-decoration:line-through; color:#999; font-size:12px;">' + regularPrice.toFixed(2) + ' TL</span>' +
+                    '<span class="sonuc-fiyat">' + salePrice.toFixed(2) + ' TL</span>' +
+                '</div>';
+            }
+
+            if (outOfStock) {
+                li.style.backgroundColor = "#fff5f5";
+                li.style.opacity = "0.7";
+                li.style.cursor = "not-allowed";
+                li.style.borderLeft = "4px solid #e74c3c";
+            }
+
+            li.innerHTML =
+                (urun.images.length > 0
+                    ? '<img src="' + urun.images[0].src + '" style="width:30px; height:30px; object-fit:cover; border-radius:3px; ' + ((isVariableParent || outOfStock) ? 'filter:grayscale(1); opacity:0.5;' : '') + '">'
+                    : '<div style="width:30px; height:30px; background:#f0f0f0; border-radius:3px;"></div>') +
+                '<div style="display:flex; flex-direction:column; flex:1; ' + ((isVariableParent || outOfStock) ? 'opacity:0.8;' : '') + '">' +
+                    '<span style="font-weight:bold; font-size:14px; color: ' + (outOfStock ? '#c0392b' : 'inherit') + '">' +
+                        urun.name +
+                        (isVariableParent ? ' <small style="color:#7f8c8d;">(Seçenekleri Gör)</small>' : '') +
+                        (outOfStock ? ' <small style="color:#e74c3c; font-weight:bold;">(STOKTA YOK)</small>' : '') +
+                    '</span>' +
+                    '<span class="sonuc-sku">' + (urun.sku || 'SKU yok') + (urun.manage_stock ? ' <small style="color:#95a5a6;">(Stok: ' + (urun.stock_quantity || 0) + ')</small>' : '') + '</span>' +
+                '</div>' +
+                ((isVariableParent || outOfStock) ? '' : (regularPrice > salePrice && salePrice > 0 ? fiyatHTML : '<span class="sonuc-fiyat" style="margin-left:auto;">' + salePrice.toFixed(2) + ' TL</span>'));
+
+            // Tıklama olayı (Sadece satılabilir ürünler için)
+            if (!isVariableParent && !outOfStock) {
+                li.addEventListener("click", function() {
+                    HK.CartManager.ekleUrunObjesiyle(urun);
+                    document.getElementById("urun-arama-modal").style.display = "none";
+                });
+            }
+
+            return li;
         },
 
         // =========================================
