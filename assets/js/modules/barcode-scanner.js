@@ -64,13 +64,13 @@
         _urunuBulVeEkle: async function(sku) {
             var durumMetni = document.getElementById("durum");
             try {
-                var response = await fetch(window.location.origin + '/wp-json/hizli-kasa/v1/search?s=' + encodeURIComponent(sku), {
+                var response = await fetch(window.location.origin + '/wp-json/hizli-kasa/v1/search?exact=1&s=' + encodeURIComponent(sku), {
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });
                 var data = await response.json();
                 var urun = data.find(function(item) { 
                     var trimmedSku = (item.sku ? item.sku.trim() : "");
-                    return trimmedSku === sku.trim() || String(item.id) === sku.trim(); 
+                    return trimmedSku === sku.trim(); 
                 }) || data[0];
 
                 if (urun) {

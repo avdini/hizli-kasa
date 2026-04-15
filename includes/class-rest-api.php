@@ -35,33 +35,49 @@ function hizli_kasa_ozel_arama($data) {
     $s = sanitize_text_field($data['s']);
     if (empty($s)) return [];
 
-    // Hem ana ürünleri hem varyantları isim ve SKU'dan arayan SQL
-    $results = $wpdb->get_results($wpdb->prepare("
-        SELECT p.ID, p.post_title, p.post_type, p.post_parent,
-               MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
-               MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
-               MAX(CASE WHEN pm.meta_key = '_regular_price' THEN pm.meta_value END) as regular_price,
-               MAX(CASE WHEN pm.meta_key = '_stock_status' THEN pm.meta_value END) as stock_status,
-               MAX(CASE WHEN pm.meta_key = '_manage_stock' THEN pm.meta_value END) as manage_stock,
-               MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
-        FROM {$wpdb->posts} p
-        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-        WHERE p.post_status = 'publish'
-          AND p.post_type IN ('product', 'product_variation')
-          AND (
-              p.ID = %d -- Kimlik eşleşmesi
-              OR p.post_title LIKE %s 
-              OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s)
-          )
-        GROUP BY p.ID
-        -- Tam eşleşenleri her zaman en başa al (ID veya SKU)
-        ORDER BY (CASE 
-            WHEN p.ID = %d THEN 0 
-            WHEN p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value = %s) THEN 1
-            ELSE 2 
-        END) ASC, p.post_title ASC
-        LIMIT 20
-    ", (int)$s, '%' . $wpdb->esc_like($s) . '%', '%' . $wpdb->esc_like($s) . '%', (int)$s, $s));
+    $exact = $data->get_param('exact');
+
+    if ($exact) {
+        // Barkod okuyucu için tam SKU eşleşmesi
+        $results = $wpdb->get_results($wpdb->prepare("
+            SELECT p.ID, p.post_title, p.post_type, p.post_parent,
+                   MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
+                   MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
+                   MAX(CASE WHEN pm.meta_key = '_regular_price' THEN pm.meta_value END) as regular_price,
+                   MAX(CASE WHEN pm.meta_key = '_stock_status' THEN pm.meta_value END) as stock_status,
+                   MAX(CASE WHEN pm.meta_key = '_manage_stock' THEN pm.meta_value END) as manage_stock,
+                   MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
+            FROM {$wpdb->posts} p
+            LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+            WHERE p.post_status = 'publish'
+              AND p.post_type IN ('product', 'product_variation')
+              AND p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value = %s)
+            GROUP BY p.ID
+            LIMIT 20
+        ", $s));
+    } else {
+        // Normal manuel arama (LIKE)
+        $results = $wpdb->get_results($wpdb->prepare("
+            SELECT p.ID, p.post_title, p.post_type, p.post_parent,
+                   MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
+                   MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
+                   MAX(CASE WHEN pm.meta_key = '_regular_price' THEN pm.meta_value END) as regular_price,
+                   MAX(CASE WHEN pm.meta_key = '_stock_status' THEN pm.meta_value END) as stock_status,
+                   MAX(CASE WHEN pm.meta_key = '_manage_stock' THEN pm.meta_value END) as manage_stock,
+                   MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
+            FROM {$wpdb->posts} p
+            LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+            WHERE p.post_status = 'publish'
+              AND p.post_type IN ('product', 'product_variation')
+              AND (
+                  p.post_title LIKE %s 
+                  OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s)
+              )
+            GROUP BY p.ID
+            ORDER BY p.post_title ASC
+            LIMIT 20
+        ", '%' . $wpdb->esc_like($s) . '%', '%' . $wpdb->esc_like($s) . '%'));
+    }
 
     $formatted = [];
     foreach ($results as $row) {
