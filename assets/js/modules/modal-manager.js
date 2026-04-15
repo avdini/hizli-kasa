@@ -155,6 +155,13 @@
                 var anaUrun = grup.parent;
                 var varyasyonlar = grup.variations;
                 
+                // Stok durumuna göre varyasyonları sırala (Stokta olanlar üstte)
+                varyasyonlar.sort(function(a, b) {
+                    var aOut = a.stock_status === 'outofstock' || (a.manage_stock && a.stock_quantity !== null && a.stock_quantity <= 0);
+                    var bOut = b.stock_status === 'outofstock' || (b.manage_stock && b.stock_quantity !== null && b.stock_quantity <= 0);
+                    return aOut - bOut; // false (0) önce, true (1) sonra
+                });
+
                 // --- ANA SATIR (Veya Basit Ürün) ---
                 var li = self._urunSatiriOlustur(anaUrun, true);
                 els.aramaSonuclariListe.appendChild(li);
@@ -212,9 +219,9 @@
 
             li.innerHTML =
                 (urun.images.length > 0
-                    ? '<img src="' + urun.images[0].src + '" style="width:30px; height:30px; object-fit:cover; border-radius:3px; ' + ((isVariableParent || outOfStock) ? 'filter:grayscale(1); opacity:0.5;' : '') + '">'
+                    ? '<img src="' + urun.images[0].src + '" style="width:30px; height:30px; object-fit:cover; border-radius:3px; ' + (outOfStock ? 'filter:grayscale(1); opacity:0.5;' : '') + '">'
                     : '<div style="width:30px; height:30px; background:#f0f0f0; border-radius:3px;"></div>') +
-                '<div style="display:flex; flex-direction:column; flex:1; ' + ((isVariableParent || outOfStock) ? 'opacity:0.8;' : '') + '">' +
+                '<div style="display:flex; flex-direction:column; flex:1; ' + (outOfStock ? 'opacity:0.8;' : '') + '">' +
                     '<span style="font-weight:bold; font-size:14px; color: ' + (outOfStock ? '#c0392b' : 'inherit') + '">' +
                         urun.name +
                         (isVariableParent ? ' <small style="color:#7f8c8d;">(Seçenekleri Gör)</small>' : '') +
