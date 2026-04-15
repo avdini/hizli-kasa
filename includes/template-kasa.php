@@ -233,7 +233,7 @@ if (!defined('ABSPATH'))
 
     <!-- Gün Sonu Raporu Modalı -->
     <div id="gun-sonu-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10002; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); align-items:center; justify-content:center;">
-        <div class="modal-icerik" style="width:600px !important; max-height:85vh; display:flex; flex-direction:column;">
+        <div class="modal-icerik" style="width:900px !important; max-height:85vh; display:flex; flex-direction:column;">
             <!-- Yükleniyor Durumu -->
             <div id="gun-sonu-yukleniyor" style="text-align:center; padding:40px;">
                 <div style="font-size:36px; margin-bottom:15px; animation: gs-spin 1s linear infinite;">⏳</div>
@@ -246,7 +246,8 @@ if (!defined('ABSPATH'))
             <!-- Butonlar -->
             <div class="modal-butonlar" style="margin-top:15px; flex-shrink:0;">
                 <button id="gun-sonu-kapat" style="background:#eee; color:#333;">Kapat</button>
-                <button id="gun-sonu-yazdir" style="background:#2c3e50; color:white; display:none;">🖨️ Fiş Yazdır</button>
+                <button id="gun-sonu-yazdir-ozet" style="background:#34495e; color:white; display:none;">🖨️ Sadece Yazdır</button>
+                <button id="gun-sonu-yazdir" style="background:#2c3e50; color:white; display:none;">🖨️ Fiş Yazdır (Detaylı)</button>
             </div>
         </div>
     </div>

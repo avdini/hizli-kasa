@@ -736,7 +736,7 @@ html, body {
 /* Rapor Kart Grid */
 .gs-kart-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     margin-bottom: 15px;
 }

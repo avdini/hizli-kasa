@@ -13,6 +13,7 @@
     HK.DayEndReport = {
 
         els: {},
+        data: null,
 
         /**
          * Gün Sonu Raporu event listener'larını bağla
@@ -24,6 +25,7 @@
                 gunSonuModal: document.getElementById("gun-sonu-modal"),
                 gunSonuKapat: document.getElementById("gun-sonu-kapat"),
                 gunSonuYazdir: document.getElementById("gun-sonu-yazdir"),
+                gunSonuYazdirOzet: document.getElementById("gun-sonu-yazdir-ozet"),
                 gunSonuIcerik: document.getElementById("gun-sonu-icerik"),
                 gunSonuYukleniyor: document.getElementById("gun-sonu-yukleniyor"),
                 gunSonuSablon: document.getElementById("gun-sonu-sablon"),
@@ -44,7 +46,13 @@
 
             if (this.els.gunSonuYazdir) {
                 this.els.gunSonuYazdir.addEventListener("click", function() {
-                    self._yazdir();
+                    self._yazdir(true);
+                });
+            }
+
+            if (this.els.gunSonuYazdirOzet) {
+                this.els.gunSonuYazdirOzet.addEventListener("click", function() {
+                    self._yazdir(false);
                 });
             }
 
@@ -81,8 +89,9 @@
                 self.els.gunSonuYukleniyor.style.display = "none";
                 self.els.gunSonuIcerik.style.display = "block";
 
+                self.data = rapor;
                 self._raporuGoster(rapor);
-                self._fisSablonuDoldur(rapor);
+                self._fisSablonuDoldur(rapor, true);
             } catch (error) {
                 console.error("Gün sonu raporu hatası:", error);
                 self.els.gunSonuYukleniyor.innerHTML = '<p style="color: #e74c3c; text-align:center;">Rapor yüklenirken hata oluştu!</p>';
@@ -105,10 +114,12 @@
                         '<p style="margin:0;">Kasa ' + rapor.kasa_no + ' için bugün henüz sipariş oluşturulmamış.</p>' +
                     '</div>';
                 this.els.gunSonuYazdir.style.display = "none";
+                if (this.els.gunSonuYazdirOzet) this.els.gunSonuYazdirOzet.style.display = "none";
                 return;
             }
 
             this.els.gunSonuYazdir.style.display = "inline-block";
+            if (this.els.gunSonuYazdirOzet) this.els.gunSonuYazdirOzet.style.display = "inline-block";
 
             var html = '';
 
@@ -196,8 +207,10 @@
         /**
          * Termal fiş şablonunu rapor verisiyle doldur
          * @param {Object} rapor API'den dönen rapor verisi
+         * @param {Boolean} includeDetails Detaylı ürün ve sipariş listesi eklensin mi?
          */
-        _fisSablonuDoldur: function(rapor) {
+        _fisSablonuDoldur: function(rapor, includeDetails) {
+            if (includeDetails === undefined) includeDetails = true;
             var sablon = this.els.gunSonuSablon;
             if (!sablon) return;
 
@@ -241,7 +254,7 @@
             html += '</div>';
 
             // ─── ÜRÜN DAĞILIMI ───
-            if (rapor.urun_dagilimi && rapor.urun_dagilimi.length > 0) {
+            if (includeDetails && rapor.urun_dagilimi && rapor.urun_dagilimi.length > 0) {
                 html += '<div style="margin-bottom:8px;">';
                 html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px dashed #000;">ÜRÜN DAĞILIMI</p>';
                 html += '<table style="width:100%; font-size:11px; border-collapse:collapse;">';
@@ -259,7 +272,8 @@
             }
 
             // ─── SİPARİŞ LİSTESİ ───
-            html += '<div style="margin-bottom:8px;">';
+            if (includeDetails) {
+                html += '<div style="margin-bottom:8px;">';
             html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px dashed #000;">SİPARİŞLER (' + rapor.siparis_sayisi + ')</p>';
             html += '<table style="width:100%; font-size:11px; border-collapse:collapse;">';
             html += '<tr style="border-bottom:1px solid #000;"><th style="text-align:left;">Saat</th><th style="text-align:left;">No</th><th style="text-align:left;">Ödm.</th><th style="text-align:right;">Tutar</th></tr>';
@@ -274,6 +288,7 @@
             });
             html += '</table>';
             html += '</div>';
+            }
 
             // ─── KASİYERLER ───
             if (rapor.kasiyerler && Object.keys(rapor.kasiyerler).length > 0) {
@@ -297,8 +312,14 @@
 
         /**
          * Fiş şablonunu yazdır
+         * @param {Boolean} includeDetails Detaylı rapor mu?
          */
-        _yazdir: function() {
+        _yazdir: function(includeDetails) {
+            if (!this.data) return;
+
+            // Yazdırmadan önce şablonu güncelleyelim (detaylı veya özet)
+            this._fisSablonuDoldur(this.data, includeDetails);
+
             // Termal fiş şablonunu göster, yazdır, gizle
             var sablon = this.els.gunSonuSablon;
             if (!sablon) return;
