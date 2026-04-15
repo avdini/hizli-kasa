@@ -82,8 +82,8 @@ function hizli_kasa_ozel_arama($data) {
                 WHERE p.post_status = 'publish'
                   AND (p.ID = %d OR p.post_parent = %d)
                 GROUP BY p.ID
-                ORDER BY p.post_type ASC, p.ID ASC
-            ", $parent_id, $parent_id));
+                ORDER BY (CASE WHEN p.ID = %d THEN 0 ELSE 1 END) ASC, p.post_type ASC, p.ID ASC
+            ", $parent_id, $parent_id, $tek_sonuc['id']));
 
             if (!empty($genis_results)) {
                 $formatted = [];
@@ -107,7 +107,11 @@ function hizli_kasa_format_urun_row($row) {
     $is_variable = $urun->is_type('variable');
     if ($is_variable) {
         $children = $urun->get_children();
-        if (empty($children)) {
+        // Sadece yayında (publish) olan varyasyonları sayalım
+        $active_children = array_filter($children, function($child_id) {
+            return get_post_status($child_id) === 'publish';
+        });
+        if (empty($active_children)) {
             $is_variable = false;
         }
     }

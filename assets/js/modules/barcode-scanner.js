@@ -68,7 +68,9 @@
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });
                 var data = await response.json();
-                var urun = data.find(function(item) { return item.sku === sku; }) || data[0];
+                var urun = data.find(function(item) { 
+                    return (item.sku ? item.sku.trim() : "") === sku.trim(); 
+                }) || data[0];
 
                 if (urun) {
                     HK.CartManager.ekleUrunObjesiyle(urun);

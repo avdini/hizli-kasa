@@ -137,7 +137,7 @@ window.HizliKasa = window.HizliKasa || {};
             var durumMetni = document.getElementById("durum");
 
             if (urun.is_variable) {
-                durumMetni.innerText = "HATA: Ana Ürün! Lütfen varyant kodu okutun.";
+                durumMetni.innerText = "HATA: Ana Ürün (" + urun.name + ")! Lütfen varyant kodu okutun.";
                 durumMetni.style.color = "red";
                 return;
             }
