@@ -49,12 +49,19 @@ function hizli_kasa_ozel_arama($data) {
         WHERE p.post_status = 'publish'
           AND p.post_type IN ('product', 'product_variation')
           AND (
-              p.post_title LIKE %s 
+              p.ID = %d -- Kimlik eşleşmesi
+              OR p.post_title LIKE %s 
               OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s)
           )
         GROUP BY p.ID
+        -- Tam eşleşenleri her zaman en başa al (ID veya SKU)
+        ORDER BY (CASE 
+            WHEN p.ID = %d THEN 0 
+            WHEN p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value = %s) THEN 1
+            ELSE 2 
+        END) ASC, p.post_title ASC
         LIMIT 20
-    ", '%' . $wpdb->esc_like($s) . '%', '%' . $wpdb->esc_like($s) . '%'));
+    ", (int)$s, '%' . $wpdb->esc_like($s) . '%', '%' . $wpdb->esc_like($s) . '%', (int)$s, $s));
 
     $formatted = [];
     foreach ($results as $row) {

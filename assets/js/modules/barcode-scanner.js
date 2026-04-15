@@ -69,7 +69,8 @@
                 });
                 var data = await response.json();
                 var urun = data.find(function(item) { 
-                    return (item.sku ? item.sku.trim() : "") === sku.trim(); 
+                    var trimmedSku = (item.sku ? item.sku.trim() : "");
+                    return trimmedSku === sku.trim() || String(item.id) === sku.trim(); 
                 }) || data[0];
 
                 if (urun) {
