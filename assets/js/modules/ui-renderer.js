@@ -70,11 +70,11 @@
             var genelToplam = 0;
 
             state.sepet.forEach(function(item, index) {
-                var araToplamOriginal = item.price * item.quantity;
+                // Fiyat Katmanları
+                var etiketFiyat = (item.regular_price || item.price) * item.quantity;
+                var kampanyaFiyat = item.price * item.quantity;
                 var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
-                var cashDiscountFactor = hasAutoDiscount ? 0.95 : 1;
-                var araToplamGosterilecek = araToplamOriginal * cashDiscountFactor;
-                genelToplam += araToplamOriginal;
+                var netFiyat = kampanyaFiyat * (hasAutoDiscount ? 0.95 : 1);
 
                 var li = document.createElement("li");
 
@@ -91,11 +91,11 @@
                             '<span style="color:#999; font-size:12px; margin-bottom:2px;">' + item.sku + '</span>' +
                             '<small class="urun-detay">' + item.quantity + ' Adet x ' + fiyatGosterim + '</small>' +
                         '</span>' +
-                        '<div class="v-check">POS v2.7 - Canlı Senkronizasyon Aktif</div>' +
                     '</div>' +
                     '<span class="urun-fiyat-grup">' +
-                        '<span class="ara-toplam" style="' + (hasAutoDiscount ? 'color: #27ae60;' : '') + '">' + araToplamGosterilecek.toFixed(2) + ' TL</span>' +
-                        (hasAutoDiscount ? '<div style="font-size: 10px; color: #999; text-decoration: line-through;">' + araToplamOriginal.toFixed(2) + ' TL</div>' : '') +
+                        (etiketFiyat > kampanyaFiyat ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + etiketFiyat.toFixed(2) + ' TL</div>' : '') +
+                        (kampanyaFiyat > netFiyat ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + kampanyaFiyat.toFixed(2) + ' TL</div>' : '') +
+                        '<div class="ara-toplam" style="font-size: 19px; color: #27ae60; font-weight: 800; line-height: 1.1; margin-top: 2px;">' + netFiyat.toFixed(2) + ' TL</div>' +
                     '</span>';
 
                 var azaltButon = document.createElement("button");
