@@ -355,9 +355,20 @@
         _bindYuvarlaButon: function() {
             var els = this.els;
 
+            // Ayarlardan buton aktifliğini kontrol et
+            if (!kasaAyar.yuvarlamaAktif || kasaAyar.yuvarlamaAktif === '0') {
+                if (els.yuvarlaButon) {
+                    els.yuvarlaButon.style.display = "none";
+                }
+                return;
+            }
+
             els.yuvarlaButon.addEventListener("click", function() {
                 var state = HK.State;
                 if (state.sepet.length === 0) return;
+
+                // Yuvarlama adımı (ayarlardan)
+                var adim = parseFloat(kasaAyar.yuvarlaModu) || 1;
 
                 // Mevcut toplam hesapla (aynı mantık ui-renderer ile)
                 var sepetAraToplam = 0;
@@ -373,21 +384,24 @@
                 var mevcutToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
                 if (mevcutToplam <= 0) return;
 
-                // Küsüratı hesapla
-                var kusurat = mevcutToplam - Math.floor(mevcutToplam);
+                // Yuvarlanan hedefi hesapla (adımın alt katına yuvarla)
+                var yuvarlanmis = Math.floor(mevcutToplam / adim) * adim;
 
-                // Eğer zaten tam sayıysa bir şey yapma
-                if (kusurat < 0.01) {
+                // Eğer zaten yuvarlak ise bir şey yapma
+                var fark = mevcutToplam - yuvarlanmis;
+                if (fark < 0.01) {
                     document.getElementById("durum").innerText = "Toplam zaten yuvarlak.";
                     document.getElementById("durum").style.color = "#95a5a6";
                     return;
                 }
 
-                // Küsüratı iskontoya ekle
-                state.iskontoTutar = parseFloat((state.iskontoTutar + kusurat).toFixed(2));
+                // Farkı iskontoya ekle
+                state.iskontoTutar = parseFloat((state.iskontoTutar + fark).toFixed(2));
                 HK.UIRenderer.arayuzuGuncelle();
 
-                document.getElementById("durum").innerText = "Küsürat yuvarlandı: -" + kusurat.toFixed(2) + " TL iskonto eklendi.";
+                // Bilgi mesajı
+                var modLabel = adim < 1 ? (adim * 100) + " kuruş" : adim + " TL";
+                document.getElementById("durum").innerText = "Küsürat yuvarlandı (" + modLabel + "): -" + fark.toFixed(2) + " TL iskonto eklendi.";
                 document.getElementById("durum").style.color = "#27ae60";
             });
         },

@@ -29,6 +29,10 @@ function hizli_kasa_ayarlari_kaydet()
 {
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_siparis_durumu');
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_yetkili_roller');
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_yuvarlama_aktif', array(
+        'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
+    ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_yuvarlama_modu');
 }
 
 // Admin Ayarlar Sayfası Arayüzü
@@ -70,6 +74,30 @@ function hizli_kasa_ayarlar_sayfasi()
                         <?php endforeach; ?>
                         <p class="description">Sadece seçilen role sahip kullanıcılar hızlı kasa ekranını görebilir ve işlem
                             yapabilir.</p>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Küsürat Yuvarlama</th>
+                    <td>
+                        <?php $yuvarlama_aktif = get_option('hizli_kasa_yuvarlama_aktif', '1'); ?>
+                        <label>
+                            <input type="checkbox" name="hizli_kasa_yuvarlama_aktif" value="1" <?php checked($yuvarlama_aktif, '1'); ?>>
+                            "Küsürat Yuvarla" butonunu göster
+                        </label>
+                        <p class="description">Kasada küsürat yuvarlama butonunu aktif eder. Kapatıldığında buton gizlenir.</p>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Yuvarlama Modu</th>
+                    <td>
+                        <?php $yuvarlama_modu = get_option('hizli_kasa_yuvarlama_modu', '1'); ?>
+                        <select name="hizli_kasa_yuvarlama_modu">
+                            <option value="0.5" <?php selected($yuvarlama_modu, '0.5'); ?>>0.50 TL'ye yuvarla (Örn: 12.70 → 12.50)</option>
+                            <option value="1" <?php selected($yuvarlama_modu, '1'); ?>>1 TL'ye yuvarla (Örn: 12.70 → 12.00)</option>
+                            <option value="5" <?php selected($yuvarlama_modu, '5'); ?>>5 TL'nin katına yuvarla (Örn: 123 → 120)</option>
+                            <option value="10" <?php selected($yuvarlama_modu, '10'); ?>>10 TL'nin katına yuvarla (Örn: 123 → 120)</option>
+                        </select>
+                        <p class="description">Küsürat yuvarlama butonuna basıldığında toplam hangi basamağa yuvarlanacağını belirler.</p>
                     </td>
                 </tr>
             </table>

@@ -87,7 +87,9 @@ function hizli_kasa_uygulamasi()
         'nonce' => wp_create_nonce('wp_rest'),
         'siparisDurumu' => $guncel_durum,
         'userName' => $display_name,
-        'version' => HIZLI_KASA_VERSION
+        'version' => HIZLI_KASA_VERSION,
+        'yuvarlamaAktif' => get_option('hizli_kasa_yuvarlama_aktif', '1'),
+        'yuvarlaModu' => get_option('hizli_kasa_yuvarlama_modu', '1')
     ));
 
     // HTML Template'i Render Et
