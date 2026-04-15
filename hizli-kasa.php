@@ -32,7 +32,6 @@ $hizli_kasa_update_checker = PucFactory::buildUpdateChecker(
 );
 
 // Private Repo izinleri için GitHub Token
-$hizli_kasa_update_checker->setAuthentication('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');
-
 // Hangi branch'i takip edeceğini belirliyoruz (main)
+$hizli_kasa_update_checker->setAuthentication('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');
 $hizli_kasa_update_checker->setBranch('main');
