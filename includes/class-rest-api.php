@@ -62,6 +62,12 @@ function hizli_kasa_ozel_arama($data) {
         if (!$urun) continue;
 
         $is_variable = $urun->is_type('variable');
+        if ($is_variable) {
+            $children = $urun->get_children();
+            if (empty($children)) {
+                $is_variable = false;
+            }
+        }
         $name = $urun->get_name();
         if ($row->post_type === 'product_variation') {
             $parent = wc_get_product($row->post_parent);
