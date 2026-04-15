@@ -1,0 +1,298 @@
+/**
+ * Hızlı Kasa - Modal Yöneticisi (Modal Manager)
+ *
+ * İskonto, ürün arama, ödeme bölme modallarının
+ * açma/kapama/hesaplama işlemleri.
+ *
+ * @package HizliKasa
+ */
+
+(function(HK) {
+    'use strict';
+
+    HK.ModalManager = {
+
+        // DOM Referansları
+        els: {},
+
+        /**
+         * Tüm modal event listener'larını bağla
+         */
+        init: function() {
+            this.els = {
+                iskontoModal: document.getElementById("iskonto-modal"),
+                iskontoInput: document.getElementById("iskonto-input"),
+                iskontoButon: document.getElementById("iskonto-buton"),
+                iskontoOnay: document.getElementById("iskonto-onay"),
+                iskontoIptal: document.getElementById("iskonto-iptal"),
+                urunAramaModal: document.getElementById("urun-arama-modal"),
+                urunAramaInput: document.getElementById("urun-arama-input"),
+                aramaSonuclariListe: document.getElementById("arama-sonuclari"),
+                urunAramaKapat: document.getElementById("urun-arama-kapat"),
+                manuelUrunButon: document.getElementById("manuel-urun-buton"),
+                bolButon: document.getElementById("bol-buton"),
+                bolModal: document.getElementById("odeme-bol-modal"),
+                bolNetToplamArea: document.getElementById("bol-net-toplam"),
+                bolKalanTutarArea: document.getElementById("bol-kalan-tutar"),
+                bolKalanUyari: document.getElementById("bol-kalan-uyari"),
+                bolNakitInput: document.getElementById("bol-nakit"),
+                bolKartInput: document.getElementById("bol-kart"),
+                bolIbanInput: document.getElementById("bol-iban"),
+                bolOnayla: document.getElementById("bol-onayla"),
+                bolVazgec: document.getElementById("bol-vazgec")
+            };
+
+            this._bindIskontoModal();
+            this._bindUrunAramaModal();
+            this._bindOdemeBolModal();
+            this._bindModalDismiss();
+        },
+
+        // =========================================
+        //  İSKONTO MODALI
+        // =========================================
+
+        _bindIskontoModal: function() {
+            var els = this.els;
+
+            els.iskontoButon.addEventListener("click", function() {
+                els.iskontoModal.style.display = "flex";
+                els.iskontoInput.value = HK.State.iskontoTutar || "";
+                els.iskontoInput.focus();
+            });
+
+            els.iskontoInput.addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    els.iskontoOnay.click();
+                }
+            });
+
+            els.iskontoIptal.addEventListener("click", function() {
+                els.iskontoModal.style.display = "none";
+            });
+
+            els.iskontoOnay.addEventListener("click", function() {
+                HK.State.iskontoTutar = parseFloat(els.iskontoInput.value) || 0;
+                els.iskontoModal.style.display = "none";
+                HK.UIRenderer.arayuzuGuncelle();
+            });
+        },
+
+        // =========================================
+        //  ÜRÜN ARAMA MODALI
+        // =========================================
+
+        _aramaTimeout: null,
+
+        _bindUrunAramaModal: function() {
+            var self = this;
+            var els = this.els;
+
+            els.manuelUrunButon.addEventListener("click", function() {
+                els.urunAramaModal.style.display = "flex";
+                els.urunAramaInput.value = "";
+                els.aramaSonuclariListe.innerHTML = "";
+                els.urunAramaInput.focus();
+            });
+
+            els.urunAramaKapat.addEventListener("click", function() {
+                els.urunAramaModal.style.display = "none";
+            });
+
+            els.urunAramaInput.addEventListener("input", function() {
+                clearTimeout(self._aramaTimeout);
+                var query = els.urunAramaInput.value.trim();
+                if (query.length < 2) {
+                    els.aramaSonuclariListe.innerHTML = "";
+                    return;
+                }
+
+                self._aramaTimeout = setTimeout(async function() {
+                    try {
+                        var response = await fetch(window.location.origin + '/wp-json/hizli-kasa/v1/search?s=' + encodeURIComponent(query), {
+                            headers: { 'X-WP-Nonce': kasaAyar.nonce }
+                        });
+                        var data = await response.json();
+                        self._sonuclariGoster(data);
+                    } catch (error) {
+                        console.error("Arama hatası:", error);
+                    }
+                }, 300);
+            });
+        },
+
+        /**
+         * Arama sonuçlarını listeye render et
+         * @param {Array} urunler Ürün listesi
+         */
+        _sonuclariGoster: function(urunler) {
+            var els = this.els;
+            els.aramaSonuclariListe.innerHTML = "";
+
+            if (urunler.length === 0) {
+                els.aramaSonuclariListe.innerHTML = '<li style="cursor:default; justify-content:center; color:#999;">Sonuç bulunamadı.</li>';
+                return;
+            }
+
+            urunler.forEach(function(urun) {
+                var regularPrice = parseFloat(urun.regular_price || 0);
+                var salePrice = parseFloat(urun.price || 0);
+
+                // Stok Durumu Kontrolü
+                var outOfStock = urun.stock_status === 'outofstock' || (urun.manage_stock && urun.stock_quantity !== null && urun.stock_quantity <= 0);
+                var isVariableParent = urun.is_variable;
+
+                var fiyatHTML = '<span class="sonuc-fiyat">' + salePrice.toFixed(2) + ' TL</span>';
+                if (regularPrice > salePrice && salePrice > 0) {
+                    fiyatHTML = '<div style="display:flex; flex-direction:column; align-items:flex-end; margin-left:auto;">' +
+                        '<span style="text-decoration:line-through; color:#999; font-size:12px;">' + regularPrice.toFixed(2) + ' TL</span>' +
+                        '<span class="sonuc-fiyat">' + salePrice.toFixed(2) + ' TL</span>' +
+                    '</div>';
+                }
+
+                var li = document.createElement("li");
+
+                // Stil Belirleme
+                if (outOfStock) {
+                    li.style.backgroundColor = "#fff5f5";
+                    li.style.opacity = "0.7";
+                    li.style.cursor = "not-allowed";
+                    li.style.borderLeft = "4px solid #e74c3c";
+                } else if (isVariableParent) {
+                    li.style.backgroundColor = "#fafafa";
+                    li.style.cursor = "default";
+                }
+
+                li.innerHTML =
+                    (urun.images.length > 0
+                        ? '<img src="' + urun.images[0].src + '" style="width:30px; height:30px; object-fit:cover; border-radius:3px; ' + ((isVariableParent || outOfStock) ? 'filter:grayscale(1); opacity:0.5;' : '') + '">'
+                        : '<div style="width:30px; height:30px; background:#f0f0f0; border-radius:3px;"></div>') +
+                    '<div style="display:flex; flex-direction:column; flex:1; ' + ((isVariableParent || outOfStock) ? 'opacity:0.6;' : '') + '">' +
+                        '<span style="font-weight:bold; font-size:14px; color: ' + (outOfStock ? '#c0392b' : 'inherit') + '">' +
+                            urun.name +
+                            (isVariableParent ? ' <small style="color:#7f8c8d;">(Ana Ürün - Satılamaz)</small>' : '') +
+                            (outOfStock ? ' <small style="color:#e74c3c; font-weight:bold;">(STOKTA YOK)</small>' : '') +
+                        '</span>' +
+                        '<span class="sonuc-sku">' + (urun.sku || 'SKU yok') + (urun.manage_stock ? ' <small style="color:#95a5a6;">(Stok: ' + (urun.stock_quantity || 0) + ')</small>' : '') + '</span>' +
+                    '</div>' +
+                    ((isVariableParent || outOfStock) ? '' : (regularPrice > salePrice && salePrice > 0 ? fiyatHTML : '<span class="sonuc-fiyat" style="margin-left:auto;">' + salePrice.toFixed(2) + ' TL</span>'));
+
+                if (!isVariableParent && !outOfStock) {
+                    li.addEventListener("click", function() {
+                        HK.CartManager.ekleUrunObjesiyle(urun);
+                        els.urunAramaModal.style.display = "none";
+                    });
+                }
+
+                els.aramaSonuclariListe.appendChild(li);
+            });
+        },
+
+        // =========================================
+        //  ÖDEME BÖLME MODALI
+        // =========================================
+
+        _bindOdemeBolModal: function() {
+            var self = this;
+            var els = this.els;
+
+            els.bolButon.addEventListener("click", function() {
+                var state = HK.State;
+                if (state.sepet.length === 0) return;
+
+                var toplamPara = 0;
+                state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity); });
+                var netHedef = toplamPara - state.iskontoTutar;
+
+                els.bolNetToplamArea.innerText = netHedef.toFixed(2);
+                els.bolNakitInput.value = "";
+                els.bolKartInput.value = "";
+                els.bolIbanInput.value = "";
+                self._bolHesapla();
+                els.bolModal.style.display = "flex";
+            });
+
+            [els.bolNakitInput, els.bolKartInput, els.bolIbanInput].forEach(function(inp) {
+                inp.addEventListener("input", function() { self._bolHesapla(); });
+            });
+
+            els.bolVazgec.addEventListener("click", function() {
+                els.bolModal.style.display = "none";
+            });
+
+            els.bolOnayla.addEventListener("click", async function() {
+                var state = HK.State;
+                var toplamPara = 0;
+                state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity); });
+                var netHedef = toplamPara - state.iskontoTutar;
+
+                var nakit = parseFloat(els.bolNakitInput.value) || 0;
+                var kart = parseFloat(els.bolKartInput.value) || 0;
+                var iban = parseFloat(els.bolIbanInput.value) || 0;
+
+                var girenToplam = nakit + kart + iban;
+                var fark = netHedef - girenToplam;
+
+                if (Math.abs(fark) >= 0.01) {
+                    alert("Dikkat! Ödeme tutarı ile sepet toplamı eşleşmiyor.\nFark: " + fark.toFixed(2) + " TL\nLütfen tutarları kontrol edin.");
+                    return;
+                }
+
+                var splitData = { nakit: nakit, kart: kart, iban: iban };
+                var sorunlar = await HK.OrderProcessor.sonStokKontrolu();
+
+                if (sorunlar.length > 0) {
+                    HK.OrderProcessor._stokUyarisiGoster(sorunlar);
+                    els.bolModal.style.display = "none";
+                } else {
+                    els.bolModal.style.display = "none";
+                    HK.OrderProcessor.siparisIsleminiGerceklestir(splitData);
+                }
+            });
+        },
+
+        /**
+         * Ödeme bölme kalan tutarını hesapla
+         */
+        _bolHesapla: function() {
+            var state = HK.State;
+            var els = this.els;
+
+            var toplamPara = 0;
+            state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity); });
+            var netHedef = toplamPara - state.iskontoTutar;
+
+            var nakit = parseFloat(els.bolNakitInput.value) || 0;
+            var kart = parseFloat(els.bolKartInput.value) || 0;
+            var iban = parseFloat(els.bolIbanInput.value) || 0;
+
+            var girenToplam = nakit + kart + iban;
+            var kalan = netHedef - girenToplam;
+
+            els.bolKalanTutarArea.innerText = kalan.toFixed(2);
+
+            if (Math.abs(kalan) < 0.01) {
+                els.bolKalanUyari.innerText = "Toplam Tamamlandı!";
+                els.bolKalanUyari.className = "kalan-tamam";
+            } else {
+                els.bolKalanUyari.innerText = kalan > 0 ? "Kalan: " + kalan.toFixed(2) + " TL" : "Fazla: " + Math.abs(kalan).toFixed(2) + " TL";
+                els.bolKalanUyari.className = "kalan-eksik";
+            }
+        },
+
+        // =========================================
+        //  MODAL DIŞ TIKLA KAPAMA
+        // =========================================
+
+        _bindModalDismiss: function() {
+            var els = this.els;
+            window.addEventListener("click", function(event) {
+                if (event.target == els.iskontoModal) els.iskontoModal.style.display = "none";
+                if (event.target == els.urunAramaModal) els.urunAramaModal.style.display = "none";
+                if (event.target == els.bolModal) els.bolModal.style.display = "none";
+            });
+        }
+    };
+
+})(window.HizliKasa);
