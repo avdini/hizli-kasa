@@ -110,7 +110,16 @@
             // Eğer ödeme bölünmüşse OTOMATİK %5 indirimleri IPTAL et
             var isAutoDiscount = splitData ? false : (state.odemeTipi === "cash" || state.odemeTipi === "iban");
 
+            // Toplamlar için ön çalışma
+            var sepetAraToplam = 0;
+            var sepetListeToplami = 0;
+            state.sepet.forEach(function(item) {
+                sepetAraToplam += (item.price * item.quantity);
+                sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
+            });
+
             var temizSepet = state.sepet.map(function(item) {
+                var lineEtiketFiyati = (item.regular_price || item.price);
                 var lineSubtotal = item.price * item.quantity;
                 var lineTotal = isAutoDiscount ? (lineSubtotal * 0.95) : lineSubtotal;
 
@@ -121,7 +130,9 @@
                     total: lineTotal.toFixed(2),
                     meta_data: [
                         { key: "Kasiyer", value: kasaAyar.userName || "Kasa Personeli" },
-                        { key: "Kasa No", value: state.aktifKasaId.toString() }
+                        { key: "Kasa No", value: state.aktifKasaId.toString() },
+                        { key: "_etiket_fiyat", value: lineEtiketFiyati.toFixed(2) },
+                        { key: "_kampanya_fiyat", value: item.price.toFixed(2) }
                     ]
                 };
                 if (item.variation_id) p.variation_id = item.variation_id;
@@ -133,8 +144,6 @@
                 feeLines.push({ name: "İskonto", total: "-" + state.iskontoTutar.toFixed(2), tax_status: "none" });
             }
 
-            var sepetAraToplam = 0;
-            state.sepet.forEach(function(item) { sepetAraToplam += (item.price * item.quantity); });
             var netToplam = sepetAraToplam - state.iskontoTutar - (isAutoDiscount ? (sepetAraToplam * 0.05) : 0);
 
             // Ödeme Yöntemleri (Raporlama İçin)
@@ -181,6 +190,8 @@
                     { key: "_odeme_nakit", value: oNakit.toFixed(2) },
                     { key: "_odeme_kart", value: oKart.toFixed(2) },
                     { key: "_odeme_iban", value: oIban.toFixed(2) },
+                    { key: "_etiket_toplami", value: sepetListeToplami.toFixed(2) },
+                    { key: "_ara_toplam", value: sepetAraToplam.toFixed(2) },
                     { key: "Ödeme (Nakit)", value: oNakit.toFixed(2) + " TL" },
                     { key: "Ödeme (Kart)", value: oKart.toFixed(2) + " TL" },
                     { key: "Ödeme (IBAN)", value: oIban.toFixed(2) + " TL" }
