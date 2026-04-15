@@ -188,6 +188,9 @@ if (!defined('ABSPATH'))
             <p style="margin:5px 0; font-size:12px;">HIZLI KASA SATIŞ FİŞİ</p>
             <p id="fis-tarih" style="margin:0; font-size:11px;"></p>
             <p id="fis-no-text" style="font-weight:bold; margin:5px 0; font-size:14px;"></p>
+            <div style="text-align:center; margin-bottom:10px;">
+                <svg id="fis-barkod" style="max-width:100%; height:auto;"></svg>
+            </div>
         </div>
         
         <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:10px;">

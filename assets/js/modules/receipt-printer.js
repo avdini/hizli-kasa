@@ -93,6 +93,23 @@
             }
 
             els.fisGenelToplam.innerText = parseFloat(order.total).toFixed(2) + " TL";
+
+            // Barkod Üret (CODE128)
+            if (typeof JsBarcode === "function") {
+                try {
+                    JsBarcode("#fis-barkod", (order.id || order.number).toString(), {
+                        format: "CODE128",
+                        width: 2,
+                        height: 50,
+                        displayValue: false,
+                        margin: 0,
+                        background: "#ffffff",
+                        lineColor: "#000000"
+                    });
+                } catch (e) {
+                    console.error("Barkod oluşturulamadı:", e);
+                }
+            }
         },
 
         /**
