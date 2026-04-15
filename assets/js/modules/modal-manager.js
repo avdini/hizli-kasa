@@ -159,34 +159,50 @@
                 varyasyonlar.sort(function(a, b) {
                     var aOut = a.stock_status === 'outofstock' || (a.manage_stock && a.stock_quantity !== null && a.stock_quantity <= 0);
                     var bOut = b.stock_status === 'outofstock' || (b.manage_stock && b.stock_quantity !== null && b.stock_quantity <= 0);
-                    return aOut - bOut; // false (0) önce, true (1) sonra
+                    return aOut - bOut;
                 });
 
-                // --- ANA SATIR (Veya Basit Ürün) ---
-                var li = self._urunSatiriOlustur(anaUrun, true);
-                els.aramaSonuclariListe.appendChild(li);
+                // ÖZEL DURUM: Eğer sadece tek bir ürün grubu varsa (SKU araması gibi), 
+                // akordiyon yapma, hepsini düz liste olarak göster.
+                if (gruplar.length === 1) {
+                    // Ana ürünü ekle (unclickable header style)
+                    var liMain = self._urunSatiriOlustur(anaUrun, true);
+                    liMain.style.borderBottom = "2px solid #ddd";
+                    liMain.style.background = "#fff";
+                    els.aramaSonuclariListe.appendChild(liMain);
 
-                // Eğer varyasyonlar varsa konteyner oluştur
-                if (varyasyonlar.length > 0) {
-                    li.classList.add("parent-row");
-                    
-                    var vContainer = document.createElement("div");
-                    vContainer.className = "variation-container";
-                    
+                    // Varyasyonları direkt ekle
                     varyasyonlar.forEach(function(v) {
                         var vLi = self._urunSatiriOlustur(v, false);
-                        vLi.classList.add("variation-row");
-                        vContainer.appendChild(vLi);
+                        vLi.style.paddingLeft = "30px";
+                        els.aramaSonuclariListe.appendChild(vLi);
                     });
+                } else {
+                    // --- NORMAL AKORDİYON DÜZENİ ---
+                    var li = self._urunSatiriOlustur(anaUrun, true);
+                    els.aramaSonuclariListe.appendChild(li);
 
-                    els.aramaSonuclariListe.appendChild(vContainer);
+                    if (varyasyonlar.length > 0) {
+                        li.classList.add("parent-row");
+                        
+                        var vContainer = document.createElement("div");
+                        vContainer.className = "variation-container";
+                        
+                        varyasyonlar.forEach(function(v) {
+                            var vLi = self._urunSatiriOlustur(v, false);
+                            vLi.classList.add("variation-row");
+                            vContainer.appendChild(vLi);
+                        });
 
-                    // Tıklama ile aç/kapat
-                    li.addEventListener("click", function(e) {
-                        e.preventDefault();
-                        var isOpen = li.classList.toggle("is-open");
-                        vContainer.classList.toggle("is-open", isOpen);
-                    });
+                        els.aramaSonuclariListe.appendChild(vContainer);
+
+                        // Tıklama ile aç/kapat
+                        li.addEventListener("click", function(e) {
+                            e.preventDefault();
+                            var isOpen = li.classList.toggle("is-open");
+                            vContainer.classList.toggle("is-open", isOpen);
+                        });
+                    }
                 }
             });
         },

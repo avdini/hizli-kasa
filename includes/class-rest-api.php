@@ -172,7 +172,10 @@ function hizli_kasa_ozel_arama($data) {
                 WHERE p.post_status = 'publish'
                   AND (p.ID = %d OR p.post_parent = %d)
                 GROUP BY p.ID
-                ORDER BY (CASE WHEN p.ID = %d THEN 0 ELSE 1 END) ASC, p.post_type ASC, p.ID ASC
+                ORDER BY 
+                  (CASE WHEN p.ID = %d THEN 0 ELSE 1 END) ASC,
+                  (CASE WHEN p.post_type = 'product' THEN 0 ELSE 1 END) ASC,
+                  p.ID ASC
             ", $parent_id, $parent_id, $tek_sonuc['id']));
 
             if (!empty($genis_results)) {
