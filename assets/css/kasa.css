@@ -332,7 +332,9 @@ html, body {
 }
 
 #onayla-buton {
-    flex: 4 !important;
+    flex: 0 0 auto !important;
+    width: 220px;
+    margin-left: auto;
     padding: 15px;
     font-size: 18px;
     background: #2c3e50;
@@ -344,9 +346,9 @@ html, body {
     transition: all 0.2s;
 }
 
-#bol-buton, #iskonto-buton {
-    flex: 1.2 !important;
-    padding: 15px;
+#bol-buton, #iskonto-buton, #yuvarla-buton {
+    flex: 0 1 auto !important;
+    padding: 15px 18px;
     font-size: 13px;
     background: #95a5a6;
     color: white;
@@ -362,7 +364,7 @@ html, body {
     transform: scale(1.02);
 }
 
-#bol-buton:hover, #iskonto-buton:hover {
+#bol-buton:hover, #iskonto-buton:hover, #yuvarla-buton:hover {
     background: #7f8c8d;
 }
 

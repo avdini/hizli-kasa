@@ -77,8 +77,9 @@ if (!defined('ABSPATH'))
             <!-- İşlem Butonları -->
             <div class="islem-grubu">
                 <button id="bol-buton">Ödemeyi Böl</button>
-                <button id="onayla-buton">Sipariş Oluştur</button>
                 <button id="iskonto-buton">İskonto</button>
+                <button id="yuvarla-buton">Küsürat Yuvarla</button>
+                <button id="onayla-buton">Sipariş Oluştur</button>
             </div>
 
             <div class="v-check">POS v<?php echo HIZLI_KASA_VERSION; ?> - Stok Kontrolü Aktif</div>

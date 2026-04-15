@@ -39,12 +39,14 @@
                 bolKartInput: document.getElementById("bol-kart"),
                 bolIbanInput: document.getElementById("bol-iban"),
                 bolOnayla: document.getElementById("bol-onayla"),
-                bolVazgec: document.getElementById("bol-vazgec")
+                bolVazgec: document.getElementById("bol-vazgec"),
+                yuvarlaButon: document.getElementById("yuvarla-buton")
             };
 
             this._bindIskontoModal();
             this._bindUrunAramaModal();
             this._bindOdemeBolModal();
+            this._bindYuvarlaButon();
             this._bindModalDismiss();
         },
 
@@ -344,6 +346,50 @@
                 els.bolKalanUyari.innerText = kalan > 0 ? "Kalan: " + kalan.toFixed(2) + " TL" : "Fazla: " + Math.abs(kalan).toFixed(2) + " TL";
                 els.bolKalanUyari.className = "kalan-eksik";
             }
+        },
+
+        // =========================================
+        //  KÜSÜRAT YUVARLAMA
+        // =========================================
+
+        _bindYuvarlaButon: function() {
+            var els = this.els;
+
+            els.yuvarlaButon.addEventListener("click", function() {
+                var state = HK.State;
+                if (state.sepet.length === 0) return;
+
+                // Mevcut toplam hesapla (aynı mantık ui-renderer ile)
+                var sepetAraToplam = 0;
+                state.sepet.forEach(function(item) {
+                    sepetAraToplam += (item.price * item.quantity);
+                });
+
+                var nakitIndirimTutar = 0;
+                if (state.odemeTipi === "cash" || state.odemeTipi === "iban") {
+                    nakitIndirimTutar = sepetAraToplam * 0.05;
+                }
+
+                var mevcutToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
+                if (mevcutToplam <= 0) return;
+
+                // Küsüratı hesapla
+                var kusurat = mevcutToplam - Math.floor(mevcutToplam);
+
+                // Eğer zaten tam sayıysa bir şey yapma
+                if (kusurat < 0.01) {
+                    document.getElementById("durum").innerText = "Toplam zaten yuvarlak.";
+                    document.getElementById("durum").style.color = "#95a5a6";
+                    return;
+                }
+
+                // Küsüratı iskontoya ekle
+                state.iskontoTutar = parseFloat((state.iskontoTutar + kusurat).toFixed(2));
+                HK.UIRenderer.arayuzuGuncelle();
+
+                document.getElementById("durum").innerText = "Küsürat yuvarlandı: -" + kusurat.toFixed(2) + " TL iskonto eklendi.";
+                document.getElementById("durum").style.color = "#27ae60";
+            });
         },
 
         // =========================================
