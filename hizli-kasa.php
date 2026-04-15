@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hızlı Kasa (Barkod Okuyucu)
  * Description: WooCommerce için sadece barkod ve enter tuşuyla çalışan hızlı POS sistemi.
- * Version: 1.4
+ * Version: 2.7
  */
 
 if (!defined('ABSPATH'))
