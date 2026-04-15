@@ -20,6 +20,7 @@ if (!defined('ABSPATH'))
             <div class="sidebar-btn" data-id="2"><span>📠</span> Kasa 2</div>
             <div class="sidebar-btn" data-id="3"><span>📠</span> Kasa 3</div>
             <div class="sidebar-btn" data-id="4"><span>📠</span> Kasa 4</div>
+            <div id="gun-sonu-buton" class="sidebar-btn gun-sonu"><span>📋</span> Gün Sonu</div>
         </div>
 
         <!-- Ana Kasa Konteyner -->
@@ -82,10 +83,7 @@ if (!defined('ABSPATH'))
                 <button id="onayla-buton">Sipariş Oluştur</button>
             </div>
 
-            <div class="kasa-alt-bilgi">
-                <button id="gun-sonu-buton" class="gun-sonu-alt"><span>📋</span> Gün Sonu</button>
-                <div class="v-check">POS v<?php echo HIZLI_KASA_VERSION; ?> - Stok Kontrolü Aktif</div>
-            </div>
+            <div class="v-check">POS v<?php echo HIZLI_KASA_VERSION; ?> - Stok Kontrolü Aktif</div>
         </div>
     </div>
 
