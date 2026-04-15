@@ -702,26 +702,29 @@ html, body {
    GÜN SONU RAPORU
    ============================================= */
 
-/* Sidebar Ayırıcı */
-.sidebar-divider {
-    height: 1px;
-    background: #ddd;
-    margin: 5px 0;
-}
 
-/* Gün Sonu Butonu */
-.sidebar-btn.gun-sonu {
+
+/* Gün Sonu Butonu (Alt) */
+.gun-sonu-alt {
     background: linear-gradient(135deg, #f39c12, #e67e22);
     color: white;
-    border-color: #e67e22;
-    font-size: 11px;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.sidebar-btn.gun-sonu:hover {
-    background: linear-gradient(135deg, #e67e22, #d35400) !important;
-    border-color: #d35400 !important;
-    color: white !important;
-    transform: scale(1.05);
+.gun-sonu-alt:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    opacity: 0.9;
 }
 
 /* Loading Spinner */
@@ -938,11 +941,21 @@ html, body {
    VERSİYON ETİKETİ
    ============================================= */
 
+.kasa-alt-bilgi {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
+    flex-shrink: 0;
+}
+
 .v-check {
     font-size: 10px;
     color: #ccc;
-    text-align: center;
-    margin-top: 10px;
+    text-align: right;
+    margin-top: 0;
 }
 
 /* =============================================
