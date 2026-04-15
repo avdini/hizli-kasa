@@ -58,47 +58,85 @@ function hizli_kasa_ozel_arama($data) {
 
     $formatted = [];
     foreach ($results as $row) {
-        $urun = wc_get_product($row->ID);
-        if (!$urun) continue;
+        $formatted[] = hizli_kasa_format_urun_row($row);
+    }
 
-        $is_variable = $urun->is_type('variable');
-        if ($is_variable) {
-            $children = $urun->get_children();
-            if (empty($children)) {
-                $is_variable = false;
+    // Eğer sadece tek bir sonuç geldiyse ve bu bir variable ürün (veya varyantı) ise,
+    // tüm kardeşlerini ve ana ürünü de listeye ekle.
+    if (count($formatted) === 1) {
+        $tek_sonuc = $formatted[0];
+        $parent_id = ($tek_sonuc['type'] === 'variation') ? $tek_sonuc['parent_id'] : $tek_sonuc['id'];
+
+        $ana_urun = wc_get_product($parent_id);
+        if ($ana_urun && $ana_urun->is_type('variable')) {
+            $genis_results = $wpdb->get_results($wpdb->prepare("
+                SELECT p.ID, p.post_title, p.post_type, p.post_parent,
+                       MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
+                       MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
+                       MAX(CASE WHEN pm.meta_key = '_regular_price' THEN pm.meta_value END) as regular_price,
+                       MAX(CASE WHEN pm.meta_key = '_stock_status' THEN pm.meta_value END) as stock_status,
+                       MAX(CASE WHEN pm.meta_key = '_manage_stock' THEN pm.meta_value END) as manage_stock,
+                       MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
+                FROM {$wpdb->posts} p
+                LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+                WHERE p.post_status = 'publish'
+                  AND (p.ID = %d OR p.post_parent = %d)
+                GROUP BY p.ID
+                ORDER BY p.post_type ASC, p.ID ASC
+            ", $parent_id, $parent_id));
+
+            if (!empty($genis_results)) {
+                $formatted = [];
+                foreach ($genis_results as $grow) {
+                    $formatted[] = hizli_kasa_format_urun_row($grow);
+                }
             }
         }
-        $name = $urun->get_name();
-        if ($row->post_type === 'product_variation') {
-            $parent = wc_get_product($row->post_parent);
-            if ($parent) {
-                // Varyant niteliklerini isme ekle: "Ürün Adı - M, Kırmızı"
-                $attributes = $urun->get_variation_attributes();
-                $attr_label = implode(', ', array_map('wc_attribute_label', $attributes));
-                // attributes dizisindeki değerleri de ekleyelim
-                $attr_values = implode(', ', array_values($attributes));
-                $name = $parent->get_name() . ' - ' . $attr_values;
-            }
-        }
-
-        $image_id = $urun->get_image_id();
-        $image_url = $image_id ? wp_get_attachment_image_url($image_id, 'thumbnail') : '';
-
-        $formatted[] = [
-            'id' => (int)$row->ID,
-            'parent_id' => (int)$row->post_parent,
-            'type' => $row->post_type === 'product_variation' ? 'variation' : 'product',
-            'name' => $name,
-            'sku' => $row->sku,
-            'price' => $row->price,
-            'regular_price' => $row->regular_price,
-            'stock_status' => $row->stock_status,
-            'manage_stock' => $row->manage_stock === 'yes',
-            'stock_quantity' => (float)$row->stock_quantity,
-            'images' => $image_url ? [['src' => $image_url]] : [],
-            'is_variable' => $is_variable
-        ];
     }
 
     return $formatted;
+}
+
+/**
+ * Veritabanından gelen ürün satırını formatlar.
+ */
+function hizli_kasa_format_urun_row($row) {
+    $urun = wc_get_product($row->ID);
+    if (!$urun) return null;
+
+    $is_variable = $urun->is_type('variable');
+    if ($is_variable) {
+        $children = $urun->get_children();
+        if (empty($children)) {
+            $is_variable = false;
+        }
+    }
+
+    $name = $urun->get_name();
+    if ($row->post_type === 'product_variation') {
+        $parent = wc_get_product($row->post_parent);
+        if ($parent) {
+            $attributes = $urun->get_variation_attributes();
+            $attr_values = implode(', ', array_values($attributes));
+            $name = $parent->get_name() . ' - ' . $attr_values;
+        }
+    }
+
+    $image_id = $urun->get_image_id();
+    $image_url = $image_id ? wp_get_attachment_image_url($image_id, 'thumbnail') : '';
+
+    return [
+        'id' => (int)$row->ID,
+        'parent_id' => (int)$row->post_parent,
+        'type' => $row->post_type === 'product_variation' ? 'variation' : 'product',
+        'name' => $name,
+        'sku' => $row->sku,
+        'price' => $row->price,
+        'regular_price' => $row->regular_price,
+        'stock_status' => $row->stock_status,
+        'manage_stock' => $row->manage_stock === 'yes',
+        'stock_quantity' => (float)$row->stock_quantity,
+        'images' => $image_url ? [['src' => $image_url]] : [],
+        'is_variable' => $is_variable
+    ];
 }
