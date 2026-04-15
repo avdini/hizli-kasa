@@ -326,15 +326,19 @@ html, body {
 .islem-grubu {
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
+    gap: 15px !important;
     flex-shrink: 0;
     margin-bottom: 5px;
 }
 
+.islem-sol-grup {
+    display: flex !important;
+    flex: 1 !important;
+    gap: 10px !important;
+}
+
 #onayla-buton {
-    flex: 0 0 auto !important;
-    width: 220px;
-    margin-left: auto;
+    flex: 1 !important;
     padding: 15px;
     font-size: 18px;
     background: #2c3e50;
@@ -347,8 +351,8 @@ html, body {
 }
 
 #bol-buton, #iskonto-buton, #yuvarla-buton {
-    flex: 0 1 auto !important;
-    padding: 15px 18px;
+    flex: 1 !important;
+    padding: 15px 5px;
     font-size: 13px;
     background: #95a5a6;
     color: white;
@@ -357,6 +361,9 @@ html, body {
     cursor: pointer;
     font-weight: bold;
     transition: all 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 #onayla-buton:hover {

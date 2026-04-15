@@ -76,9 +76,11 @@ if (!defined('ABSPATH'))
 
             <!-- İşlem Butonları -->
             <div class="islem-grubu">
-                <button id="bol-buton">Ödemeyi Böl</button>
-                <button id="iskonto-buton">İskonto</button>
-                <button id="yuvarla-buton">Küsürat Yuvarla</button>
+                <div class="islem-sol-grup">
+                    <button id="bol-buton">Ödemeyi Böl</button>
+                    <button id="iskonto-buton">İskonto</button>
+                    <button id="yuvarla-buton">Küsürat Yuvarla</button>
+                </div>
                 <button id="onayla-buton">Sipariş Oluştur</button>
             </div>
 
