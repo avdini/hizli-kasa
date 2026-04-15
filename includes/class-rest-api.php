@@ -35,6 +35,7 @@ function hizli_kasa_ozel_arama($data) {
     $s = sanitize_text_field($data['s']);
     if (empty($s)) return [];
 
+    $results = [];
     $exact = $data->get_param('exact');
 
     if ($exact) {
@@ -56,27 +57,66 @@ function hizli_kasa_ozel_arama($data) {
             LIMIT 20
         ", $s));
     } else {
-        // Normal manuel arama (LIKE)
-        $results = $wpdb->get_results($wpdb->prepare("
-            SELECT p.ID, p.post_title, p.post_type, p.post_parent,
-                   MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
-                   MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
-                   MAX(CASE WHEN pm.meta_key = '_regular_price' THEN pm.meta_value END) as regular_price,
-                   MAX(CASE WHEN pm.meta_key = '_stock_status' THEN pm.meta_value END) as stock_status,
-                   MAX(CASE WHEN pm.meta_key = '_manage_stock' THEN pm.meta_value END) as manage_stock,
-                   MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
-            FROM {$wpdb->posts} p
-            LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-            WHERE p.post_status = 'publish'
-              AND p.post_type IN ('product', 'product_variation')
-              AND (
-                  p.post_title LIKE %s 
-                  OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s)
-              )
-            GROUP BY p.ID
-            ORDER BY p.post_title ASC
-            LIMIT 20
-        ", '%' . $wpdb->esc_like($s) . '%', '%' . $wpdb->esc_like($s) . '%'));
+        // --- AKILLI ARAMA MANTIĞI ---
+        $found_ids = [];
+
+        // 1. Advanced Woo Search Entegrasyonu (Eğer kuruluysa)
+        if (class_exists('AWS_Search')) {
+            $aws_search = new AWS_Search();
+            // AWS 'search' metodu ürün ID'lerini içeren bir dizi döner.
+            $aws_results = $aws_search->search($s);
+            if (!empty($aws_results['products'])) {
+                foreach ($aws_results['products'] as $p_item) {
+                     $found_ids[] = $p_item['id'];
+                }
+            }
+        }
+
+        // 2. Eğer AWS yoksa veya sonuç bulamadıysa, Gelişmiş Yedek Arama (Fallback)
+        if (empty($found_ids)) {
+            $words = explode(' ', $s);
+            $where_parts = [];
+            foreach ($words as $word) {
+                if (empty($word)) continue;
+                $like = '%' . $wpdb->esc_like($word) . '%';
+                $where_parts[] = $wpdb->prepare("(p.post_title LIKE %s OR pm.meta_value LIKE %s)", $like, $like);
+            }
+            $where_clause = implode(' AND ', $where_parts);
+
+            $fallback_results = $wpdb->get_results("
+                SELECT p.ID
+                FROM {$wpdb->posts} p
+                LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_sku'
+                WHERE p.post_status = 'publish'
+                  AND p.post_type IN ('product', 'product_variation')
+                  AND ($where_clause)
+                GROUP BY p.ID
+                LIMIT 20
+            ");
+            
+            foreach ($fallback_results as $fr) {
+                $found_ids[] = $fr->ID;
+            }
+        }
+
+        // 3. Bulunan ID'lerin detaylarını getir (Hydration)
+        if (!empty($found_ids)) {
+            $ids_str = implode(',', array_map('intval', $found_ids));
+            $results = $wpdb->get_results("
+                SELECT p.ID, p.post_title, p.post_type, p.post_parent,
+                       MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
+                       MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
+                       MAX(CASE WHEN pm.meta_key = '_regular_price' THEN pm.meta_value END) as regular_price,
+                       MAX(CASE WHEN pm.meta_key = '_stock_status' THEN pm.meta_value END) as stock_status,
+                       MAX(CASE WHEN pm.meta_key = '_manage_stock' THEN pm.meta_value END) as manage_stock,
+                       MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
+                FROM {$wpdb->posts} p
+                LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+                WHERE p.ID IN ($ids_str)
+                GROUP BY p.ID
+                ORDER BY FIELD(p.ID, $ids_str)
+            ");
+        }
     }
 
     $formatted = [];
