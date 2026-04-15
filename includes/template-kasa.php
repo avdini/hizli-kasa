@@ -20,7 +20,8 @@ if (!defined('ABSPATH'))
             <div class="sidebar-btn" data-id="2"><span>📠</span> Kasa 2</div>
             <div class="sidebar-btn" data-id="3"><span>📠</span> Kasa 3</div>
             <div class="sidebar-btn" data-id="4"><span>📠</span> Kasa 4</div>
-            <div id="gun-sonu-buton" class="sidebar-btn gun-sonu"><span>📋</span> Gün Sonu</div>
+            <div id="gun-sonu-buton" class="sidebar-btn gun-sonu"><span>📋</span> Kasa Gün Sonu</div>
+            <div id="genel-rapor-buton" class="sidebar-btn genel-rapor"><span>📊</span> Genel Rapor</div>
         </div>
 
         <!-- Ana Kasa Konteyner -->
@@ -246,8 +247,8 @@ if (!defined('ABSPATH'))
             <!-- Butonlar -->
             <div class="modal-butonlar" style="margin-top:15px; flex-shrink:0;">
                 <button id="gun-sonu-kapat" style="background:#eee; color:#333;">Kapat</button>
-                <button id="gun-sonu-yazdir-ozet" style="background:#34495e; color:white; display:none;">🖨️ Sadece Yazdır</button>
-                <button id="gun-sonu-yazdir" style="background:#2c3e50; color:white; display:none;">🖨️ Fiş Yazdır (Detaylı)</button>
+                <button id="gun-sonu-yazdir-ozet" style="background:#34495e; color:white; display:none;">🖨️ Yazdır</button>
+                <button id="gun-sonu-yazdir" style="background:#2c3e50; color:white; display:none;">🖨️ Detaylı Yazdır</button>
             </div>
         </div>
     </div>

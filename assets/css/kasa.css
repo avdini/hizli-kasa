@@ -720,6 +720,21 @@ html, body {
     transform: scale(1.05);
 }
 
+.sidebar-btn.genel-rapor {
+    margin-top: 5px;
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    color: white;
+    border-color: #8e44ad;
+    font-size: 11px;
+}
+
+.sidebar-btn.genel-rapor:hover {
+    background: linear-gradient(135deg, #8e44ad, #7d3c98) !important;
+    border-color: #7d3c98 !important;
+    color: white !important;
+    transform: scale(1.05);
+}
+
 /* Loading Spinner */
 @keyframes gs-spin {
     from { transform: rotate(0deg); }

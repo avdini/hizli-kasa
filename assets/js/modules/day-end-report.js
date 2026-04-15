@@ -29,12 +29,19 @@
                 gunSonuIcerik: document.getElementById("gun-sonu-icerik"),
                 gunSonuYukleniyor: document.getElementById("gun-sonu-yukleniyor"),
                 gunSonuSablon: document.getElementById("gun-sonu-sablon"),
-                gunSonuButon: document.getElementById("gun-sonu-buton")
+                gunSonuButon: document.getElementById("gun-sonu-buton"),
+                genelRaporButon: document.getElementById("genel-rapor-buton")
             };
 
             if (this.els.gunSonuButon) {
                 this.els.gunSonuButon.addEventListener("click", function() {
-                    self.raporuGetir();
+                    self.raporuGetir(); // Varsayılan: Aktif kasa
+                });
+            }
+
+            if (this.els.genelRaporButon) {
+                this.els.genelRaporButon.addEventListener("click", function() {
+                    self.raporuGetir('all'); // Tüm kasalar
                 });
             }
 
@@ -68,11 +75,12 @@
 
         /**
          * API'den gün sonu rapor verisini çek
+         * @param {String|Number|null} kasaId Belirli bir kasa ID veya 'all'
          */
-        raporuGetir: async function() {
+        raporuGetir: async function(kasaId) {
             var self = this;
             var state = HK.State;
-            var kasaNo = state.aktifKasaId;
+            var finalKasaNo = kasaId || state.aktifKasaId;
 
             // Modalı aç, yükleniyor göster
             this.els.gunSonuModal.style.display = "flex";
@@ -80,7 +88,7 @@
             this.els.gunSonuIcerik.style.display = "none";
 
             try {
-                var url = window.location.origin + '/wp-json/hizli-kasa/v1/gun-sonu-raporu?kasa_no=' + kasaNo;
+                var url = window.location.origin + '/wp-json/hizli-kasa/v1/gun-sonu-raporu?kasa_no=' + finalKasaNo;
                 var response = await fetch(url, {
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });
@@ -218,9 +226,11 @@
             var html = '';
 
             // ─── BAŞLIK ───
+            var baslik = (rapor.kasa_no === 'Genel') ? 'GENEL GÜN SONU RAPORU' : 'GÜN SONU RAPORU';
+            
             html += '<div style="text-align:center; margin-bottom:8px; border-bottom:2px double #000; padding-bottom:8px;">';
             html += '<h2 style="margin:0; font-size:16px;">' + (document.querySelector('#fis-sablon h2') ? document.querySelector('#fis-sablon h2').innerText : 'MAĞAZA') + '</h2>';
-            html += '<p style="margin:3px 0; font-size:13px; font-weight:bold;">═══ GÜN SONU RAPORU ═══</p>';
+            html += '<p style="margin:3px 0; font-size:13px; font-weight:bold;">═══ ' + baslik + ' ═══</p>';
             html += '<p style="margin:2px 0; font-size:11px;">Kasa: ' + rapor.kasa_no + '</p>';
             html += '<p style="margin:2px 0; font-size:11px;">' + rapor.tarih_okunabilir + '</p>';
             html += '<p style="margin:2px 0; font-size:10px;">Rapor: ' + rapor.rapor_zamani + '</p>';

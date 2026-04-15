@@ -46,6 +46,8 @@ function hizli_kasa_gun_sonu_raporu($request) {
         return new WP_Error('missing_param', 'kasa_no parametresi gerekli.', array('status' => 400));
     }
 
+    $is_general = ($kasa_no === 'all');
+
     // Tarih verilmezse bugünü kullan
     if (empty($tarih)) {
         $tarih = current_time('Y-m-d');
@@ -54,22 +56,26 @@ function hizli_kasa_gun_sonu_raporu($request) {
     $tarih_baslangic = $tarih . ' 00:00:00';
     $tarih_bitis     = $tarih . ' 23:59:59';
 
-    // Bu kasaya ait siparişleri çek
+    // Siparişleri çek
     $args = array(
         'limit'        => -1,
         'status'       => array('processing', 'completed', 'on-hold'),
         'date_created' => $tarih_baslangic . '...' . $tarih_bitis,
-        'meta_key'     => '_hizli_kasa_kasa_no',
-        'meta_value'   => $kasa_no,
         'orderby'      => 'date',
         'order'        => 'ASC',
     );
+
+    // Genel rapor değilse belirli kasaya göre filtrele
+    if (!$is_general) {
+        $args['meta_key']   = '_hizli_kasa_kasa_no';
+        $args['meta_value'] = $kasa_no;
+    }
 
     $orders = wc_get_orders($args);
 
     if (empty($orders)) {
         return array(
-            'kasa_no'        => $kasa_no,
+            'kasa_no'        => ($kasa_no === 'all') ? 'Genel' : $kasa_no,
             'tarih'          => $tarih,
             'siparis_sayisi' => 0,
             'siparisler'     => array(),
@@ -183,7 +189,7 @@ function hizli_kasa_gun_sonu_raporu($request) {
     });
 
     return array(
-        'kasa_no'        => $kasa_no,
+        'kasa_no'        => ($kasa_no === 'all') ? 'Genel' : $kasa_no,
         'tarih'          => $tarih,
         'tarih_okunabilir' => date_i18n('d.m.Y l', strtotime($tarih)),
         'rapor_zamani'   => current_time('d.m.Y H:i:s'),
