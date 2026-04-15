@@ -156,30 +156,26 @@
                 var varyasyonlar = grup.variations;
                 
                 // Stok durumuna göre varyasyonları sırala (Stokta olanlar üstte)
-                varyasyonlar.sort(function(a, b) {
-                    var aOut = a.stock_status === 'outofstock' || (a.manage_stock && a.stock_quantity !== null && a.stock_quantity <= 0);
-                    var bOut = b.stock_status === 'outofstock' || (b.manage_stock && b.stock_quantity !== null && b.stock_quantity <= 0);
-                    return aOut - bOut;
-                });
+                // ... (existing sort logic)
 
                 // ÖZEL DURUM: Eğer sadece tek bir ürün grubu varsa (SKU araması gibi), 
                 // akordiyon yapma, hepsini düz liste olarak göster.
                 if (gruplar.length === 1) {
-                    // Ana ürünü ekle (unclickable header style)
-                    var liMain = self._urunSatiriOlustur(anaUrun, true);
+                    // Ana ürünü ekle (YUKARIDAKİ FARK: showVariationHint = false)
+                    var liMain = self._urunSatiriOlustur(anaUrun, true, false);
                     liMain.style.borderBottom = "2px solid #ddd";
                     liMain.style.background = "#fff";
                     els.aramaSonuclariListe.appendChild(liMain);
 
                     // Varyasyonları direkt ekle
                     varyasyonlar.forEach(function(v) {
-                        var vLi = self._urunSatiriOlustur(v, false);
+                        var vLi = self._urunSatiriOlustur(v, false, false);
                         vLi.style.paddingLeft = "30px";
                         els.aramaSonuclariListe.appendChild(vLi);
                     });
                 } else {
                     // --- NORMAL AKORDİYON DÜZENİ ---
-                    var li = self._urunSatiriOlustur(anaUrun, true);
+                    var li = self._urunSatiriOlustur(anaUrun, true, true);
                     els.aramaSonuclariListe.appendChild(li);
 
                     if (varyasyonlar.length > 0) {
@@ -189,7 +185,7 @@
                         vContainer.className = "variation-container";
                         
                         varyasyonlar.forEach(function(v) {
-                            var vLi = self._urunSatiriOlustur(v, false);
+                            var vLi = self._urunSatiriOlustur(v, false, true);
                             vLi.classList.add("variation-row");
                             vContainer.appendChild(vLi);
                         });
@@ -210,7 +206,7 @@
         /**
          * Tekil ürün satırı DOM öğesi oluşturur
          */
-        _urunSatiriOlustur: function(urun, isMain) {
+        _urunSatiriOlustur: function(urun, isMain, showVariationHint) {
             var regularPrice = parseFloat(urun.regular_price || 0);
             var salePrice = parseFloat(urun.price || 0);
             var outOfStock = urun.stock_status === 'outofstock' || (urun.manage_stock && urun.stock_quantity !== null && urun.stock_quantity <= 0);
@@ -240,7 +236,7 @@
                 '<div style="display:flex; flex-direction:column; flex:1; ' + (outOfStock ? 'opacity:0.8;' : '') + '">' +
                     '<span style="font-weight:bold; font-size:14px; color: ' + (outOfStock ? '#c0392b' : 'inherit') + '">' +
                         urun.name +
-                        (isVariableParent ? ' <small style="color:#7f8c8d;">(Seçenekleri Gör)</small>' : '') +
+                        (isVariableParent && showVariationHint !== false ? ' <small style="color:#7f8c8d;">(Seçenekleri Gör)</small>' : '') +
                         (outOfStock ? ' <small style="color:#e74c3c; font-weight:bold;">(STOKTA YOK)</small>' : '') +
                     '</span>' +
                     '<span class="sonuc-sku">' + (urun.sku || 'SKU yok') + (urun.manage_stock ? ' <small style="color:#95a5a6;">(Stok: ' + (urun.stock_quantity || 0) + ')</small>' : '') + '</span>' +

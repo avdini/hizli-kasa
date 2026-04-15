@@ -43,6 +43,10 @@ if (!defined('ABSPATH'))
 
             <!-- Toplam Alanı -->
             <div class="toplam-alani">
+                <div class="toplam-satir" id="liste-toplami-satiri">
+                    <span class="toplam-etiket">ETİKET TOPLAMI:</span>
+                    <span id="liste-toplami-deger" style="font-size: 18px; font-weight: bold; color: #95a5a6;">0.00 TL</span>
+                </div>
                 <div class="toplam-satir" id="ara-toplam-satiri">
                     <span class="toplam-etiket">ARA TOPLAM:</span>
                     <span id="ara-toplam-deger" style="font-size: 20px; font-weight: bold; color: #7f8c8d;">0.00 TL</span>
@@ -195,6 +199,10 @@ if (!defined('ABSPATH'))
         </table>
 
         <div style="border-top:1px dashed #000; padding-top:10px; font-size:13px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:3px;" id="fis-liste-toplami-satiri">
+                <span>Etiket Toplamı:</span>
+                <span id="fis-liste-toplami-tutar"></span>
+            </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:3px; display:none;" id="fis-nakit-indirim-satiri">
                 <span id="fis-nakit-indirim-etiket">İndirim (%5):</span>
                 <span id="fis-nakit-indirim-tutar"></span>

@@ -29,6 +29,8 @@
                 nakitIndirimDegerArea: document.getElementById("nakit-indirim-deger"),
                 nakitIndirimEtiket: document.getElementById("nakit-indirim-etiket"),
                 araToplamArea: document.getElementById("ara-toplam-deger"),
+                listeToplamiSatiri: document.getElementById("liste-toplami-satiri"),
+                listeToplamiArea: document.getElementById("liste-toplami-deger"),
                 sidebarButtons: document.querySelectorAll(".sidebar-btn")
             };
 
@@ -116,8 +118,10 @@
 
             // Toplam Hesaplamalar
             var sepetAraToplam = 0;
+            var sepetListeToplami = 0;
             state.sepet.forEach(function(item) {
                 sepetAraToplam += (item.price * item.quantity);
+                sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
             });
 
             var nakitIndirimTutar = 0;
@@ -139,6 +143,9 @@
 
             var sonToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
             if (sonToplam < 0) sonToplam = 0;
+
+            els.listeToplamiSatiri.style.setProperty("display", "flex", "important");
+            els.listeToplamiArea.innerText = sepetListeToplami.toFixed(2) + " TL";
 
             els.araToplamArea.innerText = sepetAraToplam.toFixed(2) + " TL";
             els.genelToplamArea.innerText = sonToplam.toFixed(2) + " TL";

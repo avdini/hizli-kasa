@@ -29,6 +29,8 @@
                 fisIskontoTutar: document.getElementById("fis-iskonto-tutar"),
                 fisNakitIndirimSatiri: document.getElementById("fis-nakit-indirim-satiri"),
                 fisNakitIndirimTutar: document.getElementById("fis-nakit-indirim-tutar"),
+                fisListeToplamiSatiri: document.getElementById("fis-liste-toplami-satiri"),
+                fisListeToplamiTutar: document.getElementById("fis-liste-toplami-tutar"),
                 fisGenelToplam: document.getElementById("fis-genel-toplam"),
                 fisTarih: document.getElementById("fis-tarih"),
                 fisNoText: document.getElementById("fis-no-text")
@@ -59,6 +61,16 @@
 
             var autoDiscountLabel = state.odemeTipi === "cash" ? "Nakit İndirimi (%5):" : "Havale İndirimi (%5):";
             var isAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+
+            var orderSubtotal = 0;
+            var orderTotalBeforeFees = 0;
+            order.line_items.forEach(function(li) { 
+                orderSubtotal += parseFloat(li.subtotal);
+                orderTotalBeforeFees += parseFloat(li.total);
+            });
+
+            els.fisListeToplamiSatiri.style.display = "flex";
+            els.fisListeToplamiTutar.innerText = orderSubtotal.toFixed(2) + " TL";
 
             if (isAutoDiscount) {
                 var totalBeforeAuto = 0;
