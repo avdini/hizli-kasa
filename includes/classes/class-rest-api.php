@@ -35,6 +35,22 @@ add_action('rest_api_init', function () {
             return current_user_can('edit_posts');
         }
     ));
+
+    register_rest_route('hizli-kasa/v1', '/get-order', array(
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_get_order_details',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
+
+    register_rest_route('hizli-kasa/v1', '/process-refund', array(
+        'methods' => 'POST',
+        'callback' => 'hizli_kasa_process_refund',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
 });
 
 /**
@@ -444,7 +460,7 @@ function hizli_kasa_load_tab_content($request) {
     $tab = sanitize_text_field($request->get_param('tab'));
     
     // Güvenlik: Sadece izin verilen sekme dosyalarını yükle
-    $allowed_tabs = ['kasa', 'urunler', 'raporlar', 'ayarlar'];
+    $allowed_tabs = ['kasa', 'urunler', 'raporlar', 'ayarlar', 'iade'];
     if (!in_array($tab, $allowed_tabs)) {
         return new WP_Error('invalid_tab', 'Geçersiz sekme adı.', array('status' => 400));
     }
@@ -464,5 +480,106 @@ function hizli_kasa_load_tab_content($request) {
 
     return array(
         'html' => $html
+    );
+}
+
+/**
+ * İade işlemi için sipariş detaylarını getirir.
+ */
+function hizli_kasa_get_order_details($request) {
+    $order_id = sanitize_text_field($request->get_param('id'));
+    $order = wc_get_order($order_id);
+
+    if (!$order) {
+        return new WP_Error('no_order', 'Sipariş bulunamadı.', array('status' => 404));
+    }
+
+    $items = [];
+    foreach ($order->get_items() as $item_id => $item) {
+        $product = $item->get_product();
+        $items[] = [
+            'item_id' => $item_id,
+            'id'      => $item->get_product_id(),
+            'name'    => $item->get_name(),
+            'sku'     => $product ? $product->get_sku() : '',
+            'qty'     => $item->get_quantity(),
+            'price'   => $item->get_total() / $item->get_quantity(),
+            'total'   => $item->get_total(),
+        ];
+    }
+
+    return [
+        'id'         => $order->get_id(),
+        'date'       => $order->get_date_created()->date('d.m.Y H:i'),
+        'total'      => $order->get_total(),
+        'items'      => $items,
+        'payment'    => $order->get_payment_method_title(),
+        'kasiyer'    => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor'
+    ];
+}
+
+/**
+ * İade (Negatif Sipariş) oluşturur.
+ */
+function hizli_kasa_process_refund($request) {
+    $data = $request->get_json_params();
+    $original_order_id = sanitize_text_field($data['original_order_id']);
+    $refund_items = $data['items']; // [{id, qty, price, name}]
+
+    if (empty($refund_items)) {
+        return new WP_Error('no_items', 'İade edilecek ürün seçilmedi.', array('status' => 400));
+    }
+
+    // Yeni negatif sipariş oluştur
+    $refund_order = wc_create_order(array(
+        'status'      => 'completed',
+        'customer_id' => 0, // Misafir iade
+    ));
+
+    $total_refund = 0;
+
+    foreach ($refund_items as $item) {
+        // Negatif fiyat ve miktar
+        $qty = abs($item['qty']) * -1;
+        $price = abs($item['price']);
+        $line_total = $price * $qty;
+
+        $product = wc_get_product($item['id']);
+        if ($product) {
+            $item_id = $refund_order->add_product($product, 1, array(
+                'totals' => array(
+                    'subtotal'     => $line_total,
+                    'subtotal_tax' => 0,
+                    'total'        => $line_total,
+                    'tax'          => 0,
+                )
+            ));
+            
+            // Adedi manuel düzenle (add_product negatif adedi sevmezse)
+            $refund_item = $refund_order->get_item($item_id);
+            $refund_item->set_quantity($qty);
+            $refund_item->set_total($line_total);
+            $refund_item->save();
+
+            $total_refund += $line_total;
+        }
+    }
+
+    // Meta veriler
+    $refund_order->set_payment_method('cod'); // Kapıda ödeme / İade faturası mantığı
+    $refund_order->set_payment_method_title('İade İşlemi');
+    $refund_order->update_meta_data('_hizli_kasa_original_order', $original_order_id);
+    $refund_order->update_meta_data('_hizli_kasa_is_refund', 'yes');
+    $refund_order->update_meta_data('_hizli_kasa_kasiyer', wp_get_current_user()->display_name);
+    
+    // Toplamı hesaplat
+    $refund_order->calculate_totals();
+    $refund_order->save();
+
+    return array(
+        'success'  => true,
+        'order_id' => $refund_order->get_id(),
+        'total'    => $refund_order->get_total(),
+        'message'  => 'İade başarıyla oluşturuldu.'
     );
 }

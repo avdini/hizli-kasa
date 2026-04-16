@@ -71,6 +71,7 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-receipt-printer', $js_base . 'modules/receipt-printer.js', array('kasa-order-processor'), $pos_version, true);
     wp_enqueue_script('kasa-day-end-report', $js_base . 'modules/day-end-report.js', array('kasa-cart-manager'), $pos_version, true);
     wp_enqueue_script('kasa-app-navigation', $js_base . 'modules/app-navigation.js', array('kasa-ui-renderer'), $pos_version, true);
+    wp_enqueue_script('kasa-refund-manager', $js_base . 'modules/refund-manager.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-js', $js_base . 'kasa.js', array(
         'kasa-cart-manager',
         'kasa-ui-renderer',
@@ -79,7 +80,8 @@ function hizli_kasa_uygulamasi()
         'kasa-order-processor',
         'kasa-receipt-printer',
         'kasa-day-end-report',
-        'kasa-app-navigation'
+        'kasa-app-navigation',
+        'kasa-refund-manager'
     ), $pos_version, true);
 
     // JavaScript'e veri aktarımı
