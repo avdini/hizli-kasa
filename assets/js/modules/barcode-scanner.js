@@ -23,11 +23,17 @@
             var durumMetni = document.getElementById("durum");
 
             document.addEventListener("keydown", async function(e) {
-                // Modal açıkken barkod dinleme
-                var iskontoModal = document.getElementById("iskonto-modal");
-                var fisOnayModal = document.getElementById("fis-onay-modal");
-                var urunAramaModal = document.getElementById("urun-arama-modal");
-                var bolModal = document.getElementById("odeme-bol-modal");
+                // Sadece Kasa sekmesi aktifken dinle
+                const activeTab = document.querySelector('.ust-sekme.aktif');
+                if (!activeTab || activeTab.getAttribute('data-tab') !== 'kasa') {
+                    return;
+                }
+
+                // Eğer bir input veya textarea odaklıysa barkod dinleyiciyi devre dışı bırak
+                // (Manuel giriş yapılmasına izin ver)
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    return;
+                }
 
                 if ((iskontoModal && iskontoModal.style.display === "flex") ||
                     (fisOnayModal && fisOnayModal.style.display === "flex") ||

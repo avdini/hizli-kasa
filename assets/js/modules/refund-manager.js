@@ -26,7 +26,10 @@ const RefundManager = (function () {
 
         if (siparisInput) {
             siparisInput.onkeydown = (e) => {
-                if (e.key === 'Enter') fetchOrder(siparisInput.value);
+                if (e.key === 'Enter') {
+                    fetchOrder(siparisInput.value);
+                    siparisInput.value = ''; // Barkod okunduktan sonra temizle
+                }
             };
             siparisInput.focus();
         }
@@ -35,16 +38,15 @@ const RefundManager = (function () {
             onaylaBtn.onclick = processRefund;
         }
 
-        // Barkod okuyucu global dinleyicisine müdahale (İade sekmesindeysek)
-        document.addEventListener('keydown', function(e) {
-            const activeTab = document.querySelector('.ust-sekme.aktif');
-            if (activeTab && activeTab.getAttribute('data-tab') === 'iade') {
-                // Eğer input odaklı değilse ve enter basıldıysa input'u temizle ve odağı oraya çek
-                if (document.activeElement !== siparisInput && e.key === 'Enter') {
-                    // Barkod okuyucu tamamlandığında burayı tetikleyebilir
+        // Modül konteynerine tıklandığında input'u tekrar odakla (Hızlı barkod için)
+        const container = document.getElementById('iade-modul-konteyner');
+        if (container) {
+            container.onclick = (e) => {
+                if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+                    siparisInput.focus();
                 }
-            }
-        });
+            };
+        }
     }
 
     async function fetchOrder(id) {

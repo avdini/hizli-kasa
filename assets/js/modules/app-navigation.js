@@ -41,6 +41,9 @@ const AppNavigation = (function () {
 
         // Görünürlüğü güncelle
         updateUI(tabName);
+
+        // Sekme her aktif olduğunda olayı tetikle (modüllerin odaklanma vb. işlemleri için)
+        dispatchTabLoadedEvent(tabName);
     }
 
     function isAlreadyActive(tabName) {
@@ -70,9 +73,6 @@ const AppNavigation = (function () {
             if (contentDiv) {
                 contentDiv.innerHTML = data.html;
                 loadedTabs.push(tabName);
-                
-                // Eğer yeni sayfada özel init fonksiyonları gerekiyorsa burada tetiklenebilir
-                dispatchTabLoadedEvent(tabName);
             }
 
         } catch (error) {
