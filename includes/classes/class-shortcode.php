@@ -91,6 +91,7 @@ function hizli_kasa_uygulamasi()
 
     wp_localize_script('kasa-cart-manager', 'kasaAyar', array(
         'apiUrl' => rest_url('wc/v3/'),
+        'rootApiUrl' => rest_url(),
         'nonce' => wp_create_nonce('wp_rest'),
         'siparisDurumu' => $guncel_durum,
         'userName' => $display_name,

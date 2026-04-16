@@ -5,20 +5,26 @@
  */
 
 const AppNavigation = (function () {
-    const tabs = document.querySelectorAll('.ust-sekme');
-    const contents = document.querySelectorAll('.tab-content');
-    const loadingOverlay = document.getElementById('app-loading');
+    let tabs = null;
+    let contents = null;
+    let loadingOverlay = null;
 
     // Aktif sekmeleri ve içerikleri tutar
     let loadedTabs = ['kasa']; // Kasa varsayılan olarak yüklüdür
 
     function init() {
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const targetTab = tab.getAttribute('data-tab');
-                handleTabSwitch(targetTab);
+        tabs = document.querySelectorAll('.ust-sekme');
+        contents = document.querySelectorAll('.tab-content');
+        loadingOverlay = document.getElementById('app-loading');
+
+        if (tabs) {
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.getAttribute('data-tab');
+                    handleTabSwitch(targetTab);
+                });
             });
-        });
+        }
     }
 
     /**
@@ -49,7 +55,8 @@ const AppNavigation = (function () {
         showLoading();
 
         try {
-            const response = await fetch(`${kasaAyar.apiUrl}hizli-kasa/v1/load-tab?tab=${tabName}`, {
+            const apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
+            const response = await fetch(`${apiBase}hizli-kasa/v1/load-tab?tab=${tabName}`, {
                 headers: {
                     'X-WP-Nonce': kasaAyar.nonce
                 }
@@ -78,22 +85,28 @@ const AppNavigation = (function () {
 
     function updateUI(tabName) {
         // Sekme butonlarını güncelle
-        tabs.forEach(t => {
-            if (t.getAttribute('data-tab') === tabName) {
-                t.classList.add('aktif');
-            } else {
-                t.classList.remove('aktif');
-            }
-        });
+        if (tabs) {
+            tabs.forEach(t => {
+                if (!t) return;
+                if (t.getAttribute('data-tab') === tabName) {
+                    t.classList.add('aktif');
+                } else {
+                    t.classList.remove('aktif');
+                }
+            });
+        }
 
         // İçerik alanlarını güncelle
-        contents.forEach(c => {
-            if (c.id === `tab-content-${tabName}`) {
-                c.classList.add('aktif');
-            } else {
-                c.classList.remove('aktif');
-            }
-        });
+        if (contents) {
+            contents.forEach(c => {
+                if (!c) return;
+                if (c.id === `tab-content-${tabName}`) {
+                    c.classList.add('aktif');
+                } else {
+                    c.classList.remove('aktif');
+                }
+            });
+        }
     }
 
     function showLoading() {

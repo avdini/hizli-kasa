@@ -53,7 +53,8 @@ const RefundManager = (function () {
 
         showLoading();
         try {
-            const response = await fetch(`${kasaAyar.apiUrl}hizli-kasa/v1/get-order?id=${id}`, {
+            const apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
+            const response = await fetch(`${apiBase}hizli-kasa/v1/get-order?id=${id}`, {
                 headers: { 'X-WP-Nonce': kasaAyar.nonce }
             });
 
@@ -165,7 +166,8 @@ const RefundManager = (function () {
 
         showLoading();
         try {
-            const response = await fetch(`${kasaAyar.apiUrl}hizli-kasa/v1/process-refund`, {
+            const apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
+            const response = await fetch(`${apiBase}hizli-kasa/v1/process-refund`, {
                 method: 'POST',
                 headers: { 
                     'X-WP-Nonce': kasaAyar.nonce,
