@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hızlı Kasa (Barkod Okuyucu)
  * Description: WooCommerce için sadece barkod ve enter tuşuyla çalışan hızlı POS sistemi.
- * Version: 2.9.7
+ * Version: 3.0
  * Author: Seyfullah Kurt
  */
 
@@ -10,15 +10,15 @@ if (!defined('ABSPATH'))
     exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '2.9.7');
+define('HIZLI_KASA_VERSION', '3.0');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
 // Modülleri Yükle
-require_once HIZLI_KASA_PATH . 'includes/class-admin-settings.php';
-require_once HIZLI_KASA_PATH . 'includes/class-rest-api.php';
-require_once HIZLI_KASA_PATH . 'includes/class-shortcode.php';
-require_once HIZLI_KASA_PATH . 'includes/class-menu-filter.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-admin-settings.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-rest-api.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-shortcode.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-menu-filter.php';
 
 // Otomatik Güncelleme Sistemi (Plugin Update Checker)
 require_once HIZLI_KASA_PATH . 'includes/plugin-update-checker/plugin-update-checker.php';

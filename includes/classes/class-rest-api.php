@@ -27,6 +27,14 @@ add_action('rest_api_init', function () {
             return current_user_can('edit_posts');
         }
     ));
+
+    register_rest_route('hizli-kasa/v1', '/load-tab', array(
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_load_tab_content',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
 });
 
 /**
@@ -424,4 +432,37 @@ function hizli_kasa_format_urun_row($row) {
         'images' => $image_url ? [['src' => $image_url]] : [],
         'is_variable' => $is_variable
     ];
+}
+
+/**
+ * Sekme içeriğini yükler ve döner.
+ * 
+ * @param WP_REST_Request $request
+ * @return array JSON formatında HTML çıktısı
+ */
+function hizli_kasa_load_tab_content($request) {
+    $tab = sanitize_text_field($request->get_param('tab'));
+    
+    // Güvenlik: Sadece izin verilen sekme dosyalarını yükle
+    $allowed_tabs = ['kasa', 'urunler', 'raporlar', 'ayarlar'];
+    if (!in_array($tab, $allowed_tabs)) {
+        return new WP_Error('invalid_tab', 'Geçersiz sekme adı.', array('status' => 400));
+    }
+
+    $template_file = HIZLI_KASA_PATH . "includes/views/tab-{$tab}.php";
+    
+    if (!file_exists($template_file)) {
+        // Eğer dosya yoksa geçici bir içerik dön (placeholder)
+        return array(
+            'html' => "<div style='padding:40px; text-align:center;'><h3>{$tab} Sayfası Hazırlanıyor...</h3><p>Bu modül yakında aktif edilecek.</p></div>"
+        );
+    }
+
+    ob_start();
+    include $template_file;
+    $html = ob_get_clean();
+
+    return array(
+        'html' => $html
+    );
 }
