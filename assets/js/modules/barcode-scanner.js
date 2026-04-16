@@ -35,6 +35,12 @@
                     return;
                 }
 
+                // Modal açıkken barkod dinleme
+                var iskontoModal = document.getElementById("iskonto-modal");
+                var fisOnayModal = document.getElementById("fis-onay-modal");
+                var urunAramaModal = document.getElementById("urun-arama-modal");
+                var bolModal = document.getElementById("odeme-bol-modal");
+
                 if ((iskontoModal && iskontoModal.style.display === "flex") ||
                     (fisOnayModal && fisOnayModal.style.display === "flex") ||
                     (urunAramaModal && urunAramaModal.style.display === "flex") ||
