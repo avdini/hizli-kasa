@@ -51,6 +51,22 @@ add_action('rest_api_init', function () {
             return current_user_can('edit_posts');
         }
     ));
+
+    register_rest_route('hizli-kasa/v1', '/terminal/products', array(
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_terminal_products',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
+
+    register_rest_route('hizli-kasa/v1', '/terminal/update-stock', array(
+        'methods' => 'POST',
+        'callback' => 'hizli_kasa_terminal_update_stock',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
 });
 
 /**
@@ -434,6 +450,23 @@ function hizli_kasa_format_urun_row($row) {
     $image_id = $urun->get_image_id();
     $image_url = $image_id ? wp_get_attachment_image_url($image_id, 'thumbnail') : '';
 
+    // Depo Bazlı Stok Bilgisi (Eğer kullanıcıya depo atanmışsa)
+    $depo_stock = null;
+    $user_id = get_current_user_id();
+    $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
+    
+    if ($depo_id) {
+        global $wpdb;
+        $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+        $p_id = ($row->post_type === 'product_variation') ? $row->post_parent : $row->ID;
+        $v_id = ($row->post_type === 'product_variation') ? $row->ID : 0;
+        
+        $depo_stock = $wpdb->get_var($wpdb->prepare("
+            SELECT quantity FROM $stok_table 
+            WHERE product_id = %d AND variation_id = %d AND location_id = %d
+        ", $p_id, $v_id, $depo_id));
+    }
+
     return [
         'id' => (int)$row->ID,
         'parent_id' => (int)$row->post_parent,
@@ -444,9 +477,75 @@ function hizli_kasa_format_urun_row($row) {
         'regular_price' => $row->regular_price,
         'stock_status' => $row->stock_status,
         'manage_stock' => $row->manage_stock === 'yes',
-        'stock_quantity' => (float)$row->stock_quantity,
+        'stock_quantity' => (float)$row->stock_quantity, // WC Toplam Stok
+        'warehouse_stock' => ($depo_stock !== null) ? (float)$depo_stock : (float)$row->stock_quantity, // Depo Stoğu (Shadow Layer)
         'images' => $image_url ? [['src' => $image_url]] : [],
         'is_variable' => $is_variable
+    ];
+}
+
+/**
+ * Terminal için ürün listesi döner.
+ */
+function hizli_kasa_terminal_products($request) {
+    global $wpdb;
+    $s = sanitize_text_field($request->get_param('s'));
+    
+    // Basit bir arama veya son 50 ürün
+    if ($s) {
+        $data = new WP_REST_Request('GET', '/hizli-kasa/v1/search');
+        $data->set_param('s', $s);
+        return hizli_kasa_ozel_arama($data);
+    }
+
+    $results = $wpdb->get_results("
+        SELECT p.ID, p.post_title, p.post_type, p.post_parent,
+               MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
+               MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
+               MAX(CASE WHEN pm.meta_key = '_regular_price' THEN pm.meta_value END) as regular_price,
+               MAX(CASE WHEN pm.meta_key = '_stock_status' THEN pm.meta_value END) as stock_status,
+               MAX(CASE WHEN pm.meta_key = '_manage_stock' THEN pm.meta_value END) as manage_stock,
+               MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
+        FROM {$wpdb->posts} p
+        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+        WHERE p.post_status = 'publish'
+          AND p.post_type IN ('product', 'product_variation')
+        GROUP BY p.ID
+        ORDER BY p.post_modified DESC
+        LIMIT 50
+    ");
+
+    $formatted = [];
+    foreach ($results as $row) {
+        $formatted[] = hizli_kasa_format_urun_row($row);
+    }
+    return $formatted;
+}
+
+/**
+ * Terminal üzerinden stok güncelleme.
+ */
+function hizli_kasa_terminal_update_stock($request) {
+    $data = $request->get_json_params();
+    $product_id = intval($data['product_id']);
+    $variation_id = intval($data['variation_id'] ?? 0);
+    $change = floatval($data['change']);
+    $reason = sanitize_text_field($data['reason'] ?: "Terminal Manuel Güncelleme");
+
+    $user_id = get_current_user_id();
+    $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
+
+    if (!$depo_id) {
+        return new WP_Error('no_depo', 'Bağlı olduğunuz bir depo yok.', ['status' => 400]);
+    }
+
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
+    $new_qty = Hizli_Kasa_Stock_Manager::update_warehouse_stock($product_id, $variation_id, $depo_id, $change, $reason);
+
+    return [
+        'success' => true,
+        'new_qty' => $new_qty,
+        'message' => 'Stok başarıyla güncellendi.'
     ];
 }
 
@@ -572,6 +671,21 @@ function hizli_kasa_process_refund($request) {
     $refund_order->update_meta_data('_hizli_kasa_is_refund', 'yes');
     $refund_order->update_meta_data('_hizli_kasa_kasiyer', wp_get_current_user()->display_name);
     
+    // Çoklu Depo Entegrasyonu: İade edilen ürünleri kasiyerin deposuna geri koy
+    $user_id = get_current_user_id();
+    $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
+    
+    if ($depo_id) {
+        require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
+        foreach ($refund_items as $item) {
+            $product_id = intval($item['id']);
+            $variation_id = intval($item['variation_id'] ?? 0);
+            $qty = abs($item['qty']); // İade edilen miktar
+            
+            Hizli_Kasa_Stock_Manager::update_warehouse_stock($product_id, $variation_id, $depo_id, $qty, "İade İşlemi (Geri Dönüş - #$original_order_id)");
+        }
+    }
+
     // Toplamı hesaplat
     $refund_order->calculate_totals();
     $refund_order->save();

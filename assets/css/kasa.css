@@ -1325,3 +1325,262 @@ html, body {
         padding: 15px;
     }
 }
+
+/* =============================================
+   STOK TERMİNALİ (STOCK TERMINAL)
+   ============================================= */
+
+#stok-terminali {
+    padding: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: #1a1a1a;
+    color: #fff;
+    font-family: 'Outfit', sans-serif;
+}
+
+.terminal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.depo-bilgi {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.depo-bilgi .ikon {
+    font-size: 32px;
+    background: rgba(52, 152, 219, 0.2);
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.depo-bilgi label {
+    font-size: 12px;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.depo-bilgi h3 {
+    margin: 5px 0 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.arama-kutusu {
+    position: relative;
+    width: 400px;
+}
+
+#terminal-arama-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 15px 45px 15px 20px;
+    color: #fff;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+#terminal-arama-input:focus {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: #3498db;
+    outline: none;
+    box-shadow: 0 0 20px rgba(52, 152, 219, 0.2);
+}
+
+.arama-ikon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.5;
+}
+
+.terminal-body {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 15px;
+    overflow-y: auto;
+    padding: 1px;
+}
+
+.terminal-urun-kart {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+.terminal-urun-kart:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.terminal-urun-kart .urun-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #333;
+    margin-right: 15px;
+}
+
+.terminal-urun-kart .urun-detay {
+    flex: 1;
+}
+
+.terminal-urun-kart .urun-ad {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.terminal-urun-kart .urun-sku {
+    font-size: 12px;
+    color: #666;
+}
+
+.terminal-urun-kart .urun-stok {
+    text-align: right;
+    min-width: 100px;
+}
+
+.terminal-urun-kart .stok-sayi {
+    font-size: 18px;
+    font-weight: 700;
+    display: block;
+}
+
+.terminal-urun-kart .stok-etiket {
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+}
+
+.stok-kritik .stok-sayi { color: #e74c3c; }
+.stok-tamam .stok-sayi { color: #2ecc71; }
+
+.terminal-footer {
+    display: flex;
+    gap: 30px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px 25px;
+    border-radius: 15px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-item span {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.stat-item label {
+    font-size: 11px;
+    color: #777;
+    text-transform: uppercase;
+}
+
+/* Modal Stilleri */
+#stok-duzenle-modal .modal-icerik.glass {
+    background: rgba(30, 30, 30, 0.8) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+    width: 400px !important;
+}
+
+.stok-kontrol-grup {
+    display: flex;
+    gap: 20px;
+    margin: 25px 0;
+}
+
+.mevcut-stok {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.mevcut-stok label { font-size: 12px; color: #aaa; display: block; margin-bottom: 5px; }
+.mevcut-stok span { font-size: 24px; font-weight: 800; color: #3498db; }
+
+.degisim-input {
+    flex: 1.5;
+}
+
+.degisim-input .input-row {
+    display: flex;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.degisim-input button {
+    background: transparent;
+    border: none;
+    color: #fff;
+    width: 45px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.degisim-input button:hover { background: rgba(255, 255, 255, 0.1); }
+
+.degisim-input input {
+    background: transparent !important;
+    border: none !important;
+    color: #fff !important;
+    text-align: center;
+    margin-bottom: 0 !important;
+    padding: 10px 0 !important;
+}
+
+.terminal-uyari {
+    text-align: center;
+    padding: 100px 40px;
+    opacity: 0.7;
+}
+
+.terminal-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    opacity: 0.5;
+}
+
+.spin {
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #3498db;
+    border-radius: 50%;
+    animation: gs-spin 1s linear infinite;
+    margin-bottom: 10px;
+}

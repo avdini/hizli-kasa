@@ -1,9 +1,84 @@
-<?php if (!defined('ABSPATH')) exit; ?>
-<div style="padding: 40px; text-align: center; background: white; margin: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-    <div style="font-size: 64px; margin-bottom: 20px;">📦</div>
-    <h2 style="color: #2c3e50; margin-bottom: 10px;">Ürün Yönetimi</h2>
-    <p style="color: #7f8c8d; font-size: 16px;">Bu modül üzerinden stok takibi, fiyat güncelleme ve barkod basımı yapabileceksiniz.</p>
-    <div style="display: inline-block; margin-top: 30px; padding: 12px 25px; background: #3498db; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; opacity: 0.6;">
-        Yakında Aktif Olacak
+<?php 
+if (!defined('ABSPATH')) exit; 
+
+$user_id = get_current_user_id();
+$depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
+
+global $wpdb;
+$depo_name = "Depo Seçilmedi";
+if ($depo_id) {
+    $depo_name = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}hizli_kasa_depolar WHERE id = %d", $depo_id));
+}
+?>
+<div id="stok-terminali">
+    <!-- Üst Bar: Depo Bilgisi ve Arama -->
+    <div class="terminal-header">
+        <div class="depo-bilgi">
+            <span class="ikon">🏢</span>
+            <div>
+                <label>Aktif Depo</label>
+                <h3 id="aktif-depo-adi"><?php echo esc_html($depo_name ?: "Bilinmeyen Depo"); ?></h3>
+            </div>
+        </div>
+        <div class="arama-kutusu">
+            <input type="text" id="terminal-arama-input" placeholder="Ürün adı veya barkod okutun..." autocomplete="off">
+            <span class="arama-ikon">🔍</span>
+        </div>
+    </div>
+
+    <!-- Ana İçerik: Ürün Listesi -->
+    <div class="terminal-body" id="terminal-urun-listesi">
+        <?php if (!$depo_id): ?>
+            <div class="terminal-uyari">
+                <span style="font-size: 48px;">⚠️</span>
+                <h3>Profilinize bir depo atanmamış!</h3>
+                <p>İşlem yapabilmek için yöneticinizden size bir depo atamasını isteyin.</p>
+            </div>
+        <?php else: ?>
+            <div class="terminal-loading">
+                <div class="spin"></div>
+                <p>Ürünler yükleniyor...</p>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Alt Bar: İstatistikler (Opsiyonel) -->
+    <div class="terminal-footer">
+        <div class="stat-item">
+            <span id="toplam-urun-sayisi">0</span>
+            <label>Kayıtlı Ürün</label>
+        </div>
+        <div class="stat-item">
+            <span id="kritik-stok-sayisi">0</span>
+            <label>Kritik Stok</label>
+        </div>
+    </div>
+</div>
+
+<!-- Stok Düzenleme Modalı -->
+<div id="stok-duzenle-modal" class="modal-cerceve" style="display:none;">
+    <div class="modal-icerik glass">
+        <h3 id="modal-urun-adi">Ürün Adı</h3>
+        <p id="modal-urun-detay">SKU: ---</p>
+        
+        <div class="stok-kontrol-grup">
+            <div class="mevcut-stok">
+                <label>Mevcut Stok</label>
+                <span id="modal-mevcut-qty">0</span>
+            </div>
+            <div class="degisim-input">
+                <label>Değişim Miktarı</label>
+                <div class="input-row">
+                    <button class="btn-eksilt">-</button>
+                    <input type="number" id="modal-degisim-input" value="1" step="0.01">
+                    <button class="btn-artir">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-butonlar">
+            <button id="stok-kaydet-iptal" class="btn-secondary">İptal</button>
+            <button id="stok-kaydet-onay" class="btn-primary">Hareketi Kaydet</button>
+        </div>
     </div>
 </div>

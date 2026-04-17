@@ -34,6 +34,11 @@ document.addEventListener("DOMContentLoaded", function() {
     // 6. Gün sonu raporu modülünü başlat
     HK.DayEndReport.init();
 
+    // 7. Stok terminali modülünü başlat
+    if (HK.StockTerminal) {
+        HK.StockTerminal.init();
+    }
+
     // 7. Sekmeler arası canlı senkronizasyon
     window.addEventListener('storage', function(e) {
         var state = HK.State;
