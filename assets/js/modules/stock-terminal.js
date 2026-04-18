@@ -217,6 +217,8 @@
                 var isVariable = p.is_variable && p.variations && p.variations.length > 0;
                 var isCritical = !isVariable && p.warehouse_stock <= 5;
                 if (isCritical) criticalCount++;
+
+                var img = p.images && p.images[0] ? p.images[0].src : '';
                 
                 html += `
                     <div class="terminal-urun-kart ${isVariable ? 'terminal-parent-card is-variable' : ''}" data-id="${p.id}" data-vid="0">
