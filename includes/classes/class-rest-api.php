@@ -178,6 +178,7 @@ function hizli_kasa_gun_sonu_raporu($request) {
         // Ürün detayları
         $urunler = array();
         foreach ($order->get_items() as $item) {
+
             $qty   = $item->get_quantity();
             $total = (float) $item->get_total();
             $name  = $item->get_name();
@@ -428,66 +429,71 @@ function hizli_kasa_ozel_arama($data) {
  * Veritabanından gelen ürün satırını formatlar.
  */
 function hizli_kasa_format_urun_row($row) {
-    $urun = wc_get_product($row->ID);
-    if (!$urun) return null;
+    try {
+        $urun = wc_get_product($row->ID);
+        if (!$urun) return null;
 
-    $is_variable = $urun->is_type('variable');
-    if ($is_variable) {
-        $children = $urun->get_children();
-        // Sadece yayında (publish) olan varyasyonları sayalım
-        $active_children = array_filter($children, function($child_id) {
-            return get_post_status($child_id) === 'publish';
-        });
-        if (empty($active_children)) {
-            $is_variable = false;
+        $is_variable = $urun->is_type('variable');
+        if ($is_variable) {
+            $children = $urun->get_children();
+            $active_children = array_filter($children, function($child_id) {
+                return get_post_status($child_id) === 'publish';
+            });
+            if (empty($active_children)) {
+                $is_variable = false;
+            }
         }
-    }
 
-    $name = $urun->get_name();
-    if ($row->post_type === 'product_variation') {
-        $parent = wc_get_product($row->post_parent);
-        if ($parent) {
-            $attributes = $urun->get_variation_attributes();
-            $attr_values = implode(', ', array_values($attributes));
-            $name = $parent->get_name() . ' - ' . $attr_values;
+        $name = $urun->get_name();
+        if ($row->post_type === 'product_variation') {
+            $parent = wc_get_product($row->post_parent);
+            if ($parent) {
+                $attributes = $urun->get_variation_attributes();
+                $attr_values = implode(', ', array_values($attributes));
+                $name = $parent->get_name() . ' - ' . $attr_values;
+            }
         }
-    }
 
-    $image_id = $urun->get_image_id();
-    $image_url = $image_id ? wp_get_attachment_image_url($image_id, 'thumbnail') : '';
+        $image_id = $urun->get_image_id();
+        $image_url = $image_id ? wp_get_attachment_image_url($image_id, 'thumbnail') : '';
 
-    // Depo Bazlı Stok Bilgisi (Eğer kullanıcıya depo atanmışsa)
-    $depo_stock = null;
-    $user_id = get_current_user_id();
-    $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
-    
-    if ($depo_id) {
-        global $wpdb;
-        $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
-        $p_id = ($row->post_type === 'product_variation') ? $row->post_parent : $row->ID;
-        $v_id = ($row->post_type === 'product_variation') ? $row->ID : 0;
+        // Depo Bazlı Stok Bilgisi
+        $depo_stock = null;
+        $user_id = get_current_user_id();
+        $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
         
-        $depo_stock = $wpdb->get_var($wpdb->prepare("
-            SELECT quantity FROM $stok_table 
-            WHERE product_id = %d AND variation_id = %d AND location_id = %d
-        ", $p_id, $v_id, $depo_id));
-    }
+        if ($depo_id) {
+            global $wpdb;
+            $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+            $p_id = ($row->post_type === 'product_variation') ? $row->post_parent : $row->ID;
+            $v_id = ($row->post_type === 'product_variation') ? $row->ID : 0;
+            
+            // Tablo var mı kontrol et (Sessiz hata engelleme)
+            $depo_stock = $wpdb->get_var($wpdb->prepare("
+                SELECT quantity FROM $stok_table 
+                WHERE product_id = %d AND variation_id = %d AND location_id = %d
+            ", $p_id, $v_id, $depo_id));
+        }
 
-    return [
-        'id' => (int)$row->ID,
-        'parent_id' => (int)$row->post_parent,
-        'type' => $row->post_type === 'product_variation' ? 'variation' : 'product',
-        'name' => $name,
-        'sku' => $row->sku,
-        'price' => $row->price,
-        'regular_price' => $row->regular_price,
-        'stock_status' => $row->stock_status,
-        'manage_stock' => $row->manage_stock === 'yes',
-        'stock_quantity' => (float)$row->stock_quantity, // WC Toplam Stok
-        'warehouse_stock' => ($depo_stock !== null) ? (float)$depo_stock : (float)$row->stock_quantity, // Depo Stoğu (Shadow Layer)
-        'images' => $image_url ? [['src' => $image_url]] : [],
-        'is_variable' => $is_variable
-    ];
+        return [
+            'id' => (int)$row->ID,
+            'parent_id' => (int)$row->post_parent,
+            'type' => $row->post_type === 'product_variation' ? 'variation' : 'product',
+            'name' => $name,
+            'sku' => $row->sku,
+            'price' => $row->price,
+            'regular_price' => $row->regular_price,
+            'stock_status' => $row->stock_status,
+            'manage_stock' => $row->manage_stock === 'yes',
+            'stock_quantity' => (float)$row->stock_quantity,
+            'warehouse_stock' => ($depo_stock !== null) ? (float)$depo_stock : (float)$row->stock_quantity,
+            'images' => $image_url ? [['src' => $image_url]] : [],
+            'is_variable' => $is_variable
+        ];
+    } catch (Exception $e) {
+        error_log('Hızlı Kasa Ürün Formatlama Hatası (ID: ' . $row->ID . '): ' . $e->getMessage());
+        return null;
+    }
 }
 
 /**

@@ -73,12 +73,15 @@
                 if (exact) url += '&exact=1';
 
                 var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
+                if (!response.ok) throw new Error("Sunucu hatası: " + response.status);
+                
                 var data = await response.json();
 
-                this.state.products = data;
+                this.state.products = (data && Array.isArray(data)) ? data : [];
                 this.renderProducts();
             } catch (e) {
-                console.error("Stok yükleme hatası", e);
+                console.error("Hızlı Kasa: Stok yükleme hatası", e);
+                container.innerHTML = '<div class="terminal-uyari"><p>Ürünler yüklenirken bir hata oluştu: ' + e.message + '</p><button onclick="location.reload()" class="button">Tekrar Dene</button></div>';
             }
         },
 
