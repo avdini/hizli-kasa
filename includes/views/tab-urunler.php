@@ -34,6 +34,11 @@ if ($depo_id) {
                 <h3>Profilinize bir depo atanmamış!</h3>
                 <p>İşlem yapabilmek için yöneticinizden size bir depo atamasını isteyin.</p>
             </div>
+        <?php else: ?>
+            <div class="terminal-loading">
+                <div class="spin"></div>
+                <p>Ürünler yükleniyor...</p>
+            </div>
         <?php endif; ?>
     </div>
 

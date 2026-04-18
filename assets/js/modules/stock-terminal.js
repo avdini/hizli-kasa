@@ -20,7 +20,14 @@
         init: function() {
             var self = this;
             var input = document.getElementById('terminal-arama-input');
-            if (!input) return;
+            
+            // Eğer element henüz yoksa (sekme yüklenmemişse), yüklendiğinde tekrar dene
+            if (!input) {
+                document.addEventListener('hkTabLoaded', function(e) {
+                    if (e.detail.tab === 'urunler') self.init();
+                }, { once: true });
+                return;
+            }
 
             // İlk ürünleri yükle
             this.loadProducts();
