@@ -530,8 +530,8 @@ function hizli_kasa_terminal_products($request) {
         );
     }
 
-    // Toplam ana ürün sayısını al
-    $total_count = $wpdb->get_var("SELECT COUNT(ID) FROM {$wpdb->posts} WHERE post_type = 'product' AND post_status = 'publish'");
+    // Toplam kayıtlı öğe sayısını al (Ürün + Varyasyon)
+    $total_count = $wpdb->get_var("SELECT COUNT(ID) FROM {$wpdb->posts} WHERE post_type IN ('product', 'product_variation') AND post_status = 'publish'");
 
     $results = $wpdb->get_results($wpdb->prepare("
         SELECT p.ID, p.post_title, p.post_type, p.post_parent,

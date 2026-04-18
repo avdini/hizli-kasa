@@ -53,14 +53,14 @@
             input.addEventListener('input', function() {
                 clearTimeout(self.state.searchTimer);
                 self.state.searchTimer = setTimeout(() => {
-                    self.loadProducts(this.value);
+                    self.loadProducts(false); // Arama yaparken append false olmalı
                 }, 300);
             });
 
             // Barkod okuyucu desteği (Enter tuşu)
             input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    self.loadProducts(this.value, true);
+                    self.loadProducts(false); // Enter'a basınca aramayı tazele
                 }
             });
 
@@ -125,6 +125,9 @@
                 
                 // İstatistikleri Güncelle
                 if (document.getElementById('toplam-urun-sayisi')) {
+                    var label = s ? 'Arama Sonucu' : 'Kayıtlı Ürün';
+                    var labelEl = document.querySelector('.stat-item label[for="toplam-urun-sayisi"]');
+                    if (labelEl) labelEl.innerText = label;
                     document.getElementById('toplam-urun-sayisi').innerText = this.state.total;
                 }
                 if (document.getElementById('kritik-stok-sayisi')) {

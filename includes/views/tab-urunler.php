@@ -52,7 +52,7 @@ if ($depo_id) {
     <div class="terminal-footer">
         <div class="stat-item">
             <span id="toplam-urun-sayisi">0</span>
-            <label>Kayıtlı Ürün</label>
+            <label for="toplam-urun-sayisi">Kayıtlı Ürün</label>
         </div>
         <div class="stat-item">
             <span id="kritik-stok-sayisi">0</span>
