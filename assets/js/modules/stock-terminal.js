@@ -83,6 +83,39 @@
                 var input = document.getElementById('modal-degisim-input');
                 input.value = parseFloat(input.value) - 1;
             });
+
+            // --- ETKİNLİK DELEGASYONU (Tıklama Desteği) ---
+            var listContainer = document.getElementById('terminal-urun-listesi');
+            if (listContainer) {
+                listContainer.addEventListener('click', function(e) {
+                    var kart = e.target.closest('.terminal-urun-kart');
+                    if (!kart) return;
+
+                    var id = parseInt(kart.dataset.id);
+                    var vid = parseInt(kart.dataset.vid);
+                    var isParent = kart.dataset.isParent === "true";
+
+                    if (isParent) {
+                        // Alt menüyü aç/kapat
+                        var childContainer = document.getElementById('vars-' + id);
+                        if (childContainer) {
+                            var isVisible = childContainer.style.display === 'block';
+                            childContainer.style.display = isVisible ? 'none' : 'block';
+                            var icon = kart.querySelector('.expand-icon');
+                            if (icon) icon.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+                        }
+                    } else {
+                        // Normal ürün veya varyasyon seçimi
+                        var product = self.state.products.find(p => p.id === id);
+                        if (vid > 0 && product && product.variations) {
+                            var variation = product.variations.find(v => v.id === vid);
+                            if (variation) self.openEditModal(variation);
+                        } else if (product) {
+                            self.openEditModal(product);
+                        }
+                    }
+                });
+            }
         },
 
         /**
@@ -226,37 +259,6 @@
             } else {
                 container.innerHTML = html;
             }
-
-            // Kartlara tıklama olayı ekle (Sadece yeni eklenenlere veya tümüne)
-            var self = this;
-            var targetKarts = append ? container.querySelectorAll('.terminal-urun-kart:nth-last-child(-n+50)') : container.querySelectorAll('.terminal-urun-kart');
-            
-            targetKarts.forEach(kart => {
-                kart.addEventListener('click', function(e) {
-                    var id = parseInt(this.dataset.id);
-                    var vid = parseInt(this.dataset.vid);
-                    var isParent = this.dataset.isParent === "true";
-
-                    if (isParent) {
-                        // Alt menüyü aç/kapat
-                        var childContainer = document.getElementById('vars-' + id);
-                        if (childContainer) {
-                            var isVisible = childContainer.style.display === 'block';
-                            childContainer.style.display = isVisible ? 'none' : 'block';
-                            this.querySelector('.expand-icon').style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
-                        }
-                    } else {
-                        // Normal ürün veya varyasyon seçimi
-                        var product = self.state.products.find(p => p.id === id);
-                        if (vid > 0 && product && product.variations) {
-                            var variation = product.variations.find(v => v.id === vid);
-                            self.openEditModal(variation);
-                        } else {
-                            self.openEditModal(product);
-                        }
-                    }
-                });
-            });
         },
 
         /**
