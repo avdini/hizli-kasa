@@ -59,7 +59,8 @@ const AppNavigation = (function () {
 
         try {
             const apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
-            const response = await fetch(`${apiBase}hizli-kasa/v1/load-tab?tab=${tabName}`, {
+            // Cache busting için timestamp ekleyelim
+            const response = await fetch(`${apiBase}hizli-kasa/v1/load-tab?tab=${tabName}&_=${Date.now()}`, {
                 headers: {
                     'X-WP-Nonce': kasaAyar.nonce
                 }
