@@ -1584,3 +1584,59 @@ html, body {
     animation: gs-spin 1s linear infinite;
     margin-bottom: 10px;
 }
+
+/* =============================================
+   TERMİNAL VARYASYON AKORDİYON STİLLERİ
+   ============================================= */
+
+.terminal-urun-kart.is-variable {
+    border-left: 4px solid #3498db;
+}
+
+.var-badge {
+    background: rgba(52, 152, 219, 0.2);
+    color: #3498db;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    font-weight: 800;
+}
+
+.expand-icon {
+    font-size: 12px;
+    transition: transform 0.3s;
+    opacity: 0.5;
+    margin-left: 15px;
+}
+
+.terminal-variations-container {
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+}
+
+.variation-item {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important;
+}
+
+.variation-item:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.variation-indent {
+    width: 40px;
+    height: 100%;
+    border-right: 2px solid rgba(255, 255, 255, 0.05);
+    margin-right: 15px;
+}
+
+.variation-item .urun-ad {
+    font-size: 13px !important;
+    color: #ccc;
+}
+
+.variation-item .stok-sayi {
+    font-size: 15px !important;
+}

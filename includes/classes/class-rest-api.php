@@ -435,13 +435,44 @@ function hizli_kasa_format_urun_row($row) {
         $urun = wc_get_product($row->ID);
         if (!$urun) return null;
 
-        $is_variable = $urun->is_type('variable');
+        $active_children_data = [];
         if ($is_variable) {
             $children = $urun->get_children();
-            $active_children = array_filter($children, function($child_id) {
-                return get_post_status($child_id) === 'publish';
-            });
-            if (empty($active_children)) {
+            foreach ($children as $child_id) {
+                if (get_post_status($child_id) !== 'publish') continue;
+                
+                $v_urun = wc_get_product($child_id);
+                if (!$v_urun) continue;
+
+                // Varyasyon için depo stoğu
+                $v_depo_stock = null;
+                $user_id = get_current_user_id();
+                $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
+                
+                if ($depo_id) {
+                    global $wpdb;
+                    $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+                    $v_depo_stock = $wpdb->get_var($wpdb->prepare("
+                        SELECT quantity FROM $stok_table 
+                        WHERE product_id = %d AND variation_id = %d AND location_id = %d
+                    ", $row->ID, $child_id, $depo_id));
+                }
+
+                $attributes = $v_urun->get_variation_attributes();
+                $attr_values = implode(', ', array_values($attributes));
+
+                $active_children_data[] = [
+                    'id' => (int)$child_id,
+                    'parent_id' => (int)$row->ID,
+                    'type' => 'variation',
+                    'name' => $urun->get_name() . ' - ' . $attr_values,
+                    'sku' => $v_urun->get_sku(),
+                    'warehouse_stock' => ($v_depo_stock !== null) ? (float)$v_depo_stock : (float)$v_urun->get_stock_quantity(),
+                    'stock_quantity' => (float)$v_urun->get_stock_quantity()
+                ];
+            }
+            
+            if (empty($active_children_data)) {
                 $is_variable = false;
             }
         }
@@ -490,7 +521,8 @@ function hizli_kasa_format_urun_row($row) {
             'stock_quantity' => (float)$row->stock_quantity,
             'warehouse_stock' => ($depo_stock !== null) ? (float)$depo_stock : (float)$row->stock_quantity,
             'images' => $image_url ? [['src' => $image_url]] : [],
-            'is_variable' => $is_variable
+            'is_variable' => $is_variable,
+            'variations' => $active_children_data
         ];
     } catch (Exception $e) {
         error_log('Hızlı Kasa Ürün Formatlama Hatası (ID: ' . $row->ID . '): ' . $e->getMessage());

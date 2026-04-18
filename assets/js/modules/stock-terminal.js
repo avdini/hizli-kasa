@@ -181,20 +181,43 @@
                 if (isCritical) criticalCount++;
 
                 var img = p.images && p.images[0] ? p.images[0].src : '';
+                var isVariable = p.is_variable && p.variations && p.variations.length > 0;
                 
                 html += `
-                    <div class="terminal-urun-kart" data-id="${p.id}" data-vid="${p.variation_id || 0}">
+                    <div class="terminal-urun-kart ${isVariable ? 'is-variable' : ''}" data-id="${p.id}" data-vid="0" ${isVariable ? 'data-is-parent="true"' : ''}>
                         <img src="${img}" class="urun-img" alt="">
                         <div class="urun-detay">
-                            <div class="urun-ad">${p.name}</div>
+                            <div class="urun-ad">${p.name} ${isVariable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
                             <div class="urun-sku">${p.sku || 'SKU YOK'} | Toplam: ${p.stock_quantity}</div>
                         </div>
                         <div class="urun-stok ${isCritical ? 'stok-kritik' : 'stok-tamam'}">
                             <span class="stok-sayi">${p.warehouse_stock}</span>
                             <span class="stok-etiket">MEVCUT STOK</span>
                         </div>
+                        ${isVariable ? '<div class="expand-icon">▼</div>' : ''}
                     </div>
                 `;
+
+                if (isVariable) {
+                    html += `<div class="terminal-variations-container" id="vars-${p.id}" style="display:none;">`;
+                    p.variations.forEach(v => {
+                        var vCritical = v.warehouse_stock <= 5;
+                        html += `
+                            <div class="terminal-urun-kart variation-item" data-id="${v.parent_id}" data-vid="${v.id}">
+                                <div class="variation-indent"></div>
+                                <div class="urun-detay">
+                                    <div class="urun-ad">${v.name}</div>
+                                    <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${v.stock_quantity}</div>
+                                </div>
+                                <div class="urun-stok ${vCritical ? 'stok-kritik' : 'stok-tamam'}">
+                                    <span class="stok-sayi">${v.warehouse_stock}</span>
+                                    <span class="stok-etiket">STOK</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `</div>`;
+                }
             }
 
             if (append) {
@@ -209,11 +232,29 @@
             var targetKarts = append ? container.querySelectorAll('.terminal-urun-kart:nth-last-child(-n+50)') : container.querySelectorAll('.terminal-urun-kart');
             
             targetKarts.forEach(kart => {
-                kart.addEventListener('click', function() {
+                kart.addEventListener('click', function(e) {
                     var id = parseInt(this.dataset.id);
                     var vid = parseInt(this.dataset.vid);
-                    var product = self.state.products.find(p => p.id === id);
-                    self.openEditModal(product);
+                    var isParent = this.dataset.isParent === "true";
+
+                    if (isParent) {
+                        // Alt menüyü aç/kapat
+                        var childContainer = document.getElementById('vars-' + id);
+                        if (childContainer) {
+                            var isVisible = childContainer.style.display === 'block';
+                            childContainer.style.display = isVisible ? 'none' : 'block';
+                            this.querySelector('.expand-icon').style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+                        }
+                    } else {
+                        // Normal ürün veya varyasyon seçimi
+                        var product = self.state.products.find(p => p.id === id);
+                        if (vid > 0 && product && product.variations) {
+                            var variation = product.variations.find(v => v.id === vid);
+                            self.openEditModal(variation);
+                        } else {
+                            self.openEditModal(product);
+                        }
+                    }
                 });
             });
         },
