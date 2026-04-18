@@ -376,7 +376,10 @@ function hizli_kasa_ozel_arama($data) {
 
     $formatted = [];
     foreach ($results as $row) {
-        $formatted[] = hizli_kasa_format_urun_row($row);
+        $item = hizli_kasa_format_urun_row($row);
+        if ($item) {
+            $formatted[] = $item;
+        }
     }
 
     // Eğer sadece tek bir sonuç geldiyse ve bu bir variable ürün (veya varyantı) ise,
@@ -409,7 +412,10 @@ function hizli_kasa_ozel_arama($data) {
             if (!empty($genis_results)) {
                 $formatted = [];
                 foreach ($genis_results as $grow) {
-                    $formatted[] = hizli_kasa_format_urun_row($grow);
+                    $gitem = hizli_kasa_format_urun_row($grow);
+                    if ($gitem) {
+                        $formatted[] = $gitem;
+                    }
                 }
             }
         }
@@ -517,7 +523,10 @@ function hizli_kasa_terminal_products($request) {
 
     $formatted = [];
     foreach ($results as $row) {
-        $formatted[] = hizli_kasa_format_urun_row($row);
+        $item = hizli_kasa_format_urun_row($row);
+        if ($item) {
+            $formatted[] = $item;
+        }
     }
     return $formatted;
 }

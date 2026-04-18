@@ -99,6 +99,8 @@
             var criticalCount = 0;
 
             this.state.products.forEach(p => {
+                if (!p) return; // Geçersiz ürünleri atla
+
                 var isCritical = p.warehouse_stock <= 5;
                 if (isCritical) criticalCount++;
 

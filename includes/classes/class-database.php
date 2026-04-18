@@ -44,7 +44,12 @@ class Hizli_Kasa_Database {
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (id)
         ) $charset_collate;";
-        dbDelta($sql1);
+        $res1 = dbDelta($sql1);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Depolar): ' . $wpdb->last_error);
+        } else {
+            error_log('Hızlı Kasa DB Delta (Depolar): ' . print_r($res1, true));
+        }
 
         // 2. Stok Konumları Tablosu
         $sql2 = "CREATE TABLE {$tables['stok_konumlari']} (
@@ -59,7 +64,10 @@ class Hizli_Kasa_Database {
             KEY variation_id (variation_id),
             KEY location_id (location_id)
         ) $charset_collate;";
-        dbDelta($sql2);
+        $res2 = dbDelta($sql2);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Konumlar): ' . $wpdb->last_error);
+        }
 
         // 3. Stok Hareketleri (Log) Tablosu
         $sql3 = "CREATE TABLE {$tables['stok_hareketleri']} (
@@ -77,7 +85,10 @@ class Hizli_Kasa_Database {
             KEY product_id (product_id),
             KEY location_id (location_id)
         ) $charset_collate;";
-        dbDelta($sql3);
+        $res3 = dbDelta($sql3);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Hareketler): ' . $wpdb->last_error);
+        }
     }
 
     /**

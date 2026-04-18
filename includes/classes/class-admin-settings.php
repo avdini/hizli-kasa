@@ -69,6 +69,7 @@ function hizli_kasa_handle_depo_actions() {
 
     // Yeni Depo Ekleme
     if (isset($_POST['hizli_kasa_depo_ekle'])) {
+        error_log('Hızlı Kasa: Depo ekleme tetiklendi.');
         check_admin_referer('depo_ekle_action', 'depo_ekle_nonce');
         
         $inserted = $wpdb->insert($table_name, [
@@ -77,6 +78,10 @@ function hizli_kasa_handle_depo_actions() {
             'description' => sanitize_textarea_field($_POST['depo_desc']),
             'priority'    => intval($_POST['depo_priority']),
         ]);
+
+        if (!$inserted) {
+            error_log('Hızlı Kasa DB Hatası: ' . $wpdb->last_error);
+        }
 
         $msg = $inserted ? 'depo_eklendi' : 'depo_hata';
         wp_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&hizli_kasa_msg=' . $msg));
