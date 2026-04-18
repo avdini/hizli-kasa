@@ -92,17 +92,21 @@
                     if (!kart) return;
 
                     var id = parseInt(kart.dataset.id);
-                    var vid = parseInt(kart.dataset.vid);
-                    var isParent = kart.dataset.isParent === "true";
+                    var vid = parseInt(kart.dataset.vid || 0);
+                    var isParent = kart.classList.contains('terminal-parent-card');
 
                     if (isParent) {
                         // Alt menüyü aç/kapat
                         var childContainer = document.getElementById('vars-' + id);
                         if (childContainer) {
-                            var isVisible = childContainer.style.display === 'block';
-                            childContainer.style.display = isVisible ? 'none' : 'block';
+                            var isHidden = window.getComputedStyle(childContainer).display === 'none';
+                            childContainer.style.display = isHidden ? 'block' : 'none';
+                            
+                            // İkon rotasyonu
                             var icon = kart.querySelector('.expand-icon');
-                            if (icon) icon.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+                            if (icon) {
+                                icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+                            }
                         }
                     } else {
                         // Normal ürün veya varyasyon seçimi
@@ -210,23 +214,23 @@
                 var p = this.state.products[i];
                 if (!p) continue;
 
-                var isCritical = p.warehouse_stock <= 5;
-                if (isCritical) criticalCount++;
-
-                var img = p.images && p.images[0] ? p.images[0].src : '';
                 var isVariable = p.is_variable && p.variations && p.variations.length > 0;
+                var isCritical = !isVariable && p.warehouse_stock <= 5;
+                if (isCritical) criticalCount++;
                 
                 html += `
-                    <div class="terminal-urun-kart ${isVariable ? 'is-variable' : ''}" data-id="${p.id}" data-vid="0" ${isVariable ? 'data-is-parent="true"' : ''}>
+                    <div class="terminal-urun-kart ${isVariable ? 'terminal-parent-card is-variable' : ''}" data-id="${p.id}" data-vid="0">
                         <img src="${img}" class="urun-img" alt="">
                         <div class="urun-detay">
                             <div class="urun-ad">${p.name} ${isVariable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
                             <div class="urun-sku">${p.sku || 'SKU YOK'} | Toplam: ${p.stock_quantity}</div>
                         </div>
+                        ${!isVariable ? `
                         <div class="urun-stok ${isCritical ? 'stok-kritik' : 'stok-tamam'}">
                             <span class="stok-sayi">${p.warehouse_stock}</span>
                             <span class="stok-etiket">MEVCUT STOK</span>
                         </div>
+                        ` : ''}
                         ${isVariable ? '<div class="expand-icon">▼</div>' : ''}
                     </div>
                 `;

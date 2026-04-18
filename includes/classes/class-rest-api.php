@@ -549,9 +549,13 @@ function hizli_kasa_terminal_products($request) {
     // Kritik Stok Sayısı (Global - Tüm depo için)
     $table_stok = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
     $critical_count = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table_stok WHERE location_id = %d AND quantity <= 5",
+        "SELECT COUNT(*) FROM $table_stok WHERE location_id = %d AND quantity <= 5 AND (variation_id > 0 OR product_id IN (SELECT ID FROM {$wpdb->posts} WHERE post_type = 'product'))",
         $depo_id
     )) ?: 0;
+    
+    // Not: variation_id > 0 ise direkt alt üründür. 
+    // variation_id = 0 ise ve post_type='product' ise basit üründür (veya parent). 
+    // Parent ürünlerin depo tablosunda genellikle kaydı olmaz veya miktar girilmez.
 
     if ($s) {
         // Arama yapılıyorsa depo_id'yi de request'e ekleyelim ki ozel_arama kullansın
