@@ -542,6 +542,10 @@ function hizli_kasa_terminal_products($request) {
     $user_id = get_current_user_id();
     $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
 
+    if (!$depo_id) {
+        return new WP_Error('no_depo', 'Profilinize bir depo atanmamış!', ['status' => 403]);
+    }
+
     // Kritik Stok Sayısı (Global - Tüm depo için)
     $table_stok = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
     $critical_count = $wpdb->get_var($wpdb->prepare(

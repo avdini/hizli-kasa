@@ -125,7 +125,7 @@
             if (this.state.isLoading) return;
 
             var container = document.getElementById('terminal-urun-listesi');
-            if (!container) return;
+            if (!container || container.querySelector('.no-depo-warning')) return;
 
             var input = document.getElementById('terminal-arama-input');
             var s = input ? input.value : '';

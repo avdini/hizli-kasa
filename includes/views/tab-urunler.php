@@ -29,7 +29,7 @@ if ($depo_id) {
     <!-- Ana İçerik: Ürün Listesi -->
     <div class="terminal-body" id="terminal-urun-listesi">
         <?php if (!$depo_id): ?>
-            <div class="terminal-uyari">
+            <div class="terminal-uyari no-depo-warning">
                 <span style="font-size: 48px;">⚠️</span>
                 <h3>Profilinize bir depo atanmamış!</h3>
                 <p>İşlem yapabilmek için yöneticinizden size bir depo atamasını isteyin.</p>
