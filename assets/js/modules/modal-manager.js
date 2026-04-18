@@ -112,7 +112,8 @@
 
                 self._aramaTimeout = setTimeout(async function() {
                     try {
-                        var response = await fetch(window.location.origin + '/wp-json/hizli-kasa/v1/search?s=' + encodeURIComponent(query), {
+                        var apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
+                        var response = await fetch(apiBase + 'hizli-kasa/v1/search?s=' + encodeURIComponent(query), {
                             headers: { 'X-WP-Nonce': kasaAyar.nonce }
                         });
                         var data = await response.json();

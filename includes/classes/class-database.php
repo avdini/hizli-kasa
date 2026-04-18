@@ -41,7 +41,7 @@ class Hizli_Kasa_Database {
             address text,
             description text,
             priority int(11) DEFAULT 0,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            created_at datetime,
             PRIMARY KEY  (id)
         ) $charset_collate;";
         $res1 = dbDelta($sql1);
@@ -57,8 +57,8 @@ class Hizli_Kasa_Database {
             product_id bigint(20) NOT NULL,
             variation_id bigint(20) DEFAULT 0,
             location_id bigint(20) NOT NULL,
-            quantity float NOT NULL DEFAULT 0,
-            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            quantity decimal(15,4) DEFAULT 0.0000,
+            updated_at datetime,
             PRIMARY KEY  (id),
             KEY product_id (product_id),
             KEY variation_id (variation_id),
@@ -78,9 +78,9 @@ class Hizli_Kasa_Database {
             user_id bigint(20) NOT NULL,
             old_qty float NOT NULL,
             new_qty float NOT NULL,
-            change_amount float NOT NULL,
-            reason varchar(255) DEFAULT '',
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            amount decimal(15,4) NOT NULL,
+            reason text,
+            created_at datetime,
             PRIMARY KEY  (id),
             KEY product_id (product_id),
             KEY location_id (location_id)

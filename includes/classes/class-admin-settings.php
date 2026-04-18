@@ -53,7 +53,8 @@ function hizli_kasa_handle_depo_actions() {
                 add_settings_error('hizli_kasa_messages', 'depo_eklendi', 'Yeni depo başarıyla eklendi.', 'updated');
                 break;
             case 'depo_hata':
-                add_settings_error('hizli_kasa_messages', 'depo_hata', 'Depo eklenirken bir hata oluştu.', 'error');
+                $err = isset($_GET['hizli_kasa_err']) ? sanitize_text_field($_GET['hizli_kasa_err']) : 'Depo eklenirken bir hata oluştu.';
+                add_settings_error('hizli_kasa_messages', 'depo_hata', $err, 'error');
                 break;
             case 'depo_silindi':
                 add_settings_error('hizli_kasa_messages', 'depo_silindi', 'Depo başarıyla silindi.', 'updated');
@@ -77,14 +78,16 @@ function hizli_kasa_handle_depo_actions() {
             'address'     => sanitize_textarea_field($_POST['depo_address']),
             'description' => sanitize_textarea_field($_POST['depo_desc']),
             'priority'    => intval($_POST['depo_priority']),
+            'created_at'  => current_time('mysql')
         ]);
 
-        if (!$inserted) {
-            error_log('Hızlı Kasa DB Hatası: ' . $wpdb->last_error);
+        if ($inserted === false) {
+            $error_msg = $wpdb->last_error ?: "Bilinmeyen veritabanı hatası. Tablolar eksik olabilir. Lütfen 'Sistem Araçları' sekmesinden tabloları onarın.";
+            wp_safe_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&hizli_kasa_msg=depo_hata&hizli_kasa_err=' . urlencode($error_msg)));
+            exit;
         }
 
-        $msg = $inserted ? 'depo_eklendi' : 'depo_hata';
-        wp_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&hizli_kasa_msg=' . $msg));
+        wp_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&hizli_kasa_msg=depo_eklendi'));
         exit;
     }
 
