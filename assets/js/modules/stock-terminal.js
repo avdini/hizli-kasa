@@ -14,7 +14,11 @@
         state: {
             products: [],
             selectedProduct: null,
-            searchTimer: null
+            searchTimer: null,
+            offset: 0,
+            hasMore: true,
+            isLoading: false,
+            total: 0
         },
 
         init: function() {
@@ -27,6 +31,19 @@
                     if (e.detail.tab === 'urunler') self.init();
                 }, { once: true });
                 return;
+            }
+
+            // Scroll Listener (Sonsuz Kaydırma)
+            var container = document.getElementById('terminal-urun-listesi');
+            if (container) {
+                container.addEventListener('scroll', function() {
+                    if (self.state.isLoading || !self.state.hasMore) return;
+                    
+                    // Alt sınıra 100px kala yeni yükleme yap
+                    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 100) {
+                        self.loadProducts(true);
+                    }
+                });
             }
 
             // İlk ürünleri yükle
@@ -71,53 +88,93 @@
         /**
          * Ürünleri API'den yükler.
          */
-        loadProducts: async function(s = '', exact = false) {
+        loadProducts: async function(append = false) {
+            if (this.state.isLoading) return;
+
             var container = document.getElementById('terminal-urun-listesi');
             if (!container) return;
 
+            var input = document.getElementById('terminal-arama-input');
+            var s = input ? input.value : '';
+
+            // Arama yapılıyorsa veya başa dönülüyorsa resetle
+            if (!append) {
+                this.state.offset = 0;
+                this.state.products = [];
+                this.state.hasMore = true;
+                container.innerHTML = '<div class="terminal-loading"><div class="spin"></div><p>Ürünler yükleniyor...</p></div>';
+            }
+
+            this.state.isLoading = true;
+
             try {
-                var url = kasaAyar.rootApiUrl + 'hizli-kasa/v1/terminal/products?s=' + encodeURIComponent(s);
-                if (exact) url += '&exact=1';
+                var url = kasaAyar.rootApiUrl + 'hizli-kasa/v1/terminal/products?limit=50&offset=' + this.state.offset;
+                if (s) url += '&s=' + encodeURIComponent(s);
 
                 var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
                 if (!response.ok) throw new Error("Sunucu hatası: " + response.status);
                 
                 var data = await response.json();
 
-                this.state.products = (data && Array.isArray(data)) ? data : [];
-                this.renderProducts();
+                if (Array.isArray(data)) {
+                    // Arama motoru veya eski API
+                    this.state.products = append ? this.state.products.concat(data) : data;
+                    this.state.hasMore = false;
+                } else {
+                    // Yeni paginated API
+                    var newProducts = data.products || [];
+                    this.state.products = append ? this.state.products.concat(newProducts) : newProducts;
+                    this.state.total = data.total || 0;
+                    this.state.hasMore = data.has_more || false;
+                    this.state.offset += newProducts.length;
+                    
+                    if (document.getElementById('toplam-urun-sayisi')) {
+                        document.getElementById('toplam-urun-sayisi').innerText = this.state.total;
+                    }
+                }
+
+                this.renderProducts(append);
             } catch (e) {
                 console.error("Hızlı Kasa: Stok yükleme hatası", e);
-                container.innerHTML = '<div class="terminal-uyari"><p>Ürünler yüklenirken bir hata oluştu.</p><button onclick="location.reload()" class="button">Tekrar Dene</button></div>';
+                if (!append) {
+                    container.innerHTML = '<div class="terminal-uyari"><p>Ürünler yüklenirken bir hata oluştu.</p><button onclick="location.reload()" class="button">Tekrar Dene</button></div>';
+                }
                 
-                // Debug Panelini Göster
                 var debugPanel = document.getElementById('terminal-debug');
                 if (debugPanel) {
                     debugPanel.style.display = 'block';
                     document.getElementById('debug-error-msg').innerText = e.message;
                     document.getElementById('debug-api-url').innerText = url;
                 }
+            } finally {
+                this.state.isLoading = false;
             }
         },
 
         /**
          * Ürün listesini HTML olarak basar.
          */
-        renderProducts: function() {
+        renderProducts: function(append = false) {
             var container = document.getElementById('terminal-urun-listesi');
-            var totalEl = document.getElementById('toplam-urun-sayisi');
             var criticalEl = document.getElementById('kritik-stok-sayisi');
 
-            if (this.state.products.length === 0) {
+            if (this.state.products.length === 0 && !append) {
                 container.innerHTML = '<div class="terminal-uyari"><p>Ürün bulunamadı.</p></div>';
                 return;
             }
 
+            // Sadece yeni eklenenleri render etmek daha performanslıdır
+            // Ancak mevcut yapı tüm state'i tuttuğu için basitleştirelim:
             var html = '';
             var criticalCount = 0;
 
-            this.state.products.forEach(p => {
-                if (!p) return; // Geçersiz ürünleri atla
+            // Eğer append ise sadece son eklenenleri (son 50) dönelim
+            var startIdx = append ? (this.state.products.length - 50) : 0;
+            if (startIdx < 0) startIdx = 0;
+
+            for (var i = startIdx; i < this.state.products.length; i++) {
+                var p = this.state.products[i];
+                if (!p) continue;
 
                 var isCritical = p.warehouse_stock <= 5;
                 if (isCritical) criticalCount++;
@@ -137,15 +194,24 @@
                         </div>
                     </div>
                 `;
-            });
+            }
 
-            container.innerHTML = html;
-            totalEl.innerText = this.state.products.length;
-            criticalEl.innerText = criticalCount;
+            if (append) {
+                // Eğer daha önce loading varsa temizle (opsiyonel)
+                container.insertAdjacentHTML('beforeend', html);
+            } else {
+                container.innerHTML = html;
+            }
 
-            // Kartlara tıklama olayı ekle
+            // Kritik stok sayısını güncelle (sadece ilk yüklemede veya genel bir sayaç tutularak yapılabilir)
+            // Şimdilik sadece render edilenlerdekini sayar.
+            if (criticalEl && !append) criticalEl.innerText = criticalCount;
+
+            // Kartlara tıklama olayı ekle (Sadece yeni eklenenlere veya tümüne)
             var self = this;
-            container.querySelectorAll('.terminal-urun-kart').forEach(kart => {
+            var targetKarts = append ? container.querySelectorAll('.terminal-urun-kart:nth-last-child(-n+50)') : container.querySelectorAll('.terminal-urun-kart');
+            
+            targetKarts.forEach(kart => {
                 kart.addEventListener('click', function() {
                     var id = parseInt(this.dataset.id);
                     var vid = parseInt(this.dataset.vid);

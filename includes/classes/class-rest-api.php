@@ -55,7 +55,9 @@ add_action('rest_api_init', function () {
     register_rest_route('hizli-kasa/v1', '/terminal/products', array(
         'methods' => 'GET',
         'callback' => 'hizli_kasa_terminal_products',
-        'permission_callback' => '__return_true' // Geçici olarak herkes (giriş yapmış) için açalım, debug amaçlı
+        'permission_callback' => function () {
+            return is_user_logged_in();
+        }
     ));
 
     register_rest_route('hizli-kasa/v1', '/terminal/update-stock', array(
@@ -498,20 +500,23 @@ function hizli_kasa_format_urun_row($row) {
  * Terminal için ürün listesi döner.
  */
 function hizli_kasa_terminal_products($request) {
-    error_log('Hızlı Kasa DEBUG: Terminal products request received.');
     global $wpdb;
-    $s = sanitize_text_field($request->get_param('s'));
+    $s      = sanitize_text_field($request->get_param('s'));
+    $offset = intval($request->get_param('offset') ?: 0);
+    $limit  = 50;
     
     $user_id = get_current_user_id();
     $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
-    error_log("Hızlı Kasa DEBUG: User ID: $user_id, Depo ID: $depo_id");
+
     if ($s) {
-        $data = new WP_REST_Request('GET', '/hizli-kasa/v1/search');
-        $data->set_param('s', $s);
-        return hizli_kasa_ozel_arama($data);
+        $products = hizli_kasa_ozel_arama($request);
+        return $products;
     }
 
-    $results = $wpdb->get_results("
+    // Toplam ana ürün sayısını al
+    $total_count = $wpdb->get_var("SELECT COUNT(ID) FROM {$wpdb->posts} WHERE post_type = 'product' AND post_status = 'publish'");
+
+    $results = $wpdb->get_results($wpdb->prepare("
         SELECT p.ID, p.post_title, p.post_type, p.post_parent,
                MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
                MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
@@ -522,20 +527,26 @@ function hizli_kasa_terminal_products($request) {
         FROM {$wpdb->posts} p
         LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
         WHERE p.post_status = 'publish'
-          AND p.post_type IN ('product', 'product_variation')
+          AND p.post_type = 'product'
         GROUP BY p.ID
         ORDER BY p.post_modified DESC
-        LIMIT 50
-    ");
+        LIMIT %d OFFSET %d
+    ", $limit, $offset));
 
     $formatted = [];
     foreach ($results as $row) {
-        $item = hizli_kasa_format_urun_row($row);
+        $item = hizli_kasa_format_urun_row($row, $depo_id);
         if ($item) {
             $formatted[] = $item;
         }
     }
-    return $formatted;
+
+    return array(
+        'products' => $formatted,
+        'total'    => (int)$total_count,
+        'has_more' => ($offset + $limit) < $total_count,
+        'offset'   => $offset
+    );
 }
 
 /**
