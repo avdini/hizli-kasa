@@ -38,8 +38,8 @@ class Hizli_Kasa_Database {
         $sql1 = "CREATE TABLE {$tables['depolar']} (
             id bigint(20) NOT NULL AUTO_INCREMENT,
             name varchar(255) NOT NULL,
-            address text DEFAULT '',
-            description text DEFAULT '',
+            address text,
+            description text,
             priority int(11) DEFAULT 0,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (id)

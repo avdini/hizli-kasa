@@ -37,7 +37,7 @@ function hizli_kasa_ayarlari_kaydet()
 }
 
 /**
- * Depo İşlemlerini Yönetir (Ekleme/Silme)
+ * Depo İşlemlerini Yönetir (Ekleme/Silme/Mesajlar)
  */
 add_action('admin_init', 'hizli_kasa_handle_depo_actions');
 function hizli_kasa_handle_depo_actions() {
@@ -45,6 +45,27 @@ function hizli_kasa_handle_depo_actions() {
     
     global $wpdb;
     $table_name = $wpdb->prefix . 'hizli_kasa_depolar';
+
+    // Mesajları Yönet (Yönlendirme sonrası gösterim için)
+    if (isset($_GET['hizli_kasa_msg'])) {
+        switch ($_GET['hizli_kasa_msg']) {
+            case 'depo_eklendi':
+                add_settings_error('hizli_kasa_messages', 'depo_eklendi', 'Yeni depo başarıyla eklendi.', 'updated');
+                break;
+            case 'depo_hata':
+                add_settings_error('hizli_kasa_messages', 'depo_hata', 'Depo eklenirken bir hata oluştu.', 'error');
+                break;
+            case 'depo_silindi':
+                add_settings_error('hizli_kasa_messages', 'depo_silindi', 'Depo başarıyla silindi.', 'updated');
+                break;
+            case 'depo_silme_hata':
+                add_settings_error('hizli_kasa_messages', 'depo_silme_hata', 'Depo silinirken bir hata oluştu.', 'error');
+                break;
+            case 'db_onarildi':
+                add_settings_error('hizli_kasa_messages', 'db_onarildi', 'Veritabanı tabloları kontrol edildi ve onarıldı.', 'updated');
+                break;
+        }
+    }
 
     // Yeni Depo Ekleme
     if (isset($_POST['hizli_kasa_depo_ekle'])) {
@@ -57,14 +78,8 @@ function hizli_kasa_handle_depo_actions() {
             'priority'    => intval($_POST['depo_priority']),
         ]);
 
-        if ($inserted) {
-            add_settings_error('hizli_kasa_messages', 'depo_eklendi', 'Yeni depo başarıyla eklendi.', 'updated');
-        } else {
-            add_settings_error('hizli_kasa_messages', 'depo_hata', 'Depo eklenirken bir hata oluştu.', 'error');
-        }
-
-        // Yönlendirme yaparak formu temizle ve mesajı koru
-        wp_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&settings-updated=true'));
+        $msg = $inserted ? 'depo_eklendi' : 'depo_hata';
+        wp_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&hizli_kasa_msg=' . $msg));
         exit;
     }
 
@@ -75,13 +90,8 @@ function hizli_kasa_handle_depo_actions() {
         
         $deleted = $wpdb->delete($table_name, ['id' => $depo_id]);
 
-        if ($deleted) {
-            add_settings_error('hizli_kasa_messages', 'depo_silindi', 'Depo başarıyla silindi.', 'updated');
-        } else {
-            add_settings_error('hizli_kasa_messages', 'depo_silme_hata', 'Depo silinirken bir hata oluştu.', 'error');
-        }
-
-        wp_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&settings-updated=true'));
+        $msg = $deleted ? 'depo_silindi' : 'depo_silme_hata';
+        wp_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&hizli_kasa_msg=' . $msg));
         exit;
     }
 }
@@ -135,6 +145,16 @@ function hizli_kasa_save_user_warehouse_field($user_id) {
  */
 add_action('wp_ajax_hizli_kasa_setup', 'hizli_kasa_ajax_setup');
 add_action('wp_ajax_hizli_kasa_reset', 'hizli_kasa_ajax_reset');
+add_action('wp_ajax_hizli_kasa_repair_db', 'hizli_kasa_ajax_repair_db');
+
+function hizli_kasa_ajax_repair_db() {
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz işlem!']);
+    
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-database.php';
+    Hizli_Kasa_Database::init(); // Tabloları eksikse oluşturur, varsa günceller
+
+    wp_send_json_success(['message' => 'Veritabanı tabloları başarıyla onarıldı.']);
+}
 
 function hizli_kasa_ajax_setup() {
     if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz işlem!']);
@@ -280,6 +300,12 @@ function hizli_kasa_ayarlar_sayfasi()
                     <button type="button" id="btn-hizli-kasa-reset" class="button button-link-delete">Sistemi Sıfırla (Fabrika Ayarları)</button>
                 </div>
 
+                <div class="card" style="margin-top:20px;">
+                    <h3>Sistem Onarımı</h3>
+                    <p>Eğer depoları kaydedemiyorsanız veya veritabanı hataları alıyorsanız tabloları onarmayı deneyin. Bu işlem verilerinizi silmez.</p>
+                    <button type="button" id="btn-hizli-kasa-repair" class="button button-secondary">Tabloları Onar / Veritabanı Güncelle</button>
+                </div>
+
                 <script>
                 jQuery(document).ready(function($) {
                     $('#btn-hizli-kasa-setup').on('click', function() {
@@ -300,6 +326,14 @@ function hizli_kasa_ayarlar_sayfasi()
 
                         $(this).prop('disabled', true).text('Siliniyor...');
                         $.post(ajaxurl, { action: 'hizli_kasa_reset' }, function(res) {
+                            alert(res.data.message);
+                            location.reload();
+                        });
+                    });
+
+                    $('#btn-hizli-kasa-repair').on('click', function() {
+                        $(this).prop('disabled', true).text('Onarılıyor...');
+                        $.post(ajaxurl, { action: 'hizli_kasa_repair_db' }, function(res) {
                             alert(res.data.message);
                             location.reload();
                         });
