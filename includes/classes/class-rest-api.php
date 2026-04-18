@@ -375,9 +375,11 @@ function hizli_kasa_ozel_arama($data) {
         }
     }
 
+    $depo_id   = $data->get_param('depo_id');
+
     $formatted = [];
     foreach ($results as $row) {
-        $item = hizli_kasa_format_urun_row($row);
+        $item = hizli_kasa_format_urun_row($row, $depo_id);
         if ($item) {
             $formatted[] = $item;
         }
@@ -508,9 +510,24 @@ function hizli_kasa_terminal_products($request) {
     $user_id = get_current_user_id();
     $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
 
+    // Kritik Stok Sayısı (Global - Tüm depo için)
+    $table_stok = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+    $critical_count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $table_stok WHERE location_id = %d AND quantity <= 5",
+        $depo_id
+    )) ?: 0;
+
     if ($s) {
+        // Arama yapılıyorsa depo_id'yi de request'e ekleyelim ki ozel_arama kullansın
+        $request->set_param('depo_id', $depo_id);
         $products = hizli_kasa_ozel_arama($request);
-        return $products;
+        return array(
+            'products' => $products,
+            'total'    => count($products),
+            'has_more' => false,
+            'offset'   => 0,
+            'critical_count' => (int)$critical_count
+        );
     }
 
     // Toplam ana ürün sayısını al
@@ -545,7 +562,8 @@ function hizli_kasa_terminal_products($request) {
         'products' => $formatted,
         'total'    => (int)$total_count,
         'has_more' => ($offset + $limit) < $total_count,
-        'offset'   => $offset
+        'offset'   => $offset,
+        'critical_count' => (int)$critical_count
     );
 }
 

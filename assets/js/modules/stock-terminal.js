@@ -116,21 +116,19 @@
                 
                 var data = await response.json();
 
-                if (Array.isArray(data)) {
-                    // Arama motoru veya eski API
-                    this.state.products = append ? this.state.products.concat(data) : data;
-                    this.state.hasMore = false;
-                } else {
-                    // Yeni paginated API
-                    var newProducts = data.products || [];
-                    this.state.products = append ? this.state.products.concat(newProducts) : newProducts;
-                    this.state.total = data.total || 0;
-                    this.state.hasMore = data.has_more || false;
-                    this.state.offset += newProducts.length;
-                    
-                    if (document.getElementById('toplam-urun-sayisi')) {
-                        document.getElementById('toplam-urun-sayisi').innerText = this.state.total;
-                    }
+                // Yeni unified API yapısını işle
+                var newProducts = data.products || [];
+                this.state.products = append ? this.state.products.concat(newProducts) : newProducts;
+                this.state.total = data.total || 0;
+                this.state.hasMore = data.has_more || false;
+                this.state.offset += newProducts.length;
+                
+                // İstatistikleri Güncelle
+                if (document.getElementById('toplam-urun-sayisi')) {
+                    document.getElementById('toplam-urun-sayisi').innerText = this.state.total;
+                }
+                if (document.getElementById('kritik-stok-sayisi')) {
+                    document.getElementById('kritik-stok-sayisi').innerText = data.critical_count || 0;
                 }
 
                 this.renderProducts(append);
@@ -202,10 +200,6 @@
             } else {
                 container.innerHTML = html;
             }
-
-            // Kritik stok sayısını güncelle (sadece ilk yüklemede veya genel bir sayaç tutularak yapılabilir)
-            // Şimdilik sadece render edilenlerdekini sayar.
-            if (criticalEl && !append) criticalEl.innerText = criticalCount;
 
             // Kartlara tıklama olayı ekle (Sadece yeni eklenenlere veya tümüne)
             var self = this;
