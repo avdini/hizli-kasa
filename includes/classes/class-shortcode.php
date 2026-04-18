@@ -99,7 +99,8 @@ function hizli_kasa_uygulamasi()
         'userName' => $display_name,
         'version' => HIZLI_KASA_VERSION,
         'yuvarlamaAktif' => get_option('hizli_kasa_yuvarlama_aktif', '1'),
-        'yuvarlaModu' => get_option('hizli_kasa_yuvarlama_modu', '1')
+        'yuvarlaModu' => get_option('hizli_kasa_yuvarlama_modu', '1'),
+        'kritikStokEsigi' => (int)get_option('hizli_kasa_kritik_stok_esigi', 5)
     ));
 
     // HTML Template'i Render Et

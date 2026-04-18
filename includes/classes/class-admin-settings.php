@@ -34,6 +34,11 @@ function hizli_kasa_ayarlari_kaydet()
     ));
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_yuvarlama_modu');
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_varsayilan_online_depo');
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_kritik_stok_esigi', array(
+        'type' => 'integer',
+        'default' => 5,
+        'sanitize_callback' => 'intval'
+    ));
 }
 
 /**
@@ -256,6 +261,14 @@ function hizli_kasa_ayarlar_sayfasi()
                                     <?php endforeach; ?>
                                 </select>
                                 <p class="description">Online satışlarda stok önce bu depodan düşülür. Yoksa öncelik sırasına göre diğerlerine bakılır.</p>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">Kritik Stok Eşiği</th>
+                            <td>
+                                <?php $kritik_esik = get_option('hizli_kasa_kritik_stok_esigi', 5); ?>
+                                <input type="number" name="hizli_kasa_kritik_stok_esigi" value="<?php echo esc_attr($kritik_esik); ?>" min="0" step="1" class="small-text"> Adet
+                                <p class="description">Depo stoğu bu rakama ve altına düştüğünde terminalde kırmızı uyarı gösterilir.</p>
                             </td>
                         </tr>
                         <tr valign="top">

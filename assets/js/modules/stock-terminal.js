@@ -215,7 +215,8 @@
                 if (!p) continue;
 
                 var isVariable = p.is_variable && p.variations && p.variations.length > 0;
-                var isCritical = !isVariable && p.warehouse_stock <= 5;
+                var threshold = (typeof kasaAyar !== 'undefined' && kasaAyar.kritikStokEsigi) ? parseInt(kasaAyar.kritikStokEsigi) : 5;
+                var isCritical = !isVariable && p.warehouse_stock <= threshold;
                 if (isCritical) criticalCount++;
 
                 var img = p.images && p.images[0] ? p.images[0].src : '';

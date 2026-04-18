@@ -543,6 +543,8 @@ function hizli_kasa_terminal_products($request) {
     $user_id = get_current_user_id();
     $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
 
+    $threshold = (int)get_option('hizli_kasa_kritik_stok_esigi', 5);
+
     if (!$depo_id) {
         return new WP_Error('no_depo', 'Profilinize bir depo atanmamış!', ['status' => 403]);
     }
@@ -550,8 +552,8 @@ function hizli_kasa_terminal_products($request) {
     // Kritik Stok Sayısı (Global - Tüm depo için)
     $table_stok = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
     $critical_count = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table_stok WHERE location_id = %d AND quantity <= 5 AND (variation_id > 0 OR product_id IN (SELECT ID FROM {$wpdb->posts} WHERE post_type = 'product'))",
-        $depo_id
+        "SELECT COUNT(*) FROM $table_stok WHERE location_id = %d AND quantity <= %d AND (variation_id > 0 OR product_id IN (SELECT ID FROM {$wpdb->posts} WHERE post_type = 'product'))",
+        $depo_id, $threshold
     )) ?: 0;
     
     // Not: variation_id > 0 ise direkt alt üründür. 
