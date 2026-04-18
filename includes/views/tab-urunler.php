@@ -34,12 +34,13 @@ if ($depo_id) {
                 <h3>Profilinize bir depo atanmamış!</h3>
                 <p>İşlem yapabilmek için yöneticinizden size bir depo atamasını isteyin.</p>
             </div>
-        <?php else: ?>
-            <div class="terminal-loading">
-                <div class="spin"></div>
-                <p>Ürünler yükleniyor...</p>
-            </div>
         <?php endif; ?>
+    </div>
+
+    <!-- Hata ve Debug Paneli -->
+    <div id="terminal-debug" style="display:none; margin:10px; padding:10px; background:#f8d7da; color:#721c24; border-radius:4px; font-family:monospace; font-size:12px;">
+        <strong>Hata Detayı:</strong> <span id="debug-error-msg"></span>
+        <br><strong>API URL:</strong> <span id="debug-api-url"></span>
     </div>
 
     <!-- Alt Bar: İstatistikler (Opsiyonel) -->

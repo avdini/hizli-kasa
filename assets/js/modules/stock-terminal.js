@@ -81,7 +81,15 @@
                 this.renderProducts();
             } catch (e) {
                 console.error("Hızlı Kasa: Stok yükleme hatası", e);
-                container.innerHTML = '<div class="terminal-uyari"><p>Ürünler yüklenirken bir hata oluştu: ' + e.message + '</p><button onclick="location.reload()" class="button">Tekrar Dene</button></div>';
+                container.innerHTML = '<div class="terminal-uyari"><p>Ürünler yüklenirken bir hata oluştu.</p><button onclick="location.reload()" class="button">Tekrar Dene</button></div>';
+                
+                // Debug Panelini Göster
+                var debugPanel = document.getElementById('terminal-debug');
+                if (debugPanel) {
+                    debugPanel.style.display = 'block';
+                    document.getElementById('debug-error-msg').innerText = e.message;
+                    document.getElementById('debug-api-url').innerText = url;
+                }
             }
         },
 
