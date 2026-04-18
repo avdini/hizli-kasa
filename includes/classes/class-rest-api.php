@@ -56,7 +56,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_terminal_products',
         'permission_callback' => function () {
-            return is_user_logged_in();
+            return current_user_can('edit_posts');
         }
     ));
 
