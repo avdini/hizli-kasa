@@ -7,22 +7,6 @@ if (!defined('ABSPATH')) exit;
 global $wpdb;
 $table_name = $wpdb->prefix . 'hizli_kasa_depolar';
 
-// İşlemleri Yakala (PHP tarafında basit CRUD)
-if (isset($_POST['hizli_kasa_depo_ekle'])) {
-    check_admin_referer('depo_ekle_action', 'depo_ekle_nonce');
-    $wpdb->insert($table_name, [
-        'name'        => sanitize_text_field($_POST['depo_name']),
-        'address'     => sanitize_textarea_field($_POST['depo_address']),
-        'description' => sanitize_textarea_field($_POST['depo_desc']),
-        'priority'    => intval($_POST['depo_priority']),
-    ]);
-}
-
-if (isset($_GET['delete_depo'])) {
-    check_admin_referer('delete_depo_' . $_GET['delete_depo']);
-    $wpdb->delete($table_name, ['id' => intval($_GET['delete_depo'])]);
-}
-
 $depolar = $wpdb->get_results("SELECT * FROM $table_name ORDER BY priority DESC");
 ?>
 
@@ -30,6 +14,7 @@ $depolar = $wpdb->get_results("SELECT * FROM $table_name ORDER BY priority DESC"
     <div class="card" style="max-width: 100%; margin-top: 0;">
         <h3>Yeni Depo Ekle</h3>
         <form method="post" action="">
+            <input type="hidden" name="tab" value="depolar">
             <?php wp_nonce_field('depo_ekle_action', 'depo_ekle_nonce'); ?>
             <table class="form-table">
                 <tr>

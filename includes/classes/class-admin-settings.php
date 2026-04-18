@@ -37,6 +37,56 @@ function hizli_kasa_ayarlari_kaydet()
 }
 
 /**
+ * Depo İşlemlerini Yönetir (Ekleme/Silme)
+ */
+add_action('admin_init', 'hizli_kasa_handle_depo_actions');
+function hizli_kasa_handle_depo_actions() {
+    if (!isset($_GET['page']) || $_GET['page'] !== 'hizli-kasa-ayarlar') return;
+    
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'hizli_kasa_depolar';
+
+    // Yeni Depo Ekleme
+    if (isset($_POST['hizli_kasa_depo_ekle'])) {
+        check_admin_referer('depo_ekle_action', 'depo_ekle_nonce');
+        
+        $inserted = $wpdb->insert($table_name, [
+            'name'        => sanitize_text_field($_POST['depo_name']),
+            'address'     => sanitize_textarea_field($_POST['depo_address']),
+            'description' => sanitize_textarea_field($_POST['depo_desc']),
+            'priority'    => intval($_POST['depo_priority']),
+        ]);
+
+        if ($inserted) {
+            add_settings_error('hizli_kasa_messages', 'depo_eklendi', 'Yeni depo başarıyla eklendi.', 'updated');
+        } else {
+            add_settings_error('hizli_kasa_messages', 'depo_hata', 'Depo eklenirken bir hata oluştu.', 'error');
+        }
+
+        // Yönlendirme yaparak formu temizle ve mesajı koru
+        wp_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&settings-updated=true'));
+        exit;
+    }
+
+    // Depo Silme
+    if (isset($_GET['delete_depo'])) {
+        $depo_id = intval($_GET['delete_depo']);
+        check_admin_referer('delete_depo_' . $depo_id);
+        
+        $deleted = $wpdb->delete($table_name, ['id' => $depo_id]);
+
+        if ($deleted) {
+            add_settings_error('hizli_kasa_messages', 'depo_silindi', 'Depo başarıyla silindi.', 'updated');
+        } else {
+            add_settings_error('hizli_kasa_messages', 'depo_silme_hata', 'Depo silinirken bir hata oluştu.', 'error');
+        }
+
+        wp_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&settings-updated=true'));
+        exit;
+    }
+}
+
+/**
  * Kullanıcı Profili Entegrasyonu
  */
 add_action('show_user_profile', 'hizli_kasa_user_warehouse_field');
@@ -123,6 +173,7 @@ function hizli_kasa_ayarlar_sayfasi()
     ?>
     <div class="wrap">
         <h1>Hızlı Kasa Ayarları</h1>
+        <?php settings_errors('hizli_kasa_messages'); ?>
         
         <h2 class="nav-tab-wrapper">
             <a href="?page=hizli-kasa-ayarlar&tab=genel" class="nav-tab <?php echo $active_tab == 'genel' ? 'nav-tab-active' : ''; ?>">Genel Ayarlar</a>
