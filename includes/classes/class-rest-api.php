@@ -435,6 +435,7 @@ function hizli_kasa_format_urun_row($row) {
         $urun = wc_get_product($row->ID);
         if (!$urun) return null;
 
+        $is_variable = $urun->is_type('variable');
         $active_children_data = [];
         if ($is_variable) {
             $children = $urun->get_children();
