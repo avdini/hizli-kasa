@@ -963,22 +963,25 @@ function hizli_kasa_terminal_products($request) {
         }
 
         // Toplam Kalem Sayısı: Basit Ürün + Tüm Varyasyonlar
-        // Arama kriterlerine uyan parentların altındaki depo kayıtlarını sayar
-        $grand_total_items = $wpdb->get_var($wpdb->prepare("
-            SELECT COUNT(sk.id)
-            FROM $stok_table sk
-            INNER JOIN {$wpdb->posts} p ON (
-                (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0)
-                OR
-                (p.post_type = 'product_variation' AND sk.variation_id = p.ID)
-            )
-            WHERE sk.location_id = %d 
-              AND (
-                  p.ID IN (SELECT ID FROM ({$wpdb->posts} p $join WHERE $where) as matched_ids)
-                  OR 
-                  p.post_parent IN (SELECT ID FROM ({$wpdb->posts} p $join WHERE $where) as matched_ids)
-              )
-        ", array_merge([$depo_id], $params)));
+        // Önce eşleşen ana ürünlerin ID listesini alıyoruz
+        $matched_ids = $wpdb->get_col($wpdb->prepare("
+            SELECT DISTINCT p.ID
+            FROM {$wpdb->posts} p
+            $join
+            WHERE $where
+        ", ...$params));
+
+        if (!empty($matched_ids)) {
+            $ids_str = implode(',', array_map('intval', $matched_ids));
+            $grand_total_items = $wpdb->get_var($wpdb->prepare("
+                SELECT COUNT(sk.id)
+                FROM $stok_table sk
+                WHERE sk.location_id = %d 
+                  AND (sk.product_id IN ($ids_str) OR sk.variation_id IN (SELECT ID FROM {$wpdb->posts} WHERE post_parent IN ($ids_str)))
+            ", $depo_id));
+        }
+    }
+
     }
 
     return [
