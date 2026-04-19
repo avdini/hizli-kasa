@@ -439,23 +439,34 @@ jQuery(document).ready(function($) {
 
     // Define reload function early
     window.loadStockList = function(page = 1) {
+        console.log('HK Debug: loadStockList called, page:', page);
         const query = $('#admin-product-search').val();
         const filterMismatch = $('#filter-mismatch').is(':checked');
         const $body = $('#admin-stock-list-body');
         const ajax_url = (typeof ajaxurl !== 'undefined') ? ajaxurl : '/wp-admin/admin-ajax.php';
         
+        console.log('HK Debug: Sending AJAX request to:', ajax_url, {
+            action: 'hizli_kasa_get_admin_stock_list',
+            s: query,
+            paged: page,
+            filter_mismatch: filterMismatch
+        });
+
         $.post(ajax_url, {
             action: 'hizli_kasa_get_admin_stock_list',
             s: query,
             paged: page,
             filter_mismatch: filterMismatch
         }, function(res) {
+            console.log('HK Debug: AJAX Response received:', res);
             $body.css('opacity', '1');
             if(res.success) {
+                console.log('HK Debug: Rendering table with', res.data.products.length, 'products');
                 renderTable(res.data.products);
                 renderPagination(res.data.total_pages, page);
             } else {
                 let errorMsg = res.data ? res.data.message : 'Bilinmeyen hata';
+                console.error('HK Debug: AJAX reported failure:', errorMsg);
                 $body.html(`<tr><td colspan="100%" style="text-align:center; padding:40px;">
                     <div style="color:#d63638; font-weight:600; margin-bottom:10px;">⚠️ Veri Alınamadı</div>
                     <div style="font-size:13px; color:#666; margin-bottom:15px;">${errorMsg}</div>
@@ -463,6 +474,7 @@ jQuery(document).ready(function($) {
                 </td></tr>`);
             }
         }).fail(function(xhr) {
+            console.error('HK Debug: AJAX Connection failed (Status:', xhr.status, ')', xhr.responseText);
             $body.css('opacity', '1');
             let detail = (xhr.status === 504) ? 'Sunucu yanıt süresi aşıldı (Timeout). Lütfen sayfayı yenileyip tekrar deneyin.' : 'Bağlantı hatası oluştu.';
             $body.html(`<tr><td colspan="100%" style="text-align:center; padding:40px;">
