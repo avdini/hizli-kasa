@@ -26,34 +26,7 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
         </div>
     </div>
 
-    <!-- Eşleşmeyen Ürünler Bölümü (Artık Yukarıda) -->
-    <div id="unmatched-items-section" style="margin-bottom:30px; display:block;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="margin:0; color:#d63638; font-size:18px;"><span class="dashicons dashicons-warning" style="font-size:20px; width:20px; height:20px;"></span> Eşleşmeyen Ürünler</h2>
-            <button type="button" class="button button-link-delete" id="btn-clear-unmatched" style="display:none;" onclick="deleteAllUnmatched()">Tümünü Temizle</button>
-        </div>
-        <div class="card" style="padding:0; overflow:hidden; border-color:#e5e7eb;">
-            <table class="wp-list-table widefat fixed striped" style="box-shadow:none; border:none;">
-                <thead>
-                    <tr>
-                        <th style="background:#f9fafb;">Dosyadaki Depo</th>
-                        <th style="background:#f9fafb;">Dosyadaki Ürün Adı</th>
-                        <th style="background:#f9fafb;">SKU (Hatalı/Eksik)</th>
-                        <th style="background:#f9fafb;">Miktar</th>
-                        <th style="background:#f9fafb;">Hata Mesajı</th>
-                        <th style="width:80px; background:#f9fafb;">İşlem</th>
-                    </tr>
-                </thead>
-                <tbody id="unmatched-items-body">
-                    <tr>
-                        <td colspan="6" style="text-align:center; padding:20px; color:#64748b; font-style:italic;">
-                            <span class="dashicons dashicons-yes-alt" style="color:#10b981;"></span> Henüz uyuşmazlık bulunmuyor.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <!-- Stok Tablosu -->
 
     <div id="admin-stock-table-container">
         <table class="wp-list-table widefat fixed striped table-view-list products">
@@ -449,55 +422,7 @@ jQuery(document).ready(function($) {
         });
     });
 
-    // --- Eşleşmeyen Ürünler Yönetimi ---
-    function loadUnmatchedItems() {
-        $.post(ajaxurl, { action: 'hizli_kasa_get_unmatched' }, function(res) {
-            const $body = $('#unmatched-items-body');
-            const $clearBtn = $('#btn-clear-unmatched');
-            $body.empty();
-
-            if (res.success && res.data.length > 0) {
-                $clearBtn.show();
-                res.data.forEach(item => {
-                    $body.append(`
-                        <tr>
-                            <td>${item.warehouse_name}</td>
-                            <td>${item.product_name || '—'}</td>
-                            <td style="color:#d63638; font-weight:bold;">${item.sku}</td>
-                            <td>${item.stock_qty}</td>
-                            <td style="font-size:11px; color:#666;">${item.error_msg}</td>
-                            <td>
-                                <button type="button" class="button button-small" onclick="deleteUnmatched(${item.id})">Sil</button>
-                            </td>
-                        </tr>
-                    `);
-                });
-            } else {
-                $clearBtn.hide();
-                $body.append(`
-                    <tr>
-                        <td colspan="6" style="text-align:center; padding:20px; color:#64748b; font-style:italic;">
-                            <span class="dashicons dashicons-yes-alt" style="color:#10b981;"></span> Henüz uyuşmazlık bulunmuyor.
-                        </td>
-                    </tr>
-                `);
-            }
-        });
-    }
-
-    window.deleteUnmatched = function(id) {
-        if (id === -1 && !confirm('Tüm listeyi temizlemek istediğinize emin misiniz?')) return;
-        $.post(ajaxurl, { action: 'hizli_kasa_delete_unmatched', id: id }, function(res) {
-            loadUnmatchedItems();
-        });
-    };
-
-    window.deleteAllUnmatched = function() {
-        deleteUnmatched(-1);
-    };
-
-    // İlk yüklemede eşleşmeyenleri kontrol et
-    loadUnmatchedItems();
+    // İlk yüklemede eşleşmeyenleri kontrol etmeyi artık yapmıyoruz (Ayrı sekmede)
 
     // Define reload function early
     window.loadStockList = function(page = 1) {

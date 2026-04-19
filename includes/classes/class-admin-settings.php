@@ -177,15 +177,16 @@ function hizli_kasa_handle_depo_actions() {
 
     // Depo Silme
     if (isset($_GET['delete_depo'])) {
-        $depo_id = intval($_GET['delete_depo']);
-        check_admin_referer('delete_depo_' . $depo_id);
-        
+        $depo_name = $wpdb->get_var($wpdb->prepare("SELECT name FROM $table_name WHERE id = %d", $depo_id));
         $deleted = $wpdb->delete($table_name, ['id' => $depo_id]);
 
         if ($deleted) {
-            // Sıkı İzolasyon: Deponun tüm stoklarını ve loglarını da sil
+            // Sıkı İzolasyon: Deponun tüm stoklarını, loglarını ve uyuşmazlıklarını sil
             $wpdb->delete($wpdb->prefix . 'hizli_kasa_stok_konumlari',  ['location_id' => $depo_id]);
             $wpdb->delete($wpdb->prefix . 'hizli_kasa_stok_hareketleri', ['location_id' => $depo_id]);
+            if ($depo_name) {
+                $wpdb->delete($wpdb->prefix . 'hizli_kasa_unmatched_items', ['warehouse_name' => $depo_name]);
+            }
         }
 
         $msg = $deleted ? 'depo_silindi' : 'depo_silme_hata';
@@ -431,6 +432,7 @@ add_action('wp_ajax_hizli_kasa_export_stocks', 'hizli_kasa_ajax_export_stocks');
 add_action('wp_ajax_hizli_kasa_import_stocks', 'hizli_kasa_ajax_import_stocks');
 add_action('wp_ajax_hizli_kasa_get_unmatched', 'hizli_kasa_ajax_get_unmatched');
 add_action('wp_ajax_hizli_kasa_delete_unmatched', 'hizli_kasa_ajax_delete_unmatched');
+add_action('wp_ajax_hizli_kasa_clear_all_unmatched', 'hizli_kasa_ajax_clear_all_unmatched');
 
 /**
  * Ürün ve Depo Stok Listesini Getir (Optimize)
@@ -815,13 +817,26 @@ function hizli_kasa_ajax_delete_unmatched() {
     global $wpdb;
     $table = $wpdb->prefix . 'hizli_kasa_unmatched_items';
     
+    // Eğer ID -1 gelirse bu "Tümünü Temizle" demektir
     if ($id === -1) {
         $wpdb->query("TRUNCATE TABLE $table");
     } else {
         $wpdb->delete($table, ['id' => $id]);
     }
     
-    wp_send_json_success();
+    wp_send_json_success(['message' => 'İşlem başarılı.']);
+}
+
+/**
+ * Tüm Eşleşmeyen Ürünleri Sil (Ekstra Güvenlik)
+ */
+function hizli_kasa_ajax_clear_all_unmatched() {
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    
+    global $wpdb;
+    $table = $wpdb->prefix . 'hizli_kasa_unmatched_items';
+    $wpdb->query("TRUNCATE TABLE $table");
+    wp_send_json_success(['message' => 'Tüm liste temizlendi.']);
 }
 
 // Admin Ayarlar Sayfası Arayüzü
@@ -837,9 +852,15 @@ function hizli_kasa_ayarlar_sayfasi()
         <h1>Hızlı Kasa Ayarları</h1>
         <?php settings_errors('hizli_kasa_messages'); ?>
         
+        <?php
+        global $wpdb;
+        $unmatched_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hizli_kasa_unmatched_items");
+        $badge = $unmatched_count > 0 ? ' <span style="background:#d63638; color:#fff; padding:1px 6px; border-radius:10px; font-size:10px; font-weight:bold; vertical-align:middle; margin-left:4px;">!</span>' : '';
+        ?>
         <h2 class="nav-tab-wrapper">
             <a href="?page=hizli-kasa&tab=genel" class="nav-tab <?php echo $active_tab == 'genel' ? 'nav-tab-active' : ''; ?>">Genel Ayarlar</a>
             <a href="?page=hizli-kasa&tab=stok" class="nav-tab <?php echo $active_tab == 'stok' ? 'nav-tab-active' : ''; ?>">Stok Yönetimi</a>
+            <a href="?page=hizli-kasa&tab=unmatched" class="nav-tab <?php echo $active_tab == 'unmatched' ? 'nav-tab-active' : ''; ?>">Eşleşmeyen Ürünler<?php echo $badge; ?></a>
             <a href="?page=hizli-kasa&tab=depolar" class="nav-tab <?php echo $active_tab == 'depolar' ? 'nav-tab-active' : ''; ?>">Depo Yönetimi</a>
             <a href="?page=hizli-kasa&tab=araclar" class="nav-tab <?php echo $active_tab == 'araclar' ? 'nav-tab-active' : ''; ?>">Sistem Araçları</a>
         </h2>
@@ -929,6 +950,9 @@ function hizli_kasa_ayarlar_sayfasi()
 
             <?php elseif ($active_tab == 'stok'): ?>
                 <?php include HIZLI_KASA_PATH . 'includes/views/admin-stok-yonetimi.php'; ?>
+
+            <?php elseif ($active_tab == 'unmatched'): ?>
+                <?php include HIZLI_KASA_PATH . 'includes/views/admin-stok-uyusmazlik.php'; ?>
 
             <?php elseif ($active_tab == 'depolar'): ?>
                 <?php include HIZLI_KASA_PATH . 'includes/views/admin-depo-yonetimi.php'; ?>
