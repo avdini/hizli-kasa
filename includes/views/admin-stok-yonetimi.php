@@ -130,15 +130,16 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
 
 /* Hierarchical Rows & Accordion */
 .row-variable { cursor: pointer; user-select: none; font-weight: 500; }
-.row-variation { transition: all 0.2s; }
+.row-variation { transition: all 0.2s; border-top: 1px solid #f8fafc; }
 .variation-indent { padding-left: 45px !important; position: relative; }
 
-/* Zebra Striping (Excel-style) */
-#admin-stock-list-body tr:nth-child(even) { background-color: #f6f7f7 !important; }
-#admin-stock-list-body tr:nth-child(odd) { background-color: #ffffff !important; }
+/* Smart Group Striping */
+.stripe-even { background-color: #f0f7ff !important; } /* Mavimsi ton */
+.stripe-odd { background-color: #ffffff !important; }
+.row-variation { background-color: #ffffff !important; } /* Varyasyonlar temiz beyaz kalsın */
 
 /* Hover Effect */
-#admin-stock-list-body tr:hover { background-color: #eff6ff !important; }
+#admin-stock-list-body tr:hover { background-color: #e0e7ff !important; } /* Daha belirgin hover */
 
 .variation-indent::before {
     content: '';
@@ -249,12 +250,16 @@ jQuery(document).ready(function($) {
             return;
         }
 
+        let mainRowCounter = 0;
+
         products.forEach(p => {
+            mainRowCounter++;
             const isVariable = p.type === 'variable';
             const badgeClass = isVariable ? 'badge-variable' : 'badge-simple';
             const badgeText = isVariable ? 'Varyantlı' : 'Basit';
+            const stripeClass = (mainRowCounter % 2 === 0) ? 'stripe-even' : 'stripe-odd';
 
-            let row = `<tr class="${isVariable ? 'row-variable' : ''}" data-id="${p.id}">
+            let row = `<tr class="${isVariable ? 'row-variable' : ''} ${stripeClass}" data-id="${p.id}">
                 <td><img src="${p.thumbnail}" style="width:40px; height:40px; border-radius:4px; object-fit:cover;"></td>
                 <td style="vertical-align:middle;">
                     <div style="display:flex; align-items:center;">
