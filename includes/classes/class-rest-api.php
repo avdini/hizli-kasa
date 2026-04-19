@@ -363,13 +363,18 @@ function hizli_kasa_ozel_arama($data) {
     $s = sanitize_text_field($data['s']);
     if (empty($s)) return [];
 
-    $results = [];
-    $exact = $data->get_param('exact');
+    $stok_table = Hizli_Kasa_Database::get_tables()['stok_konumlari'];
+    $depo_id    = $data->get_param('depo_id');
+    $results    = [];
+    $exact      = $data->get_param('exact');
 
     if ($exact) {
         // Barkod okuyucu için tam SKU eşleşmesi
         $results = $wpdb->get_results($wpdb->prepare("
             SELECT p.ID, p.post_title, p.post_type, p.post_parent,
+                   tt_type.slug as product_type,
+                   pm_thumb.meta_value as thumbnail_id,
+                   sk.quantity as warehouse_stock,
                    MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
                    MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
                    MAX(CASE WHEN pm.meta_key = '_regular_price' THEN pm.meta_value END) as regular_price,
@@ -378,12 +383,17 @@ function hizli_kasa_ozel_arama($data) {
                    MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
             FROM {$wpdb->posts} p
             LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+            LEFT JOIN {$wpdb->postmeta} pm_thumb ON p.ID = pm_thumb.post_id AND pm_thumb.meta_key = '_thumbnail_id'
+            LEFT JOIN $stok_table sk ON (sk.product_id = p.ID AND sk.location_id = %d AND sk.variation_id = 0)
+            LEFT JOIN {$wpdb->term_relationships} tr_type ON p.ID = tr_type.object_id
+            LEFT JOIN {$wpdb->term_taxonomy} tt_tax ON tr_type.term_taxonomy_id = tt_tax.term_taxonomy_id AND tt_tax.taxonomy = 'product_type'
+            LEFT JOIN {$wpdb->terms} tt_type ON tt_tax.term_id = tt_type.term_id
             WHERE p.post_status = 'publish'
               AND p.post_type IN ('product', 'product_variation')
               AND p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value = %s)
             GROUP BY p.ID
             LIMIT 20
-        ", $s));
+        ", $depo_id, $s));
     } else {
         // --- AKILLI ARAMA MANTIĞI ---
         $found_ids = [];
@@ -457,8 +467,11 @@ function hizli_kasa_ozel_arama($data) {
         // 3. Bulunan ID'lerin detaylarını getir (Hydration)
         if (!empty($found_ids)) {
             $ids_str = implode(',', array_map('intval', $found_ids));
-            $results = $wpdb->get_results("
+            $results = $wpdb->get_results($wpdb->prepare("
                 SELECT p.ID, p.post_title, p.post_type, p.post_parent,
+                       tt_type.slug as product_type,
+                       pm_thumb.meta_value as thumbnail_id,
+                       sk.quantity as warehouse_stock,
                        MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
                        MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
                        MAX(CASE WHEN pm.meta_key = '_regular_price' THEN pm.meta_value END) as regular_price,
@@ -467,14 +480,17 @@ function hizli_kasa_ozel_arama($data) {
                        MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
                 FROM {$wpdb->posts} p
                 LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+                LEFT JOIN {$wpdb->postmeta} pm_thumb ON p.ID = pm_thumb.post_id AND pm_thumb.meta_key = '_thumbnail_id'
+                LEFT JOIN $stok_table sk ON (sk.product_id = p.ID AND sk.location_id = %d AND sk.variation_id = 0)
+                LEFT JOIN {$wpdb->term_relationships} tr_type ON p.ID = tr_type.object_id
+                LEFT JOIN {$wpdb->term_taxonomy} tt_tax ON tr_type.term_taxonomy_id = tt_tax.term_taxonomy_id AND tt_tax.taxonomy = 'product_type'
+                LEFT JOIN {$wpdb->terms} tt_type ON tt_tax.term_id = tt_type.term_id
                 WHERE p.ID IN ($ids_str)
                 GROUP BY p.ID
                 ORDER BY FIELD(p.ID, $ids_str)
-            ");
+            ", $depo_id));
         }
     }
-
-    $depo_id   = $data->get_param('depo_id');
 
     $formatted = [];
     foreach ($results as $row) {
@@ -514,7 +530,7 @@ function hizli_kasa_ozel_arama($data) {
             if (!empty($genis_results)) {
                 $formatted = [];
                 foreach ($genis_results as $grow) {
-                    $gitem = hizli_kasa_format_urun_row($grow);
+                    $gitem = hizli_kasa_format_urun_row($grow, $depo_id);
                     if ($gitem) {
                         $formatted[] = $gitem;
                     }
@@ -535,7 +551,7 @@ function hizli_kasa_ozel_arama($data) {
 /**
  * Veritabanı row'unu JSON formatına çevirir (Performans Optimizasyonlu).
  */
-function hizli_kasa_format_urun_row($row, $depo_id, $variations_by_parent = []) {
+function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent = []) {
     try {
         $parent_id = (int)$row->ID;
         // product_type SQL'den gelecek
