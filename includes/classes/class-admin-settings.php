@@ -483,12 +483,16 @@ function hizli_kasa_ajax_get_admin_stock_list() {
             if (!$v_post || $v_post->post_parent != $m_id) continue;
 
             $vm = $metas_by_id[$v_id] ?? [];
+            $v_thumb_id = $vm['_thumbnail_id'] ?? 0;
+            $v_thumbnail = $v_thumb_id ? wp_get_attachment_image_url($v_thumb_id, 'thumbnail') : wc_placeholder_img_src();
+
             $v_item = [
                 'id' => $m_id,
                 'variation_id' => $v_id,
                 'name' => $v_post->post_title,
                 'sku' => $vm['_sku'] ?? '',
                 'wc_stock' => (float)($vm['_stock'] ?? 0),
+                'thumbnail' => $v_thumbnail,
                 'warehouse_stocks' => []
             ];
             foreach ($depolar as $d) {

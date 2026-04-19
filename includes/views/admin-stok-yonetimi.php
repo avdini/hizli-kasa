@@ -128,21 +128,43 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
     line-height: 1;
 }
 
-/* Hierarchical Rows */
-.row-variable { background: #f8fafc !important; }
-.row-variation { background: #ffffff !important; }
-.variation-indent { padding-left: 40px !important; position: relative; }
+/* Hierarchical Rows & Accordion */
+.row-variable { background: #f8fafc !important; cursor: pointer; user-select: none; }
+.row-variable:hover { background: #f1f5f9 !important; }
+.row-variation { background: #ffffff !important; transition: all 0.2s; }
+.variation-indent { padding-left: 45px !important; position: relative; }
 .variation-indent::before {
     content: '';
     position: absolute;
     left: 20px;
     top: -10px;
     bottom: 50%;
-    width: 15px;
+    width: 20px;
     border-left: 2px solid #cbd5e1;
     border-bottom: 2px solid #cbd5e1;
-    border-bottom-left-radius: 4px;
+    border-bottom-left-radius: 6px;
 }
+
+.toggle-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: #e2e8f0;
+    color: #64748b;
+    font-size: 10px;
+    margin-right: 8px;
+    transition: all 0.2s;
+}
+.row-variable.expanded .toggle-icon {
+    background: #2271b1;
+    color: #fff;
+    transform: rotate(90deg);
+}
+
+.hidden-variation { display: none !important; }
 
 /* Badges */
 .hk-badge {
@@ -204,6 +226,13 @@ jQuery(document).ready(function($) {
     // İlk Yükleme (Artık güvenli)
     loadStockList();
 
+    // Sayfa değiştirince veya arama yapınca delegasyonlu event listener'ı bir kez kur
+    $(document).off('click', '.row-variable').on('click', '.row-variable', function() {
+        const productID = $(this).data('id');
+        $(this).toggleClass('expanded');
+        $(`.child-of-${productID}`).toggleClass('hidden-variation');
+    });
+
     function renderTable(products) {
         const $body = $('#admin-stock-list-body');
         $body.empty();
@@ -218,14 +247,15 @@ jQuery(document).ready(function($) {
             const badgeClass = isVariable ? 'badge-variable' : 'badge-simple';
             const badgeText = isVariable ? 'Varyantlı' : 'Basit';
 
-            let row = `<tr class="${isVariable ? 'row-variable' : ''}">
+            let row = `<tr class="${isVariable ? 'row-variable' : ''}" data-id="${p.id}">
                 <td><img src="${p.thumbnail}" style="width:40px; height:40px; border-radius:4px; object-fit:cover;"></td>
                 <td style="vertical-align:middle;">
-                    <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+                    <div style="display:flex; align-items:center;">
+                        ${isVariable ? '<span class="toggle-icon">▶</span>' : ''}
                         <strong>${p.name}</strong>
                         <span class="hk-badge ${badgeClass}">${badgeText}</span>
                     </div>
-                    <code style="font-size:10px; color:#64748b;">SKU: ${p.sku || 'N/A'}</code>
+                    <code style="font-size:10px; color:#64748b; margin-left:${isVariable ? '26px' : '0'};">SKU: ${p.sku || 'N/A'}</code>
                 </td>
                 <td style="font-weight:bold; color:#64748b; vertical-align:middle;">${isVariable ? '-' : p.wc_stock}</td>`;
             
@@ -246,8 +276,8 @@ jQuery(document).ready(function($) {
             // Varyasyonları Ekle
             if(isVariable && p.variations) {
                 p.variations.forEach(v => {
-                    let vRow = `<tr class="row-variation">
-                        <td></td>
+                    let vRow = `<tr class="row-variation child-of-${p.id} hidden-variation">
+                        <td style="text-align:right;"><img src="${v.thumbnail}" style="width:30px; height:30px; border-radius:4px; object-fit:cover;"></td>
                         <td class="variation-indent" style="vertical-align:middle;">
                             <div style="display:flex; align-items:center;">
                                 <span style="font-size:13px; color:#334155;">${v.name}</span>
