@@ -95,11 +95,11 @@ class Hizli_Kasa_Database {
         $sql4 = "CREATE TABLE {$tables['unmatched_items']} (
             id bigint(20) NOT NULL AUTO_INCREMENT,
             warehouse_name varchar(255) NOT NULL,
-            product_name varchar(255),
-            sku varchar(100),
-            stock_qty decimal(15,4) DEFAULT 0.0000,
+            product_name varchar(255) DEFAULT '',
+            sku varchar(100) DEFAULT '',
+            stock_qty decimal(15,4) DEFAULT '0.0000',
             error_msg text,
-            created_at datetime,
+            created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
             PRIMARY KEY  (id)
         ) $charset_collate;";
         $res4 = dbDelta($sql4);

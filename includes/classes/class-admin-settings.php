@@ -113,16 +113,27 @@ function hizli_kasa_handle_depo_actions() {
             case 'db_onarildi':
                 add_settings_error('hizli_kasa_messages', 'db_onarildi', 'Veritabanı tabloları kontrol edildi ve onarıldı.', 'updated');
                 break;
+            case 'depo_guncellendi':
+                add_settings_error('hizli_kasa_messages', 'depo_guncellendi', 'Depo bilgileri başarıyla güncellendi.', 'updated');
+                break;
         }
     }
 
     // Yeni Depo Ekleme
     if (isset($_POST['hizli_kasa_depo_ekle'])) {
-        error_log('Hızlı Kasa: Depo ekleme tetiklendi.');
         check_admin_referer('depo_ekle_action', 'depo_ekle_nonce');
         
+        $name = sanitize_text_field($_POST['depo_name']);
+        
+        // Mükerrer Kayıt Kontrolü
+        $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table_name WHERE name = %s", $name));
+        if ($exists) {
+            wp_safe_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=depo_hata&hizli_kasa_err=' . urlencode('Bu isimde bir depo zaten mevcut.')));
+            exit;
+        }
+
         $inserted = $wpdb->insert($table_name, [
-            'name'        => sanitize_text_field($_POST['depo_name']),
+            'name'        => $name,
             'address'     => sanitize_textarea_field($_POST['depo_address']),
             'description' => sanitize_textarea_field($_POST['depo_desc']),
             'priority'    => intval($_POST['depo_priority']),
@@ -130,12 +141,37 @@ function hizli_kasa_handle_depo_actions() {
         ]);
 
         if ($inserted === false) {
-            $error_msg = $wpdb->last_error ?: "Bilinmeyen veritabanı hatası. Tablolar eksik olabilir. Lütfen 'Sistem Araçları' sekmesinden tabloları onarın.";
+            $error_msg = $wpdb->last_error ?: "Veritabanı hatası.";
             wp_safe_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=depo_hata&hizli_kasa_err=' . urlencode($error_msg)));
             exit;
         }
 
         wp_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=depo_eklendi'));
+        exit;
+    }
+
+    // Depo Güncelleme
+    if (isset($_POST['hizli_kasa_depo_guncelle'])) {
+        check_admin_referer('depo_guncelle_action', 'depo_guncelle_nonce');
+        
+        $id = intval($_POST['depo_id']);
+        $name = sanitize_text_field($_POST['depo_name']);
+        
+        // İsim çakışma kontrolü (Kendi ID'si hariç)
+        $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table_name WHERE name = %s AND id != %d", $name, $id));
+        if ($exists) {
+            wp_safe_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=depo_hata&hizli_kasa_err=' . urlencode('Bu isimde başka bir depo zaten mevcut.')));
+            exit;
+        }
+
+        $updated = $wpdb->update($table_name, [
+            'name'        => $name,
+            'address'     => sanitize_textarea_field($_POST['depo_address']),
+            'description' => sanitize_textarea_field($_POST['depo_desc']),
+            'priority'    => intval($_POST['depo_priority'])
+        ], ['id' => $id]);
+
+        wp_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=depo_guncellendi'));
         exit;
     }
 

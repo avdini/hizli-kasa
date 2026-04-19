@@ -230,7 +230,7 @@ class Hizli_Kasa_Stock_Manager {
         }
 
         $results = $wpdb->get_results("
-            SELECT d.name as warehouse, p.post_title as product_name, sk.quantity, sk.product_id, sk.variation_id
+            SELECT d.name as warehouse, d.priority, d.address as warehouse_address, p.post_title as product_name, sk.quantity, sk.product_id, sk.variation_id
             FROM {$tables['stok_konumlari']} sk
             JOIN {$tables['depolar']} d ON sk.location_id = d.id
             JOIN {$wpdb->posts} p ON (CASE WHEN sk.variation_id > 0 THEN sk.variation_id ELSE sk.product_id END) = p.ID
@@ -242,6 +242,8 @@ class Hizli_Kasa_Stock_Manager {
             $sku = get_post_meta($row->variation_id ?: $row->product_id, '_sku', true);
             $data[] = [
                 'Depo Adı'     => $row->warehouse,
+                'Öncelik'     => $row->priority,
+                'Depo Adresi' => $row->warehouse_address,
                 'Ürün Adı'    => $row->product_name,
                 'SKU'         => $sku,
                 'Stok Miktarı' => $row->quantity
@@ -253,7 +255,7 @@ class Hizli_Kasa_Stock_Manager {
         }
 
         // CSV Hazırla
-        $output = "Depo Adı,Ürün Adı,SKU,Stok Miktarı\n";
+        $output = "Depo Adı,Öncelik,Depo Adresi,Ürün Adı,SKU,Stok Miktarı\n";
         foreach ($data as $row) {
             $clean_row = array_map(function($v) {
                 return '"' . str_replace('"', '""', $v) . '"';
@@ -290,14 +292,16 @@ class Hizli_Kasa_Stock_Manager {
 
         foreach ($rows as $row) {
             $warehouse_name = $row['Depo Adı'] ?? $row['warehouse'] ?? '';
+            $priority       = intval($row['Öncelik'] ?? $row['priority'] ?? 0);
+            $address        = $row['Depo Adresi'] ?? $row['warehouse_address'] ?? '';
             $sku            = $row['SKU'] ?? $row['sku'] ?? '';
             $qty            = floatval($row['Stok Miktarı'] ?? $row['quantity'] ?? 0);
             $product_name   = $row['Ürün Adı'] ?? $row['product_name'] ?? '';
 
             if (empty($warehouse_name) || empty($sku)) continue;
 
-            // 1. Depoyu Bul veya Oluştur
-            $depo_id = self::get_or_create_warehouse($warehouse_name, $stats);
+            // 1. Depoyu Bul veya Oluştur/Güncelle
+            $depo_id = self::get_or_create_warehouse($warehouse_name, $stats, $priority, $address);
 
             // 2. Ürünü Bul
             $ids = self::find_product_by_sku($sku);
@@ -319,7 +323,7 @@ class Hizli_Kasa_Stock_Manager {
     /**
      * Depoyu isme göre bulur yoksa oluşturur.
      */
-    private static function get_or_create_warehouse($name, &$stats) {
+    private static function get_or_create_warehouse($name, &$stats, $priority = 0, $address = '') {
         global $wpdb;
         $table = Hizli_Kasa_Database::get_tables()['depolar'];
         
@@ -328,11 +332,21 @@ class Hizli_Kasa_Stock_Manager {
         if (!$id) {
             $wpdb->insert($table, [
                 'name' => $name,
-                'created_at' => current_time('mysql'),
-                'priority' => 0
+                'address' => $address,
+                'priority' => $priority,
+                'created_at' => current_time('mysql')
             ]);
             $id = $wpdb->insert_id;
             $stats['new_warehouses']++;
+        } else {
+            // Mevcut depoyu güncelle (Eğer dosyada bilgi varsa)
+            $update_data = [];
+            if (!empty($address)) $update_data['address'] = $address;
+            if ($priority > 0) $update_data['priority'] = $priority;
+
+            if (!empty($update_data)) {
+                $wpdb->update($table, $update_data, ['id' => $id]);
+            }
         }
         
         return $id;
@@ -398,9 +412,10 @@ class Hizli_Kasa_Stock_Manager {
      */
     public static function add_unmatched_item($warehouse_name, $product_name, $sku, $qty, $error) {
         global $wpdb;
-        $table = Hizli_Kasa_Database::get_tables()['unmatched_items'];
+        $tables = Hizli_Kasa_Database::get_tables();
+        $table = $tables['unmatched_items'];
         
-        $wpdb->insert($table, [
+        $inserted = $wpdb->insert($table, [
             'warehouse_name' => $warehouse_name,
             'product_name'   => $product_name,
             'sku'            => $sku,
@@ -408,5 +423,9 @@ class Hizli_Kasa_Stock_Manager {
             'error_msg'      => $error,
             'created_at'     => current_time('mysql')
         ]);
+
+        if ($inserted === false) {
+            error_log('Hızlı Kasa DB Hatası (Unmatched Insert): ' . $wpdb->last_error);
+        }
     }
 }
