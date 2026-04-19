@@ -109,7 +109,13 @@ jQuery(document).ready(function($) {
             if(res.success) {
                 renderTable(res.data.products);
                 renderPagination(res.data.total_pages, page);
+            } else {
+                $body.html('<tr><td colspan="100%" style="text-align:center; color:red; padding:20px;">Hata: ' + (res.data ? res.data.message : 'Bilinmeyen hata') + '</td></tr>');
             }
+        }).fail(function(xhr) {
+            $body.css('opacity', '1');
+            $body.html('<tr><td colspan="100%" style="text-align:center; color:red; padding:20px;">Sunucu hatası oluştu. Lütfen tekrar deneyin. (Kod: ' + xhr.status + ')</td></tr>');
+            console.error(xhr.responseText);
         });
     };
 

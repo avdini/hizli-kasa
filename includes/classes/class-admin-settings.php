@@ -393,10 +393,10 @@ add_action('wp_ajax_hizli_kasa_admin_update_stock', 'hizli_kasa_ajax_admin_updat
  * Ürün ve Depo Stok Listesini Getir (Optimize)
  */
 function hizli_kasa_ajax_get_admin_stock_list() {
-    if (!current_user_can('manage_options')) wp_send_json_error();
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
 
     global $wpdb;
-    hizli_kasa_log("Admin Stok Listesi Çağrıldı: s=" . $_POST['s']);
+    hizli_kasa_log("Admin Stok Listesi Başladı (Ultra-Optimize)");
     
     $s = sanitize_text_field($_POST['s']);
     $paged = max(1, intval($_POST['paged']));
@@ -406,7 +406,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
     $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
     $depo_table = $wpdb->prefix . 'hizli_kasa_depolar';
 
-    // 1. ÜRÜN BULMA (ID Discovery)
+    // ADIM 1: Sadece ID'leri Bul (HAFİF)
     $where = "p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish'";
     $params = [];
     if ($s) {
@@ -416,82 +416,87 @@ function hizli_kasa_ajax_get_admin_stock_list() {
     }
 
     $total_items = $wpdb->get_var($wpdb->prepare("SELECT COUNT(p.ID) FROM {$wpdb->posts} p WHERE $where", ...$params));
-    $total_pages = ceil($total_items / $per_page);
-
-    $sql = $wpdb->prepare("
-        SELECT p.ID, p.post_title, p.post_parent, p.post_type,
-               MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
-               MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as wc_stock,
-               MAX(CASE WHEN pm.meta_key = '_thumbnail_id' THEN pm.meta_value END) as thumb_id
-        FROM {$wpdb->posts} p
-        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-        WHERE $where
-        GROUP BY p.ID
-        ORDER BY p.post_title DESC, p.ID DESC
+    $target_ids = $wpdb->get_col($wpdb->prepare("
+        SELECT p.ID FROM {$wpdb->posts} p WHERE $where 
+        ORDER BY p.post_type ASC, p.post_title ASC 
         LIMIT %d OFFSET %d
-    ", array_merge($params, [$per_page, $offset]));
+    ", array_merge($params, [$per_page, $offset])));
 
-    $products = $wpdb->get_results($sql);
-    hizli_kasa_log("Ana ürünler çekildi: " . count($products));
+    hizli_kasa_log("ID Discovery bitti: " . count($target_ids) . " adet.");
 
-    if (empty($products)) {
+    if (empty($target_ids)) {
         wp_send_json_success(['products' => [], 'total_pages' => 0]);
     }
 
-    $depolar = $wpdb->get_results("SELECT id FROM $depo_table ORDER BY priority DESC");
-    $product_ids = wp_list_pluck($products, 'ID');
+    // ADIM 2: Detayları Topla (NOKTA ATIŞI)
+    $placeholders = implode(',', array_fill(0, count($target_ids), '%d'));
+    
+    // Meta bilgilerini toplu çek
+    $meta_results = $wpdb->get_results($wpdb->prepare("
+        SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta} 
+        WHERE post_id IN ($placeholders) AND meta_key IN ('_sku', '_stock', '_thumbnail_id')
+    ", $target_ids));
+    
+    $metas_by_id = [];
+    foreach ($meta_results as $m) { $metas_by_id[$m->post_id][$m->meta_key] = $m->meta_value; }
 
-    // 2. TOPLU STOK ÇEKME (N+1 Çözümü)
+    // Ürün başlıklarını ve tiplerini al
+    $p_details = $wpdb->get_results("SELECT ID, post_title, post_type, post_parent FROM {$wpdb->posts} WHERE ID IN ($placeholders)");
+    $details_by_id = [];
+    foreach ($p_details as $pd) { $details_by_id[$pd->ID] = $pd; }
+
+    // ADIM 3: Depo Stoklarını Topla (NOKTA ATIŞI)
+    $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priority DESC");
+    $stock_results = $wpdb->get_results($wpdb->prepare("
+        SELECT location_id, product_id, variation_id, quantity 
+        FROM $stok_table 
+        WHERE (product_id IN ($placeholders) OR variation_id IN ($placeholders))
+    ", array_merge($target_ids, $target_ids)));
+
     $stocks_by_loc = [];
-    if (!empty($product_ids)) {
-        $placeholders = implode(',', array_fill(0, count($product_ids), '%d'));
-        // Hem basit ürünleri hem de varyasyonları tek seferde al
-        $stock_sql = "SELECT location_id, product_id, variation_id, quantity FROM $stok_table WHERE (product_id IN ($placeholders) OR variation_id IN ($placeholders))";
-        $stock_results = $wpdb->get_results($wpdb->prepare($stock_sql, array_merge($product_ids, $product_ids)));
-        
-        foreach ($stock_results as $sr) {
-            $key = ($sr->variation_id > 0) ? "v_{$sr->variation_id}" : "p_{$sr->product_id}";
-            $stocks_by_loc[$sr->location_id][$key] = $sr->quantity;
-        }
+    foreach ($stock_results as $sr) {
+        $key = ($sr->variation_id > 0) ? "v_{$sr->variation_id}" : "p_{$sr->product_id}";
+        $stocks_by_loc[$sr->location_id][$key] = $sr->quantity;
     }
 
+    // BİRLEŞTİR (Formatla)
     $output = [];
-    foreach ($products as $p) {
+    foreach ($target_ids as $id) {
+        $p = $details_by_id[$id];
+        $m = isset($metas_by_id[$id]) ? $metas_by_id[$id] : [];
+        
         $name = $p->post_title;
         if ($p->post_type === 'product_variation') {
             $parent_title = get_the_title($p->post_parent);
             $name = $parent_title . ' - ' . $name;
         }
 
-        $thumbnail = $p->thumb_id ? wp_get_attachment_image_url($p->thumb_id, 'thumbnail') : wc_placeholder_img_src();
-        
+        $thumb_id = isset($m['_thumbnail_id']) ? $m['_thumbnail_id'] : 0;
+        $thumbnail = $thumb_id ? wp_get_attachment_image_url($thumb_id, 'thumbnail') : wc_placeholder_img_src();
+
         $item = [
             'id'           => ($p->post_type === 'product_variation' ? $p->post_parent : $p->ID),
             'variation_id' => ($p->post_type === 'product_variation' ? $p->ID : 0),
             'name'         => $name,
-            'sku'          => $p->sku,
-            'wc_stock'     => (float)$p->wc_stock,
+            'sku'          => isset($m['_sku']) ? $m['_sku'] : '',
+            'wc_stock'     => isset($m['_stock']) ? (float)$m['_stock'] : 0,
             'thumbnail'    => $thumbnail,
             'warehouse_stocks' => []
         ];
 
         foreach ($depolar as $d) {
-            $key = ($p->post_type === 'product_variation') ? "v_{$p->ID}" : "p_{$p->ID}";
-            $qty = isset($stocks_by_loc[$d->id][$key]) ? $stocks_by_loc[$d->id][$key] : 0;
-            
-            $item['warehouse_stocks'][] = [
-                'depo_id' => $d->id,
-                'qty'     => (float)$qty
-            ];
+            $stock_key = ($p->post_type === 'product_variation') ? "v_{$p->ID}" : "p_{$p->ID}";
+            $qty = isset($stocks_by_loc[$d->id][$stock_key]) ? $stocks_by_loc[$d->id][$stock_key] : 0;
+            $item['warehouse_stocks'][] = ['depo_id' => $d->id, 'qty' => (float)$qty];
         }
         $output[] = $item;
     }
 
-    hizli_kasa_log("Admin Stok Listesi Bitti.");
+    hizli_kasa_log("Admin Stok Listesi Bitti (Başarı)");
     wp_send_json_success([
         'products'    => $output,
-        'total_pages' => (int)$total_pages,
-        'current_page' => (int)$paged
+        'total_pages' => ceil($total_items / $per_page),
+        'current_page' => $paged
     ]);
 }
 
