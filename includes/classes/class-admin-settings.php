@@ -422,6 +422,7 @@ function hizli_kasa_save_user_warehouse_field($user_id) {
 add_action('wp_ajax_hizli_kasa_setup', 'hizli_kasa_ajax_setup');
 add_action('wp_ajax_hizli_kasa_reset', 'hizli_kasa_ajax_reset');
 add_action('wp_ajax_hizli_kasa_repair_db', 'hizli_kasa_ajax_repair_db');
+add_action('wp_ajax_hizli_kasa_debug_db', 'hizli_kasa_ajax_debug_db');
 add_action('wp_ajax_hizli_kasa_get_admin_stock_list', 'hizli_kasa_ajax_get_admin_stock_list');
 add_action('wp_ajax_hizli_kasa_admin_update_stock', 'hizli_kasa_ajax_admin_update_stock');
 
@@ -688,6 +689,26 @@ function hizli_kasa_ajax_repair_db() {
     wp_send_json_success(['message' => 'Veritabanı tabloları başarıyla onarıldı.']);
 }
 
+function hizli_kasa_ajax_debug_db() {
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    
+    global $wpdb;
+    $tables = Hizli_Kasa_Database::get_tables();
+    $report = [];
+
+    foreach ($tables as $key => $table) {
+        $exists = $wpdb->get_var("SHOW TABLES LIKE '$table'");
+        $count = $exists ? $wpdb->get_var("SELECT COUNT(*) FROM $table") : 'TABLE MISSING';
+        $report[$key] = [
+            'table' => $table,
+            'exists' => $exists ? true : false,
+            'row_count' => $count
+        ];
+    }
+
+    wp_send_json_success($report);
+}
+
 function hizli_kasa_ajax_setup() {
     if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz işlem!']);
     
@@ -772,6 +793,13 @@ function hizli_kasa_ajax_get_unmatched() {
     
     global $wpdb;
     $table = $wpdb->prefix . 'hizli_kasa_unmatched_items';
+    
+    // Tablo kontrolü ve gerekirse oluşturma
+    if (!$wpdb->get_var("SHOW TABLES LIKE '$table'")) {
+        require_once HIZLI_KASA_PATH . 'includes/classes/class-database.php';
+        Hizli_Kasa_Database::init();
+    }
+
     $results = $wpdb->get_results("SELECT * FROM $table ORDER BY created_at DESC");
     
     wp_send_json_success($results);
