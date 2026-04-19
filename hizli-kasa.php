@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 3.6.4
+ * Version: 3.6.5
  * Author: Seyfullah Kurt
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH'))
 	exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '3.6.4');
+define('HIZLI_KASA_VERSION', '3.6.5');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -18,14 +18,20 @@ define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
  * Hızlı Kasa için özel loglama fonksiyonu.
  * Eklenti ana klasöründeki hizli-kasa-debug.log dosyasına yazar.
  */
-function hizli_kasa_log($message) {
+function hizli_kasa_log($message, $filename = 'hizli-kasa-debug.log') {
     if (is_array($message) || is_object($message)) {
         $message = print_r($message, true);
     }
-    // WP_CONTENT_DIR kullanımı daha güvenlidir, wp_upload_dir() erken yüklemede çökebilir.
-    $file = WP_CONTENT_DIR . '/hizli-kasa-debug.log';
+    $file = HIZLI_KASA_PATH . $filename;
     $timestamp = date('Y-m-d H:i:s');
     @file_put_contents($file, "[$timestamp] $message\n", FILE_APPEND);
+}
+
+/**
+ * Admin işlemleri için ayrı log
+ */
+function hizli_kasa_admin_log($message) {
+    hizli_kasa_log($message, 'hizli-kasa-admin.log');
 }
 
 // Canary Log: Sadece WP hazır olduğunda çalıştır

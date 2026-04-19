@@ -395,40 +395,25 @@ add_action('wp_ajax_hizli_kasa_admin_update_stock', 'hizli_kasa_ajax_admin_updat
 function hizli_kasa_ajax_get_admin_stock_list() {
     if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
 
-    global $wpdb;
-    hizli_kasa_log("Admin Stok Listesi Başladı (Ultra-Optimize)");
-    error_log("HIZLI KASA DEBUG: Admin Stok Listesi AJAX Call Received.");
-    
-    $s = sanitize_text_field($_POST['s']);
-    $paged = max(1, intval($_POST['paged']));
-    $per_page = 24;
-    $offset = ($paged - 1) * $per_page;
+    // BAĞLANTI TESTİ LOGU
+    hizli_kasa_admin_log("-----------------------------------------");
+    hizli_kasa_admin_log("BAĞLANTI TESTİ: AJAX Çağrısı Başarıyla Alındı.");
 
-    $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
-    $depo_table = $wpdb->prefix . 'hizli_kasa_depolar';
+    // TEST İÇİN SAHTE VERİ GÖNDERİYORUZ (Veritabanını tamamen baypas et)
+    $test_products = [
+        [
+            'id' => 1, 'variation_id' => 0, 'name' => 'TEST ÜRÜN 1 (LOG TESTİ)', 'sku' => 'TEST-001', 'wc_stock' => 10,
+            'thumbnail' => '', 'warehouse_stocks' => [['depo_id' => 1, 'qty' => 5]]
+        ]
+    ];
 
-    // ADIM 1: Sadece ID'leri Bul (HAFİF)
-    $where = "p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish'";
-    $params = [];
-    $search_where = "";
-    if ($s) {
-        $like = '%' . $wpdb->esc_like($s) . '%';
-        $search_where = " AND (p.post_title LIKE %s OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s))";
-        $params[] = $like; $params[] = $like;
-    }
-
-    $total_items = $wpdb->get_var($wpdb->prepare("SELECT COUNT(p.ID) FROM {$wpdb->posts} p WHERE $where $search_where", ...$params));
-    $target_ids = $wpdb->get_col($wpdb->prepare("
-        SELECT p.ID FROM {$wpdb->posts} p WHERE $where $search_where
-        ORDER BY p.post_type ASC, p.ID DESC 
-        LIMIT %d OFFSET %d
-    ", array_merge($params, [$per_page, $offset])));
-
-    hizli_kasa_log("ID Discovery bitti: " . count($target_ids) . " adet.");
-
-    if (empty($target_ids)) {
-        wp_send_json_success(['products' => [], 'total_pages' => 0]);
-    }
+    wp_send_json_success([
+        'products'    => $test_products,
+        'total_pages' => 1,
+        'current_page' => 1
+    ]);
+    exit; // Kesinlikle burada dur
+}
 
     // ADIM 2: Detayları Topla (NOKTA ATIŞI)
     $placeholders = implode(',', array_fill(0, count($target_ids), '%d'));
@@ -494,7 +479,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         $output[] = $item;
     }
 
-    hizli_kasa_log("Admin Stok Listesi Bitti (Başarı)");
+    hizli_kasa_admin_log("Admin Stok Listesi Veri Birleştirme Bitti. " . count($output) . " ürün gönderiliyor.");
     wp_send_json_success([
         'products'    => $output,
         'total_pages' => ceil($total_items / $per_page),
