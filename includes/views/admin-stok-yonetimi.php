@@ -26,6 +26,35 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
         </div>
     </div>
 
+    <!-- Eşleşmeyen Ürünler Bölümü (Artık Yukarıda) -->
+    <div id="unmatched-items-section" style="margin-bottom:30px; display:block;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0; color:#d63638; font-size:18px;"><span class="dashicons dashicons-warning" style="font-size:20px; width:20px; height:20px;"></span> Eşleşmeyen Ürünler</h2>
+            <button type="button" class="button button-link-delete" id="btn-clear-unmatched" style="display:none;" onclick="deleteAllUnmatched()">Tümünü Temizle</button>
+        </div>
+        <div class="card" style="padding:0; overflow:hidden; border-color:#e5e7eb;">
+            <table class="wp-list-table widefat fixed striped" style="box-shadow:none; border:none;">
+                <thead>
+                    <tr>
+                        <th style="background:#f9fafb;">Dosyadaki Depo</th>
+                        <th style="background:#f9fafb;">Dosyadaki Ürün Adı</th>
+                        <th style="background:#f9fafb;">SKU (Hatalı/Eksik)</th>
+                        <th style="background:#f9fafb;">Miktar</th>
+                        <th style="background:#f9fafb;">Hata Mesajı</th>
+                        <th style="width:80px; background:#f9fafb;">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="unmatched-items-body">
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:20px; color:#64748b; font-style:italic;">
+                            <span class="dashicons dashicons-yes-alt" style="color:#10b981;"></span> Henüz uyuşmazlık bulunmuyor.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div id="admin-stock-table-container">
         <table class="wp-list-table widefat fixed striped table-view-list products">
             <thead>
@@ -52,32 +81,6 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
 
     <div class="pagination-wrap" id="admin-stock-pagination" style="margin-top:20px; text-align:right;">
         <!-- Sayfalama buraya gelecek -->
-    </div>
-
-    <!-- Eşleşmeyen Ürünler Bölümü -->
-    <div id="unmatched-items-section" style="margin-top:40px; display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="margin:0; color:#d63638;"><span class="dashicons dashicons-warning" style="font-size:24px; width:24px; height:24px;"></span> Eşleşmeyen Ürünler</h2>
-            <button type="button" class="button button-link-delete" onclick="deleteAllUnmatched()">Tümünü Temizle</button>
-        </div>
-        <div class="card" style="padding:0; overflow:hidden;">
-            <table class="wp-list-table widefat fixed striped">
-                <thead>
-                    <tr>
-                        <th>Dosyadaki Depo</th>
-                        <th>Dosyadaki Ürün Adı</th>
-                        <th>SKU (Hatalı/Eksik)</th>
-                        <th>Stok Miktarı</th>
-                        <th>Hata Mesajı</th>
-                        <th style="width:100px;">İşlem</th>
-                    </tr>
-                </thead>
-                <tbody id="unmatched-items-body">
-                    <!-- JS ile dolacak -->
-                </tbody>
-            </table>
-        </div>
-        <p class="description" style="margin-top:10px;">* Bu listedeki ürünler sistemde eşleşen bir SKU bulunamadığı için stokları güncellenmemiştir. Manuel kontrol sonrası listeden silebilirsiniz.</p>
     </div>
 </div>
 
@@ -449,10 +452,12 @@ jQuery(document).ready(function($) {
     // --- Eşleşmeyen Ürünler Yönetimi ---
     function loadUnmatchedItems() {
         $.post(ajaxurl, { action: 'hizli_kasa_get_unmatched' }, function(res) {
+            const $body = $('#unmatched-items-body');
+            const $clearBtn = $('#btn-clear-unmatched');
+            $body.empty();
+
             if (res.success && res.data.length > 0) {
-                $('#unmatched-items-section').show();
-                const $body = $('#unmatched-items-body');
-                $body.empty();
+                $clearBtn.show();
                 res.data.forEach(item => {
                     $body.append(`
                         <tr>
@@ -468,7 +473,14 @@ jQuery(document).ready(function($) {
                     `);
                 });
             } else {
-                $('#unmatched-items-section').hide();
+                $clearBtn.hide();
+                $body.append(`
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:20px; color:#64748b; font-style:italic;">
+                            <span class="dashicons dashicons-yes-alt" style="color:#10b981;"></span> Henüz uyuşmazlık bulunmuyor.
+                        </td>
+                    </tr>
+                `);
             }
         });
     }
