@@ -76,10 +76,26 @@
         _urunuBulVeEkle: async function(sku) {
             var durumMetni = document.getElementById("durum");
             try {
-                var response = await fetch(window.location.origin + '/wp-json/hizli-kasa/v1/search?exact=1&s=' + encodeURIComponent(sku), {
-                    headers: { 'X-WP-Nonce': kasaAyar.nonce }
+                // kasaAyar.rootApiUrl kullanıyoruz (daha güvenli)
+                var apiUrl = (typeof kasaAyar !== 'undefined' && kasaAyar.rootApiUrl) 
+                    ? kasaAyar.rootApiUrl + 'hizli-kasa/v1/search'
+                    : window.location.origin + '/wp-json/hizli-kasa/v1/search';
+
+                var response = await fetch(apiUrl + '?exact=1&s=' + encodeURIComponent(sku), {
+                    headers: { 'X-WP-Nonce': (typeof kasaAyar !== 'undefined' ? kasaAyar.nonce : '') }
                 });
+
+                if (!response.ok) {
+                    throw new Error("Sunucu hatası: " + response.status);
+                }
+
                 var data = await response.json();
+                
+                // Response bir array değilse (WP Error dönerse) hata ver
+                if (!Array.isArray(data)) {
+                    throw new Error(data.message || "Bilinmeyen API Hatası");
+                }
+
                 var urun = data.find(function(item) { 
                     var trimmedSku = (item.sku ? item.sku.trim() : "");
                     return trimmedSku === sku.trim(); 
@@ -88,11 +104,21 @@
                 if (urun) {
                     HK.CartManager.ekleUrunObjesiyle(urun);
                 } else {
-                    durumMetni.innerText = "HATA: Ürün bulunamadı!";
-                    durumMetni.style.color = "red";
+                    durumMetni.innerText = "HATA: [" + sku + "] bulunamadı!";
+                    durumMetni.style.color = "#e74c3c";
+                    
+                    // 3 saniye sonra mesajı temizle
+                    setTimeout(function() {
+                        if (durumMetni.innerText.includes("bulunamadı")) {
+                            durumMetni.innerText = "Hazır (Barkod Bekleniyor)";
+                            durumMetni.style.color = "";
+                        }
+                    }, 3000);
                 }
             } catch (error) {
                 console.error("API Hatası", error);
+                durumMetni.innerText = "API HATASI: " + error.message;
+                durumMetni.style.color = "red";
             }
         }
     };
