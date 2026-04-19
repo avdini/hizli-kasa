@@ -333,10 +333,15 @@ jQuery(document).ready(function($) {
         resetImportUI();
     };
 
+    let importOccurred = false;
+
     window.closeImportModal = function() {
         $('#hk-import-modal').hide();
-        loadStockList(); // Stokları yenile
-        loadUnmatchedItems(); // Varsa eşleşmeyenleri yenile
+        if (importOccurred) {
+            location.reload();
+        } else {
+            loadStockList(); 
+        }
     };
 
     function resetImportUI() {
@@ -406,20 +411,16 @@ jQuery(document).ready(function($) {
                 $('#hk-close-import-btn').prop('disabled', false);
                 $('#start-import-btn').text('İşlem Tamamlandı');
                 
-                if (res.success) {
-                    $('#import-progress-container').hide();
-                    if (res.data.stats) {
-                        $('#res-updated').text(res.data.stats.updated);
-                        $('#res-unmatched').text(res.data.stats.unmatched);
-                        $('#res-warehouses').text(res.data.stats.new_warehouses);
-                        $('#import-result-summary').show();
-                    }
-                    
-                    let msg = '<strong>Harika!</strong> Stoklar başarıyla güncellendi.';
+                    const msg = '<strong>Harika!</strong> Stoklar başarıyla güncellendi.';
                     if (res.data.stats && res.data.stats.unmatched > 0) {
                         msg += `<div style="font-size:12px; margin-top:5px; font-weight:normal;">${res.data.stats.unmatched} ürün eşleşmediği için ayrı bir listeye eklendi. "Eşleşmeyen Ürünler" sekmesinden kontrol edebilirsiniz.</div>`;
                     }
                     $('#hk-import-message').html(msg).css({ 'background': '#ecfdf5', 'color': '#065f46', 'border': '1px solid #d1fae5' }).fadeIn();
+                    
+                    importOccurred = true;
+                    $('#start-import-btn').text('Tamam (Sayfayı Yenile)').off('click').on('click', function() {
+                        closeImportModal();
+                    });
                 } else {
                     const errorMsg = res.data.message || 'Bilinmeyen bir hata oluştu.';
                     $('#hk-import-message').html('<strong>Hata!</strong> ' + errorMsg).css({ 'background': '#fef2f2', 'color': '#991b1b', 'border': '1px solid #fecaca' }).fadeIn();
