@@ -213,9 +213,11 @@
         }
     };
 
+})(window.HizliKasa || (window.HizliKasa = {}));
+
 // Sekme yüklendiğinde başlat
 document.addEventListener('hkTabLoaded', function(e) {
-    if (e.detail.tab === 'masraf') {
-        HK.ExpenseManager.init();
+    if (e.detail.tab === 'masraf' && window.HizliKasa && window.HizliKasa.ExpenseManager) {
+        window.HizliKasa.ExpenseManager.init();
     }
 });
