@@ -152,28 +152,16 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
 }
 
 /* Hierarchical Rows & Accordion */
-.row-variable { cursor: pointer; user-select: none; font-weight: 500; }
-.row-variation { transition: all 0.2s; border-top: 1px solid #f8fafc; }
-.variation-indent { padding-left: 45px !important; position: relative; }
+.row-variable { cursor: pointer; user-select: none; font-weight: 500; background-color: #ffffff !important; }
+.row-variation { transition: all 0.2s; border-top: 1px solid #f8fafc; background-color: #ffffff !important; }
+.variation-indent { padding-left: 20px !important; position: relative; }
 
-/* Smart Group Striping */
-.stripe-even { background-color: #f0f7ff !important; } /* Mavimsi ton */
-.stripe-odd { background-color: #ffffff !important; }
-.row-variation { background-color: #ffffff !important; } /* Varyasyonlar temiz beyaz kalsın */
+/* Hover Effect (Glow) */
+#admin-stock-list-body tr:hover { background-color: #f1f5f9 !important; } 
 
-/* Hover Effect */
-#admin-stock-list-body tr:hover { background-color: #e0e7ff !important; } /* Daha belirgin hover */
-
-.variation-indent::before {
-    content: '';
-    position: absolute;
-    left: 20px;
-    top: -10px;
-    bottom: 50%;
-    width: 20px;
-    border-left: 2px solid #cbd5e1;
-    border-bottom: 2px solid #cbd5e1;
-    border-bottom-left-radius: 6px;
+@keyframes hk-pulse-success {
+    0% { color: #166534; }
+    100% { color: inherit; }
 }
 
 .toggle-icon {
@@ -273,16 +261,12 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        let mainRowCounter = 0;
-
         products.forEach(p => {
-            mainRowCounter++;
             const isVariable = p.type === 'variable';
             const badgeClass = isVariable ? 'badge-variable' : 'badge-simple';
             const badgeText = isVariable ? 'Varyantlı' : 'Basit';
-            const stripeClass = (mainRowCounter % 2 === 0) ? 'stripe-even' : 'stripe-odd';
 
-            let row = `<tr class="${isVariable ? 'row-variable' : ''} ${stripeClass}" data-id="${p.id}">
+            let row = `<tr class="${isVariable ? 'row-variable' : ''}" data-id="${p.id}">
                 <td><img src="${p.thumbnail}" style="width:40px; height:40px; border-radius:4px; object-fit:cover;"></td>
                 <td style="vertical-align:middle;">
                     <div style="display:flex; align-items:center;">
