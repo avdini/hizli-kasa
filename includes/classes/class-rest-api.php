@@ -823,7 +823,27 @@ function hizli_kasa_terminal_products($request) {
         return ['products' => [], 'total' => 0, 'has_more' => false, 'critical_count' => 0];
     }
 
-    // Ürünleri Getir
+    // ADIM 1: ID KEŞFİ (Hafif Sorgu)
+    // Sadece gösterilecek 24 ID'yi buluyoruz (Meta tablolarına dokunmuyoruz)
+    $id_query = $wpdb->prepare("
+        SELECT DISTINCT p.ID 
+        FROM {$wpdb->posts} p 
+        $join_extra 
+        WHERE $where 
+        ORDER BY p.post_title ASC 
+        LIMIT %d OFFSET %d
+    ", array_merge($params, [$limit, $offset]));
+    
+    $target_ids = $wpdb->get_col($id_query);
+    hizli_kasa_log("ID Keşfi Bitti: " . count($target_ids) . " adet ID bulundu.");
+
+    if (empty($target_ids)) {
+        return ['products' => [], 'total' => (int)$total, 'has_more' => false, 'critical_count' => 0];
+    }
+
+    // ADIM 2: DETAYLARI ÇEK (Nokta Atışı)
+    // Sadece bulduğumuz 24 ID için ağır meta bilgilerini çekiyoruz
+    $placeholders = implode(',', array_fill(0, count($target_ids), '%d'));
     $sql = $wpdb->prepare("
         SELECT p.ID, p.post_title, p.post_type, p.post_parent,
                tt_type.slug as product_type,
@@ -842,15 +862,13 @@ function hizli_kasa_terminal_products($request) {
         LEFT JOIN {$wpdb->term_relationships} tr_type ON p.ID = tr_type.object_id
         LEFT JOIN {$wpdb->term_taxonomy} tt_tax ON tr_type.term_taxonomy_id = tt_tax.term_taxonomy_id AND tt_tax.taxonomy = 'product_type'
         LEFT JOIN {$wpdb->terms} tt_type ON tt_tax.term_id = tt_type.term_id
-        $join_extra
-        WHERE $where
+        WHERE p.ID IN ($placeholders)
         GROUP BY p.ID
         ORDER BY p.post_title ASC
-        LIMIT %d OFFSET %d
-    ", array_merge([$depo_id], $params, [$limit, $offset]));
+    ", array_merge([$depo_id], $target_ids));
 
     $results = $wpdb->get_results($sql);
-    hizli_kasa_log("Sonuçlar çekildi: " . count($results));
+    hizli_kasa_log("Hydration (Detay Çekme) Bitti: " . count($results) . " satır.");
 
     // Varyasyonları Toplu Çek
     $parent_ids = wp_list_pluck($results, 'ID');
