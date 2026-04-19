@@ -129,10 +129,17 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
 }
 
 /* Hierarchical Rows & Accordion */
-.row-variable { background: #f8fafc !important; cursor: pointer; user-select: none; }
-.row-variable:hover { background: #f1f5f9 !important; }
-.row-variation { background: #ffffff !important; transition: all 0.2s; }
+.row-variable { cursor: pointer; user-select: none; font-weight: 500; }
+.row-variation { transition: all 0.2s; }
 .variation-indent { padding-left: 45px !important; position: relative; }
+
+/* Zebra Striping (Excel-style) */
+#admin-stock-list-body tr:nth-child(even) { background-color: #f6f7f7 !important; }
+#admin-stock-list-body tr:nth-child(odd) { background-color: #ffffff !important; }
+
+/* Hover Effect */
+#admin-stock-list-body tr:hover { background-color: #eff6ff !important; }
+
 .variation-indent::before {
     content: '';
     position: absolute;
