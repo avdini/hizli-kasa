@@ -532,106 +532,59 @@ function hizli_kasa_ozel_arama($data) {
  * @param object $row     DB satırı
  * @param int|null $depo_id Hangi deponun stoğuna bakılacak
  */
-function hizli_kasa_format_urun_row($row, $depo_id = null) {
+/**
+ * Veritabanı row'unu JSON formatına çevirir (Performans Optimizasyonlu).
+ */
+function hizli_kasa_format_urun_row($row, $depo_id, $variations_by_parent = []) {
     try {
-        $urun = wc_get_product($row->ID);
-        if (!$urun) return null;
-
-        $is_variable = $urun->is_type('variable');
+        $parent_id = (int)$row->ID;
+        // product_type SQL'den gelecek
+        $is_variable = ($row->product_type === 'variable');
+        
         $active_children_data = [];
-        if ($is_variable) {
-            $children = $urun->get_children();
-            foreach ($children as $child_id) {
-                if (get_post_status($child_id) !== 'publish') continue;
-                
-                $v_urun = wc_get_product($child_id);
-                if (!$v_urun) continue;
-
-                // Varyasyon için depo stoğu
-                $v_depo_stock = null;
-                
-                if ($depo_id) {
-                    global $wpdb;
-                    $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
-                    $v_depo_stock = $wpdb->get_var($wpdb->prepare("
-                        SELECT quantity FROM $stok_table 
-                        WHERE product_id = %d AND variation_id = %d AND location_id = %d
-                    ", $row->ID, $child_id, $depo_id));
-                }
-
-                $attributes = $v_urun->get_variation_attributes();
-                $attr_values = implode(', ', array_values($attributes));
-
+        if ($is_variable && isset($variations_by_parent[$parent_id])) {
+            foreach ($variations_by_parent[$parent_id] as $v) {
+                // Varyasyon adını basitçe oluştur (Daha detaylısı lazımsa SQL'den meta çekilebilir)
                 $active_children_data[] = [
-                    'id' => (int)$child_id,
-                    'parent_id' => (int)$row->ID,
-                    'type' => 'variation',
-                    'name' => $urun->get_name() . ' - ' . $attr_values,
-                    'sku' => $v_urun->get_sku(),
-                    'warehouse_stock' => ($v_depo_stock !== null) ? (float)$v_depo_stock : (float)$v_urun->get_stock_quantity(),
-                    'stock_quantity' => (float)$v_urun->get_stock_quantity()
+                    'id'               => (int)$v->ID,
+                    'parent_id'        => $parent_id,
+                    'type'             => 'variation',
+                    'name'             => $v->post_title, // SQL'den gelen formatlı ad
+                    'sku'              => $v->sku ?: '',
+                    'warehouse_stock'  => (float)$v->warehouse_stock,
+                    'stock_quantity'   => (float)$v->stock_quantity
                 ];
             }
-            
-            if (empty($active_children_data)) {
-                $is_variable = false;
-            }
         }
 
-        $name = $urun->get_name();
-        if ($row->post_type === 'product_variation') {
-            $parent = wc_get_product($row->post_parent);
-            if ($parent) {
-                $attributes = $urun->get_variation_attributes();
-                $attr_values = implode(', ', array_values($attributes));
-                $name = $parent->get_name() . ' - ' . $attr_values;
-            }
-        }
-
-        $image_id = $urun->get_image_id();
-        $image_url = $image_id ? wp_get_attachment_image_url($image_id, 'thumbnail') : '';
-
-        // Depo Bazlı Stok Bilgisi (önce parametre, yoksa user_meta fallback)
-        $depo_stock = null;
-        if (!$depo_id) {
-            $uid = get_current_user_id();
-            $depo_id = hizli_kasa_get_user_active_depo($uid);
-        }
-        
-        if ($depo_id) {
-            global $wpdb;
-            $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
-            $p_id = ($row->post_type === 'product_variation') ? $row->post_parent : $row->ID;
-            $v_id = ($row->post_type === 'product_variation') ? $row->ID : 0;
-            
-            // Tablo var mı kontrol et (Sessiz hata engelleme)
-            $depo_stock = $wpdb->get_var($wpdb->prepare("
-                SELECT quantity FROM $stok_table 
-                WHERE product_id = %d AND variation_id = %d AND location_id = %d
-            ", $p_id, $v_id, $depo_id));
+        // Resim (SQL'den thumbnail_id gelecek)
+        $image_url = '';
+        if (!empty($row->thumbnail_id)) {
+            $image_url = wp_get_attachment_image_url($row->thumbnail_id, 'thumbnail');
         }
 
         return [
-            'id' => (int)$row->ID,
-            'parent_id' => (int)$row->post_parent,
-            'type' => $row->post_type === 'product_variation' ? 'variation' : 'product',
-            'name' => $name,
-            'sku' => $row->sku,
-            'price' => $row->price,
-            'regular_price' => $row->regular_price,
-            'stock_status' => $row->stock_status,
-            'manage_stock' => $row->manage_stock === 'yes',
-            'stock_quantity' => (float)$row->stock_quantity,
-            'warehouse_stock' => ($depo_stock !== null) ? (float)$depo_stock : 0,
-            'images' => $image_url ? [['src' => $image_url]] : [],
-            'is_variable' => $is_variable,
-            'variations' => $active_children_data
+            'id'              => $parent_id,
+            'parent_id'       => (int)$row->post_parent,
+            'type'            => $row->post_type === 'product_variation' ? 'variation' : 'product',
+            'name'            => $row->post_title,
+            'sku'             => $row->sku,
+            'price'           => $row->price,
+            'regular_price'   => $row->regular_price,
+            'stock_status'    => $row->stock_status,
+            'manage_stock'    => $row->manage_stock === 'yes',
+            'stock_quantity'  => (float)$row->stock_quantity,
+            'warehouse_stock' => (float)$row->warehouse_stock,
+            'images'          => $image_url ? [['src' => $image_url]] : [],
+            'is_variable'     => ($is_variable && !empty($active_children_data)),
+            'variations'      => $active_children_data
         ];
     } catch (Exception $e) {
         error_log('Hızlı Kasa Ürün Formatlama Hatası (ID: ' . $row->ID . '): ' . $e->getMessage());
         return null;
     }
 }
+
 
 /**
  * Terminal üzerinden stok güncelleme.
@@ -829,66 +782,53 @@ function hizli_kasa_process_refund($request) {
 function hizli_kasa_terminal_products($request) {
     global $wpdb;
     
-    $limit   = intval($request->get_param('limit') ?: 50);
+    $limit   = intval($request->get_param('limit') ?: 24);
     $offset  = intval($request->get_param('offset') ?: 0);
     $depo_id = intval($request->get_param('depo_id'));
     $s       = sanitize_text_field($request->get_param('s'));
 
-    // Kritik stok eşiğini al
     $threshold = (int) get_option('hizli_kasa_kritik_stok_esigi', 5);
-
     $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
 
-    // Sadece ANA ürünleri (product) ve SEÇİLİ deponun ürünlerini getiriyoruz.
+    // ANA ÜRÜN FİLTRELEME (Sadece 'product' tipi ve stok izolasyonu)
     $where = "p.post_status = 'publish' AND p.post_type = 'product'";
-    $join  = "LEFT JOIN {$wpdb->postmeta} pm_sku ON p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku'";
+    $join_extra = "";
     
-    // Sıkı İzolasyon: Eğer depo seçiliyse, sadece o depoya atanmış ürünleri getir
     if ($depo_id) {
-        $join .= $wpdb->prepare(" INNER JOIN $stok_table sk_filter ON (sk_filter.product_id = p.ID AND sk_filter.location_id = %d)", $depo_id);
+        $join_extra .= $wpdb->prepare(" INNER JOIN $stok_table sk_filter ON (sk_filter.product_id = p.ID AND sk_filter.location_id = %d AND sk_filter.variation_id = 0)", $depo_id);
     }
 
     $params = [];
-
     if (!empty($s)) {
         $like = '%' . $wpdb->esc_like($s) . '%';
         $where .= " AND (
             p.post_title LIKE %s 
-            OR pm_sku.meta_value LIKE %s 
+            OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s)
             OR p.ID IN (
                 SELECT DISTINCT sub_p.post_parent 
                 FROM {$wpdb->posts} sub_p 
-                LEFT JOIN {$wpdb->postmeta} sub_pm ON sub_p.ID = sub_pm.post_id AND sub_pm.meta_key = '_sku'
-                WHERE sub_p.post_type = 'product_variation' 
-                  AND (sub_p.post_title LIKE %s OR sub_pm.meta_value LIKE %s)
+                INNER JOIN {$wpdb->postmeta} sub_pm ON sub_p.ID = sub_pm.post_id AND sub_pm.meta_key = '_sku'
+                WHERE sub_p.post_type = 'product_variation' AND sub_pm.meta_value LIKE %s
             )
         )";
         $params[] = $like;
         $params[] = $like;
         $params[] = $like;
-        $params[] = $like;
     }
 
-    // Toplam sayıyı bul
-    $total = $wpdb->get_var($wpdb->prepare("
-        SELECT COUNT(DISTINCT p.ID)
-        FROM {$wpdb->posts} p
-        $join
-        WHERE $where
-    ", ...$params));
+    // Toplam sayıyı bul (Hızlı)
+    $total = $wpdb->get_var($wpdb->prepare("SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p $join_extra WHERE $where", ...$params));
 
     if (!$total) {
-        return [
-            'products'       => [],
-            'total'          => 0,
-            'has_more'       => false,
-            'critical_count' => 0
-        ];
+        return ['products' => [], 'total' => 0, 'has_more' => false, 'critical_count' => 0];
     }
 
-    // Sorguyu hazırla
+    // SAYFA ÜRÜNLERİNİ GETİR (Büyük SQL Optimizasyonu)
     $sql = $wpdb->prepare("
         SELECT p.ID, p.post_title, p.post_type, p.post_parent,
+               tt_type.slug as product_type,
+               pm_thumb.meta_value as thumbnail_id,
+               sk_main.quantity as warehouse_stock,
                MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
                MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
                MAX(CASE WHEN pm.meta_key = '_regular_price' THEN pm.meta_value END) as regular_price,
@@ -896,91 +836,92 @@ function hizli_kasa_terminal_products($request) {
                MAX(CASE WHEN pm.meta_key = '_manage_stock' THEN pm.meta_value END) as manage_stock,
                MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
         FROM {$wpdb->posts} p
+        INNER JOIN $stok_table sk_main ON (sk_main.product_id = p.ID AND sk_main.location_id = %d AND sk_main.variation_id = 0)
         LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-        $join
+        LEFT JOIN {$wpdb->postmeta} pm_thumb ON p.ID = pm_thumb.post_id AND pm_thumb.meta_key = '_thumbnail_id'
+        LEFT JOIN {$wpdb->term_relationships} tr_type ON p.ID = tr_type.object_id
+        LEFT JOIN {$wpdb->term_taxonomy} tt_tax ON tr_type.term_taxonomy_id = tt_tax.term_taxonomy_id AND tt_tax.taxonomy = 'product_type'
+        LEFT JOIN {$wpdb->terms} tt_type ON tt_tax.term_id = tt_type.term_id
+        $join_extra
         WHERE $where
         GROUP BY p.ID
         ORDER BY p.post_title ASC
         LIMIT %d OFFSET %d
-    ", array_merge($params, [$limit, $offset]));
+    ", array_merge([$depo_id], $params, [$limit, $offset]));
 
     $results = $wpdb->get_results($sql);
+    if (!$results) return ['products' => [], 'total' => (int)$total, 'has_more' => false, 'critical_count' => 0];
 
+    // VARYASYONLARI TOPLU ÇEK (N+1 Sorununu Çöz)
+    $parent_ids = wp_list_pluck($results, 'ID');
+    $variations_by_parent = [];
+    
+    if (!empty($parent_ids)) {
+        $ids_placeholders = implode(',', array_fill(0, count($parent_ids), '%d'));
+        $v_sql = $wpdb->prepare("
+            SELECT p.ID, p.post_parent, p.post_title,
+                   sk.quantity as warehouse_stock,
+                   MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
+                   MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
+            FROM {$wpdb->posts} p
+            LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+            LEFT JOIN $stok_table sk ON (sk.variation_id = p.ID AND sk.location_id = %d)
+            WHERE p.post_type = 'product_variation' AND p.post_status = 'publish' AND p.post_parent IN ($ids_placeholders)
+            GROUP BY p.ID
+        ", array_merge([$depo_id], $parent_ids));
+        
+        $v_results = $wpdb->get_results($v_sql);
+        foreach ($v_results as $v) {
+            $variations_by_parent[$v->post_parent][] = $v;
+        }
+    }
+
+    // FORMATLA
     $formatted = [];
     foreach ($results as $row) {
-        $item = hizli_kasa_format_urun_row($row, $depo_id);
-        if ($item) {
-            $formatted[] = $item;
-        }
+        $item = hizli_kasa_format_urun_row($row, $depo_id, $variations_by_parent);
+        if ($item) $formatted[] = $item;
     }
 
-    // Kritik stok sayısını hesapla (Genel bazda değil, sadece bu depo içindeki ürünler içinden)
-    $critical_count = 0;
-    if ($depo_id) {
-        $critical_count = $wpdb->get_var($wpdb->prepare("
-            SELECT COUNT(*) FROM (
-                SELECT p.ID
-                FROM {$wpdb->posts} p
-                INNER JOIN $stok_table sk ON sk.location_id = %d AND (
-                    (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0)
-                    OR
-                    (p.post_type = 'product_variation' AND sk.variation_id = p.ID)
-                )
-                WHERE p.post_status = 'publish' 
-                  AND p.post_type IN ('product', 'product_variation')
-                  AND sk.quantity <= %d
-                GROUP BY p.ID
-            ) as t
-        ", $depo_id, $threshold));
-    }
-
-    // Sayımları Kategorize Et (Basit vs Varyasyonlu Ana Ürün vs Toplam Kalem)
-    $simple_count   = 0;
-    $variable_count = 0;
-    $grand_total_items = 0;
-
-    if ($total > 0) {
-        // Bu sorgu, mevcut deponun (ve aramanın) içindeki ürün tiplerini sayar
-        $counts_sql = "
-            SELECT 
-                SUM(CASE WHEN t.slug = 'simple' THEN 1 ELSE 0 END) as simple,
-                SUM(CASE WHEN t.slug = 'variable' THEN 1 ELSE 0 END) as variable
-            FROM (
-                SELECT p.ID, tt_terms.slug
-                FROM {$wpdb->posts} p
-                $join
-                INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
-                INNER JOIN {$wpdb->term_taxonomy} ttt ON tr.term_taxonomy_id = ttt.term_taxonomy_id AND ttt.taxonomy = 'product_type'
-                INNER JOIN {$wpdb->terms} tt_terms ON ttt.term_id = tt_terms.term_id
-                WHERE $where
-                GROUP BY p.ID
-            ) as t
-        ";
-        $counts = $wpdb->get_row($wpdb->prepare($counts_sql, ...$params));
-        if ($counts) {
-            $simple_count   = (int)$counts->simple;
-            $variable_count = (int)$counts->variable;
-        }
-
-        // Toplam Kalem Sayısı: Basit Ürün + Tüm Varyasyonlar
-        // Önce eşleşen ana ürünlerin ID listesini alıyoruz
-        $matched_ids = $wpdb->get_col($wpdb->prepare("
-            SELECT DISTINCT p.ID
+    // KRİTİK STOK VE DİĞER SAYIMLAR (Yeniden Optimize)
+    $simple_count = 0; $variable_count = 0; $grand_total_items = 0;
+    
+    $counts_sql = "
+        SELECT 
+            SUM(CASE WHEN t.slug = 'simple' THEN 1 ELSE 0 END) as simple,
+            SUM(CASE WHEN t.slug = 'variable' THEN 1 ELSE 0 END) as variable
+        FROM (
+            SELECT p.ID, tt_terms.slug
             FROM {$wpdb->posts} p
-            $join
+            $join_extra
+            INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+            INNER JOIN {$wpdb->term_taxonomy} ttt ON tr.term_taxonomy_id = ttt.term_taxonomy_id AND ttt.taxonomy = 'product_type'
+            INNER JOIN {$wpdb->terms} tt_terms ON ttt.term_id = tt_terms.term_id
             WHERE $where
-        ", ...$params));
+            GROUP BY p.ID
+        ) as t
+    ";
+    $counts = $wpdb->get_row($wpdb->prepare($counts_sql, ...$params));
+    if ($counts) { $simple_count = (int)$counts->simple; $variable_count = (int)$counts->variable; }
 
-        if (!empty($matched_ids)) {
-            $ids_str = implode(',', array_map('intval', $matched_ids));
-            $grand_total_items = $wpdb->get_var($wpdb->prepare("
-                SELECT COUNT(sk.id)
-                FROM $stok_table sk
-                WHERE sk.location_id = %d 
-                  AND (sk.product_id IN ($ids_str) OR sk.variation_id IN (SELECT ID FROM {$wpdb->posts} WHERE post_parent IN ($ids_str)))
-            ", $depo_id));
-        }
+    // Eşleşen parentların kalem toplamı
+    $matched_ids = wp_list_pluck($results, 'ID'); // Bu sefer sadece bu sayfanınkini mi yoksa genel mi?
+    // Kullanıcı genel sayıyı istediği için tüm eşleşenlerin ID'lerini alıyoruz (Hızlı sorgu)
+    $all_matched_ids = $wpdb->get_col($wpdb->prepare("SELECT DISTINCT p.ID FROM {$wpdb->posts} p $join_extra WHERE $where", ...$params));
+    if (!empty($all_matched_ids)) {
+        $ids_str = implode(',', array_map('intval', $all_matched_ids));
+        $grand_total_items = $wpdb->get_var($wpdb->prepare("
+            SELECT COUNT(sk.id) FROM $stok_table sk 
+            WHERE sk.location_id = %d AND (sk.product_id IN ($ids_str) OR sk.variation_id IN (SELECT ID FROM {$wpdb->posts} WHERE post_parent IN ($ids_str)))
+        ", $depo_id));
     }
+
+    // Kritik stok
+    $critical_count = $wpdb->get_var($wpdb->prepare("
+        SELECT COUNT(*) FROM $stok_table sk 
+        INNER JOIN {$wpdb->posts} p ON (sk.variation_id = (CASE WHEN p.post_type='product_variation' THEN p.ID ELSE 0 END) AND sk.product_id = (CASE WHEN p.post_type='product' THEN p.ID ELSE p.post_parent END))
+        WHERE sk.location_id = %d AND sk.quantity <= %d AND p.post_status = 'publish'
+    ", $depo_id, $threshold));
 
     return [
         'products'          => $formatted,
@@ -988,10 +929,11 @@ function hizli_kasa_terminal_products($request) {
         'simple_count'      => $simple_count,
         'variable_count'    => $variable_count,
         'grand_total_items' => (int)$grand_total_items,
-        'has_more'          => ($offset + $limit) < $total,
-        'critical_count'    => (int)$critical_count
+        'critical_count'    => (int)$critical_count,
+        'has_more'          => ($offset + $limit) < $total
     ];
 }
+
 
 
 
