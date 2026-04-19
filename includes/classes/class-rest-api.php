@@ -934,13 +934,65 @@ function hizli_kasa_terminal_products($request) {
         ", $depo_id, $threshold));
     }
 
+    // Sayımları Kategorize Et (Basit vs Varyasyonlu Ana Ürün vs Toplam Kalem)
+    $simple_count   = 0;
+    $variable_count = 0;
+    $grand_total_items = 0;
+
+    if ($total > 0) {
+        // Bu sorgu, mevcut deponun (ve aramanın) içindeki ürün tiplerini sayar
+        $counts_sql = "
+            SELECT 
+                SUM(CASE WHEN t.slug = 'simple' THEN 1 ELSE 0 END) as simple,
+                SUM(CASE WHEN t.slug = 'variable' THEN 1 ELSE 0 END) as variable
+            FROM (
+                SELECT p.ID, tt_terms.slug
+                FROM {$wpdb->posts} p
+                $join
+                INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+                INNER JOIN {$wpdb->term_taxonomy} ttt ON tr.term_taxonomy_id = ttt.term_taxonomy_id AND ttt.taxonomy = 'product_type'
+                INNER JOIN {$wpdb->terms} tt_terms ON ttt.term_id = tt_terms.term_id
+                WHERE $where
+                GROUP BY p.ID
+            ) as t
+        ";
+        $counts = $wpdb->get_row($wpdb->prepare($counts_sql, ...$params));
+        if ($counts) {
+            $simple_count   = (int)$counts->simple;
+            $variable_count = (int)$counts->variable;
+        }
+
+        // Toplam Kalem Sayısı: Basit Ürün + Tüm Varyasyonlar
+        // Arama kriterlerine uyan parentların altındaki depo kayıtlarını sayar
+        $grand_total_items = $wpdb->get_var($wpdb->prepare("
+            SELECT COUNT(sk.id)
+            FROM $stok_table sk
+            INNER JOIN {$wpdb->posts} p ON (
+                (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0)
+                OR
+                (p.post_type = 'product_variation' AND sk.variation_id = p.ID)
+            )
+            WHERE sk.location_id = %d 
+              AND (
+                  p.ID IN (SELECT ID FROM ({$wpdb->posts} p $join WHERE $where) as matched_ids)
+                  OR 
+                  p.post_parent IN (SELECT ID FROM ({$wpdb->posts} p $join WHERE $where) as matched_ids)
+              )
+        ", array_merge([$depo_id], $params)));
+    }
+
     return [
-        'products'       => $formatted,
-        'total'          => (int)$total,
-        'has_more'       => ($offset + $limit) < $total,
-        'critical_count' => (int)$critical_count
+        'products'          => $formatted,
+        'total'             => (int)$total,
+        'simple_count'      => $simple_count,
+        'variable_count'    => $variable_count,
+        'grand_total_items' => (int)$grand_total_items,
+        'has_more'          => ($offset + $limit) < $total,
+        'critical_count'    => (int)$critical_count
     ];
 }
+
+
 
 
 

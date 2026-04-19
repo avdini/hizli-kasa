@@ -187,12 +187,20 @@
                 // UI Güncelleme
                 this.updatePaginationUI();
                 
-                if (document.getElementById('toplam-urun-sayisi')) {
-                    document.getElementById('toplam-urun-sayisi').innerText = this.state.total;
+                if (document.getElementById('basit-urun-sayisi')) {
+                    document.getElementById('basit-urun-sayisi').innerText = data.simple_count || 0;
+                }
+                if (document.getElementById('varyasyonlu-urun-sayisi')) {
+                    document.getElementById('varyasyonlu-urun-sayisi').innerText = data.variable_count || 0;
+                }
+                if (document.getElementById('toplam-kalem-sayisi')) {
+                    document.getElementById('toplam-kalem-sayisi').innerText = data.grand_total_items || 0;
                 }
                 if (document.getElementById('kritik-stok-sayisi')) {
                     document.getElementById('kritik-stok-sayisi').innerText = data.critical_count || 0;
                 }
+
+
 
                 this.renderProducts();
             } catch (e) {

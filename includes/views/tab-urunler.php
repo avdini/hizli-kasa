@@ -69,14 +69,24 @@ if (!defined('ABSPATH')) exit;
     <!-- Alt Bar: İstatistikler (Opsiyonel) -->
     <div class="terminal-footer">
         <div class="stat-item">
-            <span id="toplam-urun-sayisi">0</span>
-            <label for="toplam-urun-sayisi">Kayıtlı Ürün</label>
+            <span id="basit-urun-sayisi">0</span>
+            <label>Basit Ürün</label>
+        </div>
+        <div class="stat-item">
+            <span id="varyasyonlu-urun-sayisi">0</span>
+            <label>Varyasyonlu (Ana)</label>
+        </div>
+        <div class="stat-item">
+            <span id="toplam-kalem-sayisi">0</span>
+            <label>Toplam Kalem</label>
         </div>
         <div class="stat-item">
             <span id="kritik-stok-sayisi">0</span>
             <label>Kritik Stok</label>
         </div>
+
     </div>
+
 </div>
 
 <!-- Stok Düzenleme Modalı -->
