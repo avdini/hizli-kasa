@@ -129,7 +129,7 @@ class Hizli_Kasa_Stock_Manager {
         }
 
         self::log_movement($product_id, $variation_id, $location_id, $old_qty, $new_qty, $reason);
-        self::sync_to_wc_stock($product_id, $variation_id);
+        // self::sync_to_wc_stock($product_id, $variation_id);
 
         return $new_qty;
     }

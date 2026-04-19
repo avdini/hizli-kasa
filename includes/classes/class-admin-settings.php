@@ -434,7 +434,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
     $metas_by_id = [];
     foreach ($meta_results as $m) { $metas_by_id[$m->post_id][$m->meta_key] = $m->meta_value; }
 
-    $p_details = $wpdb->get_results("SELECT ID, post_title, post_type, post_parent FROM {$wpdb->posts} WHERE ID IN ($placeholders)");
+    $p_details = $wpdb->get_results($wpdb->prepare("SELECT ID, post_title, post_type, post_parent FROM {$wpdb->posts} WHERE ID IN ($placeholders)", $target_ids));
     $details_by_id = [];
     foreach ($p_details as $pd) { $details_by_id[$pd->ID] = $pd; }
 
