@@ -1,25 +1,29 @@
 <?php 
-if (!defined('ABSPATH')) exit; 
-
-$user_id = get_current_user_id();
-$depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
-
-global $wpdb;
-$depo_name = "Depo Seçilmedi";
-if ($depo_id) {
-    $depo_name = $wpdb->get_var($wpdb->prepare("SELECT name FROM {$wpdb->prefix}hizli_kasa_depolar WHERE id = %d", $depo_id));
-}
+if (!defined('ABSPATH')) exit;
+// Sekme içeriği JS tarafından yönetilir — PHP yetki kontrolü yok
 ?>
 <div id="stok-terminali">
-    <!-- Üst Bar: Depo Bilgisi ve Arama -->
+    <!-- Üst Bar: Depo Switcher ve Arama -->
     <div class="terminal-header">
-        <div class="depo-bilgi">
+        <!-- Depo Seçici -->
+        <div class="depo-switcher" id="depo-switcher">
             <span class="ikon">🏢</span>
-            <div>
+            <div class="depo-switcher-content">
                 <label>Aktif Depo</label>
-                <h3 id="aktif-depo-adi"><?php echo esc_html($depo_name ?: "Bilinmeyen Depo"); ?></h3>
+                <div class="depo-switcher-trigger" id="depo-switcher-trigger">
+                    <span id="aktif-depo-adi">Yükleniyor...</span>
+                    <span class="depo-dropdown-arrow">▾</span>
+                </div>
+                <div class="depo-dropdown" id="depo-dropdown" style="display:none;">
+                    <!-- JS tarafından doldurulur -->
+                </div>
+            </div>
+            <!-- Sadece görüntüleme rozeti -->
+            <div class="depo-readonly-badge" id="depo-readonly-badge" style="display:none;">
+                👁 Sadece Görüntüleme
             </div>
         </div>
+
         <div class="arama-kutusu">
             <input type="text" id="terminal-arama-input" placeholder="Ürün adı veya barkod okutun..." autocomplete="off">
             <span class="arama-ikon">🔍</span>
@@ -28,18 +32,11 @@ if ($depo_id) {
 
     <!-- Ana İçerik: Ürün Listesi -->
     <div class="terminal-body" id="terminal-urun-listesi">
-        <?php if (!$depo_id): ?>
-            <div class="terminal-uyari no-depo-warning">
-                <span style="font-size: 48px;">⚠️</span>
-                <h3>Profilinize bir depo atanmamış!</h3>
-                <p>İşlem yapabilmek için yöneticinizden size bir depo atamasını isteyin.</p>
-            </div>
-        <?php else: ?>
-            <div class="terminal-loading">
-                <div class="spin"></div>
-                <p>Ürünler yükleniyor...</p>
-            </div>
-        <?php endif; ?>
+        <!-- JS tarafından doldurulur (DepoManager.init() → StockTerminal.init()) -->
+        <div class="terminal-loading">
+            <div class="spin"></div>
+            <p>Yükleniyor...</p>
+        </div>
     </div>
 
     <!-- Hata ve Debug Paneli -->
@@ -83,6 +80,7 @@ if ($depo_id) {
         </div>
 
         <div class="modal-butonlar">
+            <p id="modal-readonly-msg" style="display:none; color:#f59e0b; font-size:12px; margin:0 0 8px; text-align:center;">👁 Bu depoda sadece görüntüleme yetkiniz var. Stok değiştiremezsiniz.</p>
             <button id="stok-kaydet-iptal" class="btn-secondary">İptal</button>
             <button id="stok-kaydet-onay" class="btn-primary">Hareketi Kaydet</button>
         </div>

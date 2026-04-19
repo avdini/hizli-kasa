@@ -10,8 +10,9 @@
 if (!defined('ABSPATH'))
     exit;
 
-// REST API Route Kaydı
+// REST API Route Kayıtları
 add_action('rest_api_init', function () {
+    // --- Mevcut Endpoint'ler ---
     register_rest_route('hizli-kasa/v1', '/search', array(
         'methods' => 'GET',
         'callback' => 'hizli_kasa_ozel_arama',
@@ -67,7 +68,105 @@ add_action('rest_api_init', function () {
             return current_user_can('edit_posts');
         }
     ));
+
+    // --- Yeni: Kullanıcı Depo Yönetimi Endpoint'leri ---
+
+    /**
+     * Kullanıcının depo listesini ve aktif deposunu döner.
+     * Response: { view: [{id, name}], manage_ids: [1,3], active_depo_id: 2 }
+     */
+    register_rest_route('hizli-kasa/v1', '/user/depolar', array(
+        'methods'             => 'GET',
+        'callback'            => 'hizli_kasa_api_user_depolar',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
+
+    /**
+     * Kullanıcının aktif deposunu hem localStorage hem user_meta olarak ayarlar.
+     * Body: { depo_id: 5 }
+     */
+    register_rest_route('hizli-kasa/v1', '/user/set-active-depo', array(
+        'methods'             => 'POST',
+        'callback'            => 'hizli_kasa_api_set_active_depo',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
 });
+
+/**
+ * Kullanıcının depo listesini ve aktif deposunu döner.
+ */
+function hizli_kasa_api_user_depolar($request) {
+    $user_id = get_current_user_id();
+
+    // Admin ise tüm depoları görebilir
+    if (current_user_can('manage_options')) {
+        global $wpdb;
+        $depolar_raw = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar ORDER BY priority DESC, name ASC");
+        $view        = array_map(fn($d) => ['id' => (int)$d->id, 'name' => $d->name], $depolar_raw);
+        $manage_ids  = array_column($view, 'id');
+    } else {
+        $view_ids    = hizli_kasa_get_user_view_depos($user_id);
+        $manage_ids  = hizli_kasa_get_user_manage_depos($user_id);
+
+        if (empty($view_ids)) {
+            return new WP_Error('no_depo', 'Profilinize depo atanmamış.', ['status' => 403]);
+        }
+
+        global $wpdb;
+        if (!empty($view_ids)) {
+            $ids_ph  = implode(',', array_map('intval', $view_ids));
+            $depolar_raw = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar WHERE id IN ($ids_ph) ORDER BY priority DESC, name ASC");
+        } else {
+            $depolar_raw = [];
+        }
+        $view = array_map(fn($d) => ['id' => (int)$d->id, 'name' => $d->name], $depolar_raw);
+    }
+
+    // Aktif depoyu al (sunucu meta)
+    $active_depo_id = hizli_kasa_get_user_active_depo($user_id);
+    
+    // Aktif depo yoksa ilk görüntüleme deposunu seç
+    if (!$active_depo_id && !empty($view)) {
+        $active_depo_id = $view[0]['id'];
+        update_user_meta($user_id, '_hizli_kasa_active_depo', $active_depo_id);
+    }
+
+    return [
+        'view'           => $view,
+        'manage_ids'     => array_values($manage_ids),
+        'active_depo_id' => $active_depo_id ? (int)$active_depo_id : null,
+    ];
+}
+
+/**
+ * Kullanıcının aktif deposunu user_meta'ya kaydeder.
+ */
+function hizli_kasa_api_set_active_depo($request) {
+    $data    = $request->get_json_params();
+    $depo_id = intval($data['depo_id'] ?? 0);
+    $user_id = get_current_user_id();
+
+    if (!$depo_id) {
+        return new WP_Error('invalid_depo', 'Geçersiz depo ID.', ['status' => 400]);
+    }
+
+    // Yetki kontrolü: Bu depoyu görüntüleme yetkisi var mı?
+    if (!hizli_kasa_can_user_view_depo($user_id, $depo_id)) {
+        return new WP_Error('no_permission', 'Bu depoya erişim yetkiniz yok.', ['status' => 403]);
+    }
+
+    update_user_meta($user_id, '_hizli_kasa_active_depo', $depo_id);
+
+    return [
+        'success'        => true,
+        'active_depo_id' => $depo_id,
+        'message'        => 'Aktif depo güncellendi.',
+    ];
+}
 
 /**
  * Gün Sonu Raporu API endpoint'i.
@@ -429,8 +528,11 @@ function hizli_kasa_ozel_arama($data) {
 
 /**
  * Veritabanından gelen ürün satırını formatlar.
+ * 
+ * @param object $row     DB satırı
+ * @param int|null $depo_id Hangi deponun stoğuna bakılacak
  */
-function hizli_kasa_format_urun_row($row) {
+function hizli_kasa_format_urun_row($row, $depo_id = null) {
     try {
         $urun = wc_get_product($row->ID);
         if (!$urun) return null;
@@ -447,8 +549,6 @@ function hizli_kasa_format_urun_row($row) {
 
                 // Varyasyon için depo stoğu
                 $v_depo_stock = null;
-                $user_id = get_current_user_id();
-                $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
                 
                 if ($depo_id) {
                     global $wpdb;
@@ -491,10 +591,12 @@ function hizli_kasa_format_urun_row($row) {
         $image_id = $urun->get_image_id();
         $image_url = $image_id ? wp_get_attachment_image_url($image_id, 'thumbnail') : '';
 
-        // Depo Bazlı Stok Bilgisi
+        // Depo Bazlı Stok Bilgisi (önce parametre, yoksa user_meta fallback)
         $depo_stock = null;
-        $user_id = get_current_user_id();
-        $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
+        if (!$depo_id) {
+            $uid = get_current_user_id();
+            $depo_id = hizli_kasa_get_user_active_depo($uid);
+        }
         
         if ($depo_id) {
             global $wpdb;
@@ -532,99 +634,28 @@ function hizli_kasa_format_urun_row($row) {
 }
 
 /**
- * Terminal için ürün listesi döner.
- */
-function hizli_kasa_terminal_products($request) {
-    global $wpdb;
-    $s      = sanitize_text_field($request->get_param('s'));
-    $offset = intval($request->get_param('offset') ?: 0);
-    $limit  = 50;
-    
-    $user_id = get_current_user_id();
-    $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
-
-    $threshold = (int)get_option('hizli_kasa_kritik_stok_esigi', 5);
-
-    if (!$depo_id) {
-        return new WP_Error('no_depo', 'Profilinize bir depo atanmamış!', ['status' => 403]);
-    }
-
-    // Kritik Stok Sayısı (Global - Tüm depo için)
-    $table_stok = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
-    $critical_count = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table_stok WHERE location_id = %d AND quantity <= %d AND (variation_id > 0 OR product_id IN (SELECT ID FROM {$wpdb->posts} WHERE post_type = 'product'))",
-        $depo_id, $threshold
-    )) ?: 0;
-    
-    // Not: variation_id > 0 ise direkt alt üründür. 
-    // variation_id = 0 ise ve post_type='product' ise basit üründür (veya parent). 
-    // Parent ürünlerin depo tablosunda genellikle kaydı olmaz veya miktar girilmez.
-
-    if ($s) {
-        // Arama yapılıyorsa depo_id'yi de request'e ekleyelim ki ozel_arama kullansın
-        $request->set_param('depo_id', $depo_id);
-        $products = hizli_kasa_ozel_arama($request);
-        return array(
-            'products' => $products,
-            'total'    => count($products),
-            'has_more' => false,
-            'offset'   => 0,
-            'critical_count' => (int)$critical_count
-        );
-    }
-
-    // Toplam kayıtlı öğe sayısını al (Ürün + Varyasyon)
-    $total_count = $wpdb->get_var("SELECT COUNT(ID) FROM {$wpdb->posts} WHERE post_type IN ('product', 'product_variation') AND post_status = 'publish'");
-
-    $results = $wpdb->get_results($wpdb->prepare("
-        SELECT p.ID, p.post_title, p.post_type, p.post_parent,
-               MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
-               MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
-               MAX(CASE WHEN pm.meta_key = '_regular_price' THEN pm.meta_value END) as regular_price,
-               MAX(CASE WHEN pm.meta_key = '_stock_status' THEN pm.meta_value END) as stock_status,
-               MAX(CASE WHEN pm.meta_key = '_manage_stock' THEN pm.meta_value END) as manage_stock,
-               MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
-        FROM {$wpdb->posts} p
-        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-        WHERE p.post_status = 'publish'
-          AND p.post_type = 'product'
-        GROUP BY p.ID
-        ORDER BY p.post_modified DESC
-        LIMIT %d OFFSET %d
-    ", $limit, $offset));
-
-    $formatted = [];
-    foreach ($results as $row) {
-        $item = hizli_kasa_format_urun_row($row, $depo_id);
-        if ($item) {
-            $formatted[] = $item;
-        }
-    }
-
-    return array(
-        'products' => $formatted,
-        'total'    => (int)$total_count,
-        'has_more' => ($offset + $limit) < $total_count,
-        'offset'   => $offset,
-        'critical_count' => (int)$critical_count
-    );
-}
-
-/**
  * Terminal üzerinden stok güncelleme.
+ * 
+ * Body: { product_id, variation_id, change, reason, active_depo_id }
+ * active_depo_id zorunlu; kullanıcının yönetim yetkisi kontrol edilir.
  */
 function hizli_kasa_terminal_update_stock($request) {
-    $data = $request->get_json_params();
-    $product_id = intval($data['product_id']);
+    $data         = $request->get_json_params();
+    $product_id   = intval($data['product_id']);
     $variation_id = intval($data['variation_id'] ?? 0);
-    $change = floatval($data['change']);
-    $reason = sanitize_text_field($data['reason'] ?: "Terminal Manuel Güncelleme");
+    $change       = floatval($data['change']);
+    $reason       = sanitize_text_field($data['reason'] ?: "Terminal Manuel Güncelleme");
+    $depo_id      = intval($data['active_depo_id'] ?? 0);
 
     $user_id = get_current_user_id();
-    $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
 
     if (!$depo_id) {
-        return new WP_Error('no_depo', 'Bağlı olduğunuz bir depo yok.', ['status' => 400]);
+        return new WP_Error('no_depo', 'active_depo_id belirtilmedi.', ['status' => 400]);
+    }
+
+    // Yönetim yetkisi kontrolü
+    if (!hizli_kasa_can_user_manage_depo($user_id, $depo_id)) {
+        return new WP_Error('no_permission', 'Bu depoda stok değiştirme yetkiniz yok.', ['status' => 403]);
     }
 
     require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
@@ -753,17 +784,20 @@ function hizli_kasa_process_refund($request) {
     }
 
     // Meta veriler
-    $refund_order->set_payment_method('cod'); // Kapıda ödeme / İade faturası mantığı
+    $refund_order->set_payment_method('cod');
     $refund_order->set_payment_method_title('İade İşlemi');
     $refund_order->update_meta_data('_hizli_kasa_original_order', $original_order_id);
     $refund_order->update_meta_data('_hizli_kasa_is_refund', 'yes');
     $refund_order->update_meta_data('_hizli_kasa_kasiyer', wp_get_current_user()->display_name);
     
-    // Çoklu Depo Entegrasyonu: İade edilen ürünleri kasiyerin deposuna geri koy
+    // Çoklu Depo Entegrasyonu: İade edilen ürünleri aktif depoya geri koy
     $user_id = get_current_user_id();
-    $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
+    $depo_id = intval($data['active_depo_id'] ?? 0);
+    if (!$depo_id) {
+        $depo_id = hizli_kasa_get_user_active_depo($user_id);
+    }
     
-    if ($depo_id) {
+    if ($depo_id && hizli_kasa_can_user_manage_depo($user_id, $depo_id)) {
         require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
         foreach ($refund_items as $item) {
             $product_id = intval($item['id']);

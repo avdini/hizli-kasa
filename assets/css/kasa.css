@@ -1640,3 +1640,164 @@ html, body {
 .variation-item .stok-sayi {
     font-size: 15px !important;
 }
+
+/* =============================================
+   DEPO SWITCHER (Aktif Depo Seçici)
+   ============================================= */
+
+.depo-switcher {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+    user-select: none;
+    min-width: 180px;
+}
+
+.depo-switcher:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.depo-switcher .ikon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.depo-switcher-content {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+.depo-switcher-content > label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.5;
+    color: #fff;
+    margin-bottom: 2px;
+}
+
+.depo-switcher-trigger {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.depo-switcher-trigger span:first-child {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.depo-dropdown-arrow {
+    font-size: 12px;
+    opacity: 0.6;
+    color: #fff;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+.depo-switcher-trigger.open .depo-dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* Dropdown listesi */
+.depo-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 220px;
+    background: #1a2332;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+    overflow: hidden;
+    animation: depoDropIn 0.18s ease;
+}
+
+@keyframes depoDropIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.depo-dropdown-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.15s;
+}
+
+.depo-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.depo-dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.depo-dropdown-item.active {
+    background: rgba(52, 152, 219, 0.15);
+    border-left: 3px solid #3498db;
+}
+
+.depo-item-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ecf0f1;
+}
+
+.depo-manage-badge {
+    font-size: 14px;
+    opacity: 0.8;
+    cursor: default;
+}
+
+.depo-view-badge {
+    font-size: 14px;
+    opacity: 0.5;
+    cursor: default;
+}
+
+.depo-dropdown-empty {
+    padding: 16px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 13px;
+    font-style: italic;
+}
+
+/* Sadece görüntüleme rozeti */
+.depo-readonly-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 6px;
+    padding: 4px 8px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}

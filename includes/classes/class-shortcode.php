@@ -73,6 +73,7 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-app-navigation', $js_base . 'modules/app-navigation.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-refund-manager', $js_base . 'modules/refund-manager.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-stock-terminal', $js_base . 'modules/stock-terminal.js', array('kasa-ui-renderer'), $pos_version, true);
+    wp_enqueue_script('kasa-depo-manager',   $js_base . 'modules/depo-manager.js',   array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-js', $js_base . 'kasa.js', array(
         'kasa-cart-manager',
         'kasa-ui-renderer',
@@ -92,14 +93,15 @@ function hizli_kasa_uygulamasi()
     $display_name = !empty($full_name) ? $full_name : $user->display_name;
 
     wp_localize_script('kasa-cart-manager', 'kasaAyar', array(
-        'apiUrl' => rest_url('wc/v3/'),
-        'rootApiUrl' => rest_url(),
-        'nonce' => wp_create_nonce('wp_rest'),
-        'siparisDurumu' => $guncel_durum,
-        'userName' => $display_name,
-        'version' => HIZLI_KASA_VERSION,
-        'yuvarlamaAktif' => get_option('hizli_kasa_yuvarlama_aktif', '1'),
-        'yuvarlaModu' => get_option('hizli_kasa_yuvarlama_modu', '1'),
+        'apiUrl'          => rest_url('wc/v3/'),
+        'rootApiUrl'      => rest_url(),
+        'nonce'           => wp_create_nonce('wp_rest'),
+        'siparisDurumu'   => $guncel_durum,
+        'userName'        => $display_name,
+        'userId'          => get_current_user_id(),
+        'version'         => HIZLI_KASA_VERSION,
+        'yuvarlamaAktif'  => get_option('hizli_kasa_yuvarlama_aktif', '1'),
+        'yuvarlaModu'     => get_option('hizli_kasa_yuvarlama_modu', '1'),
         'kritikStokEsigi' => (int)get_option('hizli_kasa_kritik_stok_esigi', 5)
     ));
 

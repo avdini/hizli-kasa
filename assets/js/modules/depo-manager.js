@@ -1,0 +1,287 @@
+/**
+ * Hızlı Kasa - Depo Yöneticisi Modülü
+ *
+ * Çift katman cache (localStorage + WP user_meta) ile aktif depo yönetimi.
+ * Görüntüleme / yönetim yetki kontrolü.
+ * Depo switcher dropdown UI yönetimi.
+ *
+ * @package HizliKasa
+ */
+
+(function(HK) {
+    'use strict';
+
+    HK.DepoManager = {
+
+        // --- State ---
+        state: {
+            view: [],          // [{id, name}] — görüntüleyebildiği depolar
+            manageIds: [],     // [id, ...] — yönetebileceği depo ID'leri
+            activeDepoId: null,
+            isLoaded: false,
+        },
+
+        // localStorage key (per-user çakışma olmasın)
+        _cacheKey: function() {
+            var uid = (typeof kasaAyar !== 'undefined' && kasaAyar.userId) ? kasaAyar.userId : 'anon';
+            return 'hk_active_depo_' + uid;
+        },
+
+        // --- Temel Okuma / Yazma ---
+
+        getActiveDepo: function() {
+            return this.state.activeDepoId;
+        },
+
+        /**
+         * Aktif depoyu günceller:
+         * 1. state'e yazar
+         * 2. localStorage'a yazar
+         * 3. Sunucuya (user_meta) async olarak yazar
+         * 4. hkActiveDepoChanged event'ini tetikler
+         */
+        setActiveDepo: function(depoId, silent) {
+            var self = this;
+            depoId = parseInt(depoId);
+            if (!depoId || !this.canViewDepo(depoId)) {
+                console.warn('HK DepoManager: Geçersiz veya yetkisiz depo ID:', depoId);
+                return;
+            }
+
+            var prev = this.state.activeDepoId;
+            this.state.activeDepoId = depoId;
+
+            // 1. localStorage
+            try {
+                localStorage.setItem(this._cacheKey(), depoId);
+            } catch(e) {
+                console.warn('HK DepoManager: localStorage yazılamadı:', e);
+            }
+
+            // 2. Sunucuya kaydet (async, hata yutulur)
+            this._saveToServer(depoId);
+
+            // 3. Dropdown UI güncelle
+            this._updateDropdownUI();
+
+            // 4. Event tetikle (sayfa yenilemeden ürünleri günceller)
+            if (!silent && prev !== depoId) {
+                document.dispatchEvent(new CustomEvent('hkActiveDepoChanged', {
+                    detail: { depoId: depoId, prevDepoId: prev }
+                }));
+            }
+        },
+
+        canViewDepo: function(depoId) {
+            if (!depoId) return false;
+            // Admin tüm depoları görebilir (view listesi boş değilse)
+            return this.state.view.some(function(d) { return d.id === parseInt(depoId); });
+        },
+
+        canManageDepo: function(depoId) {
+            if (!depoId) return false;
+            return this.state.manageIds.includes(parseInt(depoId));
+        },
+
+        getActiveDepoName: function() {
+            var id = this.state.activeDepoId;
+            var found = this.state.view.find(function(d) { return d.id === id; });
+            return found ? found.name : '---';
+        },
+
+        // --- Sunucu ile Senkronizasyon ---
+
+        /**
+         * Sunucudan depo listesini ve aktif depoyu yükler.
+         * Önce localStorage'ı kontrol eder (hızlı yükleme), sonra sunucu cevabıyla doğrular.
+         */
+        load: async function() {
+            var self = this;
+
+            // localStorage'dan geçici aktif depo (hızlı yükleme)
+            var cachedId = null;
+            try {
+                cachedId = parseInt(localStorage.getItem(this._cacheKey())) || null;
+            } catch(e) {}
+
+            try {
+                var response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/user/depolar', {
+                    headers: { 'X-WP-Nonce': kasaAyar.nonce }
+                });
+
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+
+                var data = await response.json();
+
+                self.state.view       = data.view       || [];
+                self.state.manageIds  = data.manage_ids || [];
+
+                // Aktif depo önceliği: localStorage > sunucu > ilk görüntüleme deposu
+                var serverActive = data.active_depo_id ? parseInt(data.active_depo_id) : null;
+                var resolved     = null;
+
+                if (cachedId && self.canViewDepo(cachedId)) {
+                    resolved = cachedId;
+                } else if (serverActive && self.canViewDepo(serverActive)) {
+                    resolved = serverActive;
+                } else if (self.state.view.length > 0) {
+                    resolved = self.state.view[0].id;
+                }
+
+                self.state.activeDepoId = resolved;
+                self.state.isLoaded = true;
+
+                // Sunucu cache'i ile localStorage'ı uyumlu tut
+                if (resolved) {
+                    try { localStorage.setItem(self._cacheKey(), resolved); } catch(e) {}
+                    if (resolved !== serverActive) {
+                        self._saveToServer(resolved);
+                    }
+                }
+
+            } catch(e) {
+                console.error('HK DepoManager: Depo listesi yüklenemedi:', e);
+                // Fallback: localStorage varsa kullan
+                if (cachedId) {
+                    self.state.activeDepoId = cachedId;
+                    self.state.isLoaded = true;
+                }
+            }
+        },
+
+        /**
+         * Aktif depoyu sunucu user_meta'ya kaydeder (arka planda).
+         */
+        _saveToServer: async function(depoId) {
+            try {
+                await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/user/set-active-depo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': kasaAyar.nonce
+                    },
+                    body: JSON.stringify({ depo_id: depoId })
+                });
+            } catch(e) {
+                console.warn('HK DepoManager: Sunucuya kaydedilemedi:', e);
+            }
+        },
+
+        // --- Dropdown UI ---
+
+        /**
+         * Ürünler sekmesindeki .depo-switcher bileşenini başlatır.
+         * Tab yüklendiğinde çağrılmalıdır.
+         */
+        initSwitcherUI: function() {
+            var self = this;
+
+            var trigger = document.getElementById('depo-switcher-trigger');
+            var dropdown = document.getElementById('depo-dropdown');
+            var readonlyBadge = document.getElementById('depo-readonly-badge');
+
+            if (!trigger || !dropdown) return;
+
+            // Dropdown listesini doldur
+            this._renderDropdownItems();
+            this._updateDropdownUI();
+
+            // Tıklama: Dropdown aç/kapat
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var isOpen = dropdown.style.display !== 'none';
+                dropdown.style.display = isOpen ? 'none' : 'block';
+                trigger.classList.toggle('open', !isOpen);
+            });
+
+            // Dışarı tıklanınca kapat
+            document.addEventListener('click', function() {
+                dropdown.style.display = 'none';
+                trigger.classList.remove('open');
+            });
+
+            // Yönetim rozeti
+            if (readonlyBadge) {
+                readonlyBadge.style.display = self.canManageDepo(self.state.activeDepoId) ? 'none' : 'flex';
+            }
+        },
+
+        _renderDropdownItems: function() {
+            var self = this;
+            var dropdown = document.getElementById('depo-dropdown');
+            if (!dropdown) return;
+
+            dropdown.innerHTML = '';
+
+            if (this.state.view.length === 0) {
+                dropdown.innerHTML = '<div class="depo-dropdown-empty">Yetkili depo yok</div>';
+                return;
+            }
+
+            this.state.view.forEach(function(d) {
+                var canManage = self.canManageDepo(d.id);
+                var item = document.createElement('div');
+                item.className = 'depo-dropdown-item' + (d.id === self.state.activeDepoId ? ' active' : '');
+                item.innerHTML =
+                    '<span class="depo-item-name">' + d.name + '</span>' +
+                    (canManage
+                        ? '<span class="depo-manage-badge" title="Yönetim yetkisi var">⚙️</span>'
+                        : '<span class="depo-view-badge" title="Sadece görüntüleme">👁</span>');
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    self.setActiveDepo(d.id);
+                    var dropdown2 = document.getElementById('depo-dropdown');
+                    var trigger2  = document.getElementById('depo-switcher-trigger');
+                    if (dropdown2) dropdown2.style.display = 'none';
+                    if (trigger2) trigger2.classList.remove('open');
+                });
+                dropdown.appendChild(item);
+            });
+        },
+
+        _updateDropdownUI: function() {
+            var self = this;
+            var nameEl = document.getElementById('aktif-depo-adi');
+            var readonlyBadge = document.getElementById('depo-readonly-badge');
+
+            if (nameEl) {
+                nameEl.textContent = this.getActiveDepoName();
+            }
+
+            // Dropdown aktif item'ı işaretle
+            document.querySelectorAll('.depo-dropdown-item').forEach(function(el) {
+                el.classList.toggle('active', parseInt(el.dataset.depoId) === self.state.activeDepoId);
+            });
+
+            // Yönetim rozeti
+            var isManage = this.canManageDepo(this.state.activeDepoId);
+            if (readonlyBadge) {
+                readonlyBadge.style.display = isManage ? 'none' : 'flex';
+            }
+        },
+
+        // --- Init ---
+
+        /**
+         * Ana başlatıcı. Shortcode yüklendiğinde çağrılır.
+         */
+        init: async function() {
+            await this.load();
+
+            // Ürünler sekmesi açık olduğunda switcher'ı başlat
+            document.addEventListener('hkTabLoaded', function(e) {
+                if (e.detail.tab === 'urunler') {
+                    HK.DepoManager.initSwitcherUI();
+                }
+            });
+
+            // Eğer ürünler sekmesi zaten açıksa hemen başlat
+            if (document.getElementById('depo-switcher-trigger')) {
+                this.initSwitcherUI();
+            }
+        }
+    };
+
+})(window.HizliKasa = window.HizliKasa || {});

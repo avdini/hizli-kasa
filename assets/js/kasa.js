@@ -34,8 +34,15 @@ document.addEventListener("DOMContentLoaded", function() {
     // 6. Gün sonu raporu modülünü başlat
     HK.DayEndReport.init();
 
-    // 7. Stok terminali modülünü başlat
-    if (HK.StockTerminal) {
+    // 7. Depo Yöneticisini başlat (async — aktif depoyu server'dan/localStorage'dan yükler)
+    if (HK.DepoManager) {
+        HK.DepoManager.init().then(function() {
+            // DepoManager yüklendikten sonra stok terminalini başlat
+            if (HK.StockTerminal) {
+                HK.StockTerminal.init();
+            }
+        });
+    } else if (HK.StockTerminal) {
         HK.StockTerminal.init();
     }
 

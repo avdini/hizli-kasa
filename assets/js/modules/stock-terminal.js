@@ -33,6 +33,11 @@
                 return;
             }
 
+            // Depo değişince listeyi yenile (sayfa yenilemeden)
+            document.addEventListener('hkActiveDepoChanged', function() {
+                self.loadProducts(false);
+            });
+
             // Scroll Listener (Sonsuz Kaydırma)
             var container = document.getElementById('terminal-urun-listesi');
             if (container) {
@@ -124,12 +129,23 @@
 
         /**
          * Ürünleri API'den yükler.
+         * depo_id her zaman DepoManager'dan alınır.
          */
         loadProducts: async function(append = false) {
             if (this.state.isLoading) return;
 
             var container = document.getElementById('terminal-urun-listesi');
-            if (!container || container.querySelector('.no-depo-warning')) return;
+            if (!container) return;
+
+            // DepoManager'dan aktif depoyu al
+            var depoId = (window.HizliKasa && HizliKasa.DepoManager)
+                ? HizliKasa.DepoManager.getActiveDepo()
+                : null;
+
+            if (!depoId) {
+                container.innerHTML = '<div class="terminal-uyari no-depo-warning"><span style="font-size:48px;">⚠️</span><h3>Profilinize depo atanmamış!</h3><p>Yöneticinizden bir depo atamasını isteyin.</p></div>';
+                return;
+            }
 
             var input = document.getElementById('terminal-arama-input');
             var s = input ? input.value : '';
@@ -145,7 +161,7 @@
             this.state.isLoading = true;
 
             try {
-                var url = kasaAyar.rootApiUrl + 'hizli-kasa/v1/terminal/products?limit=50&offset=' + this.state.offset;
+                var url = kasaAyar.rootApiUrl + 'hizli-kasa/v1/terminal/products?limit=50&offset=' + this.state.offset + '&depo_id=' + depoId;
                 if (s) url += '&s=' + encodeURIComponent(s);
 
                 var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
@@ -270,6 +286,7 @@
 
         /**
          * Stok düzenleme modalını açar.
+         * Yönetim yetkisi yoksa butonlar devre dışı.
          */
         openEditModal: function(product) {
             this.state.selectedProduct = product;
@@ -277,6 +294,24 @@
             document.getElementById('modal-urun-detay').innerText = 'SKU: ' + (product.sku || '---');
             document.getElementById('modal-mevcut-qty').innerText = product.warehouse_stock;
             document.getElementById('modal-degisim-input').value = 1;
+
+            var activeDepo = (window.HizliKasa && HizliKasa.DepoManager)
+                ? HizliKasa.DepoManager.getActiveDepo()
+                : null;
+            var canManage = activeDepo && HizliKasa.DepoManager.canManageDepo(activeDepo);
+
+            var saveBtn = document.getElementById('stok-kaydet-onay');
+            if (saveBtn) {
+                saveBtn.disabled = !canManage;
+                saveBtn.title = canManage ? '' : 'Bu depoda yönetim yetkiniz yok';
+                saveBtn.style.opacity = canManage ? '1' : '0.4';
+            }
+
+            // Readonly mesajı
+            var readonlyMsg = document.getElementById('modal-readonly-msg');
+            if (readonlyMsg) {
+                readonlyMsg.style.display = canManage ? 'none' : 'block';
+            }
 
             document.getElementById('stok-duzenle-modal').style.display = 'flex';
         },
@@ -291,6 +326,15 @@
 
             if (isNaN(change) || change === 0) return alert("Lütfen geçerli bir miktar girin.");
 
+            // Yönetim yetkisi kontrolü
+            var activeDepo = (window.HizliKasa && HizliKasa.DepoManager)
+                ? HizliKasa.DepoManager.getActiveDepo()
+                : null;
+            
+            if (!activeDepo || !HizliKasa.DepoManager.canManageDepo(activeDepo)) {
+                return alert('Bu depoda stok değiştirme yetkiniz yok.');
+            }
+
             btn.disabled = true;
             btn.innerText = 'Kaydediliyor...';
 
@@ -302,19 +346,20 @@
                         'X-WP-Nonce': kasaAyar.nonce 
                     },
                     body: JSON.stringify({
-                        product_id: p.id,
-                        variation_id: p.variation_id || 0,
-                        change: change,
-                        reason: "Terminal Manuel Güncelleme"
+                        product_id:    p.id,
+                        variation_id:  p.variation_id || 0,
+                        change:        change,
+                        reason:        "Terminal Manuel Güncelleme",
+                        active_depo_id: activeDepo
                     })
                 });
 
                 var res = await response.json();
                 if (res.success) {
                     document.getElementById('stok-duzenle-modal').style.display = 'none';
-                    this.loadProducts(document.getElementById('terminal-arama-input').value);
+                    this.loadProducts(false);
                 } else {
-                    alert("Hata: " + res.message);
+                    alert("Hata: " + (res.message || res.data?.message || 'Bilinmeyen hata'));
                 }
             } catch (e) {
                 console.error(e);
@@ -326,4 +371,4 @@
         }
     };
 
-})(window.HizliKasa);
+})(window.HizliKasa = window.HizliKasa || {});
