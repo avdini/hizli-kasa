@@ -22,7 +22,7 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
             <thead>
                 <tr>
                     <th style="width:50px;">Görsel</th>
-                    <th>Ürün / SKU</th>
+                    <th>Ürün Bilgisi</th>
                     <th style="width:100px;">Site Stoğu</th>
                     <?php foreach($depolar as $d): ?>
                         <th style="text-align:center; background: #f0f6fb; border-left:1px solid #ccd0d4;">
@@ -127,6 +127,37 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
     font-size: 18px;
     line-height: 1;
 }
+
+/* Hierarchical Rows */
+.row-variable { background: #f8fafc !important; }
+.row-variation { background: #ffffff !important; }
+.variation-indent { padding-left: 40px !important; position: relative; }
+.variation-indent::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: -10px;
+    bottom: 50%;
+    width: 15px;
+    border-left: 2px solid #cbd5e1;
+    border-bottom: 2px solid #cbd5e1;
+    border-bottom-left-radius: 4px;
+}
+
+/* Badges */
+.hk-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    vertical-align: middle;
+    margin-left: 4px;
+}
+.badge-simple { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+.badge-variable { background: #ecfdf5; color: #065f46; border: 1px solid #d1fae5; }
+.badge-variation { background: #fffcf0; color: #854d0e; border: 1px solid #fef3c7; }
  </style>
 
 <script>
@@ -183,26 +214,63 @@ jQuery(document).ready(function($) {
         }
 
         products.forEach(p => {
-            let rows = `<tr>
+            const isVariable = p.type === 'variable';
+            const badgeClass = isVariable ? 'badge-variable' : 'badge-simple';
+            const badgeText = isVariable ? 'Varyantlı' : 'Basit';
+
+            let row = `<tr class="${isVariable ? 'row-variable' : ''}">
                 <td><img src="${p.thumbnail}" style="width:40px; height:40px; border-radius:4px; object-fit:cover;"></td>
-                <td>
-                    <strong>${p.name}</strong><br>
-                    <code style="font-size:10px;">SKU: ${p.sku || 'N/A'}</code>
+                <td style="vertical-align:middle;">
+                    <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+                        <strong>${p.name}</strong>
+                        <span class="hk-badge ${badgeClass}">${badgeText}</span>
+                    </div>
+                    <code style="font-size:10px; color:#64748b;">SKU: ${p.sku || 'N/A'}</code>
                 </td>
-                <td style="font-weight:bold; color:#666;">${p.wc_stock}</td>`;
+                <td style="font-weight:bold; color:#64748b; vertical-align:middle;">${isVariable ? '-' : p.wc_stock}</td>`;
             
             p.warehouse_stocks.forEach(ws => {
-                rows += `<td style="text-align:center; border-left:1px solid #eee;">
+                row += `<td style="text-align:center; border-left:1px solid #eee; vertical-align:middle;">
+                    ${isVariable ? '<span style="color:#cbd5e1">—</span>' : `
                     <div class="stock-qty-control" data-pid="${p.id}" data-vid="${p.variation_id}" data-did="${ws.depo_id}">
                         <button class="btn-qty minus" onclick="updateStock(this, -1)">-</button>
                         <span class="qty-value">${ws.qty}</span>
                         <button class="btn-qty plus" onclick="updateStock(this, 1)">+</button>
-                    </div>
+                    </div>`}
                 </td>`;
             });
 
-            rows += `</tr>`;
-            $body.append(rows);
+            row += `</tr>`;
+            $body.append(row);
+
+            // Varyasyonları Ekle
+            if(isVariable && p.variations) {
+                p.variations.forEach(v => {
+                    let vRow = `<tr class="row-variation">
+                        <td></td>
+                        <td class="variation-indent" style="vertical-align:middle;">
+                            <div style="display:flex; align-items:center;">
+                                <span style="font-size:13px; color:#334155;">${v.name}</span>
+                                <span class="hk-badge badge-variation">Varyasyon</span>
+                            </div>
+                            <code style="font-size:10px; color:#94a3b8;">SKU: ${v.sku || 'N/A'}</code>
+                        </td>
+                        <td style="font-weight:600; color:#64748b; vertical-align:middle;">${v.wc_stock}</td>`;
+
+                    v.warehouse_stocks.forEach(vws => {
+                        vRow += `<td style="text-align:center; border-left:1px solid #eee; vertical-align:middle;">
+                            <div class="stock-qty-control" data-pid="${v.id}" data-vid="${v.variation_id}" data-did="${vws.depo_id}">
+                                <button class="btn-qty minus" onclick="updateStock(this, -1)">-</button>
+                                <span class="qty-value">${vws.qty}</span>
+                                <button class="btn-qty plus" onclick="updateStock(this, 1)">+</button>
+                            </div>
+                        </td>`;
+                    });
+
+                    vRow += `</tr>`;
+                    $body.append(vRow);
+                });
+            }
         });
     }
 
