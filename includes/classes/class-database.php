@@ -21,6 +21,7 @@ class Hizli_Kasa_Database {
             'depolar'         => $wpdb->prefix . 'hizli_kasa_depolar',
             'stok_konumlari'  => $wpdb->prefix . 'hizli_kasa_stok_konumlari',
             'stok_hareketleri' => $wpdb->prefix . 'hizli_kasa_stok_hareketleri',
+            'unmatched_items'  => $wpdb->prefix . 'hizli_kasa_unmatched_items',
         ];
     }
 
@@ -88,6 +89,22 @@ class Hizli_Kasa_Database {
         $res3 = dbDelta($sql3);
         if ($wpdb->last_error) {
             error_log('Hızlı Kasa DB Delta Hatası (Hareketler): ' . $wpdb->last_error);
+        }
+
+        // 4. Eşleşmeyen Ürünler Tablosu
+        $sql4 = "CREATE TABLE {$tables['unmatched_items']} (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            warehouse_name varchar(255) NOT NULL,
+            product_name varchar(255),
+            sku varchar(100),
+            stock_qty decimal(15,4) DEFAULT 0.0000,
+            error_msg text,
+            created_at datetime,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
+        $res4 = dbDelta($sql4);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Eşleşmeyenler): ' . $wpdb->last_error);
         }
     }
 

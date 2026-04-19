@@ -389,6 +389,12 @@ add_action('wp_ajax_hizli_kasa_repair_db', 'hizli_kasa_ajax_repair_db');
 add_action('wp_ajax_hizli_kasa_get_admin_stock_list', 'hizli_kasa_ajax_get_admin_stock_list');
 add_action('wp_ajax_hizli_kasa_admin_update_stock', 'hizli_kasa_ajax_admin_update_stock');
 
+// İçe / Dışa Aktar AJAX
+add_action('wp_ajax_hizli_kasa_export_stocks', 'hizli_kasa_ajax_export_stocks');
+add_action('wp_ajax_hizli_kasa_import_stocks', 'hizli_kasa_ajax_import_stocks');
+add_action('wp_ajax_hizli_kasa_get_unmatched', 'hizli_kasa_ajax_get_unmatched');
+add_action('wp_ajax_hizli_kasa_delete_unmatched', 'hizli_kasa_ajax_delete_unmatched');
+
 /**
  * Ürün ve Depo Stok Listesini Getir (Optimize)
  */
@@ -400,6 +406,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
     hizli_kasa_admin_log("Admin Stok Listesi Başladı (Optimize)");
     
     $s = sanitize_text_field($_POST['s']);
+    $filter_mismatch = isset($_POST['filter_mismatch']) && $_POST['filter_mismatch'] === 'true';
     $paged = max(1, intval($_POST['paged']));
     $per_page = 24;
     $offset = ($paged - 1) * $per_page;
@@ -419,20 +426,52 @@ function hizli_kasa_ajax_get_admin_stock_list() {
     }
 
     // Toplam sayfa sayısı (Sadece ana ürünler üzerinden)
-    $total_items = $wpdb->get_var($wpdb->prepare("
+    $count_query = "
         SELECT COUNT(DISTINCT CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) 
         FROM {$wpdb->posts} p 
-        WHERE p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish' $search_where
-    ", ...$params));
+        WHERE p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish' $search_where";
+    
+    if ($filter_mismatch) {
+        // Miktar uyuşmazlığı olanları bulmak için daha karmaşık bir query gerekir
+        // Basitleştirmek için: Toplam depo stoğu > WC ana stoğu olan ürünleri/varyasyonları içeren ana ürünleri bul
+        $count_query = "
+            SELECT COUNT(DISTINCT main_id) FROM (
+                SELECT 
+                    CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END as main_id,
+                    (SELECT CAST(meta_value AS DECIMAL(15,4)) FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = '_stock') as wc_stock,
+                    (SELECT SUM(quantity) FROM $stok_table WHERE (variation_id = p.ID OR (p.post_type = 'product' AND product_id = p.ID AND variation_id = 0))) as total_wh_stock
+                FROM {$wpdb->posts} p
+                WHERE p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish' $search_where
+                HAVING total_wh_stock > wc_stock
+            ) as mismatch_query";
+    }
+
+    $total_items = $wpdb->get_var($wpdb->prepare($count_query, ...$params));
 
     // Ana ID'leri çek
-    $main_ids = $wpdb->get_col($wpdb->prepare("
+    $main_query = "
         SELECT DISTINCT CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END as main_id
         FROM {$wpdb->posts} p
         WHERE p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish' $search_where
         ORDER BY main_id DESC
-        LIMIT %d OFFSET %d
-    ", array_merge($params, [$per_page, $offset])));
+        LIMIT %d OFFSET %d";
+
+    if ($filter_mismatch) {
+         $main_query = "
+            SELECT DISTINCT main_id FROM (
+                SELECT 
+                    CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END as main_id,
+                    (SELECT CAST(meta_value AS DECIMAL(15,4)) FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = '_stock') as wc_stock,
+                    (SELECT SUM(quantity) FROM $stok_table WHERE (variation_id = p.ID OR (p.post_type = 'product' AND product_id = p.ID AND variation_id = 0))) as total_wh_stock
+                FROM {$wpdb->posts} p
+                WHERE p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish' $search_where
+                HAVING total_wh_stock > wc_stock
+            ) as mismatch_inner
+            ORDER BY main_id DESC
+            LIMIT %d OFFSET %d";
+    }
+
+    $main_ids = $wpdb->get_col($wpdb->prepare($main_query, array_merge($params, [$per_page, $offset])));
 
     if (empty($main_ids)) {
         wp_send_json_success(['products' => [], 'total_pages' => 0]);
@@ -499,6 +538,12 @@ function hizli_kasa_ajax_get_admin_stock_list() {
                 $qty = $stocks_by_loc[$d->id]["v_{$v_id}"] ?? 0;
                 $v_item['warehouse_stocks'][] = ['depo_id' => $d->id, 'qty' => (float)$qty];
             }
+            
+            // Mismatch kontrolü
+            $v_total_wh = array_sum(array_column($v_item['warehouse_stocks'], 'qty'));
+            $v_item['total_warehouse_stock'] = $v_total_wh;
+            $v_item['has_mismatch'] = ($v_total_wh > $v_item['wc_stock']);
+
             $children[] = $v_item;
         }
 
@@ -518,6 +563,24 @@ function hizli_kasa_ajax_get_admin_stock_list() {
             $qty = $stocks_by_loc[$d->id]["p_{$m_id}"] ?? 0;
             $item['warehouse_stocks'][] = ['depo_id' => $d->id, 'qty' => (float)$qty];
         }
+
+        // Mismatch kontrolü (Basit ürün için veya değişken ürünün genel durumu için)
+        $total_wh = array_sum(array_column($item['warehouse_stocks'], 'qty'));
+        $item['total_warehouse_stock'] = $total_wh;
+        
+        if ($item['type'] === 'simple') {
+            $item['has_mismatch'] = ($total_wh > $item['wc_stock']);
+        } else {
+            // Değişken üründe herhangi bir varyasyonda uyuşmazlık varsa true dön
+            $item['has_mismatch'] = false;
+            foreach($children as $child) {
+                if ($child['has_mismatch']) {
+                    $item['has_mismatch'] = true;
+                    break;
+                }
+            }
+        }
+
         $output[] = $item;
     }
 
@@ -609,6 +672,86 @@ function hizli_kasa_ajax_reset() {
     Hizli_Kasa_Database::init(); // Tabloları boş olarak tekrar oluştur
 
     wp_send_json_success(['message' => 'Sistem tamamen sıfırlandı.']);
+}
+
+/**
+ * Stok Dışa Aktarma (Export)
+ */
+function hizli_kasa_ajax_export_stocks() {
+    if (!current_user_can('manage_options')) wp_die('Yetkisiz erişim');
+    
+    $format = isset($_GET['format']) ? sanitize_text_field($_GET['format']) : 'csv';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
+    
+    $data = Hizli_Kasa_Stock_Manager::export_stocks($format);
+    
+    $filename = "hizli-kasa-stok-" . date('Y-m-d') . "." . $format;
+    
+    header('Content-Description: File Transfer');
+    header('Content-Type: ' . ($format === 'json' ? 'application/json' : 'text/csv'));
+    header('Content-Disposition: attachment; filename=' . $filename);
+    header('Expires: 0');
+    header('Cache-Control: must-revalidate');
+    header('Pragma: public');
+    
+    echo $data;
+    exit;
+}
+
+/**
+ * Stok İçe Aktarma (Import)
+ */
+function hizli_kasa_ajax_import_stocks() {
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    
+    if (!isset($_FILES['import_file'])) {
+        wp_send_json_error(['message' => 'Dosya seçilmedi.']);
+    }
+
+    $file = $_FILES['import_file'];
+    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $format = ($ext === 'json') ? 'json' : 'csv';
+
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
+    $result = Hizli_Kasa_Stock_Manager::process_import($file['tmp_name'], $format);
+
+    if ($result['success']) {
+        wp_send_json_success($result);
+    } else {
+        wp_send_json_error($result);
+    }
+}
+
+/**
+ * Eşleşmeyen Ürünleri Getir
+ */
+function hizli_kasa_ajax_get_unmatched() {
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    
+    global $wpdb;
+    $table = $wpdb->prefix . 'hizli_kasa_unmatched_items';
+    $results = $wpdb->get_results("SELECT * FROM $table ORDER BY created_at DESC");
+    
+    wp_send_json_success($results);
+}
+
+/**
+ * Eşleşmeyen Ürünü Sil
+ */
+function hizli_kasa_ajax_delete_unmatched() {
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    
+    $id = intval($_POST['id']);
+    global $wpdb;
+    $table = $wpdb->prefix . 'hizli_kasa_unmatched_items';
+    
+    if ($id === -1) {
+        $wpdb->query("TRUNCATE TABLE $table");
+    } else {
+        $wpdb->delete($table, ['id' => $id]);
+    }
+    
+    wp_send_json_success();
 }
 
 // Admin Ayarlar Sayfası Arayüzü

@@ -208,11 +208,199 @@ class Hizli_Kasa_Stock_Manager {
             'product_id'   => $product_id,
             'variation_id' => $variation_id,
             'location_id'  => $location_id,
-            'user_id'      => get_current_user_id(),
+            'user_id'      => get_current_user_id() ?: 0,
             'old_qty'      => $old_qty,
             'new_qty'      => $new_qty,
-            'change_amount' => $new_qty - $old_qty,
-            'reason'       => $reason
+            'amount'       => $new_qty - $old_qty, // amount sütunu SQL tanımında var
+            'reason'       => $reason,
+            'created_at'   => current_time('mysql')
+        ]);
+    }
+
+    /**
+     * Tüm depo stoklarını dışa aktarır.
+     */
+    public static function export_stocks($format = 'csv') {
+        global $wpdb;
+        $tables = Hizli_Kasa_Database::get_tables();
+        
+        $results = $wpdb->get_results("
+            SELECT d.name as warehouse, p.post_title as product_name, sk.quantity, sk.product_id, sk.variation_id
+            FROM {$tables['stok_konumlari']} sk
+            JOIN {$tables['depolar']} d ON sk.location_id = d.id
+            JOIN {$wpdb->posts} p ON (CASE WHEN sk.variation_id > 0 THEN sk.variation_id ELSE sk.product_id END) = p.ID
+        ");
+
+        $data = [];
+        foreach ($results as $row) {
+            $sku = get_post_meta($row->variation_id ?: $row->product_id, '_sku', true);
+            $data[] = [
+                'Depo Adı'     => $row->warehouse,
+                'Ürün Adı'    => $row->product_name,
+                'SKU'         => $sku,
+                'Stok Miktarı' => $row->quantity
+            ];
+        }
+
+        if ($format === 'json') {
+            return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        }
+
+        // CSV Hazırla
+        $output = "Depo Adı,Ürün Adı,SKU,Stok Miktarı\n";
+        foreach ($data as $row) {
+            $clean_row = array_map(function($v) {
+                return '"' . str_replace('"', '""', $v) . '"';
+            }, $row);
+            $output .= implode(',', $clean_row) . "\n";
+        }
+        return $output;
+    }
+
+    /**
+     * İçe aktarma dosyasını işler.
+     */
+    public static function process_import($file_path, $format = 'csv') {
+        $content = file_get_contents($file_path);
+        $rows = [];
+
+        if ($format === 'json') {
+            $rows = json_decode($content, true);
+        } else {
+            $lines = explode("\n", str_replace("\r", "", $content));
+            $headers = str_getcsv(array_shift($lines));
+            foreach ($lines as $line) {
+                if (empty($line)) continue;
+                $row_data = str_getcsv($line);
+                if (count($row_data) === count($headers)) {
+                    $rows[] = array_combine($headers, $row_data);
+                }
+            }
+        }
+
+        if (empty($rows)) return ['success' => false, 'message' => 'Dosya boş veya geçersiz format.'];
+
+        $stats = ['updated' => 0, 'unmatched' => 0, 'new_warehouses' => 0];
+
+        foreach ($rows as $row) {
+            $warehouse_name = $row['Depo Adı'] ?? $row['warehouse'] ?? '';
+            $sku            = $row['SKU'] ?? $row['sku'] ?? '';
+            $qty            = floatval($row['Stok Miktarı'] ?? $row['quantity'] ?? 0);
+            $product_name   = $row['Ürün Adı'] ?? $row['product_name'] ?? '';
+
+            if (empty($warehouse_name) || empty($sku)) continue;
+
+            // 1. Depoyu Bul veya Oluştur
+            $depo_id = self::get_or_create_warehouse($warehouse_name, $stats);
+
+            // 2. Ürünü Bul
+            $ids = self::find_product_by_sku($sku);
+
+            if ($ids) {
+                // Eşleşti -> Güncelle
+                self::update_warehouse_stock_set($ids['product_id'], $ids['variation_id'], $depo_id, $qty, "İçe Aktarma (Import)");
+                $stats['updated']++;
+            } else {
+                // Eşleşmedi -> Kaydet
+                self::add_unmatched_item($warehouse_name, $product_name, $sku, $qty, "Sistemde bu SKU ile eşleşen ürün bulunamadı.");
+                $stats['unmatched']++;
+            }
+        }
+
+        return ['success' => true, 'stats' => $stats];
+    }
+
+    /**
+     * Depoyu isme göre bulur yoksa oluşturur.
+     */
+    private static function get_or_create_warehouse($name, &$stats) {
+        global $wpdb;
+        $table = Hizli_Kasa_Database::get_tables()['depolar'];
+        
+        $id = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table WHERE name = %s", $name));
+        
+        if (!$id) {
+            $wpdb->insert($table, [
+                'name' => $name,
+                'created_at' => current_time('mysql'),
+                'priority' => 0
+            ]);
+            $id = $wpdb->insert_id;
+            $stats['new_warehouses']++;
+        }
+        
+        return $id;
+    }
+
+    /**
+     * SKU'ya göre ürün veya varyasyon bulur.
+     */
+    private static function find_product_by_sku($sku) {
+        if (empty($sku)) return false;
+        global $wpdb;
+        
+        $id = $wpdb->get_var($wpdb->prepare("SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value = %s LIMIT 1", $sku));
+        
+        if (!$id) return false;
+
+        $post = get_post($id);
+        if (!$post || ($post->post_type !== 'product' && $post->post_type !== 'product_variation')) return false;
+
+        if ($post->post_type === 'product_variation') {
+            return ['product_id' => $post->post_parent, 'variation_id' => $id];
+        }
+
+        return ['product_id' => $id, 'variation_id' => 0];
+    }
+
+    /**
+     * Belirli bir miktarı direkt set eder (Log tutarak).
+     */
+    public static function update_warehouse_stock_set($product_id, $variation_id, $location_id, $new_qty, $reason = "") {
+        global $wpdb;
+        $tables = Hizli_Kasa_Database::get_tables();
+        
+        $current = $wpdb->get_var($wpdb->prepare("
+            SELECT quantity FROM {$tables['stok_konumlari']} 
+            WHERE product_id = %d AND variation_id = %d AND location_id = %d
+        ", $product_id, $variation_id, $location_id));
+
+        $old_qty = $current ? floatval($current) : 0;
+        
+        if ($current !== null) {
+            $wpdb->update($tables['stok_konumlari'], ['quantity' => $new_qty], [
+                'product_id' => $product_id, 
+                'variation_id' => $variation_id, 
+                'location_id' => $location_id
+            ]);
+        } else {
+            $wpdb->insert($tables['stok_konumlari'], [
+                'product_id'   => $product_id,
+                'variation_id' => $variation_id,
+                'location_id'  => $location_id,
+                'quantity'     => $new_qty,
+                'updated_at'   => current_time('mysql')
+            ]);
+        }
+
+        self::log_movement($product_id, $variation_id, $location_id, $old_qty, $new_qty, $reason);
+        return $new_qty;
+    }
+
+    /**
+     * Eşleşmeyen ürünü kaydeder.
+     */
+    public static function add_unmatched_item($warehouse_name, $product_name, $sku, $qty, $error) {
+        global $wpdb;
+        $table = Hizli_Kasa_Database::get_tables()['unmatched_items'];
+        
+        $wpdb->insert($table, [
+            'warehouse_name' => $warehouse_name,
+            'product_name'   => $product_name,
+            'sku'            => $sku,
+            'stock_qty'      => $qty,
+            'error_msg'      => $error,
+            'created_at'     => current_time('mysql')
         ]);
     }
 }

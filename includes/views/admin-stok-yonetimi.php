@@ -8,12 +8,27 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
 
 <div class="hizli-kasa-admin-stock-wrap">
     <div class="stock-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; background:#fff; padding:15px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
-        <div class="search-box" style="flex:1;">
+        <div class="search-box" style="flex:1; display:flex; align-items:center; gap:15px;">
             <input type="text" id="admin-product-search" placeholder="Ürün adı veya SKU ile arayın..." style="width:100%; max-width:400px; padding:8px 12px; border-radius:4px;">
+            <label style="display:inline-flex; align-items:center; gap:8px; font-size:13px; color:#d63638; font-weight:600; cursor:pointer; background:#fff5f5; padding:5px 12px; border-radius:6px; border:1px solid #fecaca;">
+                <input type="checkbox" id="filter-mismatch" onchange="loadStockList()"> 
+                <span class="dashicons dashicons-warning" style="font-size:18px; width:18px; height:18px; color:#d63638;"></span>
+                Stok Uyuşmazlığı Olanlar
+            </label>
         </div>
-        <div class="actions">
+        <div class="actions" style="display:flex; gap:10px; align-items:center;">
+            <div class="hk-import-export-group" style="padding-right:15px; border-right:1px solid #eee; margin-right:5px;">
+                <button type="button" class="button button-secondary" onclick="openImportModal()"><span class="dashicons dashicons-upload" style="margin-top:4px;"></span> İçe Aktar</button>
+                <div class="hk-dropdown" style="display:inline-block; position:relative;">
+                    <button type="button" class="button button-secondary" id="export-dropdown-trigger"><span class="dashicons dashicons-download" style="margin-top:4px;"></span> Dışa Aktar ▼</button>
+                    <div id="export-options" class="hk-dropdown-content" style="display:none; position:absolute; right:0; background:#fff; min-width:120px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:100; border-radius:4px; padding:5px 0;">
+                        <a href="<?php echo admin_url('admin-ajax.php?action=hizli_kasa_export_stocks&format=csv'); ?>" style="display:block; padding:8px 12px; text-decoration:none; color:#333;">Excel (CSV)</a>
+                        <a href="<?php echo admin_url('admin-ajax.php?action=hizli_kasa_export_stocks&format=json'); ?>" style="display:block; padding:8px 12px; text-decoration:none; color:#333;">JSON</a>
+                    </div>
+                </div>
+            </div>
             <span id="stock-sync-status" style="margin-right:15px; font-size:12px; color:#666;"></span>
-            <button type="button" class="button button-secondary" onclick="loadStockList()">Yazdır / Listeyi Yenile</button>
+            <button type="button" class="button button-primary" onclick="loadStockList()"><span class="dashicons dashicons-update" style="margin-top:4px;"></span> Yenile</button>
         </div>
     </div>
 
@@ -43,6 +58,68 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
 
     <div class="pagination-wrap" id="admin-stock-pagination" style="margin-top:20px; text-align:right;">
         <!-- Sayfalama buraya gelecek -->
+    </div>
+
+    <!-- Eşleşmeyen Ürünler Bölümü -->
+    <div id="unmatched-items-section" style="margin-top:40px; display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="margin:0; color:#d63638;"><span class="dashicons dashicons-warning" style="font-size:24px; width:24px; height:24px;"></span> Eşleşmeyen Ürünler</h2>
+            <button type="button" class="button button-link-delete" onclick="deleteAllUnmatched()">Tümünü Temizle</button>
+        </div>
+        <div class="card" style="padding:0; overflow:hidden;">
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th>Dosyadaki Depo</th>
+                        <th>Dosyadaki Ürün Adı</th>
+                        <th>SKU (Hatalı/Eksik)</th>
+                        <th>Stok Miktarı</th>
+                        <th>Hata Mesajı</th>
+                        <th style="width:100px;">İşlem</th>
+                    </tr>
+                </thead>
+                <tbody id="unmatched-items-body">
+                    <!-- JS ile dolacak -->
+                </tbody>
+            </table>
+        </div>
+        <p class="description" style="margin-top:10px;">* Bu listedeki ürünler sistemde eşleşen bir SKU bulunamadığı için stokları güncellenmemiştir. Manuel kontrol sonrası listeden silebilirsiniz.</p>
+    </div>
+</div>
+
+<!-- İçe Aktar Modalı -->
+<div id="hk-import-modal" class="hk-modal" style="display:none; position:fixed; z-index:100000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+    <div class="hk-modal-content" style="background:#fff; padding:30px; border-radius:12px; width:450px; box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+        <h2 style="margin-top:0;">Stok İçe Aktar</h2>
+        <p style="color:#666;">CSV veya JSON formatındaki stok dosyanızı yükleyin. SKU eşleşen ürünlerin stokları otomatik güncellenecektir.</p>
+        
+        <div class="hk-import-upload-area" id="import-drop-zone" style="border:2px dashed #ddd; border-radius:8px; padding:30px; text-align:center; margin:20px 0; cursor:pointer; transition:all 0.2s;">
+            <span class="dashicons dashicons-upload" style="font-size:40px; width:40px; height:40px; color:#bbb;"></span>
+            <p style="margin:10px 0 0;">Dosyayı buraya sürükleyin veya <span style="color:#2271b1; text-decoration:underline;">tıklayıp seçin</span></p>
+            <input type="file" id="import-file-input" style="display:none;" accept=".csv,.json">
+            <div id="selected-file-info" style="display:none; margin-top:10px; font-weight:bold; color:#2271b1;"></div>
+        </div>
+
+        <div id="import-progress-container" style="display:none; margin:20px 0;">
+            <div style="background:#eee; height:8px; border-radius:4px; overflow:hidden;">
+                <div id="import-progress-bar" style="width:0%; height:100%; background:#2271b1; transition:width 0.3s;"></div>
+            </div>
+            <p id="import-progress-text" style="font-size:12px; text-align:center; margin-top:5px; color:#666;">Dosya işleniyor...</p>
+        </div>
+
+        <div id="import-result-summary" style="display:none; background:#f0f7ff; padding:15px; border-radius:8px; margin:20px 0; border-left:4px solid #2271b1;">
+            <h4 style="margin:0 0 10px;">İşlem Tamamlandı:</h4>
+            <ul style="margin:0; padding-left:20px; font-size:13px;">
+                <li>Güncellenen Ürün: <strong id="res-updated">0</strong></li>
+                <li>Hatalı/Eşleşmeyen: <strong id="res-unmatched" style="color:#d63638;">0</strong></li>
+                <li>Yeni Oluşturulan Depo: <strong id="res-warehouses">0</strong></li>
+            </ul>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+            <button type="button" class="button button-secondary" onclick="closeImportModal()">Kapat</button>
+            <button type="button" class="button button-primary" id="start-import-btn" disabled>İşlemi Başlat</button>
+        </div>
     </div>
 </div>
 
@@ -228,9 +305,157 @@ jQuery(document).ready(function($) {
         }, 500);
     });
 
+    // --- İçe / Dışa Aktar Kontrolleri ---
+    $('#export-dropdown-trigger').on('click', function(e) {
+        e.stopPropagation();
+        $('#export-options').toggle();
+    });
+
+    $(document).on('click', function() {
+        $('#export-options').hide();
+    });
+
+    window.openImportModal = function() {
+        $('#hk-import-modal').css('display', 'flex');
+        resetImportUI();
+    };
+
+    window.closeImportModal = function() {
+        $('#hk-import-modal').hide();
+        loadStockList(); // Stokları yenile
+        loadUnmatchedItems(); // Varsa eşleşmeyenleri yenile
+    };
+
+    function resetImportUI() {
+        $('#import-drop-zone').show().css('border-color', '#ddd');
+        $('#selected-file-info').hide().text('');
+        $('#import-result-summary').hide();
+        $('#import-progress-container').hide();
+        $('#start-import-btn').prop('disabled', true).text('İşlemi Başlat');
+        $('#import-file-input').val('');
+    }
+
+    const dropZone = document.getElementById('import-drop-zone');
+    const fileInput = document.getElementById('import-file-input');
+
+    if (dropZone) {
+        dropZone.onclick = () => fileInput.click();
+        dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.border_color = '#2271b1'; };
+        dropZone.ondragleave = () => { dropZone.style.border_color = '#ddd'; };
+        dropZone.ondrop = (e) => {
+            e.preventDefault();
+            const files = e.dataTransfer.files;
+            if (files.length) handleFileSelect(files[0]);
+        };
+    }
+
+    if (fileInput) {
+        fileInput.onchange = (e) => {
+            if (e.target.files.length) handleFileSelect(e.target.files[0]);
+        };
+    }
+
+    function handleFileSelect(file) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext !== 'csv' && ext !== 'json') {
+            alert('Lütfen geçerli bir CSV veya JSON dosyası seçin.');
+            return;
+        }
+        $('#selected-file-info').text('Seçilen Dosya: ' + file.name).show();
+        $('#start-import-btn').prop('disabled', false).data('file', file);
+    }
+
+    $('#start-import-btn').on('click', function() {
+        const file = $(this).data('file');
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('action', 'hizli_kasa_import_stocks');
+        formData.append('import_file', file);
+
+        $(this).prop('disabled', true).text('Yükleniyor...');
+        $('#import-drop-zone').hide();
+        $('#import-progress-container').show();
+        $('#import-progress-bar').css('width', '50%');
+
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(res) {
+                $('#import-progress-bar').css('width', '100%');
+                if (res.success) {
+                    $('#import-progress-container').hide();
+                    if (res.data.stats) {
+                        $('#res-updated').text(res.data.stats.updated);
+                        $('#res-unmatched').text(res.data.stats.unmatched);
+                        $('#res-warehouses').text(res.data.stats.new_warehouses);
+                        $('#import-result-summary').show();
+                    }
+                    if (res.data.stats && res.data.stats.unmatched > 0) {
+                        alert(res.data.stats.unmatched + ' ürün eşleşmediği için ayrı bir listeye eklendi.');
+                    } else {
+                        alert('Stoklar başarıyla güncellendi.');
+                    }
+                } else {
+                    alert('Hata: ' + (res.data.message || 'Bilinmeyen bir hata oluştu.'));
+                    resetImportUI();
+                }
+            },
+            error: function() {
+                alert('Sunucu hatası oluştu.');
+                resetImportUI();
+            }
+        });
+    });
+
+    // --- Eşleşmeyen Ürünler Yönetimi ---
+    function loadUnmatchedItems() {
+        $.post(ajaxurl, { action: 'hizli_kasa_get_unmatched' }, function(res) {
+            if (res.success && res.data.length > 0) {
+                $('#unmatched-items-section').show();
+                const $body = $('#unmatched-items-body');
+                $body.empty();
+                res.data.forEach(item => {
+                    $body.append(`
+                        <tr>
+                            <td>${item.warehouse_name}</td>
+                            <td>${item.product_name || '—'}</td>
+                            <td style="color:#d63638; font-weight:bold;">${item.sku}</td>
+                            <td>${item.stock_qty}</td>
+                            <td style="font-size:11px; color:#666;">${item.error_msg}</td>
+                            <td>
+                                <button type="button" class="button button-small" onclick="deleteUnmatched(${item.id})">Sil</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            } else {
+                $('#unmatched-items-section').hide();
+            }
+        });
+    }
+
+    window.deleteUnmatched = function(id) {
+        if (id === -1 && !confirm('Tüm listeyi temizlemek istediğinize emin misiniz?')) return;
+        $.post(ajaxurl, { action: 'hizli_kasa_delete_unmatched', id: id }, function(res) {
+            loadUnmatchedItems();
+        });
+    };
+
+    window.deleteAllUnmatched = function() {
+        deleteUnmatched(-1);
+    };
+
+    // İlk yüklemede eşleşmeyenleri kontrol et
+    loadUnmatchedItems();
+
     // Define reload function early
     window.loadStockList = function(page = 1) {
         const query = $('#admin-product-search').val();
+        const filterMismatch = $('#filter-mismatch').is(':checked');
         const $body = $('#admin-stock-list-body');
         const ajax_url = (typeof ajaxurl !== 'undefined') ? ajaxurl : '/wp-admin/admin-ajax.php';
         
@@ -239,7 +464,8 @@ jQuery(document).ready(function($) {
         $.post(ajax_url, {
             action: 'hizli_kasa_get_admin_stock_list',
             s: query,
-            paged: page
+            paged: page,
+            filter_mismatch: filterMismatch
         }, function(res) {
             $body.css('opacity', '1');
             if(res.success) {
@@ -281,6 +507,7 @@ jQuery(document).ready(function($) {
             const badgeClass = isVariable ? 'badge-variable' : 'badge-simple';
             const badgeText = isVariable ? 'Varyantlı' : 'Basit';
             const stripeClass = (mainRowCounter % 2 === 0) ? 'stripe-even' : 'stripe-odd';
+            const mismatchIcon = p.has_mismatch ? '<span class="dashicons dashicons-warning" style="color:#d63638; font-size:18px; margin-left:8px;" title="Depo stok toplamı site stoğundan fazla!"></span>' : '';
 
             let row = `<tr class="${isVariable ? 'row-variable' : ''} ${stripeClass}" data-id="${p.id}">
                 <td><img src="${p.thumbnail}" style="width:40px; height:40px; border-radius:4px; object-fit:cover;"></td>
@@ -289,10 +516,14 @@ jQuery(document).ready(function($) {
                         ${isVariable ? '<span class="toggle-icon">▶</span>' : ''}
                         <strong>${p.name}</strong>
                         <span class="hk-badge ${badgeClass}">${badgeText}</span>
+                        ${mismatchIcon}
                     </div>
                     <code style="font-size:10px; color:#64748b; margin-left:${isVariable ? '26px' : '0'};">SKU: ${p.sku || 'N/A'}</code>
                 </td>
-                <td style="font-weight:bold; color:#64748b; vertical-align:middle;">${isVariable ? '-' : p.wc_stock}</td>`;
+                <td style="font-weight:bold; color:#64748b; vertical-align:middle; ${p.has_mismatch ? 'color:#d63638;' : ''}">
+                    ${isVariable ? '-' : p.wc_stock}
+                    ${p.has_mismatch && !isVariable ? `<div style="font-size:9px; font-weight:normal; opacity:0.8;">Depo: ${p.total_warehouse_stock}</div>` : ''}
+                </td>`;
             
             p.warehouse_stocks.forEach(ws => {
                 row += `<td style="text-align:center; border-left:1px solid #eee; vertical-align:middle;">
@@ -317,10 +548,14 @@ jQuery(document).ready(function($) {
                             <div style="display:flex; align-items:center;">
                                 <span style="font-size:13px; color:#334155;">${v.name}</span>
                                 <span class="hk-badge badge-variation">Varyasyon</span>
+                                ${v.has_mismatch ? '<span class="dashicons dashicons-warning" style="color:#d63638; font-size:16px; margin-left:5px;" title="Depo stok toplamı site stoğundan fazla!"></span>' : ''}
                             </div>
                             <code style="font-size:10px; color:#94a3b8;">SKU: ${v.sku || 'N/A'}</code>
                         </td>
-                        <td style="font-weight:600; color:#64748b; vertical-align:middle;">${v.wc_stock}</td>`;
+                        <td style="font-weight:600; color:#64748b; vertical-align:middle; ${v.has_mismatch ? 'color:#d63638;' : ''}">
+                            ${v.wc_stock}
+                            ${v.has_mismatch ? `<div style="font-size:9px; font-weight:normal; opacity:0.8;">Depo: ${v.total_warehouse_stock}</div>` : ''}
+                        </td>`;
 
                     v.warehouse_stocks.forEach(vws => {
                         vRow += `<td style="text-align:center; border-left:1px solid #eee; vertical-align:middle;">
