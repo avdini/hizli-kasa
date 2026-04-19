@@ -75,7 +75,59 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
     font-weight: 500;
 }
 .updating { opacity: 0.5; pointer-events: none; }
-</style>
+
+/* Modern Pagination Styling */
+.hk-pagination {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #fff;
+    padding: 6px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+.hk-page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    background: transparent;
+}
+.hk-page-link:hover:not(.disabled):not(.active) {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+.hk-page-link.active {
+    background: #2271b1;
+    color: #fff;
+    box-shadow: 0 4px 6px -1px rgba(34, 113, 177, 0.2);
+    cursor: default;
+}
+.hk-page-link.disabled {
+    opacity: 0.3;
+    pointer-events: none;
+}
+.hk-page-dots {
+    color: #94a3b8;
+    padding: 0 4px;
+    font-weight: bold;
+}
+.hk-page-nav {
+    font-size: 18px;
+    line-height: 1;
+}
+ </style>
 
 <script>
 console.log('Hızlı Kasa JS Başlatıldı.');
@@ -185,16 +237,33 @@ jQuery(document).ready(function($) {
         $pag.empty();
         if(totalPages <= 1) return;
 
-        let html = `<div class="tablenav-pages"><span class="displaying-num">${totalPages} sayfa</span>`;
-        for(let i=1; i<=totalPages; i++) {
-            if(i === activePage) {
-                html += `<span class="current-page">${i}</span> `;
-            } else {
-                html += `<a class="page-numbers" href="#" onclick="loadStockList(${i}); return false;">${i}</a> `;
-            }
+        let items = [];
+        const range = 2; // Aktif sayfanın sağında ve solunda kaç sayı görünecek
+
+        // Önceki Butonu
+        items.push(`<a class="hk-page-link hk-page-nav ${activePage === 1 ? 'disabled' : ''}" href="#" onclick="loadStockList(${activePage - 1}); return false;">«</a>`);
+
+        // İlk sayfa
+        if (activePage > range + 1) {
+            items.push(`<a class="hk-page-link" href="#" onclick="loadStockList(1); return false;">1</a>`);
+            if (activePage > range + 2) items.push(`<span class="hk-page-dots">...</span>`);
         }
-        html += `</div>`;
-        $pag.append(html);
+
+        // Sayı Aralığı
+        for (let i = Math.max(1, activePage - range); i <= Math.min(totalPages, activePage + range); i++) {
+            items.push(`<a class="hk-page-link ${i === activePage ? 'active' : ''}" href="#" onclick="loadStockList(${i}); return false;">${i}</a>`);
+        }
+
+        // Son sayfa
+        if (activePage < totalPages - range) {
+            if (activePage < totalPages - range - 1) items.push(`<span class="hk-page-dots">...</span>`);
+            items.push(`<a class="hk-page-link" href="#" onclick="loadStockList(${totalPages}); return false;">${totalPages}</a>`);
+        }
+
+        // Sonraki Butonu
+        items.push(`<a class="hk-page-link hk-page-nav ${activePage === totalPages ? 'disabled' : ''}" href="#" onclick="loadStockList(${activePage + 1}); return false;">»</a>`);
+
+        $pag.append(`<div class="hk-pagination">${items.join('')}</div>`);
     }
 });
 </script>
