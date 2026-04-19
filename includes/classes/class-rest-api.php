@@ -544,15 +544,21 @@ function hizli_kasa_format_urun_row($row, $depo_id, $variations_by_parent = []) 
         $active_children_data = [];
         if ($is_variable && isset($variations_by_parent[$parent_id])) {
             foreach ($variations_by_parent[$parent_id] as $v) {
-                // Varyasyon adını basitçe oluştur (Daha detaylısı lazımsa SQL'den meta çekilebilir)
+                // Görsel Çözümleme
+                $var_img = '';
+                if (!empty($v->thumbnail_id)) {
+                    $var_img = wp_get_attachment_image_url($v->thumbnail_id, 'thumbnail');
+                }
+
                 $active_children_data[] = [
                     'id'               => (int)$v->ID,
                     'parent_id'        => $parent_id,
                     'type'             => 'variation',
-                    'name'             => $v->post_title, // SQL'den gelen formatlı ad
+                    'name'             => $v->post_title,
                     'sku'              => $v->sku ?: '',
                     'warehouse_stock'  => (float)$v->warehouse_stock,
-                    'stock_quantity'   => (float)$v->stock_quantity
+                    'stock_quantity'   => (float)$v->stock_quantity,
+                    'images'           => $var_img ? [['src' => $var_img]] : []
                 ];
             }
         }
@@ -879,7 +885,8 @@ function hizli_kasa_terminal_products($request) {
             SELECT p.ID, p.post_parent, p.post_title,
                    sk.quantity as warehouse_stock,
                    MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
-                   MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
+                   MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity,
+                   MAX(CASE WHEN pm.meta_key = '_thumbnail_id' THEN pm.meta_value END) as thumbnail_id
             FROM {$wpdb->posts} p
             LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
             LEFT JOIN $stok_table sk ON (sk.variation_id = p.ID AND sk.location_id = %d)

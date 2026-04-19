@@ -1108,8 +1108,7 @@ html, body {
 }
 
 .terminal-urun-kart:hover:not(.stock-out) {
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transform: scale(1.02);
 }
 
 .gs-kart {
@@ -1468,8 +1467,10 @@ html, body {
     align-items: center;
     padding: 15px 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    transition: background 0.2s;
+    transition: background 0.2s; /* Sadece arka plan parlaması kalsın */
     cursor: pointer;
+    position: relative;
+    overflow: hidden;
 }
 
 .terminal-urun-kart:hover {
@@ -1630,9 +1631,9 @@ html, body {
 /* =============================================
    TERMİNAL VARYASYON AKORDİYON STİLLERİ
    ============================================= */
-
+/* Mavi kenarlık kaldırıldı */
 .terminal-urun-kart.is-variable {
-    border-left: 4px solid #3498db;
+    border-left: none;
 }
 
 .var-badge {
@@ -1645,9 +1646,9 @@ html, body {
     font-weight: 800;
 }
 
+/* Animasyon kaldırıldı, anında açılacak */
 .expand-icon {
     font-size: 12px;
-    transition: transform 0.3s;
     opacity: 0.5;
     margin-left: 15px;
 }
@@ -1667,10 +1668,10 @@ html, body {
     background: rgba(255, 255, 255, 0.08) !important;
 }
 
+/* Mavi dikey çizgi kaldırıldı */
 .variation-indent {
-    width: 40px;
+    width: 25px;
     height: 100%;
-    border-right: 2px solid rgba(255, 255, 255, 0.05);
     margin-right: 15px;
 }
 
@@ -1681,6 +1682,15 @@ html, body {
 
 .variation-item .stok-sayi {
     font-size: 15px !important;
+}
+
+.variation-img {
+    width: 35px;
+    height: 35px;
+    border-radius: 6px;
+    object-fit: cover;
+    margin-right: 12px;
+    background: #333;
 }
 
 /* =============================================

@@ -286,15 +286,18 @@
                 if (isVariable) {
                     html += `<div class="terminal-variations-container" id="vars-${p.id}" style="display:none;">`;
                     p.variations.forEach(v => {
-                        var vCritical = v.warehouse_stock <= threshold;
+                        var vCritical = v.warehouse_stock > 0 && v.warehouse_stock <= threshold;
+                        var vImg = (v.images && v.images[0]) ? v.images[0].src : '';
+                        
                         html += `
                             <div class="terminal-urun-kart variation-item" data-id="${v.parent_id}" data-vid="${v.id}">
                                 <div class="variation-indent"></div>
+                                <img src="${vImg || img}" class="variation-img" alt="">
                                 <div class="urun-detay">
                                     <div class="urun-ad">${v.name}</div>
                                     <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${v.stock_quantity}</div>
                                 </div>
-                                <div class="urun-stok ${vCritical ? 'stok-kritik' : 'stok-tamam'}">
+                                <div class="urun-stok ${v.warehouse_stock <= 0 ? 'stok-bitti' : (vCritical ? 'stok-kritik' : 'stok-tamam')}">
                                     <span class="stok-sayi">${v.warehouse_stock}</span>
                                     <span class="stok-etiket">STOK</span>
                                 </div>
