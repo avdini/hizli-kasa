@@ -14,12 +14,46 @@ if (!defined('ABSPATH'))
 add_action('admin_menu', 'hizli_kasa_admin_menu');
 function hizli_kasa_admin_menu()
 {
-    add_options_page(
-        'Hızlı Kasa Ayarları',
+    // Ana Menü
+    add_menu_page(
+        'Hızlı Kasa',
         'Hızlı Kasa',
         'manage_options',
-        'hizli-kasa-ayarlar',
+        'hizli-kasa',
+        'hizli_kasa_ayarlar_sayfasi',
+        'dashicons-store',
+        30
+    );
+
+    // Alt Menüler
+    add_submenu_page(
+        'hizli-kasa',
+        'Genel Ayarlar',
+        'Genel Ayarlar',
+        'manage_options',
+        'hizli-kasa', // Ana menü ile aynı slug (Landing)
         'hizli_kasa_ayarlar_sayfasi'
+    );
+
+    add_submenu_page(
+        'hizli-kasa',
+        'Depo Yönetimi',
+        'Depo Yönetimi',
+        'manage_options',
+        'hizli-kasa&tab=depolar',
+        'hizli_kasa_ayarlar_sayfasi'
+    );
+
+    add_submenu_page(
+        'hizli-kasa',
+        'Terminali Başlat',
+        '<span style="color:#f58220; font-weight:bold;">POS Terminali ↗</span>',
+        'manage_options',
+        'hizli-kasa-terminal-link',
+        function() {
+            $url = home_url('/hizli-kasa/terminal/');
+            echo "<script>window.open('$url', '_blank'); location.href='admin.php?page=hizli-kasa';</script>";
+        }
     );
 }
 
@@ -46,7 +80,7 @@ function hizli_kasa_ayarlari_kaydet()
  */
 add_action('admin_init', 'hizli_kasa_handle_depo_actions');
 function hizli_kasa_handle_depo_actions() {
-    if (!isset($_GET['page']) || $_GET['page'] !== 'hizli-kasa-ayarlar') return;
+    if (!isset($_GET['page']) || $_GET['page'] !== 'hizli-kasa') return;
     
     global $wpdb;
     $table_name = $wpdb->prefix . 'hizli_kasa_depolar';
@@ -88,11 +122,11 @@ function hizli_kasa_handle_depo_actions() {
 
         if ($inserted === false) {
             $error_msg = $wpdb->last_error ?: "Bilinmeyen veritabanı hatası. Tablolar eksik olabilir. Lütfen 'Sistem Araçları' sekmesinden tabloları onarın.";
-            wp_safe_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&hizli_kasa_msg=depo_hata&hizli_kasa_err=' . urlencode($error_msg)));
+            wp_safe_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=depo_hata&hizli_kasa_err=' . urlencode($error_msg)));
             exit;
         }
 
-        wp_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&hizli_kasa_msg=depo_eklendi'));
+        wp_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=depo_eklendi'));
         exit;
     }
 
@@ -110,7 +144,7 @@ function hizli_kasa_handle_depo_actions() {
         }
 
         $msg = $deleted ? 'depo_silindi' : 'depo_silme_hata';
-        wp_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&hizli_kasa_msg=' . $msg));
+        wp_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=' . $msg));
         exit;
     }
 
@@ -393,9 +427,9 @@ function hizli_kasa_ayarlar_sayfasi()
         <?php settings_errors('hizli_kasa_messages'); ?>
         
         <h2 class="nav-tab-wrapper">
-            <a href="?page=hizli-kasa-ayarlar&tab=genel" class="nav-tab <?php echo $active_tab == 'genel' ? 'nav-tab-active' : ''; ?>">Genel Ayarlar</a>
-            <a href="?page=hizli-kasa-ayarlar&tab=depolar" class="nav-tab <?php echo $active_tab == 'depolar' ? 'nav-tab-active' : ''; ?>">Depo Yönetimi</a>
-            <a href="?page=hizli-kasa-ayarlar&tab=araclar" class="nav-tab <?php echo $active_tab == 'araclar' ? 'nav-tab-active' : ''; ?>">Sistem Araçları</a>
+            <a href="?page=hizli-kasa&tab=genel" class="nav-tab <?php echo $active_tab == 'genel' ? 'nav-tab-active' : ''; ?>">Genel Ayarlar</a>
+            <a href="?page=hizli-kasa&tab=depolar" class="nav-tab <?php echo $active_tab == 'depolar' ? 'nav-tab-active' : ''; ?>">Depo Yönetimi</a>
+            <a href="?page=hizli-kasa&tab=araclar" class="nav-tab <?php echo $active_tab == 'araclar' ? 'nav-tab-active' : ''; ?>">Sistem Araçları</a>
         </h2>
 
         <div style="margin-top: 20px;">
