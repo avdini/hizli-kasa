@@ -610,6 +610,10 @@ function hizli_kasa_ajax_admin_update_stock() {
     $change = isset($_POST['change']) ? floatval($_POST['change']) : 0;
     $set_qty = isset($_POST['set_qty']) ? sanitize_text_field($_POST['set_qty']) : null;
 
+    global $wpdb;
+    $tables = Hizli_Kasa_Database::get_tables();
+    $table = $tables['stok_konumlari'];
+
     $current = $wpdb->get_var($wpdb->prepare(
         "SELECT quantity FROM $table WHERE location_id = %d AND product_id = %d AND variation_id = %d",
         $did, ($vid > 0 ? get_post_field('post_parent', $vid) : $pid), $vid

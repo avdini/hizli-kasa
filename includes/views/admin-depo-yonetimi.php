@@ -13,7 +13,7 @@ $depolar = $wpdb->get_results("SELECT * FROM $table_name ORDER BY priority DESC"
 <div class="depo-yonetimi-konteyner">
     <div class="card" style="max-width: 100%; margin-top: 0;">
         <h3>Yeni Depo Ekle</h3>
-        <form method="post" action="options-general.php?page=hizli-kasa-ayarlar&tab=depolar">
+        <form method="post" action="admin.php?page=hizli-kasa&tab=depolar">
             <input type="hidden" name="tab" value="depolar">
             <?php wp_nonce_field('depo_ekle_action', 'depo_ekle_nonce'); ?>
             <table class="form-table">
