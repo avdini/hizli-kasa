@@ -606,6 +606,11 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         $output[] = $item;
     }
 
+    wp_send_json_success([
+        'products'    => $output,
+        'total_pages' => ceil($total_items / $per_page)
+    ]);
+
     } catch (Exception $e) {
         error_log("Hizli Kasa AJAX Hatası: " . $e->getMessage());
         wp_send_json_error(['message' => 'İstisnai bir hata oluştu: ' . $e->getMessage()]);
