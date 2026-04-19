@@ -175,26 +175,9 @@ class Hizli_Kasa_Stock_Manager {
      * Tüm depoları toplayıp WC ana stoğunu günceller.
      */
     public static function sync_to_wc_stock($product_id, $variation_id) {
-        global $wpdb;
-        $tables = Hizli_Kasa_Database::get_tables();
-
-        $total_qty = $wpdb->get_var($wpdb->prepare("
-            SELECT SUM(quantity) FROM {$tables['stok_konumlari']} 
-            WHERE product_id = %d AND variation_id = %d
-        ", $product_id, $variation_id));
-
-        $id_to_update = $variation_id ? $variation_id : $product_id;
-        
-        update_post_meta($id_to_update, '_stock', ($total_qty ?: 0));
-        
-        // Stok durumunu güncelle
-        $status = ($total_qty > 0) ? 'instock' : 'outofstock';
-        update_post_meta($id_to_update, '_stock_status', $status);
-        
-        // Cache temizle
-        wp_cache_delete($id_to_update, 'post_meta');
-        if($variation_id) wc_delete_product_transients($product_id);
-        else wc_delete_product_transients($id_to_update);
+        // Bu fonksiyon devre dışı bırakılmıştır. 
+        // Depo stoklarının WooCommerce ana stoğuyla senkronize edilmesini engeller.
+        return;
     }
 
     /**
