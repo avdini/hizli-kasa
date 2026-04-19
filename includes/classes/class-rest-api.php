@@ -781,6 +781,7 @@ function hizli_kasa_process_refund($request) {
  */
 function hizli_kasa_terminal_products($request) {
     global $wpdb;
+    hizli_kasa_log("API Başladı: depo_id=" . $request->get_param('depo_id') . " s=" . $request->get_param('s'));
     
     $limit   = intval($request->get_param('limit') ?: 24);
     $offset  = intval($request->get_param('offset') ?: 0);
@@ -790,14 +791,13 @@ function hizli_kasa_terminal_products($request) {
     $threshold = (int) get_option('hizli_kasa_kritik_stok_esigi', 5);
     $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
 
-    // ANA ÜRÜN FİLTRELEME (Sadece 'product' tipi ve stok izolasyonu)
+    // ANA ÜRÜN FİLTRELEME
     $where = "p.post_status = 'publish' AND p.post_type = 'product'";
     $join_extra = "";
     
     if ($depo_id) {
         $join_extra .= $wpdb->prepare(" INNER JOIN $stok_table sk_filter ON (sk_filter.product_id = p.ID AND sk_filter.location_id = %d)", $depo_id);
     }
-
 
     $params = [];
     if (!empty($s)) {
@@ -812,19 +812,18 @@ function hizli_kasa_terminal_products($request) {
                 WHERE sub_p.post_type = 'product_variation' AND sub_pm.meta_value LIKE %s
             )
         )";
-        $params[] = $like;
-        $params[] = $like;
-        $params[] = $like;
+        $params[] = $like; $params[] = $like; $params[] = $like;
     }
 
-    // Toplam sayıyı bul (Hızlı)
+    // Toplam sayıyı bul
     $total = $wpdb->get_var($wpdb->prepare("SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p $join_extra WHERE $where", ...$params));
+    hizli_kasa_log("Ana sorgu total: $total");
 
     if (!$total) {
         return ['products' => [], 'total' => 0, 'has_more' => false, 'critical_count' => 0];
     }
 
-    // SAYFA ÜRÜNLERİNİ GETİR (Büyük SQL Optimizasyonu)
+    // Ürünleri Getir
     $sql = $wpdb->prepare("
         SELECT p.ID, p.post_title, p.post_type, p.post_parent,
                tt_type.slug as product_type,
@@ -851,12 +850,11 @@ function hizli_kasa_terminal_products($request) {
     ", array_merge([$depo_id], $params, [$limit, $offset]));
 
     $results = $wpdb->get_results($sql);
-    if (!$results) return ['products' => [], 'total' => (int)$total, 'has_more' => false, 'critical_count' => 0];
+    hizli_kasa_log("Sonuçlar çekildi: " . count($results));
 
-    // VARYASYONLARI TOPLU ÇEK (N+1 Sorununu Çöz)
+    // Varyasyonları Toplu Çek
     $parent_ids = wp_list_pluck($results, 'ID');
     $variations_by_parent = [];
-    
     if (!empty($parent_ids)) {
         $ids_placeholders = implode(',', array_fill(0, count($parent_ids), '%d'));
         $v_sql = $wpdb->prepare("
@@ -872,68 +870,58 @@ function hizli_kasa_terminal_products($request) {
         ", array_merge([$depo_id], $parent_ids));
         
         $v_results = $wpdb->get_results($v_sql);
-        foreach ($v_results as $v) {
-            $variations_by_parent[$v->post_parent][] = $v;
-        }
+        foreach ($v_results as $v) { $variations_by_parent[$v->post_parent][] = $v; }
     }
 
-    // FORMATLA
     $formatted = [];
     foreach ($results as $row) {
         $item = hizli_kasa_format_urun_row($row, $depo_id, $variations_by_parent);
         if ($item) $formatted[] = $item;
     }
 
-    // KRİTİK STOK VE DİĞER SAYIMLAR (Yeniden Optimize & Hata Engelleme)
+    // SAYIMLAR (YÜKSEK PERFORMANS)
+    hizli_kasa_log("Sayımlar başlıyor...");
     $simple_count = 0; $variable_count = 0; $grand_total_items = 0; $critical_count = 0;
 
     if ($total > 0) {
+        // Tip sayımları
         $counts_sql = $wpdb->prepare("
             SELECT 
-                SUM(CASE WHEN t.slug = 'simple' THEN 1 ELSE 0 END) as simple,
-                SUM(CASE WHEN t.slug = 'variable' THEN 1 ELSE 0 END) as variable
-            FROM (
-                SELECT p.ID, tt_terms.slug
-                FROM {$wpdb->posts} p
-                $join_extra
-                INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
-                INNER JOIN {$wpdb->term_taxonomy} ttt ON tr.term_taxonomy_id = ttt.term_taxonomy_id AND ttt.taxonomy = 'product_type'
-                INNER JOIN {$wpdb->terms} tt_terms ON ttt.term_id = tt_terms.term_id
-                WHERE $where
-                GROUP BY p.ID
-            ) as t
+                SUM(CASE WHEN tt_terms.slug = 'simple' THEN 1 ELSE 0 END) as simple,
+                SUM(CASE WHEN tt_terms.slug = 'variable' THEN 1 ELSE 0 END) as variable
+            FROM {$wpdb->posts} p
+            $join_extra
+            INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+            INNER JOIN {$wpdb->term_taxonomy} ttt ON tr.term_taxonomy_id = ttt.term_taxonomy_id AND ttt.taxonomy = 'product_type'
+            INNER JOIN {$wpdb->terms} tt_terms ON ttt.term_id = tt_terms.term_id
+            WHERE $where
         ", ...$params);
         $counts = $wpdb->get_row($counts_sql);
         if ($counts) { $simple_count = (int)$counts->simple; $variable_count = (int)$counts->variable; }
 
-        // Toplam Kalem Sayısı (Aramaya uyan her şey)
-        // matched_ids yerine subquery kullanarak SQL Injection ve timeout riskini önlüyoruz
-        $grand_total_items = $wpdb->get_var($wpdb->prepare("
-            SELECT COUNT(sk.id) 
-            FROM $stok_table sk 
-            INNER JOIN {$wpdb->posts} p ON (
-                (sk.variation_id = 0 AND sk.product_id = p.ID AND p.post_type = 'product')
-                OR 
-                (sk.variation_id > 0 AND sk.variation_id = p.ID AND p.post_type = 'product_variation')
-            )
-            WHERE sk.location_id = %d AND (
-                p.ID IN (SELECT DISTINCT p_sub.ID FROM {$wpdb->posts} p_sub $join_extra WHERE $where)
-                OR 
-                p.post_parent IN (SELECT DISTINCT p_sub.ID FROM {$wpdb->posts} p_sub $join_extra WHERE $where)
-            )
-        ", array_merge([$depo_id], $params, $params)));
+        // Toplam Kalem (Basit Ürün + Tüm Varyasyonlar) - HIZLI JOIN
+        $grand_total_sql = $wpdb->prepare("
+            SELECT COUNT(sk.id)
+            FROM $stok_table sk
+            INNER JOIN {$wpdb->posts} p ON p.ID = (CASE WHEN sk.variation_id > 0 THEN sk.variation_id ELSE sk.product_id END)
+            INNER JOIN {$wpdb->posts} p_parent ON p_parent.ID = (CASE WHEN p.post_type = 'product' THEN p.ID ELSE p.post_parent END)
+            WHERE sk.location_id = %d AND p_parent.post_status = 'publish' AND p_parent.post_type = 'product'
+              AND (
+                  p_parent.post_title LIKE %s
+                  OR p_parent.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s)
+              )
+        ", array_merge([$depo_id], !empty($params) ? [$params[0], $params[1]] : ['%%', '%%']));
+        
+        $grand_total_items = $wpdb->get_var($grand_total_sql);
 
-        // Kritik stok
+        // Kritik Stok
         $critical_count = $wpdb->get_var($wpdb->prepare("
-            SELECT COUNT(*) FROM $stok_table sk 
-            INNER JOIN {$wpdb->posts} p ON (
-                (sk.variation_id = 0 AND sk.product_id = p.ID AND p.post_type = 'product')
-                OR 
-                (sk.variation_id > 0 AND sk.variation_id = p.ID AND p.post_type = 'product_variation')
-            )
-            WHERE sk.location_id = %d AND sk.quantity <= %d AND p.post_status = 'publish'
+            SELECT COUNT(sk.id) FROM $stok_table sk 
+            WHERE sk.location_id = %d AND sk.quantity <= %d
         ", $depo_id, $threshold));
     }
+
+    hizli_kasa_log("API Bitti: simple=$simple_count variable=$variable_count total_items=$grand_total_items");
 
     return [
         'products'          => $formatted,
@@ -945,10 +933,4 @@ function hizli_kasa_terminal_products($request) {
         'has_more'          => ($offset + $limit) < $total
     ];
 }
-
-
-
-
-
-
 

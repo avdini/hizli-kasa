@@ -14,6 +14,19 @@ define('HIZLI_KASA_VERSION', '3.4.9');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
+/**
+ * Hızlı Kasa için özel loglama fonksiyonu.
+ * Eklenti ana klasöründeki hizli-kasa-debug.log dosyasına yazar.
+ */
+function hizli_kasa_log($message) {
+    if (is_array($message) || is_object($message)) {
+        $message = print_r($message, true);
+    }
+    $file = HIZLI_KASA_PATH . 'hizli-kasa-debug.log';
+    $timestamp = date('Y-m-d H:i:s');
+    file_put_contents($file, "[$timestamp] $message\n", FILE_APPEND);
+}
+
 require_once HIZLI_KASA_PATH . 'includes/classes/class-database.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-admin-settings.php';
