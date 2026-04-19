@@ -1070,6 +1070,47 @@ html, body {
     margin-bottom: 15px;
 }
 
+.terminal-urun-kart {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Stock Out Visuals */
+.terminal-urun-kart.stock-out {
+    filter: grayscale(1) opacity(0.5);
+}
+
+.stock-out-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 5;
+    background: rgba(0,0,0,0.1);
+}
+
+.stock-out-overlay::after {
+    content: '\2715'; /* Large X */
+    font-size: 60px;
+    color: rgba(214, 54, 56, 0.6);
+    font-weight: bold;
+}
+
+.terminal-urun-kart:hover:not(.stock-out) {
+    transform: scale(1.02);
+}
+
 .gs-kart {
     background: #f8f9fa;
     border-radius: 8px;

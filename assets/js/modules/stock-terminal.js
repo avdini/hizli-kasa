@@ -255,18 +255,26 @@
                 if (!p) continue;
 
                 var isVariable = p.is_variable && p.variations && p.variations.length > 0;
-                var isCritical = !isVariable && p.warehouse_stock <= threshold;
+                
+                // Stok durumunu belirle (Grup toplamı)
+                var totalGroupStock = isVariable 
+                    ? p.variations.reduce((sum, v) => sum + parseFloat(v.warehouse_stock || 0), 0)
+                    : parseFloat(p.warehouse_stock || 0);
+                
+                var isStockOut = totalGroupStock <= 0;
+                var isCritical = !isVariable && p.warehouse_stock > 0 && p.warehouse_stock <= threshold;
                 var img = p.images && p.images[0] ? p.images[0].src : '';
                 
                 html += `
-                    <div class="terminal-urun-kart ${isVariable ? 'terminal-parent-card is-variable' : ''}" data-id="${p.id}" data-vid="0">
+                    <div class="terminal-urun-kart ${isVariable ? 'terminal-parent-card is-variable' : ''} ${isStockOut ? 'stock-out' : ''}" data-id="${p.id}" data-vid="0">
+                        ${isStockOut ? '<div class="stock-out-overlay"></div>' : ''}
                         <img src="${img}" class="urun-img" alt="">
                         <div class="urun-detay">
                             <div class="urun-ad">${p.name} ${isVariable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
                             <div class="urun-sku">${p.sku || 'SKU YOK'} | Toplam: ${p.stock_quantity}</div>
                         </div>
                         ${!isVariable ? `
-                        <div class="urun-stok ${isCritical ? 'stok-kritik' : 'stok-tamam'}">
+                        <div class="urun-stok ${isStockOut ? 'stok-bitti' : (isCritical ? 'stok-kritik' : 'stok-tamam')}">
                             <span class="stok-sayi">${p.warehouse_stock}</span>
                             <span class="stok-etiket">MEVCUT STOK</span>
                         </div>
