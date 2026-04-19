@@ -444,8 +444,6 @@ jQuery(document).ready(function($) {
         const $body = $('#admin-stock-list-body');
         const ajax_url = (typeof ajaxurl !== 'undefined') ? ajaxurl : '/wp-admin/admin-ajax.php';
         
-        $body.css('opacity', '0.5');
-        
         $.post(ajax_url, {
             action: 'hizli_kasa_get_admin_stock_list',
             s: query,
@@ -457,11 +455,21 @@ jQuery(document).ready(function($) {
                 renderTable(res.data.products);
                 renderPagination(res.data.total_pages, page);
             } else {
-                $body.html('<tr><td colspan="100%" style="text-align:center; color:red; padding:20px;">Hata: ' + (res.data ? res.data.message : 'Bilinmeyen hata') + '</td></tr>');
+                let errorMsg = res.data ? res.data.message : 'Bilinmeyen hata';
+                $body.html(`<tr><td colspan="100%" style="text-align:center; padding:40px;">
+                    <div style="color:#d63638; font-weight:600; margin-bottom:10px;">⚠️ Veri Alınamadı</div>
+                    <div style="font-size:13px; color:#666; margin-bottom:15px;">${errorMsg}</div>
+                    <button class="button" onclick="loadStockList(${page})">Tekrar Dene</button>
+                </td></tr>`);
             }
         }).fail(function(xhr) {
             $body.css('opacity', '1');
-            $body.html('<tr><td colspan="100%" style="text-align:center; color:red; padding:20px;">Sunucu hatası (Kod: ' + xhr.status + '). Detaylar loglara yazılmış olabilir.</td></tr>');
+            let detail = (xhr.status === 504) ? 'Sunucu yanıt süresi aşıldı (Timeout). Lütfen sayfayı yenileyip tekrar deneyin.' : 'Bağlantı hatası oluştu.';
+            $body.html(`<tr><td colspan="100%" style="text-align:center; padding:40px;">
+                <div style="color:#d63638; font-weight:600; margin-bottom:10px;">⚠️ Sunucu Hatası (Kod: ${xhr.status})</div>
+                <div style="font-size:13px; color:#666; margin-bottom:15px;">${detail}</div>
+                <button class="button" onclick="loadStockList(${page})">Tekrar Dene</button>
+            </td></tr>`);
         });
     };
 

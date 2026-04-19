@@ -458,62 +458,45 @@ function hizli_kasa_ajax_get_admin_stock_list() {
 
     // ADIM 1: Sadece Ana Ürün ID'lerini Bul (Varyasyonları ebeveynlerine grupla)
     $params = [];
-    $search_join = "";
-    $search_where = "";
+    $where_sql = "p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish'";
     
     if ($s) {
         $like = '%' . $wpdb->esc_like($s) . '%';
-        $search_where = " AND (p.post_title LIKE %s OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s))";
+        $where_sql .= " AND (p.post_title LIKE %s OR pm_sku.meta_value LIKE %s)";
         $params[] = $like; $params[] = $like;
     }
 
-    // Toplam sayfa sayısı (Sadece ana ürünler üzerinden)
-    $count_query = "
-        SELECT COUNT(DISTINCT CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) 
-        FROM {$wpdb->posts} p 
-        WHERE p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish' $search_where";
-    
     if ($filter_mismatch) {
-        // Miktar uyuşmazlığı olanları bulmak için daha karmaşık bir query gerekir
-        // Basitleştirmek için: Toplam depo stoğu > WC ana stoğu olan ürünleri/varyasyonları içeren ana ürünleri bul
-        $count_query = "
-            SELECT COUNT(DISTINCT main_id) FROM (
-                SELECT 
-                    CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END as main_id,
-                    (SELECT CAST(meta_value AS DECIMAL(15,4)) FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = '_stock') as wc_stock,
-                    (SELECT SUM(quantity) FROM $stok_table WHERE (variation_id = p.ID OR (p.post_type = 'product' AND product_id = p.ID AND variation_id = 0))) as total_wh_stock
-                FROM {$wpdb->posts} p
-                WHERE p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish' $search_where
-                HAVING total_wh_stock > wc_stock
-            ) as mismatch_query";
-    }
-
-    $total_items = $wpdb->get_var($wpdb->prepare($count_query, ...$params));
-
-    // Ana ID'leri çek
-    $main_query = "
-        SELECT DISTINCT CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END as main_id
-        FROM {$wpdb->posts} p
-        WHERE p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish' $search_where
-        ORDER BY main_id DESC
-        LIMIT %d OFFSET %d";
-
-    if ($filter_mismatch) {
-         $main_query = "
+        // Miktar uyuşmazlığı olanları bulmak için JOIN kullanan performanslı query
+        $main_sql = "
             SELECT DISTINCT main_id FROM (
                 SELECT 
-                    CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END as main_id,
-                    (SELECT CAST(meta_value AS DECIMAL(15,4)) FROM {$wpdb->postmeta} WHERE post_id = p.ID AND meta_key = '_stock') as wc_stock,
-                    (SELECT SUM(quantity) FROM $stok_table WHERE (variation_id = p.ID OR (p.post_type = 'product' AND product_id = p.ID AND variation_id = 0))) as total_wh_stock
+                    (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id,
+                    CAST(pm_stock.meta_value AS DECIMAL(15,4)) as wc_stock,
+                    SUM(sk.quantity) as total_wh_stock
                 FROM {$wpdb->posts} p
-                WHERE p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish' $search_where
+                LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
+                LEFT JOIN {$wpdb->postmeta} pm_stock ON (p.ID = pm_stock.post_id AND pm_stock.meta_key = '_stock')
+                LEFT JOIN $stok_table sk ON (p.ID = sk.variation_id OR (p.post_type = 'product' AND p.ID = sk.product_id AND sk.variation_id = 0))
+                WHERE $where_sql
+                GROUP BY p.ID
                 HAVING total_wh_stock > wc_stock
             ) as mismatch_inner
-            ORDER BY main_id DESC
-            LIMIT %d OFFSET %d";
+            ORDER BY main_id DESC";
+    } else {
+        $main_sql = "
+            SELECT DISTINCT (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id
+            FROM {$wpdb->posts} p
+            LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
+            WHERE $where_sql
+            ORDER BY main_id DESC";
     }
 
-    $main_ids = $wpdb->get_col($wpdb->prepare($main_query, array_merge($params, [$per_page, $offset])));
+    // Toplam sayıyı bul (Hafif bir query ile sarmalıyoruz)
+    $total_items = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM ($main_sql) as total_count", $params));
+    
+    // Sayfalanmış ana ID'leri çek
+    $main_ids = $wpdb->get_col($wpdb->prepare("$main_sql LIMIT %d OFFSET %d", array_merge($params, [$per_page, $offset])));
 
     if (empty($main_ids)) {
         wp_send_json_success(['products' => [], 'total_pages' => 0]);
