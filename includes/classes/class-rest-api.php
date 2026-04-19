@@ -94,6 +94,31 @@ add_action('rest_api_init', function () {
             return current_user_can('edit_posts');
         }
     ));
+
+    // --- Masraf Yönetimi Endpoint'leri ---
+    register_rest_route('hizli-kasa/v1', '/masraflar', array(
+        'methods'             => 'GET',
+        'callback'            => 'hizli_kasa_get_masraflar',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
+
+    register_rest_route('hizli-kasa/v1', '/masraflar', array(
+        'methods'             => 'POST',
+        'callback'            => 'hizli_kasa_add_masraf',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
+
+    register_rest_route('hizli-kasa/v1', '/masraflar/(?P<id>\d+)', array(
+        'methods'             => 'DELETE',
+        'callback'            => 'hizli_kasa_delete_masraf',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
 });
 
 /**
@@ -323,6 +348,27 @@ function hizli_kasa_gun_sonu_raporu($request) {
         );
     }
 
+    // --- Masraf Entegrasyonu ---
+    global $wpdb;
+    $masraf_table = Hizli_Kasa_Database::get_tables()['masraflar'];
+    $m_query = $wpdb->prepare("SELECT amount, payment_method FROM $masraf_table WHERE DATE(created_at) = %s", $tarih);
+    
+    if (!$is_general) {
+        $m_query .= $wpdb->prepare(" AND kasa_no = %s", $kasa_no);
+    }
+    
+    $masraflar_raw = $wpdb->get_results($m_query);
+    $toplam_masraf = 0;
+    $nakit_masraf  = 0;
+    
+    foreach ($masraflar_raw as $m) {
+        $amt = (float)$m->amount;
+        $toplam_masraf += $amt;
+        if ($m->payment_method === 'nakit') {
+            $nakit_masraf += $amt;
+        }
+    }
+
     // Ürün dağılımını sırala (en çok satılandan)
     uasort($urun_map, function($a, $b) {
         return $b['qty'] - $a['qty'];
@@ -341,6 +387,9 @@ function hizli_kasa_gun_sonu_raporu($request) {
             'nakit_toplam'      => round($nakit_toplam, 2),
             'kart_toplam'       => round($kart_toplam, 2),
             'iban_toplam'       => round($iban_toplam, 2),
+            'toplam_masraf'     => round($toplam_masraf, 2),
+            'nakit_masraf'      => round($nakit_masraf, 2),
+            'net_nakit'         => round($nakit_toplam - $nakit_masraf, 2),
             'urun_adet_toplam'  => $urun_adet,
         ),
         'urun_dagilimi'  => array_values($urun_map),
@@ -653,7 +702,7 @@ function hizli_kasa_load_tab_content($request) {
     $tab = sanitize_text_field($request->get_param('tab'));
     
     // Güvenlik: Sadece izin verilen sekme dosyalarını yükle
-    $allowed_tabs = ['kasa', 'urunler', 'raporlar', 'ayarlar', 'iade'];
+    $allowed_tabs = ['kasa', 'urunler', 'raporlar', 'ayarlar', 'iade', 'masraf'];
     if (!in_array($tab, $allowed_tabs)) {
         return new WP_Error('invalid_tab', 'Geçersiz sekme adı.', array('status' => 400));
     }
@@ -972,6 +1021,105 @@ function hizli_kasa_terminal_products($request) {
         'grand_total_items' => (int)$grand_total_items,
         'critical_count'    => (int)$critical_count,
         'has_more'          => ($offset + $limit) < $total
+    ];
+}
+
+/**
+ * Masrafları listeler.
+ */
+function hizli_kasa_get_masraflar($request) {
+    global $wpdb;
+    $tarih   = sanitize_text_field($request->get_param('tarih') ?: current_time('Y-m-d'));
+    $depo_id = intval($request->get_param('depo_id'));
+    
+    $table = Hizli_Kasa_Database::get_tables()['masraflar'];
+    
+    $query = $wpdb->prepare(
+        "SELECT * FROM $table WHERE DATE(created_at) = %s",
+        $tarih
+    );
+    
+    if ($depo_id) {
+        $query .= $wpdb->prepare(" AND location_id = %d", $depo_id);
+    }
+    
+    $query .= " ORDER BY created_at DESC";
+    
+    $results = $wpdb->get_results($query);
+    
+    // User display name'leri ekle
+    foreach ($results as &$row) {
+        $user_info = get_userdata($row->user_id);
+        $row->user_name = $user_info ? $user_info->display_name : 'Bilinmeyen';
+    }
+    
+    return $results;
+}
+
+/**
+ * Yeni masraf ekler.
+ */
+function hizli_kasa_add_masraf($request) {
+    global $wpdb;
+    $params = $request->get_json_params();
+    
+    $category       = sanitize_text_field($params['category']);
+    $amount         = floatval($params['amount']);
+    $payment_method = sanitize_text_field($params['payment_method'] ?: 'nakit');
+    $description    = sanitize_textarea_field($params['description']);
+    $depo_id        = intval($params['depo_id']);
+    $kasa_no        = sanitize_text_field($params['kasa_no']);
+    $user_id        = get_current_user_id();
+    
+    if (empty($category) || $amount <= 0) {
+        return new WP_Error('invalid_data', 'Kategori ve geçerli bir tutar gerekli.', ['status' => 400]);
+    }
+    
+    $table = Hizli_Kasa_Database::get_tables()['masraflar'];
+    
+    $result = $wpdb->insert($table, [
+        'category'       => $category,
+        'amount'         => $amount,
+        'payment_method' => $payment_method,
+        'description'    => $description,
+        'user_id'        => $user_id,
+        'location_id'    => $depo_id,
+        'kasa_no'        => $kasa_no,
+        'created_at'     => current_time('mysql'),
+    ]);
+    
+    if (!$result) {
+        return new WP_Error('db_error', 'Masraf kaydedilemedi.', ['status' => 500]);
+    }
+    
+    return [
+        'success' => true,
+        'id'      => $wpdb->insert_id,
+        'message' => 'Masraf başarıyla kaydedildi.'
+    ];
+}
+
+/**
+ * Masraf siler.
+ */
+function hizli_kasa_delete_masraf($request) {
+    global $wpdb;
+    $id = intval($request->get_param('id'));
+    
+    if (!$id) {
+        return new WP_Error('invalid_id', 'Geçersiz ID.', ['status' => 400]);
+    }
+    
+    $table = Hizli_Kasa_Database::get_tables()['masraflar'];
+    $result = $wpdb->delete($table, ['id' => $id]);
+    
+    if (!$result) {
+        return new WP_Error('db_error', 'Masraf silinemedi.', ['status' => 500]);
+    }
+    
+    return [
+        'success' => true,
+        'message' => 'Masraf silindi.'
     ];
 }
 

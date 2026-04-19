@@ -22,6 +22,7 @@ class Hizli_Kasa_Database {
             'stok_konumlari'  => $wpdb->prefix . 'hizli_kasa_stok_konumlari',
             'stok_hareketleri' => $wpdb->prefix . 'hizli_kasa_stok_hareketleri',
             'unmatched_items'  => $wpdb->prefix . 'hizli_kasa_unmatched_items',
+            'masraflar'        => $wpdb->prefix . 'hizli_kasa_masraflar',
         ];
     }
 
@@ -105,6 +106,27 @@ class Hizli_Kasa_Database {
         $res4 = dbDelta($sql4);
         if ($wpdb->last_error) {
             error_log('Hızlı Kasa DB Delta Hatası (Eşleşmeyenler): ' . $wpdb->last_error);
+        }
+
+        // 5. Masraflar Tablosu
+        $sql5 = "CREATE TABLE {$tables['masraflar']} (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            category varchar(100) NOT NULL,
+            amount decimal(15,4) NOT NULL,
+            payment_method varchar(50) DEFAULT 'nakit',
+            description text,
+            user_id bigint(20) NOT NULL,
+            location_id bigint(20) DEFAULT 0,
+            kasa_no varchar(50) DEFAULT NULL,
+            created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+            PRIMARY KEY  (id),
+            KEY category (category),
+            KEY location_id (location_id),
+            KEY created_at (created_at)
+        ) $charset_collate;";
+        $res5 = dbDelta($sql5);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Masraflar): ' . $wpdb->last_error);
         }
     }
 

@@ -29,6 +29,9 @@ if (!defined('ABSPATH')) exit;
             <div class="ust-sekme" data-tab="iade">
                 <span class="sekme-ikon">↩️</span> İade
             </div>
+            <div class="ust-sekme" data-tab="masraf">
+                <span class="sekme-ikon">💸</span> Masraf
+            </div>
         </div>
         <div class="kullanici-bilgi">
             <?php echo wp_get_current_user()->display_name; ?>
@@ -47,6 +50,7 @@ if (!defined('ABSPATH')) exit;
         <div id="tab-content-raporlar" class="tab-content"></div>
         <div id="tab-content-ayarlar" class="tab-content"></div>
         <div id="tab-content-iade" class="tab-content"></div>
+        <div id="tab-content-masraf" class="tab-content"></div>
     </div>
 
     <!-- Global Yükleniyor Göstergesi -->
