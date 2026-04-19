@@ -409,9 +409,10 @@ jQuery(document).ready(function($) {
             success: function(res) {
                 $('#import-progress-bar').css('width', '100%');
                 $('#hk-close-import-btn').prop('disabled', false);
-                $('#start-import-btn').text('İşlem Tamamlandı');
                 
-                    const msg = '<strong>Harika!</strong> Stoklar başarıyla güncellendi.';
+                if (res.success) {
+                    $('#start-import-btn').text('İşlem Tamamlandı');
+                    let msg = '<strong>Harika!</strong> Stoklar başarıyla güncellendi.';
                     if (res.data.stats && res.data.stats.unmatched > 0) {
                         msg += `<div style="font-size:12px; margin-top:5px; font-weight:normal;">${res.data.stats.unmatched} ürün eşleşmediği için ayrı bir listeye eklendi. "Eşleşmeyen Ürünler" sekmesinden kontrol edebilirsiniz.</div>`;
                     }

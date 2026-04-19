@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 3.7.15
+ * Version: 3.7.16
  * Author: Seyfullah Kurt
  */
 
@@ -10,21 +10,28 @@ if (!defined('ABSPATH'))
 	exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '3.7.15');
+define('HIZLI_KASA_VERSION', '3.7.16');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
-/**
- * Hızlı Kasa için özel loglama fonksiyonu.
- * Eklenti ana klasöründeki hizli-kasa-debug.log dosyasına yazar.
- */
 function hizli_kasa_log($message, $filename = 'hizli-kasa-debug.log') {
     if (is_array($message) || is_object($message)) {
         $message = print_r($message, true);
     }
     $file = HIZLI_KASA_PATH . $filename;
     $timestamp = date('Y-m-d H:i:s');
-    @file_put_contents($file, "[$timestamp] $message\n", FILE_APPEND);
+    $log_entry = "[$timestamp] $message\n";
+    
+    // Her zaman sistem loguna da yaz (WP_DEBUG_LOG aktifse oraya gider)
+    error_log("HK Log: " . $message);
+    
+    // Dosya yazmayı dene
+    $result = @file_put_contents($file, $log_entry, FILE_APPEND);
+    
+    if ($result === false) {
+        // Yazma başarısızsa sistem loguna hata mesajı bırak
+        error_log("HK ERROR: Could not write to $file. Check directory permissions.");
+    }
 }
 
 /**
