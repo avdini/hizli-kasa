@@ -1801,3 +1801,78 @@ html, body {
     white-space: nowrap;
     flex-shrink: 0;
 }
+
+/* --- Terminal Pagination --- */
+.terminal-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    font-size: 14px;
+}
+
+.pagination-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pagination-info select {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    outline: none;
+}
+
+.pagination-info select option {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.btn-pagination {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-pagination:hover:not(:disabled) {
+    background: var(--hk-primary, #2563eb);
+    transform: scale(1.1);
+}
+
+.btn-pagination:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+#current-page-display {
+    font-weight: 600;
+    min-width: 80px;
+    text-align: center;
+}
+
+.pagination-stats {
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+}
+

@@ -32,14 +32,35 @@ if (!defined('ABSPATH')) exit;
 
     <!-- Ana İçerik: Ürün Listesi -->
     <div class="terminal-body" id="terminal-urun-listesi">
-        <!-- JS tarafından doldurulur (DepoManager.init() → StockTerminal.init()) -->
+        <!-- JS tarafından doldurulur -->
         <div class="terminal-loading">
             <div class="spin"></div>
             <p>Yükleniyor...</p>
         </div>
     </div>
 
+    <!-- Sayfalama Kontrolleri -->
+    <div class="terminal-pagination">
+        <div class="pagination-info">
+            <label>Sayfa Başına:</label>
+            <select id="per-page-select">
+                <option value="24">24</option>
+                <option value="48">48</option>
+                <option value="96">96</option>
+            </select>
+        </div>
+        <div class="pagination-controls">
+            <button id="prev-page" class="btn-pagination" disabled>❮</button>
+            <span id="current-page-display">Sayfa 1</span>
+            <button id="next-page" class="btn-pagination">❯</button>
+        </div>
+        <div class="pagination-stats">
+            <span id="range-display">Gösterilen: 0-0 / 0</span>
+        </div>
+    </div>
+
     <!-- Hata ve Debug Paneli -->
+
     <div id="terminal-debug" style="display:none; margin:10px; padding:10px; background:#f8d7da; color:#721c24; border-radius:4px; font-family:monospace; font-size:12px;">
         <strong>Hata Detayı:</strong> <span id="debug-error-msg"></span>
         <br><strong>API URL:</strong> <span id="debug-api-url"></span>

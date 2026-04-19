@@ -837,21 +837,35 @@ function hizli_kasa_terminal_products($request) {
     // Kritik stok eşiğini al
     $threshold = (int) get_option('hizli_kasa_kritik_stok_esigi', 5);
 
-    $where = "p.post_status = 'publish' AND p.post_type IN ('product', 'product_variation')";
+    // Sadece ANA ürünleri (product) getiriyoruz, varyasyonları (product_variation) tek başına getirmiyoruz.
+    $where = "p.post_status = 'publish' AND p.post_type = 'product'";
+    $join  = "LEFT JOIN {$wpdb->postmeta} pm_sku ON p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku'";
     $params = [];
 
     if (!empty($s)) {
         $like = '%' . $wpdb->esc_like($s) . '%';
-        $where .= " AND (p.post_title LIKE %s OR pm_sku.meta_value LIKE %s)";
+        $where .= " AND (
+            p.post_title LIKE %s 
+            OR pm_sku.meta_value LIKE %s 
+            OR p.ID IN (
+                SELECT DISTINCT sub_p.post_parent 
+                FROM {$wpdb->posts} sub_p 
+                LEFT JOIN {$wpdb->postmeta} sub_pm ON sub_p.ID = sub_pm.post_id AND sub_pm.meta_key = '_sku'
+                WHERE sub_p.post_type = 'product_variation' 
+                  AND (sub_p.post_title LIKE %s OR sub_pm.meta_value LIKE %s)
+            )
+        )";
+        $params[] = $like;
+        $params[] = $like;
         $params[] = $like;
         $params[] = $like;
     }
 
-    // Toplam sayıyı bul (Arama varsa farklı, yoksa farklı)
+    // Toplam sayıyı bul
     $total = $wpdb->get_var($wpdb->prepare("
         SELECT COUNT(DISTINCT p.ID)
         FROM {$wpdb->posts} p
-        LEFT JOIN {$wpdb->postmeta} pm_sku ON p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku'
+        $join
         WHERE $where
     ", ...$params));
 
@@ -864,7 +878,7 @@ function hizli_kasa_terminal_products($request) {
         ];
     }
 
-    // Ürünleri getir
+    // Sorguyu hazırla
     $sql = $wpdb->prepare("
         SELECT p.ID, p.post_title, p.post_type, p.post_parent,
                MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
@@ -875,10 +889,10 @@ function hizli_kasa_terminal_products($request) {
                MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
         FROM {$wpdb->posts} p
         LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-        LEFT JOIN {$wpdb->postmeta} pm_sku ON p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku'
+        $join
         WHERE $where
         GROUP BY p.ID
-        ORDER BY p.post_date DESC
+        ORDER BY p.post_title ASC
         LIMIT %d OFFSET %d
     ", array_merge($params, [$limit, $offset]));
 
@@ -892,10 +906,9 @@ function hizli_kasa_terminal_products($request) {
         }
     }
 
-    // Kritik stok sayısını hesapla (Tüm ürünler içinden, sadece bu depo için)
+    // Kritik stok sayısını hesapla (Genel bazda, varyasyonları da tek tek kontrol eder)
     $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
     $critical_count = 0;
-    
     if ($depo_id) {
         $critical_count = $wpdb->get_var($wpdb->prepare("
             SELECT COUNT(*) FROM (
@@ -919,7 +932,6 @@ function hizli_kasa_terminal_products($request) {
         ", $depo_id, $threshold, $threshold));
     }
 
-
     return [
         'products'       => $formatted,
         'total'          => (int)$total,
@@ -927,4 +939,5 @@ function hizli_kasa_terminal_products($request) {
         'critical_count' => (int)$critical_count
     ];
 }
+
 
