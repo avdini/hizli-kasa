@@ -441,62 +441,59 @@ add_action('wp_ajax_hizli_kasa_clear_all_unmatched', 'hizli_kasa_ajax_clear_all_
  * Ürün ve Depo Stok Listesini Getir (Optimize)
  */
 function hizli_kasa_ajax_get_admin_stock_list() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    try {
+        if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
 
-    global $wpdb;
-    hizli_kasa_admin_log("-----------------------------------------");
-    hizli_kasa_admin_log("Admin Stok Listesi Başladı (Optimize)");
-    
-    $s = sanitize_text_field($_POST['s']);
-    $filter_mismatch = isset($_POST['filter_mismatch']) && $_POST['filter_mismatch'] === 'true';
-    $paged = max(1, intval($_POST['paged']));
-    $per_page = 24;
-    $offset = ($paged - 1) * $per_page;
+        global $wpdb;
+        $stok_table = Hizli_Kasa_Database::get_tables()['stok_konumlari'];
+        $depo_table = Hizli_Kasa_Database::get_tables()['depolar'];
+        $s = sanitize_text_field($_POST['s'] ?? '');
+        $filter_mismatch = (isset($_POST['filter_mismatch']) && $_POST['filter_mismatch'] === 'true');
+        $paged = max(1, intval($_POST['paged'] ?? 1));
+        $per_page = 24;
+        $offset = ($paged - 1) * $per_page;
 
-    $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
-    $depo_table = $wpdb->prefix . 'hizli_kasa_depolar';
+        $params = [];
+        $where_sql = "p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish'";
 
-    // ADIM 1: Sadece Ana Ürün ID'lerini Bul (Varyasyonları ebeveynlerine grupla)
-    $params = [];
-    $where_sql = "p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish'";
-    
-    if ($s) {
-        $like = '%' . $wpdb->esc_like($s) . '%';
-        $where_sql .= " AND (p.post_title LIKE %s OR pm_sku.meta_value LIKE %s)";
-        $params[] = $like; $params[] = $like;
-    }
+        if ($s) {
+            $like = '%' . $wpdb->esc_like($s) . '%';
+            $where_sql .= " AND (p.post_title LIKE %s OR pm_sku.meta_value LIKE %s)";
+            $params[] = $like; $params[] = $like;
+        }
 
-    if ($filter_mismatch) {
+        if ($filter_mismatch) {
         // Miktar uyuşmazlığı olanları bulmak için JOIN kullanan performanslı query
-        $main_sql = "
-            SELECT DISTINCT main_id FROM (
-                SELECT 
-                    (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id,
-                    CAST(pm_stock.meta_value AS DECIMAL(15,4)) as wc_stock,
-                    SUM(sk.quantity) as total_wh_stock
-                FROM {$wpdb->posts} p
-                LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
-                LEFT JOIN {$wpdb->postmeta} pm_stock ON (p.ID = pm_stock.post_id AND pm_stock.meta_key = '_stock')
-                LEFT JOIN $stok_table sk ON (p.ID = sk.variation_id OR (p.post_type = 'product' AND p.ID = sk.product_id AND sk.variation_id = 0))
-                WHERE $where_sql
-                GROUP BY p.ID
-                HAVING total_wh_stock > wc_stock
-            ) as mismatch_inner
-            ORDER BY main_id DESC";
+        $base_sql = "
+            SELECT 
+                (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id,
+                CAST(pm_stock.meta_value AS DECIMAL(15,4)) as wc_stock,
+                SUM(sk.quantity) as total_wh_stock
+            FROM {$wpdb->posts} p
+            LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
+            LEFT JOIN {$wpdb->postmeta} pm_stock ON (p.ID = pm_stock.post_id AND pm_stock.meta_key = '_stock')
+            LEFT JOIN $stok_table sk ON (p.ID = sk.variation_id OR (p.post_type = 'product' AND p.ID = sk.product_id AND sk.variation_id = 0))
+            WHERE $where_sql
+            GROUP BY p.ID
+            HAVING total_wh_stock > wc_stock";
     } else {
-        $main_sql = "
+        $base_sql = "
             SELECT DISTINCT (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id
             FROM {$wpdb->posts} p
             LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
-            WHERE $where_sql
-            ORDER BY main_id DESC";
+            WHERE $where_sql";
     }
 
-    // Toplam sayıyı bul (Hafif bir query ile sarmalıyoruz)
-    $total_items = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM ($main_sql) as total_count", $params));
-    
-    // Sayfalanmış ana ID'leri çek
-    $main_ids = $wpdb->get_col($wpdb->prepare("$main_sql LIMIT %d OFFSET %d", array_merge($params, [$per_page, $offset])));
+        // Toplam sayıyı bul
+        $total_items = $wpdb->get_var($wpdb->prepare("SELECT COUNT(DISTINCT main_id) FROM ($base_sql) as t", $params));
+        
+        // Sayfalanmış ana ID'leri çek
+        $main_ids = $wpdb->get_col($wpdb->prepare("SELECT DISTINCT main_id FROM ($base_sql) as ids ORDER BY main_id DESC LIMIT %d OFFSET %d", array_merge($params, [$per_page, $offset])));
+
+        if ($wpdb->last_error) {
+            error_log("Hizli Kasa SQL Hatası: " . $wpdb->last_error);
+            wp_send_json_error(['message' => 'Veritabanı hatası: ' . $wpdb->last_error]);
+        }
 
     if (empty($main_ids)) {
         wp_send_json_success(['products' => [], 'total_pages' => 0]);
@@ -609,8 +606,10 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         $output[] = $item;
     }
 
-    hizli_kasa_admin_log("Admin Stok Listesi Tamamlandı. Ana Ürün: " . count($output));
-    wp_send_json_success(['products' => $output, 'total_pages' => ceil($total_items / $per_page), 'current_page' => $paged]);
+    } catch (Exception $e) {
+        error_log("Hizli Kasa AJAX Hatası: " . $e->getMessage());
+        wp_send_json_error(['message' => 'İstisnai bir hata oluştu: ' . $e->getMessage()]);
+    }
 }
 
 /**
