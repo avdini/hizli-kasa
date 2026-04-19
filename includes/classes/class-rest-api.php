@@ -795,8 +795,9 @@ function hizli_kasa_terminal_products($request) {
     $join_extra = "";
     
     if ($depo_id) {
-        $join_extra .= $wpdb->prepare(" INNER JOIN $stok_table sk_filter ON (sk_filter.product_id = p.ID AND sk_filter.location_id = %d AND sk_filter.variation_id = 0)", $depo_id);
+        $join_extra .= $wpdb->prepare(" INNER JOIN $stok_table sk_filter ON (sk_filter.product_id = p.ID AND sk_filter.location_id = %d)", $depo_id);
     }
+
 
     $params = [];
     if (!empty($s)) {
@@ -836,7 +837,7 @@ function hizli_kasa_terminal_products($request) {
                MAX(CASE WHEN pm.meta_key = '_manage_stock' THEN pm.meta_value END) as manage_stock,
                MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
         FROM {$wpdb->posts} p
-        INNER JOIN $stok_table sk_main ON (sk_main.product_id = p.ID AND sk_main.location_id = %d AND sk_main.variation_id = 0)
+        LEFT JOIN $stok_table sk_main ON (sk_main.product_id = p.ID AND sk_main.location_id = %d AND sk_main.variation_id = 0)
         LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
         LEFT JOIN {$wpdb->postmeta} pm_thumb ON p.ID = pm_thumb.post_id AND pm_thumb.meta_key = '_thumbnail_id'
         LEFT JOIN {$wpdb->term_relationships} tr_type ON p.ID = tr_type.object_id
