@@ -37,6 +37,15 @@ function hizli_kasa_admin_menu()
 
     add_submenu_page(
         'hizli-kasa',
+        'Stok Yönetimi',
+        'Stok Yönetimi',
+        'manage_options',
+        'hizli-kasa&tab=stok',
+        'hizli_kasa_ayarlar_sayfasi'
+    );
+
+    add_submenu_page(
+        'hizli-kasa',
         'Depo Yönetimi',
         'Depo Yönetimi',
         'manage_options',
@@ -377,6 +386,137 @@ function hizli_kasa_save_user_warehouse_field($user_id) {
 add_action('wp_ajax_hizli_kasa_setup', 'hizli_kasa_ajax_setup');
 add_action('wp_ajax_hizli_kasa_reset', 'hizli_kasa_ajax_reset');
 add_action('wp_ajax_hizli_kasa_repair_db', 'hizli_kasa_ajax_repair_db');
+add_action('wp_ajax_hizli_kasa_get_admin_stock_list', 'hizli_kasa_ajax_get_admin_stock_list');
+add_action('wp_ajax_hizli_kasa_admin_update_stock', 'hizli_kasa_ajax_admin_update_stock');
+
+/**
+ * Ürün ve Depo Stok Listesini Getir (Optimize)
+ */
+function hizli_kasa_ajax_get_admin_stock_list() {
+    if (!current_user_can('manage_options')) wp_send_json_error();
+
+    global $wpdb;
+    $s = sanitize_text_field($_POST['s']);
+    $paged = max(1, intval($_POST['paged']));
+    $per_page = 24;
+    $offset = ($paged - 1) * $per_page;
+
+    $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+    $depo_table = $wpdb->prefix . 'hizli_kasa_depolar';
+
+    // 1. ÜRÜN BULMA (ID Discovery)
+    $where = "p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish'";
+    $params = [];
+    if ($s) {
+        $like = '%' . $wpdb->esc_like($s) . '%';
+        $where .= " AND (p.post_title LIKE %s OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s))";
+        $params[] = $like; $params[] = $like;
+    }
+
+    $total_items = $wpdb->get_var($wpdb->prepare("SELECT COUNT(p.ID) FROM {$wpdb->posts} p WHERE $where", ...$params));
+    $total_pages = ceil($total_items / $per_page);
+
+    $sql = $wpdb->prepare("
+        SELECT p.ID, p.post_title, p.post_parent, p.post_type,
+               MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
+               MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as wc_stock,
+               MAX(CASE WHEN pm.meta_key = '_thumbnail_id' THEN pm.meta_value END) as thumb_id
+        FROM {$wpdb->posts} p
+        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+        WHERE $where
+        GROUP BY p.ID
+        ORDER BY p.post_type ASC, p.post_title ASC
+        LIMIT %d OFFSET %d
+    ", array_merge($params, [$per_page, $offset]));
+
+    $products = $wpdb->get_results($sql);
+    $depolar = $wpdb->get_results("SELECT id FROM $depo_table ORDER BY priority DESC");
+
+    $output = [];
+    foreach ($products as $p) {
+        $name = $p->post_title;
+        if ($p->post_type === 'product_variation') {
+            $parent_title = get_the_title($p->post_parent);
+            $name = $parent_title . ' - ' . $name;
+        }
+
+        $thumbnail = $p->thumb_id ? wp_get_attachment_image_url($p->thumb_id, 'thumbnail') : wc_placeholder_img_src();
+        
+        $item = [
+            'id'           => $p->ID,
+            'variation_id' => $p->post_type === 'product_variation' ? $p->ID : 0,
+            'name'         => $name,
+            'sku'          => $p->sku,
+            'wc_stock'     => (float)$p->wc_stock,
+            'thumbnail'    => $thumbnail,
+            'warehouse_stocks' => []
+        ];
+
+        // Her depo için stok durumunu çek
+        foreach ($depolar as $d) {
+            $qty = $wpdb->get_var($wpdb->prepare(
+                "SELECT quantity FROM $stok_table WHERE location_id = %d AND ( (variation_id = 0 AND product_id = %d) OR (variation_id = %d) ) LIMIT 1",
+                $d->id, ($p->post_type === 'product' ? $p->ID : $p->post_parent), $p->ID
+            )) ?: 0;
+            
+            $item['warehouse_stocks'][] = [
+                'depo_id' => $d->id,
+                'qty'     => (float)$qty
+            ];
+        }
+        $output[] = $item;
+    }
+
+    wp_send_json_success([
+        'products'    => $output,
+        'total_pages' => $total_pages,
+        'current_page' => $paged
+    ]);
+}
+
+/**
+ * Manuel Stok Güncelleme
+ */
+function hizli_kasa_ajax_admin_update_stock() {
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim!']);
+
+    $pid    = intval($_POST['product_id']);
+    $vid    = intval($_POST['variation_id']);
+    $did    = intval($_POST['depo_id']);
+    $change = intval($_POST['change']);
+
+    if (!$did || !$pid) wp_send_json_error(['message' => 'Eksik veri!']);
+
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
+    
+    // Stok Güncelle (Stock Manager metodunu kullan ki log tutulsun)
+    // variation_id 0 ise basit ürün, değilse varyasyondur.
+    // product_id her zaman parent ID (veya basit ürün ID) olmalıdır.
+    
+    // Önce mevcut stoğu alıp üstüne ekleme yapıyoruz
+    global $wpdb;
+    $table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+    $current = $wpdb->get_var($wpdb->prepare(
+        "SELECT quantity FROM $table WHERE location_id = %d AND product_id = %d AND variation_id = %d",
+        $did, ($vid > 0 ? get_post_field('post_parent', $vid) : $pid), $vid
+    )) ?: 0;
+
+    $new_qty = $current + $change;
+    if ($new_qty < 0) $new_qty = 0; // Şimdilik eksiye düşürmüyoruz
+
+    $user = wp_get_current_user();
+    $reason = "Admin Manuel Müdahale (Kullanıcı: " . $user->display_name . ")";
+
+    Hizli_Kasa_Stock_Manager::update_warehouse_stock(
+        ($vid > 0 ? get_post_field('post_parent', $vid) : $pid), 
+        $vid, 
+        $did, 
+        $change, 
+        $reason
+    );
+
+    wp_send_json_success(['new_qty' => $new_qty]);
+}
 
 function hizli_kasa_ajax_repair_db() {
     if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz işlem!']);
@@ -428,6 +568,7 @@ function hizli_kasa_ayarlar_sayfasi()
         
         <h2 class="nav-tab-wrapper">
             <a href="?page=hizli-kasa&tab=genel" class="nav-tab <?php echo $active_tab == 'genel' ? 'nav-tab-active' : ''; ?>">Genel Ayarlar</a>
+            <a href="?page=hizli-kasa&tab=stok" class="nav-tab <?php echo $active_tab == 'stok' ? 'nav-tab-active' : ''; ?>">Stok Yönetimi</a>
             <a href="?page=hizli-kasa&tab=depolar" class="nav-tab <?php echo $active_tab == 'depolar' ? 'nav-tab-active' : ''; ?>">Depo Yönetimi</a>
             <a href="?page=hizli-kasa&tab=araclar" class="nav-tab <?php echo $active_tab == 'araclar' ? 'nav-tab-active' : ''; ?>">Sistem Araçları</a>
         </h2>
@@ -514,6 +655,9 @@ function hizli_kasa_ayarlar_sayfasi()
                     </table>
                     <?php submit_button('Ayarları Kaydet'); ?>
                 </form>
+
+            <?php elseif ($active_tab == 'stok'): ?>
+                <?php include HIZLI_KASA_PATH . 'includes/views/admin-stok-yonetimi.php'; ?>
 
             <?php elseif ($active_tab == 'depolar'): ?>
                 <?php include HIZLI_KASA_PATH . 'includes/views/admin-depo-yonetimi.php'; ?>
