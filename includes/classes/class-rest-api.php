@@ -884,45 +884,56 @@ function hizli_kasa_terminal_products($request) {
         if ($item) $formatted[] = $item;
     }
 
-    // KRİTİK STOK VE DİĞER SAYIMLAR (Yeniden Optimize)
-    $simple_count = 0; $variable_count = 0; $grand_total_items = 0;
-    
-    $counts_sql = "
-        SELECT 
-            SUM(CASE WHEN t.slug = 'simple' THEN 1 ELSE 0 END) as simple,
-            SUM(CASE WHEN t.slug = 'variable' THEN 1 ELSE 0 END) as variable
-        FROM (
-            SELECT p.ID, tt_terms.slug
-            FROM {$wpdb->posts} p
-            $join_extra
-            INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
-            INNER JOIN {$wpdb->term_taxonomy} ttt ON tr.term_taxonomy_id = ttt.term_taxonomy_id AND ttt.taxonomy = 'product_type'
-            INNER JOIN {$wpdb->terms} tt_terms ON ttt.term_id = tt_terms.term_id
-            WHERE $where
-            GROUP BY p.ID
-        ) as t
-    ";
-    $counts = $wpdb->get_row($wpdb->prepare($counts_sql, ...$params));
-    if ($counts) { $simple_count = (int)$counts->simple; $variable_count = (int)$counts->variable; }
+    // KRİTİK STOK VE DİĞER SAYIMLAR (Yeniden Optimize & Hata Engelleme)
+    $simple_count = 0; $variable_count = 0; $grand_total_items = 0; $critical_count = 0;
 
-    // Eşleşen parentların kalem toplamı
-    $matched_ids = wp_list_pluck($results, 'ID'); // Bu sefer sadece bu sayfanınkini mi yoksa genel mi?
-    // Kullanıcı genel sayıyı istediği için tüm eşleşenlerin ID'lerini alıyoruz (Hızlı sorgu)
-    $all_matched_ids = $wpdb->get_col($wpdb->prepare("SELECT DISTINCT p.ID FROM {$wpdb->posts} p $join_extra WHERE $where", ...$params));
-    if (!empty($all_matched_ids)) {
-        $ids_str = implode(',', array_map('intval', $all_matched_ids));
+    if ($total > 0) {
+        $counts_sql = $wpdb->prepare("
+            SELECT 
+                SUM(CASE WHEN t.slug = 'simple' THEN 1 ELSE 0 END) as simple,
+                SUM(CASE WHEN t.slug = 'variable' THEN 1 ELSE 0 END) as variable
+            FROM (
+                SELECT p.ID, tt_terms.slug
+                FROM {$wpdb->posts} p
+                $join_extra
+                INNER JOIN {$wpdb->term_relationships} tr ON p.ID = tr.object_id
+                INNER JOIN {$wpdb->term_taxonomy} ttt ON tr.term_taxonomy_id = ttt.term_taxonomy_id AND ttt.taxonomy = 'product_type'
+                INNER JOIN {$wpdb->terms} tt_terms ON ttt.term_id = tt_terms.term_id
+                WHERE $where
+                GROUP BY p.ID
+            ) as t
+        ", ...$params);
+        $counts = $wpdb->get_row($counts_sql);
+        if ($counts) { $simple_count = (int)$counts->simple; $variable_count = (int)$counts->variable; }
+
+        // Toplam Kalem Sayısı (Aramaya uyan her şey)
+        // matched_ids yerine subquery kullanarak SQL Injection ve timeout riskini önlüyoruz
         $grand_total_items = $wpdb->get_var($wpdb->prepare("
-            SELECT COUNT(sk.id) FROM $stok_table sk 
-            WHERE sk.location_id = %d AND (sk.product_id IN ($ids_str) OR sk.variation_id IN (SELECT ID FROM {$wpdb->posts} WHERE post_parent IN ($ids_str)))
-        ", $depo_id));
-    }
+            SELECT COUNT(sk.id) 
+            FROM $stok_table sk 
+            INNER JOIN {$wpdb->posts} p ON (
+                (sk.variation_id = 0 AND sk.product_id = p.ID AND p.post_type = 'product')
+                OR 
+                (sk.variation_id > 0 AND sk.variation_id = p.ID AND p.post_type = 'product_variation')
+            )
+            WHERE sk.location_id = %d AND (
+                p.ID IN (SELECT DISTINCT p_sub.ID FROM {$wpdb->posts} p_sub $join_extra WHERE $where)
+                OR 
+                p.post_parent IN (SELECT DISTINCT p_sub.ID FROM {$wpdb->posts} p_sub $join_extra WHERE $where)
+            )
+        ", array_merge([$depo_id], $params, $params)));
 
-    // Kritik stok
-    $critical_count = $wpdb->get_var($wpdb->prepare("
-        SELECT COUNT(*) FROM $stok_table sk 
-        INNER JOIN {$wpdb->posts} p ON (sk.variation_id = (CASE WHEN p.post_type='product_variation' THEN p.ID ELSE 0 END) AND sk.product_id = (CASE WHEN p.post_type='product' THEN p.ID ELSE p.post_parent END))
-        WHERE sk.location_id = %d AND sk.quantity <= %d AND p.post_status = 'publish'
-    ", $depo_id, $threshold));
+        // Kritik stok
+        $critical_count = $wpdb->get_var($wpdb->prepare("
+            SELECT COUNT(*) FROM $stok_table sk 
+            INNER JOIN {$wpdb->posts} p ON (
+                (sk.variation_id = 0 AND sk.product_id = p.ID AND p.post_type = 'product')
+                OR 
+                (sk.variation_id > 0 AND sk.variation_id = p.ID AND p.post_type = 'product_variation')
+            )
+            WHERE sk.location_id = %d AND sk.quantity <= %d AND p.post_status = 'publish'
+        ", $depo_id, $threshold));
+    }
 
     return [
         'products'          => $formatted,
@@ -934,6 +945,7 @@ function hizli_kasa_terminal_products($request) {
         'has_more'          => ($offset + $limit) < $total
     ];
 }
+
 
 
 
