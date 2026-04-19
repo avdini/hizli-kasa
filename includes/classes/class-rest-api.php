@@ -982,8 +982,6 @@ function hizli_kasa_terminal_products($request) {
         }
     }
 
-    }
-
     return [
         'products'          => $formatted,
         'total'             => (int)$total,
