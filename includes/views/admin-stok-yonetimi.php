@@ -78,6 +78,7 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
 </style>
 
 <script>
+alert('Hızlı Kasa JS Başlatılıyor. Bu kutuyu görüyorsanız JS çalışmaktadır.');
 jQuery(document).ready(function($) {
     let currentPage = 1;
     let searchTimeout = null;
@@ -91,16 +92,15 @@ jQuery(document).ready(function($) {
         }, 500);
     });
 
-    // İlk Yükleme
-    loadStockList();
-
+    // Define reload function early
     window.loadStockList = function(page = 1) {
         const query = $('#admin-product-search').val();
         const $body = $('#admin-stock-list-body');
+        const ajax_url = (typeof ajaxurl !== 'undefined') ? ajaxurl : '/wp-admin/admin-ajax.php';
         
         $body.css('opacity', '0.5');
         
-        $.post(ajaxurl, {
+        $.post(ajax_url, {
             action: 'hizli_kasa_get_admin_stock_list',
             s: query,
             paged: page
@@ -114,10 +114,13 @@ jQuery(document).ready(function($) {
             }
         }).fail(function(xhr) {
             $body.css('opacity', '1');
-            $body.html('<tr><td colspan="100%" style="text-align:center; color:red; padding:20px;">Sunucu hatası oluştu. Lütfen tekrar deneyin. (Kod: ' + xhr.status + ')</td></tr>');
-            console.error(xhr.responseText);
+            $body.html('<tr><td colspan="100%" style="text-align:center; color:red; padding:20px;">Sunucu hatası (Kod: ' + xhr.status + '). Detaylar loglara yazılmış olabilir.</td></tr>');
         });
     };
+
+    // İlk Yükleme (Artık güvenli)
+    loadStockList();
+});
 
     function renderTable(products) {
         const $body = $('#admin-stock-list-body');

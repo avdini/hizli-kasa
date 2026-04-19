@@ -397,6 +397,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
 
     global $wpdb;
     hizli_kasa_log("Admin Stok Listesi Başladı (Ultra-Optimize)");
+    error_log("HIZLI KASA DEBUG: Admin Stok Listesi AJAX Call Received.");
     
     $s = sanitize_text_field($_POST['s']);
     $paged = max(1, intval($_POST['paged']));
@@ -409,16 +410,17 @@ function hizli_kasa_ajax_get_admin_stock_list() {
     // ADIM 1: Sadece ID'leri Bul (HAFİF)
     $where = "p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish'";
     $params = [];
+    $search_where = "";
     if ($s) {
         $like = '%' . $wpdb->esc_like($s) . '%';
-        $where .= " AND (p.post_title LIKE %s OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s))";
+        $search_where = " AND (p.post_title LIKE %s OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s))";
         $params[] = $like; $params[] = $like;
     }
 
-    $total_items = $wpdb->get_var($wpdb->prepare("SELECT COUNT(p.ID) FROM {$wpdb->posts} p WHERE $where", ...$params));
+    $total_items = $wpdb->get_var($wpdb->prepare("SELECT COUNT(p.ID) FROM {$wpdb->posts} p WHERE $where $search_where", ...$params));
     $target_ids = $wpdb->get_col($wpdb->prepare("
-        SELECT p.ID FROM {$wpdb->posts} p WHERE $where 
-        ORDER BY p.post_type ASC, p.post_title ASC 
+        SELECT p.ID FROM {$wpdb->posts} p WHERE $where $search_where
+        ORDER BY p.post_type ASC, p.ID DESC 
         LIMIT %d OFFSET %d
     ", array_merge($params, [$per_page, $offset])));
 
