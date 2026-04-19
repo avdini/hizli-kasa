@@ -177,6 +177,9 @@ function hizli_kasa_handle_depo_actions() {
 
     // Depo Silme
     if (isset($_GET['delete_depo'])) {
+        $depo_id = intval($_GET['delete_depo']);
+        check_admin_referer('delete_depo_' . $depo_id);
+
         $depo_name = $wpdb->get_var($wpdb->prepare("SELECT name FROM $table_name WHERE id = %d", $depo_id));
         $deleted = $wpdb->delete($table_name, ['id' => $depo_id]);
 

@@ -86,8 +86,10 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
             </ul>
         </div>
 
+        <div id="hk-import-message" style="display:none; margin-top:15px; padding:12px; border-radius:6px; font-weight:500;"></div>
+
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-            <button type="button" class="button button-secondary" onclick="closeImportModal()">Kapat</button>
+            <button type="button" class="button button-secondary" id="hk-close-import-btn" onclick="closeImportModal()">Kapat</button>
             <button type="button" class="button button-primary" id="start-import-btn" disabled>İşlemi Başlat</button>
         </div>
     </div>
@@ -342,7 +344,9 @@ jQuery(document).ready(function($) {
         $('#selected-file-info').hide().text('');
         $('#import-result-summary').hide();
         $('#import-progress-container').hide();
+        $('#hk-import-message').hide().text('').removeClass('updated error');
         $('#start-import-btn').prop('disabled', true).text('İşlemi Başlat');
+        $('#hk-close-import-btn').prop('disabled', false);
         $('#import-file-input').val('');
     }
 
@@ -384,8 +388,10 @@ jQuery(document).ready(function($) {
         formData.append('action', 'hizli_kasa_import_stocks');
         formData.append('import_file', file);
 
-        $(this).prop('disabled', true).text('Yükleniyor...');
+        $(this).prop('disabled', true).text('İşleniyor...');
+        $('#hk-close-import-btn').prop('disabled', true);
         $('#import-drop-zone').hide();
+        $('#hk-import-message').hide().removeClass('updated error');
         $('#import-progress-container').show();
         $('#import-progress-bar').css('width', '50%');
 
@@ -397,6 +403,9 @@ jQuery(document).ready(function($) {
             contentType: false,
             success: function(res) {
                 $('#import-progress-bar').css('width', '100%');
+                $('#hk-close-import-btn').prop('disabled', false);
+                $('#start-import-btn').text('İşlem Tamamlandı');
+                
                 if (res.success) {
                     $('#import-progress-container').hide();
                     if (res.data.stats) {
@@ -405,19 +414,22 @@ jQuery(document).ready(function($) {
                         $('#res-warehouses').text(res.data.stats.new_warehouses);
                         $('#import-result-summary').show();
                     }
+                    
+                    let msg = '<strong>Harika!</strong> Stoklar başarıyla güncellendi.';
                     if (res.data.stats && res.data.stats.unmatched > 0) {
-                        alert(res.data.stats.unmatched + ' ürün eşleşmediği için ayrı bir listeye eklendi.');
-                    } else {
-                        alert('Stoklar başarıyla güncellendi.');
+                        msg += `<div style="font-size:12px; margin-top:5px; font-weight:normal;">${res.data.stats.unmatched} ürün eşleşmediği için ayrı bir listeye eklendi. "Eşleşmeyen Ürünler" sekmesinden kontrol edebilirsiniz.</div>`;
                     }
+                    $('#hk-import-message').html(msg).css({ 'background': '#ecfdf5', 'color': '#065f46', 'border': '1px solid #d1fae5' }).fadeIn();
                 } else {
-                    alert('Hata: ' + (res.data.message || 'Bilinmeyen bir hata oluştu.'));
-                    resetImportUI();
+                    const errorMsg = res.data.message || 'Bilinmeyen bir hata oluştu.';
+                    $('#hk-import-message').html('<strong>Hata!</strong> ' + errorMsg).css({ 'background': '#fef2f2', 'color': '#991b1b', 'border': '1px solid #fecaca' }).fadeIn();
+                    $('#start-import-btn').prop('disabled', false).text('İşlemi Tekrar Başlat');
                 }
             },
             error: function() {
-                alert('Sunucu hatası oluştu.');
-                resetImportUI();
+                $('#hk-close-import-btn').prop('disabled', false);
+                $('#start-import-btn').prop('disabled', false).text('İşlemi Tekrar Başlat');
+                $('#hk-import-message').html('<strong>Sunucu Hatası!</strong> İşlem sırasında bir hata oluştu.').css({ 'background': '#fef2f2', 'color': '#991b1b', 'border': '1px solid #fecaca' }).fadeIn();
             }
         });
     });
