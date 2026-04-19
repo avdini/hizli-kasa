@@ -544,16 +544,23 @@ function hizli_kasa_ajax_admin_update_stock() {
     // variation_id 0 ise basit ürün, değilse varyasyondur.
     // product_id her zaman parent ID (veya basit ürün ID) olmalıdır.
     
-    // Önce mevcut stoğu alıp üstüne ekleme yapıyoruz
-    global $wpdb;
-    $table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+    $change = isset($_POST['change']) ? floatval($_POST['change']) : 0;
+    $set_qty = isset($_POST['set_qty']) ? sanitize_text_field($_POST['set_qty']) : null;
+
     $current = $wpdb->get_var($wpdb->prepare(
         "SELECT quantity FROM $table WHERE location_id = %d AND product_id = %d AND variation_id = %d",
         $did, ($vid > 0 ? get_post_field('post_parent', $vid) : $pid), $vid
     )) ?: 0;
+    $current = floatval($current);
+
+    // Akıllı miktar belirleme (Smart Syntax)
+    if ($set_qty !== null && $set_qty !== '') {
+        $new_val = floatval($set_qty);
+        $change = $new_val - $current;
+    }
 
     $new_qty = $current + $change;
-    if ($new_qty < 0) $new_qty = 0; // Şimdilik eksiye düşürmüyoruz
+    if ($new_qty < 0) $new_qty = 0;
 
     $user = wp_get_current_user();
     $reason = "Admin Manuel Müdahale (Kullanıcı: " . $user->display_name . ")";

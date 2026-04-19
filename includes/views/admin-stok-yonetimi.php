@@ -69,12 +69,35 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
 .btn-qty:hover { background: #f0f0f0; border-color: #999; }
 .btn-qty.plus:hover { color: #2271b1; border-color: #2271b1; }
 .btn-qty.minus:hover { color: #d63638; border-color: #d63638; }
+/* Quick Edit Styling */
 .qty-value {
     min-width: 30px;
     text-align: center;
-    font-weight: 500;
+    font-weight: 600;
+    cursor: text;
+    padding: 2px 4px;
+    border-bottom: 1px dashed #cbd5e1;
+    transition: all 0.2s;
+}
+.qty-value:hover { background: #f1f5f9; border-bottom-color: #2271b1; color: #2271b1; }
+.qty-input {
+    width: 60px;
+    height: 24px;
+    text-align: center;
+    font-weight: 600;
+    border: 1px solid #2271b1;
+    border-radius: 4px;
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(34, 113, 177, 0.1);
 }
 .updating { opacity: 0.5; pointer-events: none; }
+.qty-changed {
+    animation: hk-pulse-success 1s ease;
+}
+@keyframes hk-pulse-success {
+    0% { color: #166534; transform: scale(1.1); }
+    100% { color: inherit; transform: scale(1); }
+}
 
 /* Modern Pagination Styling */
 .hk-pagination {
@@ -316,31 +339,61 @@ jQuery(document).ready(function($) {
         });
     }
 
+    // Akıllı Stok Güncelleme (Quick Edit)
+    $(document).on('click', '.qty-value', function(e) {
+        if ($(this).find('input').length > 0) return;
+        
+        const $val = $(this);
+        const currentQty = $val.text();
+        const $input = $('<input type="text" class="qty-input">').val(currentQty);
+        
+        $val.html($input);
+        $input.focus().select();
+        
+        $input.on('blur keyup', function(e) {
+            if (e.type === 'keyup' && e.keyCode !== 13 && e.keyCode !== 27) return;
+            if (e.keyCode === 27) { $val.text(currentQty); return; }
+            
+            const newVal = $input.val().trim();
+            if (newVal === currentQty) { $val.text(currentQty); return; }
+            
+            saveStock($val.closest('.stock-qty-control'), newVal);
+        });
+    });
+
     window.updateStock = function(btn, change) {
-        const $parent = jQuery(btn).closest('.stock-qty-control');
+        saveStock(jQuery(btn).closest('.stock-qty-control'), (change > 0 ? '+' : '') + change);
+    };
+
+    function saveStock($parent, inputVal) {
         const $val = $parent.find('.qty-value');
-        const data = {
+        let data = {
             action: 'hizli_kasa_admin_update_stock',
             product_id: $parent.data('pid'),
             variation_id: $parent.data('vid'),
-            depo_id: $parent.data('did'),
-            change: change
+            depo_id: $parent.data('did')
         };
+
+        // Smart Syntax Kontrolü
+        if (inputVal.startsWith('+') || inputVal.startsWith('-')) {
+            data.change = inputVal;
+        } else {
+            data.set_qty = inputVal;
+        }
 
         $parent.addClass('updating');
         
         jQuery.post(ajaxurl, data, function(res) {
             $parent.removeClass('updating');
             if(res.success) {
-                $val.text(res.data.new_qty);
-                // Başarı efekti
-                $val.css('color', change > 0 ? 'green' : 'red');
-                setTimeout(() => $val.css('color', ''), 500);
+                $val.text(res.data.new_qty).addClass('qty-changed');
+                setTimeout(() => $val.removeClass('qty-changed'), 1000);
             } else {
                 alert(res.data.message);
+                loadStockList(); // Hata varsa tabloyu eski haline getir
             }
         });
-    };
+    }
 
     function renderPagination(totalPages, activePage) {
         const $pag = $('#admin-stock-pagination');
