@@ -442,9 +442,9 @@ add_action('wp_ajax_hizli_kasa_clear_all_unmatched', 'hizli_kasa_ajax_clear_all_
  */
 function hizli_kasa_ajax_get_admin_stock_list() {
     try {
-        error_log("HK Debug: ADMIN_STOCK_LIST START");
+        hizli_kasa_admin_log("ADMIN_STOCK_LIST START");
         if (!current_user_can('manage_options')) {
-            error_log("HK Debug: Access denied for current user");
+            hizli_kasa_admin_log("Access denied for current user");
             wp_send_json_error(['message' => 'Yetkisiz erişim']);
         }
 
@@ -494,13 +494,13 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         // Sayfalanmış ana ID'leri çek
         $main_ids = $wpdb->get_col($wpdb->prepare("SELECT DISTINCT main_id FROM ($base_sql) as ids ORDER BY main_id DESC LIMIT %d OFFSET %d", array_merge($params, [$per_page, $offset])));
         
-        error_log("HK Debug: Main IDs Found: " . count($main_ids));
+        hizli_kasa_admin_log("Main IDs Found: " . count($main_ids));
         if (!empty($main_ids)) {
-            error_log("HK Debug: Main IDs: " . implode(',', $main_ids));
+            hizli_kasa_admin_log("Main IDs: " . implode(',', $main_ids));
         }
 
         if ($wpdb->last_error) {
-            error_log("HK Debug: SQL Error: " . $wpdb->last_error);
+            hizli_kasa_admin_log("SQL Error: " . $wpdb->last_error);
             wp_send_json_error(['message' => 'Veritabanı hatası: ' . $wpdb->last_error]);
         }
 
@@ -536,7 +536,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         $key = ($sr->variation_id > 0) ? "v_{$sr->variation_id}" : "p_{$sr->product_id}";
         $stocks_by_loc[$sr->location_id][$key] = $sr->quantity;
     }
-    error_log("HK Debug: Step 3 Complete (Stocks Fetched)");
+    hizli_kasa_admin_log("Step 3 Complete (Stocks Fetched)");
 
     $output = [];
     foreach ($main_ids as $m_id) {
@@ -616,16 +616,16 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         $output[] = $item;
     }
 
-    error_log("HK Debug: Final Output Prepared. Count: " . count($output));
+    hizli_kasa_admin_log("Final Output Prepared. Count: " . count($output));
 
     wp_send_json_success([
         'products'    => $output,
         'total_pages' => ceil($total_items / $per_page)
     ]);
-    error_log("HK Debug: Response Sent Successfully");
+    hizli_kasa_admin_log("Response Sent Successfully");
 
     } catch (Exception $e) {
-        error_log("Hizli Kasa AJAX Hatası: " . $e->getMessage());
+        hizli_kasa_admin_log("AJAX Hatası: " . $e->getMessage());
         wp_send_json_error(['message' => 'İstisnai bir hata oluştu: ' . $e->getMessage()]);
     }
 }
