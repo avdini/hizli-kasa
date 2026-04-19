@@ -37,11 +37,17 @@
                 }
             });
 
-            // Form gönderimi
-            form.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await self.saveExpense();
-            });
+            // Buton tıklaması (Daha güvenli, sayfa yenilemeyi önler)
+            const saveBtn = document.getElementById('masraf-kaydet-btn');
+            if (saveBtn) {
+                console.log("HK Masraf: Olay dinleyicisi bağlandı.");
+                saveBtn.addEventListener('click', async function(e) {
+                    console.log("HK Masraf: Kaydet butonuna basıldı.");
+                    await self.saveExpense();
+                });
+            } else {
+                console.warn("HK Masraf: Kaydet butonu bulunamadı!");
+            }
 
             // Ödeme yöntemi seçici görsel efekti
             document.querySelectorAll('input[name="payment_method"]').forEach(input => {

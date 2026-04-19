@@ -61,7 +61,7 @@ if (!defined('ABSPATH')) exit;
                     <textarea id="masraf-aciklama" rows="3" placeholder="Masraf detayı..." style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ddd; resize: none;"></textarea>
                 </div>
 
-                <button type="submit" id="masraf-kaydet-btn" style="width: 100%; padding: 15px; background: #2c3e50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
+                <button type="button" id="masraf-kaydet-btn" style="width: 100%; padding: 15px; background: #2c3e50; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s;">
                     Kaydet ve Listeye Ekle
                 </button>
             </form>

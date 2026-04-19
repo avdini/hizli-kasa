@@ -1034,6 +1034,11 @@ function hizli_kasa_get_masraflar($request) {
     
     $table = Hizli_Kasa_Database::get_tables()['masraflar'];
     
+    // Tablo var mı kontrol et, yoksa init çalıştır
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table'") !== $table) {
+        Hizli_Kasa_Database::init();
+    }
+    
     $query = $wpdb->prepare(
         "SELECT * FROM $table WHERE DATE(created_at) = %s",
         $tarih
@@ -1076,6 +1081,11 @@ function hizli_kasa_add_masraf($request) {
     }
     
     $table = Hizli_Kasa_Database::get_tables()['masraflar'];
+    
+    // Tablo var mı kontrol et, yoksa init çalıştır
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table'") !== $table) {
+        Hizli_Kasa_Database::init();
+    }
     
     $result = $wpdb->insert($table, [
         'category'       => $category,
