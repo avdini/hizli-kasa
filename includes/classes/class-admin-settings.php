@@ -396,6 +396,8 @@ function hizli_kasa_ajax_get_admin_stock_list() {
     if (!current_user_can('manage_options')) wp_send_json_error();
 
     global $wpdb;
+    hizli_kasa_log("Admin Stok Listesi Çağrıldı: s=" . $_POST['s']);
+    
     $s = sanitize_text_field($_POST['s']);
     $paged = max(1, intval($_POST['paged']));
     $per_page = 24;
@@ -425,12 +427,33 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
         WHERE $where
         GROUP BY p.ID
-        ORDER BY p.post_type ASC, p.post_title ASC
+        ORDER BY p.post_title DESC, p.ID DESC
         LIMIT %d OFFSET %d
     ", array_merge($params, [$per_page, $offset]));
 
     $products = $wpdb->get_results($sql);
+    hizli_kasa_log("Ana ürünler çekildi: " . count($products));
+
+    if (empty($products)) {
+        wp_send_json_success(['products' => [], 'total_pages' => 0]);
+    }
+
     $depolar = $wpdb->get_results("SELECT id FROM $depo_table ORDER BY priority DESC");
+    $product_ids = wp_list_pluck($products, 'ID');
+
+    // 2. TOPLU STOK ÇEKME (N+1 Çözümü)
+    $stocks_by_loc = [];
+    if (!empty($product_ids)) {
+        $placeholders = implode(',', array_fill(0, count($product_ids), '%d'));
+        // Hem basit ürünleri hem de varyasyonları tek seferde al
+        $stock_sql = "SELECT location_id, product_id, variation_id, quantity FROM $stok_table WHERE (product_id IN ($placeholders) OR variation_id IN ($placeholders))";
+        $stock_results = $wpdb->get_results($wpdb->prepare($stock_sql, array_merge($product_ids, $product_ids)));
+        
+        foreach ($stock_results as $sr) {
+            $key = ($sr->variation_id > 0) ? "v_{$sr->variation_id}" : "p_{$sr->product_id}";
+            $stocks_by_loc[$sr->location_id][$key] = $sr->quantity;
+        }
+    }
 
     $output = [];
     foreach ($products as $p) {
@@ -443,8 +466,8 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         $thumbnail = $p->thumb_id ? wp_get_attachment_image_url($p->thumb_id, 'thumbnail') : wc_placeholder_img_src();
         
         $item = [
-            'id'           => $p->ID,
-            'variation_id' => $p->post_type === 'product_variation' ? $p->ID : 0,
+            'id'           => ($p->post_type === 'product_variation' ? $p->post_parent : $p->ID),
+            'variation_id' => ($p->post_type === 'product_variation' ? $p->ID : 0),
             'name'         => $name,
             'sku'          => $p->sku,
             'wc_stock'     => (float)$p->wc_stock,
@@ -452,12 +475,9 @@ function hizli_kasa_ajax_get_admin_stock_list() {
             'warehouse_stocks' => []
         ];
 
-        // Her depo için stok durumunu çek
         foreach ($depolar as $d) {
-            $qty = $wpdb->get_var($wpdb->prepare(
-                "SELECT quantity FROM $stok_table WHERE location_id = %d AND ( (variation_id = 0 AND product_id = %d) OR (variation_id = %d) ) LIMIT 1",
-                $d->id, ($p->post_type === 'product' ? $p->ID : $p->post_parent), $p->ID
-            )) ?: 0;
+            $key = ($p->post_type === 'product_variation') ? "v_{$p->ID}" : "p_{$p->ID}";
+            $qty = isset($stocks_by_loc[$d->id][$key]) ? $stocks_by_loc[$d->id][$key] : 0;
             
             $item['warehouse_stocks'][] = [
                 'depo_id' => $d->id,
@@ -467,10 +487,11 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         $output[] = $item;
     }
 
+    hizli_kasa_log("Admin Stok Listesi Bitti.");
     wp_send_json_success([
         'products'    => $output,
-        'total_pages' => $total_pages,
-        'current_page' => $paged
+        'total_pages' => (int)$total_pages,
+        'current_page' => (int)$paged
     ]);
 }
 
