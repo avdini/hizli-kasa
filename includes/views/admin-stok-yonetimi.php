@@ -78,7 +78,7 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
 </style>
 
 <script>
-alert('Hızlı Kasa JS Başlatılıyor. Bu kutuyu görüyorsanız JS çalışmaktadır.');
+console.log('Hızlı Kasa JS Başlatıldı.');
 jQuery(document).ready(function($) {
     let currentPage = 1;
     let searchTimeout = null;
@@ -120,7 +120,6 @@ jQuery(document).ready(function($) {
 
     // İlk Yükleme (Artık güvenli)
     loadStockList();
-});
 
     function renderTable(products) {
         const $body = $('#admin-stock-list-body');
