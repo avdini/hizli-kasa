@@ -1078,7 +1078,7 @@ html, body {
     gap: 15px;
     align-items: center;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     border: 1px solid rgba(255, 255, 255, 0.05);
     position: relative;
     overflow: hidden;
@@ -1108,7 +1108,7 @@ html, body {
 }
 
 .terminal-urun-kart:hover:not(.stock-out) {
-    transform: scale(1.02);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .gs-kart {
@@ -1124,7 +1124,7 @@ html, body {
 }
 
 .gs-kart:hover {
-    transform: scale(1.02);
+    background: #f0f2f5;
 }
 
 .gs-kart-ikon {
@@ -1391,6 +1391,8 @@ html, body {
     padding: 20px;
     border-radius: 15px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    z-index: 100;
 }
 
 .depo-bilgi {
@@ -1777,7 +1779,7 @@ html, body {
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-    z-index: 9999;
+    z-index: 99999;
     overflow: hidden;
     animation: depoDropIn 0.18s ease;
 }
