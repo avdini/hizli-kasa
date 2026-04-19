@@ -622,7 +622,7 @@ function hizli_kasa_format_urun_row($row, $depo_id = null) {
             'stock_status' => $row->stock_status,
             'manage_stock' => $row->manage_stock === 'yes',
             'stock_quantity' => (float)$row->stock_quantity,
-            'warehouse_stock' => ($depo_stock !== null) ? (float)$depo_stock : (float)$row->stock_quantity,
+            'warehouse_stock' => ($depo_stock !== null) ? (float)$depo_stock : 0,
             'images' => $image_url ? [['src' => $image_url]] : [],
             'is_variable' => $is_variable,
             'variations' => $active_children_data
@@ -837,9 +837,17 @@ function hizli_kasa_terminal_products($request) {
     // Kritik stok eşiğini al
     $threshold = (int) get_option('hizli_kasa_kritik_stok_esigi', 5);
 
-    // Sadece ANA ürünleri (product) getiriyoruz, varyasyonları (product_variation) tek başına getirmiyoruz.
+    $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+
+    // Sadece ANA ürünleri (product) ve SEÇİLİ deponun ürünlerini getiriyoruz.
     $where = "p.post_status = 'publish' AND p.post_type = 'product'";
     $join  = "LEFT JOIN {$wpdb->postmeta} pm_sku ON p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku'";
+    
+    // Sıkı İzolasyon: Eğer depo seçiliyse, sadece o depoya atanmış ürünleri getir
+    if ($depo_id) {
+        $join .= $wpdb->prepare(" INNER JOIN $stok_table sk_filter ON (sk_filter.product_id = p.ID AND sk_filter.location_id = %d)", $depo_id);
+    }
+
     $params = [];
 
     if (!empty($s)) {
@@ -906,30 +914,24 @@ function hizli_kasa_terminal_products($request) {
         }
     }
 
-    // Kritik stok sayısını hesapla (Genel bazda, varyasyonları da tek tek kontrol eder)
-    $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+    // Kritik stok sayısını hesapla (Genel bazda değil, sadece bu depo içindeki ürünler içinden)
     $critical_count = 0;
     if ($depo_id) {
         $critical_count = $wpdb->get_var($wpdb->prepare("
             SELECT COUNT(*) FROM (
                 SELECT p.ID
                 FROM {$wpdb->posts} p
-                LEFT JOIN $stok_table sk ON sk.location_id = %d AND (
+                INNER JOIN $stok_table sk ON sk.location_id = %d AND (
                     (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0)
                     OR
                     (p.post_type = 'product_variation' AND sk.variation_id = p.ID)
                 )
-                LEFT JOIN {$wpdb->postmeta} pm_stock ON p.ID = pm_stock.post_id AND pm_stock.meta_key = '_stock'
                 WHERE p.post_status = 'publish' 
                   AND p.post_type IN ('product', 'product_variation')
-                  AND (
-                      (sk.id IS NOT NULL AND sk.quantity <= %d)
-                      OR 
-                      (sk.id IS NULL AND CAST(pm_stock.meta_value AS DECIMAL) <= %d)
-                  )
+                  AND sk.quantity <= %d
                 GROUP BY p.ID
             ) as t
-        ", $depo_id, $threshold, $threshold));
+        ", $depo_id, $threshold));
     }
 
     return [
@@ -939,5 +941,6 @@ function hizli_kasa_terminal_products($request) {
         'critical_count' => (int)$critical_count
     ];
 }
+
 
 

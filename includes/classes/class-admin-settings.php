@@ -103,10 +103,17 @@ function hizli_kasa_handle_depo_actions() {
         
         $deleted = $wpdb->delete($table_name, ['id' => $depo_id]);
 
+        if ($deleted) {
+            // Sıkı İzolasyon: Deponun tüm stoklarını ve loglarını da sil
+            $wpdb->delete($wpdb->prefix . 'hizli_kasa_stok_konumlari',  ['location_id' => $depo_id]);
+            $wpdb->delete($wpdb->prefix . 'hizli_kasa_stok_hareketleri', ['location_id' => $depo_id]);
+        }
+
         $msg = $deleted ? 'depo_silindi' : 'depo_silme_hata';
         wp_redirect(admin_url('options-general.php?page=hizli-kasa-ayarlar&tab=depolar&hizli_kasa_msg=' . $msg));
         exit;
     }
+
 }
 
 /**
