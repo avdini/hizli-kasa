@@ -19,13 +19,7 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
         <div class="actions" style="display:flex; gap:10px; align-items:center;">
             <div class="hk-import-export-group" style="padding-right:15px; border-right:1px solid #eee; margin-right:5px;">
                 <button type="button" class="button button-secondary" onclick="openImportModal()"><span class="dashicons dashicons-upload" style="margin-top:4px;"></span> İçe Aktar</button>
-                <div class="hk-dropdown" style="display:inline-block; position:relative;">
-                    <button type="button" class="button button-secondary" id="export-dropdown-trigger"><span class="dashicons dashicons-download" style="margin-top:4px;"></span> Dışa Aktar ▼</button>
-                    <div id="export-options" class="hk-dropdown-content" style="display:none; position:absolute; right:0; background:#fff; min-width:120px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:100; border-radius:4px; padding:5px 0;">
-                        <a href="<?php echo admin_url('admin-ajax.php?action=hizli_kasa_export_stocks&format=csv'); ?>" style="display:block; padding:8px 12px; text-decoration:none; color:#333;">Excel (CSV)</a>
-                        <a href="<?php echo admin_url('admin-ajax.php?action=hizli_kasa_export_stocks&format=json'); ?>" style="display:block; padding:8px 12px; text-decoration:none; color:#333;">JSON</a>
-                    </div>
-                </div>
+                <button type="button" class="button button-secondary" onclick="openExportModal()"><span class="dashicons dashicons-download" style="margin-top:4px;"></span> Dışa Aktar</button>
             </div>
             <span id="stock-sync-status" style="margin-right:15px; font-size:12px; color:#666;"></span>
             <button type="button" class="button button-primary" onclick="loadStockList()"><span class="dashicons dashicons-update" style="margin-top:4px;"></span> Yenile</button>
@@ -119,6 +113,39 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
             <button type="button" class="button button-secondary" onclick="closeImportModal()">Kapat</button>
             <button type="button" class="button button-primary" id="start-import-btn" disabled>İşlemi Başlat</button>
+        </div>
+    </div>
+</div>
+
+<!-- Dışa Aktar Modalı -->
+<div id="hk-export-modal" class="hk-modal" style="display:none; position:fixed; z-index:100000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+    <div class="hk-modal-content" style="background:#fff; padding:30px; border-radius:12px; width:450px; box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+        <h2 style="margin-top:0;">Stok Dışa Aktar</h2>
+        <p style="color:#666;">Dışa aktarılacak depoyu ve dosya formatını seçin.</p>
+        
+        <div style="margin:20px 0;">
+            <label style="display:block; margin-bottom:8px; font-weight:600;">Hangi Depo?</label>
+            <select id="export-depo-select" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ddd;">
+                <option value="0">Tüm Depolar (Genel Liste)</option>
+                <?php foreach($depolar as $d): ?>
+                    <option value="<?php echo $d->id; ?>"><?php echo esc_html($d->name); ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div style="margin:20px 0;">
+            <label style="display:block; margin-bottom:8px; font-weight:600;">Dosya Formatı</label>
+            <div style="display:flex; gap:20px;">
+                <label style="cursor:pointer;"><input type="radio" name="export_format" value="csv" checked> Excel (CSV)</label>
+                <label style="cursor:pointer;"><input type="radio" name="export_format" value="json"> JSON</label>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:30px;">
+            <button type="button" class="button button-secondary" onclick="closeExportModal()">İptal</button>
+            <button type="button" class="button button-primary" onclick="startExport()">
+                <span class="dashicons dashicons-download" style="font-size:16px; margin-top:2px;"></span> İndir
+            </button>
         </div>
     </div>
 </div>
@@ -306,14 +333,22 @@ jQuery(document).ready(function($) {
     });
 
     // --- İçe / Dışa Aktar Kontrolleri ---
-    $('#export-dropdown-trigger').on('click', function(e) {
-        e.stopPropagation();
-        $('#export-options').toggle();
-    });
+    window.openExportModal = function() {
+        $('#hk-export-modal').css('display', 'flex');
+    };
 
-    $(document).on('click', function() {
-        $('#export-options').hide();
-    });
+    window.closeExportModal = function() {
+        $('#hk-export-modal').hide();
+    };
+
+    window.startExport = function() {
+        const depoId = $('#export-depo-select').val();
+        const format = $('input[name="export_format"]:checked').val();
+        const exportUrl = `${ajaxurl}?action=hizli_kasa_export_stocks&format=${format}&depo_id=${depoId}`;
+        
+        window.location.href = exportUrl;
+        closeExportModal();
+    };
 
     window.openImportModal = function() {
         $('#hk-import-modal').css('display', 'flex');

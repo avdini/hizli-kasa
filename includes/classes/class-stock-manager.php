@@ -220,15 +220,21 @@ class Hizli_Kasa_Stock_Manager {
     /**
      * Tüm depo stoklarını dışa aktarır.
      */
-    public static function export_stocks($format = 'csv') {
+    public static function export_stocks($format = 'csv', $depo_id = 0) {
         global $wpdb;
         $tables = Hizli_Kasa_Database::get_tables();
         
+        $where = "";
+        if ($depo_id > 0) {
+            $where = $wpdb->prepare(" WHERE sk.location_id = %d", $depo_id);
+        }
+
         $results = $wpdb->get_results("
             SELECT d.name as warehouse, p.post_title as product_name, sk.quantity, sk.product_id, sk.variation_id
             FROM {$tables['stok_konumlari']} sk
             JOIN {$tables['depolar']} d ON sk.location_id = d.id
             JOIN {$wpdb->posts} p ON (CASE WHEN sk.variation_id > 0 THEN sk.variation_id ELSE sk.product_id END) = p.ID
+            $where
         ");
 
         $data = [];

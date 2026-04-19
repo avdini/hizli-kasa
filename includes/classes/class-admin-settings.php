@@ -681,9 +681,11 @@ function hizli_kasa_ajax_export_stocks() {
     if (!current_user_can('manage_options')) wp_die('Yetkisiz erişim');
     
     $format = isset($_GET['format']) ? sanitize_text_field($_GET['format']) : 'csv';
+    $depo_id = isset($_GET['depo_id']) ? intval($_GET['depo_id']) : 0;
+    
     require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
     
-    $data = Hizli_Kasa_Stock_Manager::export_stocks($format);
+    $data = Hizli_Kasa_Stock_Manager::export_stocks($format, $depo_id);
     
     $filename = "hizli-kasa-stok-" . date('Y-m-d') . "." . $format;
     
