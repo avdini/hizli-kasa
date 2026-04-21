@@ -1662,29 +1662,52 @@ html { margin-top: 0 !important; }
 .stok-kritik .stok-sayi { color: #e74c3c; }
 .stok-tamam .stok-sayi { color: #2ecc71; }
 
-.terminal-footer {
+/* --- Birleştirilmiş Terminal Footer --- */
+.terminal-footer.unified-footer {
     display: flex;
-    gap: 30px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
     background: rgba(255, 255, 255, 0.05);
-    padding: 15px 25px;
-    border-radius: 15px;
+    padding: 8px 20px;
+    border-radius: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    flex-shrink: 0;
 }
 
-.stat-item {
+.footer-stats-combined {
     display: flex;
-    flex-direction: column;
+    gap: 25px;
+    flex: 1;
+    justify-content: center;
 }
 
-.stat-item span {
-    font-size: 18px;
+.terminal-footer.unified-footer .stat-item {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.terminal-footer.unified-footer .stat-item span {
+    font-size: 16px;
     font-weight: 700;
 }
 
-.stat-item label {
-    font-size: 11px;
-    color: #777;
+.terminal-footer.unified-footer .stat-item label {
+    font-size: 10px;
+    color: #888;
     text-transform: uppercase;
+    font-weight: 600;
 }
+
+.pagination-controls-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
 
 /* Modal Stilleri */
 #stok-duzenle-modal .modal-icerik.glass {
@@ -1995,32 +2018,27 @@ html { margin-top: 0 !important; }
     flex-shrink: 0;
 }
 
-/* --- Terminal Pagination --- */
-.terminal-pagination {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    background: rgba(255, 255, 255, 0.05);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    font-size: 14px;
-}
-
+/* --- Terminal Pagination (Unified Overlap) --- */
 .pagination-info {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
+.pagination-info label {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
 .pagination-info select {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     color: #fff;
-    padding: 5px 10px;
+    padding: 3px 8px;
     border-radius: 6px;
     cursor: pointer;
     outline: none;
+    font-size: 13px;
 }
 
 .pagination-info select option {
@@ -2031,25 +2049,26 @@ html { margin-top: 0 !important; }
 .pagination-controls {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
 }
 
 .btn-pagination {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: #fff;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.2s;
+    font-size: 12px;
 }
 
 .btn-pagination:hover:not(:disabled) {
-    background: var(--hk-primary, #2563eb);
+    background: #3498db;
     transform: scale(1.1);
 }
 
@@ -2060,12 +2079,15 @@ html { margin-top: 0 !important; }
 
 #current-page-display {
     font-weight: 600;
-    min-width: 80px;
+    min-width: 70px;
     text-align: center;
+    font-size: 13px;
 }
 
 .pagination-stats {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.5);
     font-style: italic;
+    font-size: 12px;
 }
+
 

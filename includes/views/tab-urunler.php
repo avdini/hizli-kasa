@@ -39,8 +39,9 @@ if (!defined('ABSPATH')) exit;
         </div>
     </div>
 
-    <!-- Sayfalama Kontrolleri -->
-    <div class="terminal-pagination">
+    <!-- Sayfalama ve İstatistik Birleştirilmiş Footer -->
+    <div class="terminal-footer unified-footer">
+        <!-- Sol: Sayfa Başına Seçimi -->
         <div class="pagination-info">
             <label>Sayfa Başına:</label>
             <select id="per-page-select">
@@ -49,43 +50,40 @@ if (!defined('ABSPATH')) exit;
                 <option value="96">96</option>
             </select>
         </div>
-        <div class="pagination-controls">
-            <button id="prev-page" class="btn-pagination" disabled>❮</button>
-            <span id="current-page-display">Sayfa 1</span>
-            <button id="next-page" class="btn-pagination">❯</button>
+
+        <!-- Orta: İstatistikler (Kompakt) -->
+        <div class="footer-stats-combined">
+            <div class="stat-item">
+                <span id="basit-urun-sayisi">0</span>
+                <label>Basit Ürün</label>
+            </div>
+            <div class="stat-item">
+                <span id="varyasyonlu-urun-sayisi">0</span>
+                <label>Varyasyonlu (Ana)</label>
+            </div>
+            <div class="stat-item">
+                <span id="toplam-kalem-sayisi">0</span>
+                <label>Toplam Kalem</label>
+            </div>
+            <div class="stat-item">
+                <span id="kritik-stok-sayisi">0</span>
+                <label>Kritik Stok</label>
+            </div>
         </div>
-        <div class="pagination-stats">
-            <span id="range-display">Gösterilen: 0-0 / 0</span>
+
+        <!-- Sağ: Sayfalama Kontrolleri -->
+        <div class="pagination-controls-wrapper">
+            <div class="pagination-controls">
+                <button id="prev-page" class="btn-pagination" disabled>❮</button>
+                <span id="current-page-display">Sayfa 1</span>
+                <button id="next-page" class="btn-pagination">❯</button>
+            </div>
+            <div class="pagination-stats">
+                <span id="range-display">Gösterilen: 0-0 / 0</span>
+            </div>
         </div>
     </div>
 
-    <!-- Hata ve Debug Paneli -->
-
-    <div id="terminal-debug" style="display:none; margin:10px; padding:10px; background:#f8d7da; color:#721c24; border-radius:4px; font-family:monospace; font-size:12px;">
-        <strong>Hata Detayı:</strong> <span id="debug-error-msg"></span>
-        <br><strong>API URL:</strong> <span id="debug-api-url"></span>
-    </div>
-
-    <!-- Alt Bar: İstatistikler (Opsiyonel) -->
-    <div class="terminal-footer">
-        <div class="stat-item">
-            <span id="basit-urun-sayisi">0</span>
-            <label>Basit Ürün</label>
-        </div>
-        <div class="stat-item">
-            <span id="varyasyonlu-urun-sayisi">0</span>
-            <label>Varyasyonlu (Ana)</label>
-        </div>
-        <div class="stat-item">
-            <span id="toplam-kalem-sayisi">0</span>
-            <label>Toplam Kalem</label>
-        </div>
-        <div class="stat-item">
-            <span id="kritik-stok-sayisi">0</span>
-            <label>Kritik Stok</label>
-        </div>
-
-    </div>
 
 </div>
 
