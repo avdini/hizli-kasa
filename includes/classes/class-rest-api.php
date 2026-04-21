@@ -433,7 +433,13 @@ function hizli_kasa_ozel_arama($data) {
             FROM {$wpdb->posts} p
             LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
             LEFT JOIN {$wpdb->postmeta} pm_thumb ON p.ID = pm_thumb.post_id AND pm_thumb.meta_key = '_thumbnail_id'
-            LEFT JOIN $stok_table sk ON (sk.product_id = p.ID AND sk.location_id = %d AND sk.variation_id = 0)
+            LEFT JOIN $stok_table sk ON (
+                sk.location_id = %d AND 
+                (
+                    (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0) OR
+                    (p.post_type = 'product_variation' AND sk.variation_id = p.ID)
+                )
+            )
             LEFT JOIN {$wpdb->term_relationships} tr_type ON p.ID = tr_type.object_id
             LEFT JOIN {$wpdb->term_taxonomy} tt_tax ON tr_type.term_taxonomy_id = tt_tax.term_taxonomy_id AND tt_tax.taxonomy = 'product_type'
             LEFT JOIN {$wpdb->terms} tt_type ON tt_tax.term_id = tt_type.term_id
@@ -530,7 +536,13 @@ function hizli_kasa_ozel_arama($data) {
                 FROM {$wpdb->posts} p
                 LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
                 LEFT JOIN {$wpdb->postmeta} pm_thumb ON p.ID = pm_thumb.post_id AND pm_thumb.meta_key = '_thumbnail_id'
-                LEFT JOIN $stok_table sk ON (sk.product_id = p.ID AND sk.location_id = %d AND sk.variation_id = 0)
+                LEFT JOIN $stok_table sk ON (
+                    sk.location_id = %d AND 
+                    (
+                        (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0) OR
+                        (p.post_type = 'product_variation' AND sk.variation_id = p.ID)
+                    )
+                )
                 LEFT JOIN {$wpdb->term_relationships} tr_type ON p.ID = tr_type.object_id
                 LEFT JOIN {$wpdb->term_taxonomy} tt_tax ON tr_type.term_taxonomy_id = tt_tax.term_taxonomy_id AND tt_tax.taxonomy = 'product_type'
                 LEFT JOIN {$wpdb->terms} tt_type ON tt_tax.term_id = tt_type.term_id
@@ -559,6 +571,9 @@ function hizli_kasa_ozel_arama($data) {
         if ($ana_urun && $ana_urun->is_type('variable')) {
             $genis_results = $wpdb->get_results($wpdb->prepare("
                 SELECT p.ID, p.post_title, p.post_type, p.post_parent,
+                       tt_type.slug as product_type,
+                       pm_thumb.meta_value as thumbnail_id,
+                       sk.quantity as warehouse_stock,
                        MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
                        MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
                        MAX(CASE WHEN pm.meta_key = '_regular_price' THEN pm.meta_value END) as regular_price,
@@ -567,6 +582,17 @@ function hizli_kasa_ozel_arama($data) {
                        MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity
                 FROM {$wpdb->posts} p
                 LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
+                LEFT JOIN {$wpdb->postmeta} pm_thumb ON p.ID = pm_thumb.post_id AND pm_thumb.meta_key = '_thumbnail_id'
+                LEFT JOIN $stok_table sk ON (
+                    sk.location_id = %d AND 
+                    (
+                        (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0) OR
+                        (p.post_type = 'product_variation' AND sk.variation_id = p.ID)
+                    )
+                )
+                LEFT JOIN {$wpdb->term_relationships} tr_type ON p.ID = tr_type.object_id
+                LEFT JOIN {$wpdb->term_taxonomy} tt_tax ON tr_type.term_taxonomy_id = tt_tax.term_taxonomy_id AND tt_tax.taxonomy = 'product_type'
+                LEFT JOIN {$wpdb->terms} tt_type ON tt_tax.term_id = tt_type.term_id
                 WHERE p.post_status = 'publish'
                   AND (p.ID = %d OR p.post_parent = %d)
                 GROUP BY p.ID
@@ -574,7 +600,7 @@ function hizli_kasa_ozel_arama($data) {
                   (CASE WHEN p.ID = %d THEN 0 ELSE 1 END) ASC,
                   (CASE WHEN p.post_type = 'product' THEN 0 ELSE 1 END) ASC,
                   p.ID ASC
-            ", $parent_id, $parent_id, $tek_sonuc['id']));
+            ", $depo_id, $parent_id, $parent_id, $tek_sonuc['id']));
 
             if (!empty($genis_results)) {
                 $formatted = [];
@@ -604,7 +630,7 @@ function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent
     try {
         $parent_id = (int)$row->ID;
         // product_type SQL'den gelecek
-        $is_variable = ($row->product_type === 'variable');
+        $is_variable = (isset($row->product_type) && $row->product_type === 'variable');
         
         $active_children_data = [];
         if ($is_variable && isset($variations_by_parent[$parent_id])) {
