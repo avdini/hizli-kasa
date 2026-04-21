@@ -590,6 +590,9 @@ function hizli_kasa_load_tab_content($request) {
         );
     }
 
+    $user_id = get_current_user_id();
+    $user_theme = get_user_meta($user_id, '_hizli_kasa_tema', true) ?: 'light';
+
     ob_start();
     include $template_file;
     $html = ob_get_clean();

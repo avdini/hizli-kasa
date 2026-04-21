@@ -25,14 +25,31 @@
             }
         },
 
-        /**
+         /**
          * Ayarlar sekmesindeki tema butonlarını bağla
          */
         bindThemeButtons: function() {
             var self = this;
             var buttons = document.querySelectorAll('.btn-tema');
+            var app = document.getElementById('hizli-kasa-app');
+            var currentTheme = 'light';
             
+            if (app) {
+                if (app.classList.contains('theme-dark')) currentTheme = 'dark';
+            }
+
             buttons.forEach(function(btn) {
+                // İlk yüklemede aktif temayı vurgula
+                if (btn.dataset.tema === currentTheme) {
+                    btn.classList.add('aktif');
+                    btn.style.background = 'var(--hk-accent)';
+                    btn.style.color = 'white';
+                } else {
+                    btn.classList.remove('aktif');
+                    btn.style.background = 'var(--hk-bg-body)';
+                    btn.style.color = 'var(--hk-text-main)';
+                }
+
                 btn.addEventListener('click', function() {
                     var theme = this.dataset.tema;
                     self.setTheme(theme);
