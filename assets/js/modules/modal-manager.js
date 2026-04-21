@@ -105,6 +105,8 @@
             els.urunAramaInput.addEventListener("input", function() {
                 clearTimeout(self._aramaTimeout);
                 var query = els.urunAramaInput.value.trim();
+                self._lastSearchQuery = query; // Takip için son sorguyu kaydet
+
                 if (query.length < 2) {
                     els.aramaSonuclariListe.innerHTML = "";
                     return;
@@ -117,6 +119,13 @@
                             headers: { 'X-WP-Nonce': kasaAyar.nonce }
                         });
                         var data = await response.json();
+                        
+                        // ÖNEMLİ: Yarış durumunu (race condition) engelle.
+                        // Sadece en son yapılan aramanın sonuçlarını göster.
+                        if (self._lastSearchQuery !== query) {
+                            return;
+                        }
+
                         self._sonuclariGoster(data);
                     } catch (error) {
                         console.error("Arama hatası:", error);
