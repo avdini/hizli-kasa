@@ -62,4 +62,7 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
         <div class="spinner"></div>
         <span>Sayfa Yükleniyor...</span>
     </div>
+
+    <!-- Toast Bildirim Konteyneri (Global overlay) -->
+    <div id="hk-toast-container"></div>
 </div>

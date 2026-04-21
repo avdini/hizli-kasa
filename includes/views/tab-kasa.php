@@ -13,9 +13,6 @@ if (!defined('ABSPATH'))
 ?>
 
 <div id="kasa-dis-cerceve">
-    <!-- Toast Bildirim Konteyneri (Global overlay) -->
-    <div id="hk-toast-container"></div>
-
     <div id="kasa-ana-duzen">
         <!-- Sidebar: Kasa Sekmeleri -->
         <div id="kasa-sidebar">
