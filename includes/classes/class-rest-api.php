@@ -712,13 +712,13 @@ function hizli_kasa_terminal_products($request) {
 
     $params = [];
     $aws_ids = [];
+    $order_by = "p.post_title ASC";
 
     if (!empty($s)) {
         // 1. Advanced Woo Search Entegrasyonu
         if (class_exists('AWS_Search')) {
             $aws_search = new AWS_Search();
             $aws_results = $aws_search->search($s);
-            $aws_ids = [];
             if (!empty($aws_results['products'])) {
                 foreach ($aws_results['products'] as $p_item) {
                     $aws_ids[] = (int)$p_item['id'];
@@ -728,6 +728,8 @@ function hizli_kasa_terminal_products($request) {
             if (!empty($aws_ids)) {
                 $ids_ph = implode(',', array_map('intval', $aws_ids));
                 $where .= " AND p.ID IN ($ids_ph)";
+                // AWS sırasını korumak için FIELD kullanıyoruz
+                $order_by = "FIELD(p.ID, $ids_ph)";
             } else {
                 // AWS var ama sonuç yoksa zorla boş döndür
                 $where .= " AND p.ID = 0";
@@ -744,7 +746,7 @@ function hizli_kasa_terminal_products($request) {
     if (!$total) return ['products' => [], 'total' => 0, 'has_more' => false, 'critical_count' => 0];
 
     $id_query = $wpdb->prepare("
-        SELECT DISTINCT p.ID FROM {$wpdb->posts} p $join_extra WHERE $where ORDER BY p.post_title ASC LIMIT %d OFFSET %d", array_merge($params, [$limit, $offset]));
+        SELECT DISTINCT p.ID FROM {$wpdb->posts} p $join_extra WHERE $where ORDER BY $order_by LIMIT %d OFFSET %d", array_merge($params, [$limit, $offset]));
     $target_ids = $wpdb->get_col($id_query);
 
     if (empty($target_ids)) return ['products' => [], 'total' => (int)$total, 'has_more' => false, 'critical_count' => 0];
