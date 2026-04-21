@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 3.8.19
+ * Version: 3.8.20
  * Author: Seyfullah Kurt
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH'))
 	exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '3.8.19');
+define('HIZLI_KASA_VERSION', '3.8.20');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -63,6 +63,13 @@ Hizli_Kasa_Stock_Manager::listen();
 require_once HIZLI_KASA_PATH . 'includes/plugin-update-checker/plugin-update-checker.php';
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+// PUC'ın sadece branch'i takip etmesi için stratejileri filtreliyoruz (Release/Tag aranmasını engeller)
+add_filter('puc_vcs_update_detection_strategies-hizli-kasa', function($strategies) {
+	unset($strategies['latest_release']);
+	unset($strategies['latest_tag']);
+	return $strategies;
+});
 
 $hizli_kasa_update_checker = PucFactory::buildUpdateChecker(
 	'https://github.com/Seyfullahkurt9/hizli-kasa/',
