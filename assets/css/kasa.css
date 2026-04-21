@@ -1579,6 +1579,29 @@ html, body {
     border-left: 4px solid #34495e;
     margin-left: 0 !important;
     padding-left: 0 !important;
+    display: none; /* Varsayılan kapalı */
+}
+
+.variation-container.is-open {
+    display: block; /* Tıklanınca açılır */
+    animation: hk-slide-down 0.2s ease-out;
+}
+
+@keyframes hk-slide-down {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.parent-row::after {
+    content: '▼';
+    font-size: 10px;
+    margin-left: auto;
+    transition: transform 0.3s;
+    opacity: 0.5;
+}
+
+.parent-row.is-open::after {
+    transform: rotate(180deg);
 }
 
 .variation-row {

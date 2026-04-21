@@ -647,7 +647,7 @@ function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent
             'stock_quantity'  => (float)$row->stock_quantity,
             'warehouse_stock' => (float)$row->warehouse_stock,
             'images'          => $image_url ? [['src' => $image_url]] : [],
-            'is_variable'     => ($is_variable && !empty($active_children_data)),
+            'is_variable'     => $is_variable,
             'variations'      => $active_children_data
         ];
     } catch (Exception $e) {
