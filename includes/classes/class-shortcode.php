@@ -72,6 +72,7 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-refund-manager', $js_base . 'modules/refund-manager.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-expense-manager', $js_base . 'modules/expense-manager.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-stock-terminal', $js_base . 'modules/stock-terminal.js', array('kasa-ui-renderer'), $pos_version, true);
+    wp_enqueue_script('kasa-theme-manager', $js_base . 'modules/theme-manager.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-depo-manager',   $js_base . 'modules/depo-manager.js',   array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-js', $js_base . 'kasa.js', array(
         'kasa-cart-manager',
@@ -101,7 +102,8 @@ function hizli_kasa_uygulamasi()
         'version'         => HIZLI_KASA_VERSION,
         'yuvarlamaAktif'  => get_option('hizli_kasa_yuvarlama_aktif', '1'),
         'yuvarlaModu'     => get_option('hizli_kasa_yuvarlama_modu', '1'),
-        'kritikStokEsigi' => (int)get_option('hizli_kasa_kritik_stok_esigi', 5)
+        'kritikStokEsigi' => (int)get_option('hizli_kasa_kritik_stok_esigi', 5),
+        'tema'            => get_user_meta(get_current_user_id(), '_hizli_kasa_tema', true) ?: 'light'
     ));
 
     // HTML Template'i Render Et

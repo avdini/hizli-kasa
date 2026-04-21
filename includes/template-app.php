@@ -7,7 +7,11 @@
 if (!defined('ABSPATH')) exit;
 ?>
 
-<div id="hizli-kasa-app">
+<?php 
+$current_user_id = get_current_user_id();
+$user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'light'; 
+?>
+<div id="hizli-kasa-app" class="theme-<?php echo esc_attr($user_theme); ?>">
     <!-- Üst Sekme Menüsü -->
     <div id="hizli-kasa-ust-menu">
         <div class="kasa-logo">

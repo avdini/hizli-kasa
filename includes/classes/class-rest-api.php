@@ -119,6 +119,14 @@ add_action('rest_api_init', function () {
             return current_user_can('edit_posts');
         }
     ));
+
+    register_rest_route('hizli-kasa/v1', '/user/set-theme', array(
+        'methods'             => 'POST',
+        'callback'            => 'hizli_kasa_api_set_user_theme',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
 });
 
 /**
@@ -190,6 +198,23 @@ function hizli_kasa_api_set_active_depo($request) {
         'success'        => true,
         'active_depo_id' => $depo_id,
         'message'        => 'Aktif depo güncellendi.',
+    ];
+}
+
+/**
+ * Kullanıcının tema tercihini kaydeder.
+ */
+function hizli_kasa_api_set_user_theme($request) {
+    $data  = $request->get_json_params();
+    $theme = sanitize_text_field($data['theme'] ?? 'light');
+    $user_id = get_current_user_id();
+
+    update_user_meta($user_id, '_hizli_kasa_tema', $theme);
+
+    return [
+        'success' => true,
+        'theme'   => $theme,
+        'message' => 'Tema tercihi kaydedildi.',
     ];
 }
 

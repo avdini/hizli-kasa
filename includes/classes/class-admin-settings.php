@@ -314,17 +314,17 @@ function hizli_kasa_user_warehouse_field($user) {
     $manage_ids = hizli_kasa_get_user_manage_depos($user->ID);
     ?>
     <h3>Hızlı Kasa Yetkilendirme</h3>
-    <style>
-    .hk-depo-yetki-grid { display: flex; gap: 30px; flex-wrap: wrap; }
-    .hk-depo-yetki-grup { flex: 1; min-width: 220px; }
-    .hk-depo-yetki-grup h4 { margin: 0 0 8px; font-size: 13px; color: #1d2327; }
-    .hk-depo-checkbox-list { display: flex; flex-direction: column; gap: 6px; }
-    .hk-depo-checkbox-list label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; }
-    .hk-depo-checkbox-list label:hover { color: #2271b1; }
-    .hk-yonetim-not { font-size: 11px; color: #646970; margin-top: 8px; font-style: italic; }
-    .hk-depo-empty { color: #999; font-style: italic; font-size: 13px; }
-    </style>
     <table class="form-table">
+        <tr>
+            <th>Görünüm Teması</th>
+            <td>
+                <?php $current_theme = get_user_meta($user->ID, '_hizli_kasa_tema', true) ?: 'light'; ?>
+                <select name="hizli_kasa_tema">
+                    <option value="light" <?php selected($current_theme, 'light'); ?>>Aydınlık</option>
+                    <option value="dark" <?php selected($current_theme, 'dark'); ?>>Karanlık</option>
+                </select>
+            </td>
+        </tr>
         <tr>
             <th>Depo Yetkileri</th>
             <td>
@@ -408,6 +408,10 @@ function hizli_kasa_save_user_warehouse_field($user_id) {
     
     update_user_meta($user_id, '_hizli_kasa_depo_ids_view',   json_encode(array_values($view_ids)));
     update_user_meta($user_id, '_hizli_kasa_depo_ids_manage', json_encode(array_values($manage_ids)));
+
+    if (isset($_POST['hizli_kasa_tema'])) {
+        update_user_meta($user_id, '_hizli_kasa_tema', sanitize_text_field($_POST['hizli_kasa_tema']));
+    }
     
     // Aktif depo artık görüntüleme listesinde değilse temizle
     $active = intval(get_user_meta($user_id, '_hizli_kasa_active_depo', true));
