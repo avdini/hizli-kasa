@@ -260,8 +260,7 @@
             // Tıklama olayı
             li.addEventListener("click", function(e) {
                 if (isVariableParent) {
-                    // Sadece bilgi ver, ekleme yapma
-                    HK.UIRenderer.showToast("Bu bir grup üründür, lütfen aşağıdan bir seçenek belirleyin.", "warning");
+                    // Sadece çekmeceyi tetikle (diğer listener'da), sepete eklemeyi engelle
                     return;
                 }
                 

@@ -1566,7 +1566,6 @@ html, body {
 .parent-row {
     background: #f1f4f6 !important;
     font-weight: 800 !important;
-    border-left: 4px solid #34495e !important;
     cursor: pointer !important;
 }
 
@@ -1576,7 +1575,6 @@ html, body {
 
 .variation-container {
     background: #fff;
-    border-left: 4px solid #34495e;
     margin-left: 0 !important;
     padding-left: 0 !important;
     display: none; /* Varsayılan kapalı */
