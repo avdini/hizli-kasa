@@ -257,4 +257,6 @@ if (!defined('ABSPATH'))
     <div id="gun-sonu-sablon">
         <!-- JS tarafından doldurulacak -->
     </div>
+    <!-- Toast Bildirim Konteyneri -->
+    <div id="hk-toast-container"></div>
 </div>

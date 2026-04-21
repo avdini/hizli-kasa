@@ -1480,12 +1480,114 @@ html, body {
 }
 
 .terminal-urun-kart .urun-img {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     border-radius: 8px;
     object-fit: cover;
-    background: #333;
-    margin-right: 15px;
+}
+
+/* =============================================
+   TOAST BİLDİRİM SİSTEMİ (TOAST NOTIFICATIONS)
+   ============================================= */
+
+#hk-toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.hk-toast {
+    min-width: 280px;
+    max-width: 350px;
+    background: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    pointer-events: auto;
+    animation: hk-toast-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    border-left: 5px solid #27ae60;
+    font-weight: 500;
+}
+
+.hk-toast.warning { border-left-color: #f39c12; }
+.hk-toast.error   { border-left-color: #e74c3c; }
+.hk-toast.info    { border-left-color: #3498db; }
+
+.hk-toast .toast-icon { font-size: 20px; }
+.hk-toast .toast-msg { flex: 1; color: #2c3e50; font-size: 14px; }
+
+.hk-toast.fade-out {
+    animation: hk-toast-out 0.5s ease forwards;
+}
+
+@keyframes hk-toast-in {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes hk-toast-out {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(40px); opacity: 0; }
+}
+
+/* --- Arama Sonucu Tablo Görünümü --- */
+
+#arama-sonuclari .sonuc-img-cell {
+    width: 40px;
+    flex-shrink: 0;
+}
+
+#arama-sonuclari .sonuc-info-cell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+#arama-sonuclari .sonuc-stock-cell {
+    width: 80px;
+    text-align: right;
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+#arama-sonuclari .sonuc-price-cell {
+    width: 100px;
+    text-align: right;
+}
+
+.parent-row {
+    background: #f1f4f6 !important;
+    font-weight: 800 !important;
+    border-left: 4px solid #34495e !important;
+    cursor: pointer !important;
+}
+
+.parent-row:hover {
+    background: #e5e9ec !important;
+}
+
+.variation-container {
+    background: #fff;
+    border-left: 4px solid #34495e;
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+
+.variation-row {
+    padding-left: 30px !important;
+    background: #ffffff;
+}
+
+.variation-row:hover {
+    background: #f0f7ff !important;
 }
 
 .terminal-urun-kart .urun-detay {

@@ -189,6 +189,41 @@
                     durumMetni.style.color = "#2c3e50";
                 });
             });
+        },
+
+        /**
+         * Toast bildirim gösterir
+         * @param {string} msg Mesaj
+         * @param {string} type 'success', 'warning', 'error', 'info'
+         */
+        showToast: function(msg, type) {
+            type = type || 'info';
+            var container = document.getElementById('hk-toast-container');
+            if (!container) return;
+
+            var toast = document.createElement('div');
+            toast.className = 'hk-toast ' + type;
+            
+            var icon = 'ℹ️';
+            if (type === 'success') icon = '✅';
+            if (type === 'warning') icon = '⚠️';
+            if (type === 'error')   icon = '❌';
+
+            toast.innerHTML = 
+                '<span class="toast-icon">' + icon + '</span>' +
+                '<span class="toast-msg">' + msg + '</span>';
+
+            container.appendChild(toast);
+
+            // 4 saniye sonra kaldır
+            setTimeout(function() {
+                toast.classList.add('fade-out');
+                setTimeout(function() {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 500);
+            }, 4000);
         }
     };
 

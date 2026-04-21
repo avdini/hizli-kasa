@@ -167,49 +167,35 @@
                 var anaUrun = grup.parent;
                 var varyasyonlar = grup.variations;
                 
-                // Stok durumuna göre varyasyonları sırala (Stokta olanlar üstte)
-                // ... (existing sort logic)
+                // --- AKORDİYON DÜZENİ ---
+                var li = self._urunSatiriOlustur(anaUrun, true, true);
+                els.aramaSonuclariListe.appendChild(li);
 
-                // ÖZEL DURUM: Eğer sadece tek bir ürün grubu varsa (SKU araması gibi), 
-                // akordiyon yapma, hepsini düz liste olarak göster.
-                if (gruplar.length === 1) {
-                    // Ana ürünü ekle (YUKARIDAKİ FARK: showVariationHint = false)
-                    var liMain = self._urunSatiriOlustur(anaUrun, true, false);
-                    liMain.style.borderBottom = "2px solid #ddd";
-                    liMain.style.background = "#fff";
-                    els.aramaSonuclariListe.appendChild(liMain);
-
-                    // Varyasyonları direkt ekle
+                if (varyasyonlar.length > 0) {
+                    li.classList.add("parent-row");
+                    
+                    var vContainer = document.createElement("div");
+                    vContainer.className = "variation-container";
+                    
                     varyasyonlar.forEach(function(v) {
-                        var vLi = self._urunSatiriOlustur(v, false, false);
-                        vLi.style.paddingLeft = "30px";
-                        els.aramaSonuclariListe.appendChild(vLi);
+                        var vLi = self._urunSatiriOlustur(v, false, true);
+                        vLi.classList.add("variation-row");
+                        vContainer.appendChild(vLi);
                     });
-                } else {
-                    // --- NORMAL AKORDİYON DÜZENİ ---
-                    var li = self._urunSatiriOlustur(anaUrun, true, true);
-                    els.aramaSonuclariListe.appendChild(li);
 
-                    if (varyasyonlar.length > 0) {
-                        li.classList.add("parent-row");
-                        
-                        var vContainer = document.createElement("div");
-                        vContainer.className = "variation-container";
-                        
-                        varyasyonlar.forEach(function(v) {
-                            var vLi = self._urunSatiriOlustur(v, false, true);
-                            vLi.classList.add("variation-row");
-                            vContainer.appendChild(vLi);
-                        });
+                    els.aramaSonuclariListe.appendChild(vContainer);
 
-                        els.aramaSonuclariListe.appendChild(vContainer);
+                    // Tıklama ile aç/kapat
+                    li.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        var isOpen = li.classList.toggle("is-open");
+                        vContainer.classList.toggle("is-open", isOpen);
+                    });
 
-                        // Tıklama ile aç/kapat
-                        li.addEventListener("click", function(e) {
-                            e.preventDefault();
-                            var isOpen = li.classList.toggle("is-open");
-                            vContainer.classList.toggle("is-open", isOpen);
-                        });
+                    // ÖZEL DURUM: Eğer sadece tek bir ürün grubu varsa, otomatik aç
+                    if (gruplar.length === 1) {
+                        li.classList.add("is-open");
+                        vContainer.classList.add("is-open");
                     }
                 }
             });
@@ -226,13 +212,39 @@
 
             var li = document.createElement("li");
             
-            var fiyatHTML = '<span class="sonuc-fiyat">' + salePrice.toFixed(2) + ' TL</span>';
-            if (regularPrice > salePrice && salePrice > 0) {
-                fiyatHTML = '<div style="display:flex; flex-direction:column; align-items:flex-end; margin-left:auto;">' +
-                    '<span style="text-decoration:line-through; color:#999; font-size:12px;">' + regularPrice.toFixed(2) + ' TL</span>' +
-                    '<span class="sonuc-fiyat">' + salePrice.toFixed(2) + ' TL</span>' +
-                '</div>';
+            // Kolon Yapısı HTML
+            var imgHtml = (urun.images && urun.images.length > 0)
+                ? '<img src="' + urun.images[0].src + '" style="width:30px; height:30px; object-fit:cover; border-radius:3px; ' + (outOfStock ? 'filter:grayscale(1); opacity:0.5;' : '') + '">'
+                : '<div style="width:30px; height:30px; background:#f0f0f0; border-radius:3px;"></div>';
+
+            var nameHtml = 
+                '<span style="font-weight:bold; font-size:14px; color: ' + (outOfStock ? '#c0392b' : 'inherit') + '">' +
+                    urun.name +
+                    (outOfStock ? ' <small style="color:#e74c3c; font-weight:bold;">(STOKTA YOK)</small>' : '') +
+                '</span>' +
+                '<span class="sonuc-sku">' + (urun.sku || 'SKU yok') + '</span>';
+
+            var stockHtml = (urun.manage_stock) ? 'Stok: ' + (urun.stock_quantity || 0) : '';
+            
+            var priceHtml = '';
+            if (!isVariableParent) {
+                if (regularPrice > salePrice && salePrice > 0) {
+                    priceHtml = '<div style="display:flex; flex-direction:column; align-items:flex-end;">' +
+                        '<span style="text-decoration:line-through; color:#999; font-size:11px;">' + regularPrice.toFixed(2) + ' TL</span>' +
+                        '<span class="sonuc-fiyat">' + salePrice.toFixed(2) + ' TL</span>' +
+                    '</div>';
+                } else {
+                    priceHtml = '<span class="sonuc-fiyat">' + salePrice.toFixed(2) + ' TL</span>';
+                }
+            } else if (showVariationHint !== false) {
+                priceHtml = '<small style="color:#7f8c8d; font-size:11px;">Seçenekleri Gör</small>';
             }
+
+            li.innerHTML = 
+                '<div class="sonuc-img-cell">' + imgHtml + '</div>' +
+                '<div class="sonuc-info-cell">' + nameHtml + '</div>' +
+                '<div class="sonuc-stock-cell">' + stockHtml + '</div>' +
+                '<div class="sonuc-price-cell">' + priceHtml + '</div>';
 
             if (outOfStock) {
                 li.style.backgroundColor = "#fff5f5";
@@ -241,29 +253,26 @@
                 li.style.borderLeft = "4px solid #e74c3c";
             }
 
-            li.innerHTML =
-                (urun.images.length > 0
-                    ? '<img src="' + urun.images[0].src + '" style="width:30px; height:30px; object-fit:cover; border-radius:3px; ' + (outOfStock ? 'filter:grayscale(1); opacity:0.5;' : '') + '">'
-                    : '<div style="width:30px; height:30px; background:#f0f0f0; border-radius:3px;"></div>') +
-                '<div style="display:flex; flex-direction:column; flex:1; ' + (outOfStock ? 'opacity:0.8;' : '') + '">' +
-                    '<span style="font-weight:bold; font-size:14px; color: ' + (outOfStock ? '#c0392b' : 'inherit') + '">' +
-                        urun.name +
-                        (isVariableParent && showVariationHint !== false ? ' <small style="color:#7f8c8d;">(Seçenekleri Gör)</small>' : '') +
-                        (outOfStock ? ' <small style="color:#e74c3c; font-weight:bold;">(STOKTA YOK)</small>' : '') +
-                    '</span>' +
-                    '<span class="sonuc-sku">' + (urun.sku || 'SKU yok') + (urun.manage_stock ? ' <small style="color:#95a5a6;">(Stok: ' + (urun.stock_quantity || 0) + ')</small>' : '') + '</span>' +
-                '</div>' +
-                ((isVariableParent || outOfStock) ? '' : (regularPrice > salePrice && salePrice > 0 ? fiyatHTML : '<span class="sonuc-fiyat" style="margin-left:auto;">' + salePrice.toFixed(2) + ' TL</span>'));
+            // Tıklama olayı
+            li.addEventListener("click", function(e) {
+                if (isVariableParent) {
+                    // Sadece bilgi ver, ekleme yapma
+                    HK.UIRenderer.showToast("Bu bir grup üründür, lütfen aşağıdan bir seçenek belirleyin.", "warning");
+                    return;
+                }
+                
+                if (outOfStock) {
+                    HK.UIRenderer.showToast("Bu ürün stokta yok!", "error");
+                    return;
+                }
 
-            // Tıklama olayı (Sadece satılabilir ürünler için)
-            if (!isVariableParent && !outOfStock) {
-                li.addEventListener("click", function() {
-                    HK.CartManager.ekleUrunObjesiyle(urun);
-                    document.getElementById("urun-arama-modal").style.display = "none";
-                });
-            }
+                HK.CartManager.ekleUrunObjesiyle(urun);
+                document.getElementById("urun-arama-modal").style.display = "none";
+            });
 
             return li;
+        },
+
         },
 
         // =========================================
