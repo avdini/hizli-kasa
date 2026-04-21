@@ -408,29 +408,46 @@ function hizli_kasa_ozel_arama($data) {
                     $found_ids[] = (int)$p_item['id'];
                 }
             }
-        }
-
-        // 2. Fallback Arama (Post Title ve SKU)
-        if (empty($found_ids) || count($found_ids) < 5) {
+            // Not: AWS varsa ve sonuç bulamadıysa, kullanıcı isteği üzerine fallback çalıştırmıyoruz.
+        } else {
+            // 2. Fallback Arama (Post Title ve SKU) - Sadece AWS yoksa çalışır
             $words = explode(' ', $s);
-            $where_parts = [];
-            foreach ($words as $word) {
-                if (empty($word)) continue;
-                $like = '%' . $wpdb->esc_like($word) . '%';
-                $where_parts[] = $wpdb->prepare("(p.post_title LIKE %s OR pm.meta_value LIKE %s)", $like, $like);
-            }
-            $where_clause = implode(' AND ', $where_parts);
-
-            $sql = "SELECT p.ID FROM {$wpdb->posts} p 
-                    LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_sku'
-                    WHERE p.post_status = 'publish' 
-                    AND p.post_type IN ('product', 'product_variation') 
-                    AND ($where_clause) 
-                    GROUP BY p.ID LIMIT 30";
+            $where_parts_and = [];
+            $where_parts_or  = [];
             
-            $fallback_ids = $wpdb->get_col($sql);
-            if ($fallback_ids) {
-                $found_ids = array_unique(array_merge($found_ids, array_map('intval', $fallback_ids)));
+            foreach ($words as $word) {
+                if (empty($word) || mb_strlen($word) < 2) continue;
+                $like = '%' . $wpdb->esc_like($word) . '%';
+                $part = $wpdb->prepare("(p.post_title LIKE %s OR pm.meta_value LIKE %s)", $like, $like);
+                $where_parts_and[] = $part;
+                $where_parts_or[]  = $part;
+            }
+
+            if (!empty($where_parts_and)) {
+                $where_clause = implode(' AND ', $where_parts_and);
+                $sql = "SELECT p.ID FROM {$wpdb->posts} p 
+                        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_sku'
+                        WHERE p.post_status = 'publish' 
+                        AND p.post_type IN ('product', 'product_variation') 
+                        AND ($where_clause) 
+                        GROUP BY p.ID LIMIT 30";
+                $fallback_ids = $wpdb->get_col($sql);
+                
+                // Eğer AND ile sonuç gelmediyse, daha geniş bir OR araması yap
+                if (empty($fallback_ids)) {
+                    $where_clause = implode(' OR ', $where_parts_or);
+                    $sql = "SELECT p.ID FROM {$wpdb->posts} p 
+                            LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_sku'
+                            WHERE p.post_status = 'publish' 
+                            AND p.post_type IN ('product', 'product_variation') 
+                            AND ($where_clause) 
+                            GROUP BY p.ID LIMIT 20";
+                    $fallback_ids = $wpdb->get_col($sql);
+                }
+
+                if ($fallback_ids) {
+                    $found_ids = array_unique(array_map('intval', $fallback_ids));
+                }
             }
         }
     }
@@ -694,10 +711,33 @@ function hizli_kasa_terminal_products($request) {
     }
 
     $params = [];
+    $aws_ids = [];
+
     if (!empty($s)) {
-        $like = '%' . $wpdb->esc_like($s) . '%';
-        $where .= " AND (p.post_title LIKE %s OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s))";
-        $params[] = $like; $params[] = $like;
+        // 1. Advanced Woo Search Entegrasyonu
+        if (class_exists('AWS_Search')) {
+            $aws_search = new AWS_Search();
+            $aws_results = $aws_search->search($s);
+            $aws_ids = [];
+            if (!empty($aws_results['products'])) {
+                foreach ($aws_results['products'] as $p_item) {
+                    $aws_ids[] = (int)$p_item['id'];
+                }
+            }
+
+            if (!empty($aws_ids)) {
+                $ids_ph = implode(',', array_map('intval', $aws_ids));
+                $where .= " AND p.ID IN ($ids_ph)";
+            } else {
+                // AWS var ama sonuç yoksa zorla boş döndür
+                $where .= " AND p.ID = 0";
+            }
+        } else {
+            // 2. Fallback Arama (Sadece AWS yoksa)
+            $like = '%' . $wpdb->esc_like($s) . '%';
+            $where .= " AND (p.post_title LIKE %s OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s))";
+            $params[] = $like; $params[] = $like;
+        }
     }
 
     $total = $wpdb->get_var($wpdb->prepare("SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p $join_extra WHERE $where", ...$params));
