@@ -134,7 +134,7 @@
                     } catch (error) {
                         console.error("Arama hatası:", error);
                     }
-                }, 300);
+                }, 400);
             });
         },
 

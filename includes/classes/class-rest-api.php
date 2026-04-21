@@ -462,14 +462,18 @@ function hizli_kasa_ozel_arama($data) {
                      $pid = $p_item['id'];
                      $found_ids[] = $pid;
                      
-                     // Değişiklik: Her ana ürünün varyasyonlarını da ekle
-                     $product = wc_get_product($pid);
-                     if ($product && $product->is_type('variable')) {
-                         $children = $product->get_children();
+                     // Değişiklik: Her ana ürünün varyasyonlarını da ekle (Ham SQL ile hızlı kontrol)
+                     $is_variable = $wpdb->get_var($wpdb->prepare("
+                        SELECT COUNT(*) FROM {$wpdb->term_relationships} tr 
+                        JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id 
+                        JOIN {$wpdb->terms} t ON tt.term_id = t.term_id 
+                        WHERE tr.object_id = %d AND tt.taxonomy = 'product_type' AND t.slug = 'variable'
+                     ", $pid));
+
+                     if ($is_variable) {
+                         $children = $wpdb->get_col($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_parent = %d AND post_type = 'product_variation' AND post_status = 'publish'", $pid));
                          foreach($children as $child_id) {
-                             if (get_post_status($child_id) === 'publish') {
-                                 $found_ids[] = $child_id;
-                             }
+                             $found_ids[] = (int)$child_id;
                          }
                      }
                 }
@@ -501,15 +505,19 @@ function hizli_kasa_ozel_arama($data) {
             foreach ($fallback_results as $fr) {
                 $found_ids[] = $fr->ID;
                 
-                // Değişiklik: Fallback sonuçlarında da varyasyonları ekle (eğer ana ürünse)
+                // Değişiklik: Ham SQL ile hızlı kontrol
                 if ($fr->post_type === 'product') {
-                    $product = wc_get_product($fr->ID);
-                    if ($product && $product->is_type('variable')) {
-                        $children = $product->get_children();
+                    $is_variable = $wpdb->get_var($wpdb->prepare("
+                        SELECT COUNT(*) FROM {$wpdb->term_relationships} tr 
+                        JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id 
+                        JOIN {$wpdb->terms} t ON tt.term_id = t.term_id 
+                        WHERE tr.object_id = %d AND tt.taxonomy = 'product_type' AND t.slug = 'variable'
+                    ", $fr->ID));
+
+                    if ($is_variable) {
+                        $children = $wpdb->get_col($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_parent = %d AND post_type = 'product_variation' AND post_status = 'publish'", $fr->ID));
                         foreach($children as $child_id) {
-                            if (get_post_status($child_id) === 'publish') {
-                                $found_ids[] = $child_id;
-                            }
+                            $found_ids[] = (int)$child_id;
                         }
                     }
                 }
@@ -567,8 +575,16 @@ function hizli_kasa_ozel_arama($data) {
         $tek_sonuc = $formatted[0];
         $parent_id = ($tek_sonuc['type'] === 'variation') ? $tek_sonuc['parent_id'] : $tek_sonuc['id'];
 
-        $ana_urun = wc_get_product($parent_id);
-        if ($ana_urun && $ana_urun->is_type('variable')) {
+        // Ham SQL ile 'variable' olup olmadığını kontrol et (wc_get_product çok ağır)
+        $product_type = $wpdb->get_var($wpdb->prepare("
+            SELECT t.slug 
+            FROM {$wpdb->term_relationships} tr 
+            JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id 
+            JOIN {$wpdb->terms} t ON tt.term_id = t.term_id 
+            WHERE tr.object_id = %d AND tt.taxonomy = 'product_type'
+        ", $parent_id));
+
+        if ($product_type === 'variable') {
             $genis_results = $wpdb->get_results($wpdb->prepare("
                 SELECT p.ID, p.post_title, p.post_type, p.post_parent,
                        tt_type.slug as product_type,
