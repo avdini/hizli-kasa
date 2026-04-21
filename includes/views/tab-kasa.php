@@ -160,7 +160,7 @@ if (!defined('ABSPATH'))
 
     <!-- Ürün Arama Modalı -->
     <div id="urun-arama-modal">
-        <div class="modal-icerik" style="width: 500px !important;">
+        <div class="modal-icerik" style="width: 90% !important; max-width: 800px !important;">
             <h3>Ürün Ara</h3>
             <input type="text" id="urun-arama-input" placeholder="Ürün adı veya SKU yazın..." autocomplete="off">
             <ul id="arama-sonuclari">
