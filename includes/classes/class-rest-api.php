@@ -871,14 +871,36 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id) {
 
     $raw_ids_str = implode(',', array_map('intval', $ids));
     
-    // Adım 1: Gelen ID'lerin varyasyonlarını ve parent'larını belirle (Tek seferde detayları çekmek için)
+    // Adım 1: Gelen ID'lerin varyasyonlarını, parent'larını ve o parent'ların TÜM çocuklarını belirle
+    // Bu sayede dropdown'ların her zaman dolu olduğundan emin oluruz.
     $all_ids = array_map('intval', $ids);
-    $parent_lookup = $wpdb->get_results("SELECT ID, post_parent, post_type FROM {$wpdb->posts} WHERE ID IN ($raw_ids_str)");
-    foreach ($parent_lookup as $ps) {
-        if ($ps->post_type === 'product_variation' && $ps->post_parent > 0) {
-            $all_ids[] = (int)$ps->post_parent;
+    if (!empty($all_ids)) {
+        $raw_ids_str = implode(',', $all_ids);
+        $relations = $wpdb->get_results("SELECT ID, post_parent, post_type FROM {$wpdb->posts} WHERE ID IN ($raw_ids_str)");
+        
+        $parents_to_expand = [];
+        foreach ($relations as $r) {
+            if ($r->post_type === 'product_variation' && $r->post_parent > 0) {
+                $parents_to_expand[] = (int)$r->post_parent;
+            } else {
+                $parents_to_expand[] = (int)$r->ID;
+            }
+        }
+        
+        if (!empty($parents_to_expand)) {
+            $parents_to_expand = array_unique($parents_to_expand);
+            $parents_str = implode(',', $parents_to_expand);
+            
+            // Bu parent'ların TÜM çocuklarını (varyasyonlarını) listeye ekle
+            $sibling_ids = $wpdb->get_col("SELECT ID FROM {$wpdb->posts} WHERE post_parent IN ($parents_str) AND post_type = 'product_variation' AND post_status = 'publish'");
+            if ($sibling_ids) {
+                $all_ids = array_merge($all_ids, $parents_to_expand, array_map('intval', $sibling_ids));
+            } else {
+                $all_ids = array_merge($all_ids, $parents_to_expand);
+            }
         }
     }
+    
     $all_ids = array_unique($all_ids);
     $ids_str = implode(',', $all_ids);
     
