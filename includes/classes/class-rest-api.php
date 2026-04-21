@@ -432,8 +432,7 @@ function hizli_kasa_ozel_arama($data) {
     $results_map = hizli_kasa_hydrate_products_batch($found_ids, $depo_id);
 
     // 4. In-Memory Resolution & Sorting
-    // AWS veya Fallback sırasını bozmadan, varyasyonları ana ürünlere bağlayarak listeyi oluşturuyoruz.
-    $final_sorted = [];
+    $final_flat = [];
     $seen_parents = [];
 
     foreach ($found_ids as $fid) {
@@ -446,22 +445,20 @@ function hizli_kasa_ozel_arama($data) {
             // Ana ürünü bul ve ekle
             if (isset($results_map[$target_id])) {
                 $parent_item = $results_map[$target_id];
-                // Eğer ana ürünün varyasyon listesi boşsa ve biz bir varyasyon üzerinden bu ana ürüne ulaştıysak,
-                // veya ana ürün genel olarak varyasyonluysa, tüm çocukları topla.
-                if ($parent_item['is_variable']) {
-                    foreach ($results_map as $possible_v) {
-                        if ($possible_v['parent_id'] === $target_id) {
-                            $parent_item['variations'][] = $possible_v;
-                        }
+                $final_flat[] = $parent_item;
+                $seen_parents[$target_id] = true;
+
+                // Bu ana ürünün TÜM varyasyonlarını hemen arkasına ekle (JS gruplama için flat liste gerekiyor)
+                foreach ($results_map as $v) {
+                    if ($v['parent_id'] === $target_id) {
+                        $final_flat[] = $v;
                     }
                 }
-                $final_sorted[] = $parent_item;
-                $seen_parents[$target_id] = true;
             }
         }
     }
 
-    return array_values($final_sorted);
+    return array_values($final_flat);
 }
 
 /**
