@@ -11,37 +11,43 @@
    ============================================= */
 #hizli-kasa-app {
     /* Varsayılan Aydınlık Tema */
-    --hk-bg-body: #f0f2f5;
+    --hk-bg-body: #f8fafc;
     --hk-bg-card: #ffffff;
-    --hk-bg-header: #2c3e50;
+    --hk-bg-header: #1e293b;
     --hk-bg-sidebar: #ffffff;
-    --hk-bg-hover: #fcfcfc;
-    --hk-text-main: #333333;
-    --hk-text-muted: #7f8c8d;
+    --hk-bg-hover: #f1f5f9;
+    --hk-bg-input: #ffffff;
+    --hk-text-main: #1e293b;
+    --hk-text-muted: #64748b;
     --hk-text-white: #ffffff;
-    --hk-border: #ddd;
-    --hk-border-dark: #333;
-    --hk-accent: #3498db;
-    --hk-success: #27ae60;
-    --hk-danger: #e74c3c;
-    --hk-warning: #f39c12;
+    --hk-border: #e2e8f0;
+    --hk-border-dark: #cbd5e1;
+    --hk-accent: #3b82f6;
+    --hk-success: #10b981;
+    --hk-danger: #ef4444;
+    --hk-warning: #f59e0b;
+    --hk-shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --hk-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
 }
 
 #hizli-kasa-app.theme-dark {
-    --hk-bg-body: #121212;
-    --hk-bg-card: #1e1e1e;
-    --hk-bg-header: #0a0a0a;
-    --hk-bg-sidebar: #1e1e1e;
-    --hk-bg-hover: #2a2a2a;
-    --hk-text-main: #e0e0e0;
-    --hk-text-muted: #a0a0a0;
+    --hk-bg-body: #0f172a;
+    --hk-bg-card: #1e293b;
+    --hk-bg-header: #020617;
+    --hk-bg-sidebar: #1e293b;
+    --hk-bg-hover: #334155;
+    --hk-bg-input: #0f172a;
+    --hk-text-main: #f1f5f9;
+    --hk-text-muted: #94a3b8;
     --hk-text-white: #ffffff;
-    --hk-border: #333;
-    --hk-border-dark: #444;
-    --hk-accent: #3498db;
-    --hk-success: #2ecc71;
-    --hk-danger: #ff5e5e;
-    --hk-warning: #f1c40f;
+    --hk-border: #334155;
+    --hk-border-dark: #475569;
+    --hk-accent: #3b82f6;
+    --hk-success: #10b981;
+    --hk-danger: #f87171;
+    --hk-warning: #fbbf24;
+    --hk-shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.2);
+    --hk-shadow-md: 0 10px 15px -3px rgba(0,0,0,0.3);
 }
 
 /* =============================================
@@ -229,6 +235,175 @@ html { margin-top: 0 !important; }
 }
 
 /* =============================================
+   TASARIM SİSTEMİ (UTILITY CLASSES)
+   ============================================= */
+
+.hk-tab-scrollable-container {
+    padding: 20px; 
+    height: 100%; 
+    overflow-y: auto; 
+    background: var(--hk-bg-body);
+}
+
+.hk-split-layout {
+    display: flex; 
+    gap: 25px; 
+    align-items: flex-start; 
+    max-width: 1200px; 
+    margin: 0 auto;
+}
+
+.hk-panel {
+    background: var(--hk-bg-card); 
+    padding: 25px; 
+    border-radius: 12px; 
+    box-shadow: var(--hk-shadow-md);
+    border: 1px solid var(--hk-border);
+}
+
+.masraf-form-panel {
+    width: 400px; 
+    flex-shrink: 0;
+}
+
+.hk-panel-title {
+    margin-top: 0; 
+    margin-bottom: 20px; 
+    color: var(--hk-text-main); 
+    border-bottom: 2px solid var(--hk-border); 
+    padding-bottom: 10px;
+    font-weight: 800;
+}
+
+.hk-panel-flex {
+    flex: 1;
+}
+
+.hk-panel-header {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 20px; 
+    border-bottom: 2px solid var(--hk-border); 
+    padding-bottom: 10px;
+}
+
+.hk-panel-meta {
+    font-size: 14px; 
+    color: var(--hk-text-muted); 
+    font-weight: bold;
+}
+
+.hk-table-head {
+    text-align: left; 
+    background: var(--hk-bg-hover);
+    color: var(--hk-text-main);
+}
+
+.hk-tab-container-centered {
+    padding: 80px 40px; 
+    text-align: center; 
+    background: var(--hk-bg-card); 
+    margin: 40px auto; 
+    border-radius: 20px; 
+    box-shadow: var(--hk-shadow-md);
+    max-width: 600px;
+    border: 1px solid var(--hk-border);
+}
+
+.hk-hero-icon {
+    font-size: 80px; 
+    margin-bottom: 25px;
+}
+
+.hk-hero-title {
+    color: var(--hk-text-main); 
+    margin-bottom: 15px;
+    font-weight: 800;
+}
+
+.hk-hero-text {
+    color: var(--hk-text-muted); 
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+.hk-btn-primary {
+    width: 100%; 
+    padding: 15px; 
+    background: var(--hk-accent); 
+    color: white; 
+    border: none; 
+    border-radius: 10px; 
+    font-size: 16px; 
+    font-weight: 800; 
+    cursor: pointer; 
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.hk-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+    opacity: 0.9;
+}
+
+.hk-input {
+    width: 100%; 
+    padding: 12px 15px; 
+    border-radius: 10px; 
+    border: 2px solid var(--hk-border); 
+    font-size: 15px;
+    background: var(--hk-bg-input);
+    color: var(--hk-text-main);
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.hk-input:focus {
+    border-color: var(--hk-accent);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.hk-table {
+    width: 100%; 
+    border-collapse: collapse;
+}
+
+.hk-table th, .hk-table td {
+    padding: 15px; 
+    border-bottom: 1px solid var(--hk-border);
+    color: var(--hk-text-main);
+}
+
+.hk-table-foot {
+    background: var(--hk-bg-hover); 
+    font-weight: 800; 
+    font-size: 16px;
+}
+
+.hk-panel-note {
+    margin-top: 25px; 
+    padding: 20px; 
+    background: var(--hk-bg-hover); 
+    border-left: 5px solid var(--hk-warning); 
+    font-size: 14px; 
+    color: var(--hk-text-main);
+    border-radius: 0 10px 10px 0;
+}
+
+.modal-not {
+    margin-bottom:15px; 
+    background: var(--hk-bg-hover); 
+    padding: 12px; 
+    border-radius: 8px; 
+    font-size: 14px;
+    border-left: 4px solid var(--hk-accent);
+    color: var(--hk-text-main);
+}
+
+/* =============================================
    SIDEBAR
    ============================================= */
 
@@ -404,31 +579,33 @@ html { margin-top: 0 !important; }
    ============================================= */
 
 #barkod-izleme-konteyner { 
-    background: #fdfdfd; 
-    border: 1px dashed #bbb; 
-    border-radius: 6px; 
-    padding: 8px 12px; 
-    margin-bottom: 10px; 
+    background: var(--hk-bg-sidebar); 
+    border: 1px dashed var(--hk-border); 
+    border-radius: 10px; 
+    padding: 10px 15px; 
+    margin-bottom: 12px; 
     display: flex; 
     align-items: center; 
     user-select: none; 
     flex-shrink: 0;
+    box-shadow: var(--hk-shadow-sm);
 }
 
 #barkod-izleme-etiket {
-    font-size: 12px;
-    color: #999;
+    font-size: 11px;
+    color: var(--hk-text-muted);
     margin-right: 15px;
-    font-weight: bold;
+    font-weight: 800;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 #barkod-izleme {
     font-family: "Courier New", Courier, monospace;
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
-    color: #333;
-    letter-spacing: 2px;
+    color: var(--hk-accent);
+    letter-spacing: 3px;
     flex: 1;
 }
 
@@ -637,10 +814,12 @@ html { margin-top: 0 !important; }
     padding: 30px;
     border-radius: 12px;
     width: 350px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    box-shadow: var(--hk-shadow-md);
     max-height: 90vh;
     display: flex;
     flex-direction: column;
+    color: var(--hk-text-main);
+    border: 1px solid var(--hk-border);
 }
 
 .modal-icerik h3 {
@@ -648,6 +827,16 @@ html { margin-top: 0 !important; }
     margin-bottom: 20px;
     font-size: 20px;
     flex-shrink: 0;
+    color: var(--hk-text-main);
+    font-weight: 800;
+}
+
+.modal-icerik label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--hk-text-muted);
 }
 
 .modal-icerik input {
@@ -1120,17 +1309,26 @@ html { margin-top: 0 !important; }
 }
 
 .terminal-urun-kart {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--hk-bg-card);
     border-radius: 12px;
     padding: 15px;
+    margin: 8px 15px;
     display: flex;
     gap: 15px;
     align-items: center;
     cursor: pointer;
-    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid var(--hk-border);
     position: relative;
     overflow: hidden;
+    box-shadow: var(--hk-shadow-sm);
+}
+
+.terminal-urun-kart:hover:not(.stock-out) {
+    background: var(--hk-bg-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--hk-shadow-md);
+    border-color: var(--hk-accent);
 }
 
 /* Stock Out Visuals */
@@ -1494,10 +1692,10 @@ html { margin-top: 0 !important; }
 }
 
 #terminal-arama-input:focus {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: #3498db;
+    background: var(--hk-bg-input);
+    border-color: var(--hk-accent);
     outline: none;
-    box-shadow: 0 0 20px rgba(52, 152, 219, 0.2);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
 }
 
 .arama-ikon {
@@ -1920,20 +2118,24 @@ html { margin-top: 0 !important; }
 .depo-switcher {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     position: relative;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 10px;
+    padding: 10px 16px;
+    background: var(--hk-bg-input);
+    border: 2px solid var(--hk-border);
+    border-radius: 12px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
     user-select: none;
-    min-width: 180px;
+    min-width: 200px;
+    box-shadow: var(--hk-shadow-sm);
 }
 
 .depo-switcher:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--hk-bg-hover);
+    border-color: var(--hk-accent);
+    transform: translateY(-1px);
+    box-shadow: var(--hk-shadow-md);
 }
 
 .depo-switcher .ikon {
