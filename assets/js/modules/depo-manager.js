@@ -224,6 +224,7 @@
                 var canManage = self.canManageDepo(d.id);
                 var item = document.createElement('div');
                 item.className = 'depo-dropdown-item' + (d.id === self.state.activeDepoId ? ' active' : '');
+                item.dataset.depoId = d.id;
                 item.innerHTML =
                     '<span class="depo-item-name">' + d.name + '</span>' +
                     (canManage

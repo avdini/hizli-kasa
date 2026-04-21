@@ -45,6 +45,10 @@ html, body {
     background: #f0f2f5 !important;
 }
 
+/* Admin bar gizle ama DOM'da kalsın (JS hatalarını önlemek için) */
+#wpadminbar { display: none !important; }
+html { margin-top: 0 !important; }
+
 /* =============================================
    KASA ANA YAPISI
    ============================================= */

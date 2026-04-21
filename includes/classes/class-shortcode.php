@@ -44,8 +44,6 @@ function hizli_kasa_uygulamasi()
     // POS Sayfasını Önbelleğe Almayı Engelle
     if (!defined('DONOTCACHEPAGE')) define('DONOTCACHEPAGE', true);
 
-    // Admin Bar'ı Gizle (Gerçek Uygulama Hissi İçin)
-    add_filter('show_admin_bar', '__return_false');
 
     $pos_version = HIZLI_KASA_VERSION;
 

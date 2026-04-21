@@ -457,25 +457,24 @@ function hizli_kasa_ozel_arama($data) {
     // 3. Batch Hydration: Hızlı Veri Çekme Mimarisi
     $results_map = hizli_kasa_hydrate_products_batch($found_ids, $depo_id);
 
-    // 4. Tek Sonuç (veya çok az) Varsa Varyasyonları Ekle (Dropdown için)
-    if (count($results_map) <= 3) {
-        $extra_ids = [];
-        foreach ($results_map as $item) {
-            if ($item['is_variable']) {
-                $children = $wpdb->get_col($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_parent = %d AND post_status = 'publish'", $item['id']));
-                if ($children) $extra_ids = array_merge($extra_ids, array_map('intval', $children));
-            } elseif ($item['parent_id'] > 0) {
-                $parent_id = $item['parent_id'];
-                $extra_ids[] = (int)$parent_id;
-                $children = $wpdb->get_col($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_parent = %d AND post_status = 'publish'", $parent_id));
-                if ($children) $extra_ids = array_merge($extra_ids, array_map('intval', $children));
-            }
+    // 4. Varyasyonları ve Parent Bilgilerini Ekle (Dropdown/Gruplama için)
+    // Arama sonuçlarında varyasyonlu ürün varsa her zaman alt ürünlerini çekmeliyiz.
+    $extra_ids = [];
+    foreach ($results_map as $item) {
+        if ($item['is_variable']) {
+            $children = $wpdb->get_col($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_parent = %d AND post_status = 'publish'", $item['id']));
+            if ($children) $extra_ids = array_merge($extra_ids, array_map('intval', $children));
+        } elseif ($item['parent_id'] > 0) {
+            $parent_id = $item['parent_id'];
+            $extra_ids[] = (int)$parent_id;
+            $children = $wpdb->get_col($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_parent = %d AND post_status = 'publish'", $parent_id));
+            if ($children) $extra_ids = array_merge($extra_ids, array_map('intval', $children));
         }
-        
-        if (!empty($extra_ids)) {
-            $all_ids = array_unique(array_merge($found_ids, $extra_ids));
-            $results_map = hizli_kasa_hydrate_products_batch($all_ids, $depo_id);
-        }
+    }
+    
+    if (!empty($extra_ids)) {
+        $all_ids = array_unique(array_merge($found_ids, $extra_ids));
+        $results_map = hizli_kasa_hydrate_products_batch($all_ids, $depo_id);
     }
 
     return array_values($results_map);
