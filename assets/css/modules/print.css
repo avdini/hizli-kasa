@@ -1,0 +1,49 @@
+/* =============================================
+   YAZDIRMA STİLLERİ
+   ============================================= */
+
+#fis-sablon {
+    display: none;
+    font-family: 'Courier New', Courier, monospace;
+    width: 80mm;
+    padding: 5mm;
+    background: white;
+    color: black;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    /* Normal Satış Fişi */
+    #fis-sablon, #fis-sablon * {
+        visibility: visible;
+    }
+    #fis-sablon {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 2mm;
+    }
+
+    /* Gün Sonu Rapor Fişi */
+    #gun-sonu-sablon, #gun-sonu-sablon * {
+        visibility: visible;
+    }
+    #gun-sonu-sablon {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 2mm;
+    }
+
+    @page {
+        margin: 0;
+    }
+}

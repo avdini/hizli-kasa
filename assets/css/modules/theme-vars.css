@@ -1,0 +1,46 @@
+/**
+ * Hızlı Kasa - Tema Değişkenleri
+ * 
+ * @package HizliKasa
+ */
+
+#hizli-kasa-app {
+    /* Varsayılan Aydınlık Tema */
+    --hk-bg-body: #f8fafc;
+    --hk-bg-card: #ffffff;
+    --hk-bg-header: #1e293b;
+    --hk-bg-sidebar: #ffffff;
+    --hk-bg-hover: #f1f5f9;
+    --hk-bg-input: #ffffff;
+    --hk-text-main: #1e293b;
+    --hk-text-muted: #64748b;
+    --hk-text-white: #ffffff;
+    --hk-border: #e2e8f0;
+    --hk-border-dark: #cbd5e1;
+    --hk-accent: #3b82f6;
+    --hk-success: #10b981;
+    --hk-danger: #ef4444;
+    --hk-warning: #f59e0b;
+    --hk-shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --hk-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+#hizli-kasa-app.theme-dark {
+    --hk-bg-body: #0f172a;
+    --hk-bg-card: #1e293b;
+    --hk-bg-header: #020617;
+    --hk-bg-sidebar: #1e293b;
+    --hk-bg-hover: #334155;
+    --hk-bg-input: #0f172a;
+    --hk-text-main: #f1f5f9;
+    --hk-text-muted: #94a3b8;
+    --hk-text-white: #ffffff;
+    --hk-border: #334155;
+    --hk-border-dark: #475569;
+    --hk-accent: #3b82f6;
+    --hk-success: #10b981;
+    --hk-danger: #f87171;
+    --hk-warning: #fbbf24;
+    --hk-shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.2);
+    --hk-shadow-md: 0 10px 15px -3px rgba(0,0,0,0.3);
+}

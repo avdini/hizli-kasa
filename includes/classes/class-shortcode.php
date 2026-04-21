@@ -47,13 +47,21 @@ function hizli_kasa_uygulamasi()
 
     $pos_version = HIZLI_KASA_VERSION;
 
-    // CSS Dosyasını Yükle
-    wp_enqueue_style(
-        'kasa-css',
-        HIZLI_KASA_URL . 'assets/css/kasa.css',
-        array(),
-        $pos_version
-    );
+    // CSS Modüllerini Yükle
+    $css_modules = [
+        'theme-vars', 'reset', 'utilities', 'layout', 'sidebar',
+        'cart', 'barcode', 'totals', 'modals', 'refund',
+        'stock-terminal', 'reports', 'toast', 'print', 'responsive'
+    ];
+
+    foreach ($css_modules as $module) {
+        wp_enqueue_style(
+            'kasa-' . $module,
+            HIZLI_KASA_URL . 'assets/css/modules/' . $module . '.css',
+            array(),
+            $pos_version
+        );
+    }
 
     // JavaScript Modüllerini Yükle (doğru sırada)
     $js_base = HIZLI_KASA_URL . 'assets/js/';

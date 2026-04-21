@@ -1,0 +1,168 @@
+/* =============================================
+   TASARIM SİSTEMİ (UTILITY CLASSES)
+   ============================================= */
+
+.hk-tab-scrollable-container {
+    padding: 20px; 
+    height: 100%; 
+    overflow-y: auto; 
+    background: var(--hk-bg-body);
+}
+
+.hk-split-layout {
+    display: flex; 
+    gap: 25px; 
+    align-items: flex-start; 
+    max-width: 1200px; 
+    margin: 0 auto;
+}
+
+.hk-panel {
+    background: var(--hk-bg-card); 
+    padding: 25px; 
+    border-radius: 12px; 
+    box-shadow: var(--hk-shadow-md);
+    border: 1px solid var(--hk-border);
+}
+
+.masraf-form-panel {
+    width: 400px; 
+    flex-shrink: 0;
+}
+
+.hk-panel-title {
+    margin-top: 0; 
+    margin-bottom: 20px; 
+    color: var(--hk-text-main); 
+    border-bottom: 2px solid var(--hk-border); 
+    padding-bottom: 10px;
+    font-weight: 800;
+}
+
+.hk-panel-flex {
+    flex: 1;
+}
+
+.hk-panel-header {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 20px; 
+    border-bottom: 2px solid var(--hk-border); 
+    padding-bottom: 10px;
+}
+
+.hk-panel-meta {
+    font-size: 14px; 
+    color: var(--hk-text-muted); 
+    font-weight: bold;
+}
+
+.hk-table-head {
+    text-align: left; 
+    background: var(--hk-bg-hover);
+    color: var(--hk-text-main);
+}
+
+.hk-tab-container-centered {
+    padding: 80px 40px; 
+    text-align: center; 
+    background: var(--hk-bg-card); 
+    margin: 40px auto; 
+    border-radius: 20px; 
+    box-shadow: var(--hk-shadow-md);
+    max-width: 600px;
+    border: 1px solid var(--hk-border);
+}
+
+.hk-hero-icon {
+    font-size: 80px; 
+    margin-bottom: 25px;
+}
+
+.hk-hero-title {
+    color: var(--hk-text-main); 
+    margin-bottom: 15px;
+    font-weight: 800;
+}
+
+.hk-hero-text {
+    color: var(--hk-text-muted); 
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+.hk-btn-primary {
+    width: 100%; 
+    padding: 15px; 
+    background: var(--hk-accent); 
+    color: white; 
+    border: none; 
+    border-radius: 10px; 
+    font-size: 16px; 
+    font-weight: 800; 
+    cursor: pointer; 
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.hk-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4);
+    opacity: 0.9;
+}
+
+.hk-input {
+    width: 100%; 
+    padding: 12px 15px; 
+    border-radius: 10px; 
+    border: 2px solid var(--hk-border); 
+    font-size: 15px;
+    background: var(--hk-bg-input);
+    color: var(--hk-text-main);
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.hk-input:focus {
+    border-color: var(--hk-accent);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.hk-table {
+    width: 100%; 
+    border-collapse: collapse;
+}
+
+.hk-table th, .hk-table td {
+    padding: 15px; 
+    border-bottom: 1px solid var(--hk-border);
+    color: var(--hk-text-main);
+}
+
+.hk-table-foot {
+    background: var(--hk-bg-hover); 
+    font-weight: 800; 
+    font-size: 16px;
+}
+
+.hk-panel-note {
+    margin-top: 25px; 
+    padding: 20px; 
+    background: var(--hk-bg-hover); 
+    border-left: 5px solid var(--hk-warning); 
+    font-size: 14px; 
+    color: var(--hk-text-main);
+    border-radius: 0 10px 10px 0;
+}
+
+.modal-not {
+    margin-bottom:15px; 
+    background: var(--hk-bg-hover); 
+    padding: 12px; 
+    border-radius: 8px; 
+    font-size: 14px;
+    border-left: 4px solid var(--hk-accent);
+    color: var(--hk-text-main);
+}

@@ -1,0 +1,55 @@
+/* =============================================
+   MOBİL UYUMLULUK
+   ============================================= */
+
+@media (max-width: 768px) {
+    #kasa-dis-cerceve {
+        height: auto !important;
+        min-height: 100vh;
+        padding: 5px !important;
+        overflow: visible;
+    }
+    #kasa-ana-duzen {
+        flex-direction: column;
+    }
+    #kasa-sidebar {
+        flex-direction: row;
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 5px;
+    }
+    .sidebar-btn {
+        flex: 1;
+        min-width: 60px;
+        padding: 8px 0;
+    }
+    #kasa-konteyner {
+        padding: 10px;
+        border-radius: 0;
+        border: none;
+        height: auto !important;
+    }
+    #sepet-listesi {
+        max-height: 400px;
+        min-height: 200px;
+    }
+    .toplam-deger {
+        font-size: 24px !important;
+    }
+    #onayla-buton {
+        padding: 12px;
+        font-size: 16px;
+    }
+    #iskonto-buton {
+        padding: 12px;
+        font-size: 12px;
+    }
+    .ust-buton-kucuk {
+        padding: 5px 10px !important;
+        font-size: 12px !important;
+    }
+    .modal-icerik {
+        width: 95% !important;
+        padding: 15px;
+    }
+}

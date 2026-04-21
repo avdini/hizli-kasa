@@ -1,0 +1,34 @@
+/* =============================================
+   BARKOD İZLEME
+   ============================================= */
+
+#barkod-izleme-konteyner { 
+    background: var(--hk-bg-sidebar); 
+    border: 1px dashed var(--hk-border); 
+    border-radius: 10px; 
+    padding: 10px 15px; 
+    margin-bottom: 12px; 
+    display: flex; 
+    align-items: center; 
+    user-select: none; 
+    flex-shrink: 0;
+    box-shadow: var(--hk-shadow-sm);
+}
+
+#barkod-izleme-etiket {
+    font-size: 11px;
+    color: var(--hk-text-muted);
+    margin-right: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#barkod-izleme {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 22px;
+    font-weight: bold;
+    color: var(--hk-accent);
+    letter-spacing: 3px;
+    flex: 1;
+}
