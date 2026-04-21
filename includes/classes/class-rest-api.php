@@ -405,8 +405,21 @@ function hizli_kasa_ozel_arama($data) {
             $aws_results = $aws_search->search($s);
             error_log('Hizli Kasa - AWS Search Result for [' . $s . ']: ' . print_r($aws_results, true));
             if (!empty($aws_results['products'])) {
+                $raw_ids = [];
                 foreach ($aws_results['products'] as $p_item) {
-                    $found_ids[] = (int)$p_item['id'];
+                    $raw_ids[] = (int)$p_item['id'];
+                }
+
+                // Varyasyonları Ana Ürünlere Çözümle (Site Sıralamasıyla Aynı Olması İçin)
+                if (!empty($raw_ids)) {
+                    $ids_str = implode(',', $raw_ids);
+                    $resolved_rows = $wpdb->get_results("SELECT ID, post_parent, post_type FROM {$wpdb->posts} WHERE ID IN ($ids_str) ORDER BY FIELD(ID, $ids_str)");
+                    foreach ($resolved_rows as $row) {
+                        $target_id = ($row->post_type === 'product_variation') ? (int)$row->post_parent : (int)$row->ID;
+                        if ($target_id > 0 && !in_array($target_id, $found_ids)) {
+                            $found_ids[] = $target_id;
+                        }
+                    }
                 }
             }
             // Not: AWS varsa ve sonuç bulamadıysa, kullanıcı isteği üzerine fallback çalıştırmıyoruz.
@@ -720,8 +733,21 @@ function hizli_kasa_terminal_products($request) {
             $aws_search = new AWS_Search();
             $aws_results = $aws_search->search($s);
             if (!empty($aws_results['products'])) {
+                $raw_ids = [];
                 foreach ($aws_results['products'] as $p_item) {
-                    $aws_ids[] = (int)$p_item['id'];
+                    $raw_ids[] = (int)$p_item['id'];
+                }
+
+                // Varyasyonları Ana Ürünlere Çözümle (Sıralama Paritesi İçin)
+                if (!empty($raw_ids)) {
+                    $ids_str = implode(',', $raw_ids);
+                    $resolved_rows = $wpdb->get_results("SELECT ID, post_parent, post_type FROM {$wpdb->posts} WHERE ID IN ($ids_str) ORDER BY FIELD(ID, $ids_str)");
+                    foreach ($resolved_rows as $row) {
+                        $target_id = ($row->post_type === 'product_variation') ? (int)$row->post_parent : (int)$row->ID;
+                        if ($target_id > 0 && !in_array($target_id, $aws_ids)) {
+                            $aws_ids[] = $target_id;
+                        }
+                    }
                 }
             }
 
