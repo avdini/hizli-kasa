@@ -91,12 +91,16 @@
             var self = this;
             var els = this.els;
 
-            els.manuelUrunButon.addEventListener("click", function() {
-                els.urunAramaModal.style.display = "flex";
-                els.urunAramaInput.value = "";
-                els.aramaSonuclariListe.innerHTML = "";
-                els.urunAramaInput.focus();
-            });
+            if (els.manuelUrunButon) {
+                els.manuelUrunButon.addEventListener("click", function() {
+                    els.urunAramaModal.style.display = "flex";
+                    els.urunAramaInput.value = "";
+                    els.aramaSonuclariListe.innerHTML = "";
+                    els.urunAramaInput.focus();
+                });
+            } else {
+                console.error("Hızlı Kasa: 'manuel-urun-buton' bulunamadı!");
+            }
 
             els.urunAramaKapat.addEventListener("click", function() {
                 els.urunAramaModal.style.display = "none";
@@ -271,8 +275,6 @@
             });
 
             return li;
-        },
-
         },
 
         // =========================================
