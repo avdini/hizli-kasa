@@ -403,95 +403,65 @@ function hizli_kasa_ozel_arama($data) {
         if (class_exists('AWS_Search')) {
             $aws_search = new AWS_Search();
             $aws_results = $aws_search->search($s);
-            error_log('Hizli Kasa - AWS Search Result for [' . $s . ']: ' . print_r($aws_results, true));
             if (!empty($aws_results['products'])) {
-                $raw_ids = [];
                 foreach ($aws_results['products'] as $p_item) {
-                    $raw_ids[] = (int)$p_item['id'];
-                }
-
-                // Varyasyonları Ana Ürünlere Çözümle (Site Sıralamasıyla Aynı Olması İçin)
-                if (!empty($raw_ids)) {
-                    $ids_str = implode(',', $raw_ids);
-                    $resolved_rows = $wpdb->get_results("SELECT ID, post_parent, post_type FROM {$wpdb->posts} WHERE ID IN ($ids_str) ORDER BY FIELD(ID, $ids_str)");
-                    foreach ($resolved_rows as $row) {
-                        $target_id = ($row->post_type === 'product_variation') ? (int)$row->post_parent : (int)$row->ID;
-                        if ($target_id > 0 && !in_array($target_id, $found_ids)) {
-                            $found_ids[] = $target_id;
-                        }
-                    }
+                    $found_ids[] = (int)$p_item['id'];
                 }
             }
-            // Not: AWS varsa ve sonuç bulamadıysa, kullanıcı isteği üzerine fallback çalıştırmıyoruz.
         } else {
-            // 2. Fallback Arama (Post Title ve SKU) - Sadece AWS yoksa çalışır
+            // 2. Fallback Arama (Post Title ve SKU)
             $words = explode(' ', $s);
-            $where_parts_and = [];
-            $where_parts_or  = [];
-            
+            $where_parts = [];
             foreach ($words as $word) {
                 if (empty($word) || mb_strlen($word) < 2) continue;
                 $like = '%' . $wpdb->esc_like($word) . '%';
-                $part = $wpdb->prepare("(p.post_title LIKE %s OR pm.meta_value LIKE %s)", $like, $like);
-                $where_parts_and[] = $part;
-                $where_parts_or[]  = $part;
+                $where_parts[] = $wpdb->prepare("(p.post_title LIKE %s OR pm.meta_value LIKE %s)", $like, $like);
             }
-
-            if (!empty($where_parts_and)) {
-                $where_clause = implode(' AND ', $where_parts_and);
-                $sql = "SELECT p.ID FROM {$wpdb->posts} p 
-                        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_sku'
-                        WHERE p.post_status = 'publish' 
-                        AND p.post_type IN ('product', 'product_variation') 
-                        AND ($where_clause) 
-                        GROUP BY p.ID LIMIT 30";
-                $fallback_ids = $wpdb->get_col($sql);
-                
-                // Eğer AND ile sonuç gelmediyse, daha geniş bir OR araması yap
-                if (empty($fallback_ids)) {
-                    $where_clause = implode(' OR ', $where_parts_or);
-                    $sql = "SELECT p.ID FROM {$wpdb->posts} p 
-                            LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_sku'
-                            WHERE p.post_status = 'publish' 
-                            AND p.post_type IN ('product', 'product_variation') 
-                            AND ($where_clause) 
-                            GROUP BY p.ID LIMIT 20";
-                    $fallback_ids = $wpdb->get_col($sql);
-                }
-
-                if ($fallback_ids) {
-                    $found_ids = array_unique(array_map('intval', $fallback_ids));
-                }
+            if (!empty($where_parts)) {
+                $where_clause = implode(' AND ', $where_parts);
+                $found_ids = $wpdb->get_col("SELECT p.ID FROM {$wpdb->posts} p 
+                    LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_sku'
+                    WHERE p.post_status = 'publish' AND p.post_type IN ('product', 'product_variation') AND ($where_clause) LIMIT 30");
             }
         }
     }
 
     if (empty($found_ids)) return [];
 
-    // 3. Batch Hydration: Hızlı Veri Çekme Mimarisi
+    // 3. Batch Hydration (Tek seferde verileri çek)
     $results_map = hizli_kasa_hydrate_products_batch($found_ids, $depo_id);
 
-    // 4. Varyasyonları ve Parent Bilgilerini Ekle (Dropdown/Gruplama için)
-    // Arama sonuçlarında varyasyonlu ürün varsa her zaman alt ürünlerini çekmeliyiz.
-    $extra_ids = [];
-    foreach ($results_map as $item) {
-        if ($item['is_variable']) {
-            $children = $wpdb->get_col($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_parent = %d AND post_status = 'publish'", $item['id']));
-            if ($children) $extra_ids = array_merge($extra_ids, array_map('intval', $children));
-        } elseif ($item['parent_id'] > 0) {
-            $parent_id = $item['parent_id'];
-            $extra_ids[] = (int)$parent_id;
-            $children = $wpdb->get_col($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_parent = %d AND post_status = 'publish'", $parent_id));
-            if ($children) $extra_ids = array_merge($extra_ids, array_map('intval', $children));
+    // 4. In-Memory Resolution & Sorting
+    // AWS veya Fallback sırasını bozmadan, varyasyonları ana ürünlere bağlayarak listeyi oluşturuyoruz.
+    $final_sorted = [];
+    $seen_parents = [];
+
+    foreach ($found_ids as $fid) {
+        if (!isset($results_map[$fid])) continue;
+        
+        $item = $results_map[$fid];
+        $target_id = ($item['type'] === 'variation') ? $item['parent_id'] : $item['id'];
+
+        if ($target_id > 0 && !isset($seen_parents[$target_id])) {
+            // Ana ürünü bul ve ekle
+            if (isset($results_map[$target_id])) {
+                $parent_item = $results_map[$target_id];
+                // Eğer ana ürünün varyasyon listesi boşsa ve biz bir varyasyon üzerinden bu ana ürüne ulaştıysak,
+                // veya ana ürün genel olarak varyasyonluysa, tüm çocukları topla.
+                if ($parent_item['is_variable']) {
+                    foreach ($results_map as $possible_v) {
+                        if ($possible_v['parent_id'] === $target_id) {
+                            $parent_item['variations'][] = $possible_v;
+                        }
+                    }
+                }
+                $final_sorted[] = $parent_item;
+                $seen_parents[$target_id] = true;
+            }
         }
     }
-    
-    if (!empty($extra_ids)) {
-        $all_ids = array_unique(array_merge($found_ids, $extra_ids));
-        $results_map = hizli_kasa_hydrate_products_batch($all_ids, $depo_id);
-    }
 
-    return array_values($results_map);
+    return array_values($final_sorted);
 }
 
 /**
@@ -732,6 +702,7 @@ function hizli_kasa_terminal_products($request) {
         if (class_exists('AWS_Search')) {
             $aws_search = new AWS_Search();
             $aws_results = $aws_search->search($s);
+            
             if (!empty($aws_results['products'])) {
                 $raw_ids = [];
                 foreach ($aws_results['products'] as $p_item) {
@@ -741,9 +712,16 @@ function hizli_kasa_terminal_products($request) {
                 // Varyasyonları Ana Ürünlere Çözümle (Sıralama Paritesi İçin)
                 if (!empty($raw_ids)) {
                     $ids_str = implode(',', $raw_ids);
-                    $resolved_rows = $wpdb->get_results("SELECT ID, post_parent, post_type FROM {$wpdb->posts} WHERE ID IN ($ids_str) ORDER BY FIELD(ID, $ids_str)");
-                    foreach ($resolved_rows as $row) {
-                        $target_id = ($row->post_type === 'product_variation') ? (int)$row->post_parent : (int)$row->ID;
+                    $resolved_rows = $wpdb->get_results("SELECT ID, post_parent, post_type FROM {$wpdb->posts} WHERE ID IN ($ids_str)");
+                    
+                    // AWS sırasına göre parent ID'leri topla
+                    $resolved_map = [];
+                    foreach ($resolved_rows as $row) { $resolved_map[$row->ID] = $row; }
+                    
+                    foreach ($raw_ids as $rid) {
+                        if (!isset($resolved_map[$rid])) continue;
+                        $r = $resolved_map[$rid];
+                        $target_id = ($r->post_type === 'product_variation') ? (int)$r->post_parent : (int)$r->ID;
                         if ($target_id > 0 && !in_array($target_id, $aws_ids)) {
                             $aws_ids[] = $target_id;
                         }
@@ -754,14 +732,12 @@ function hizli_kasa_terminal_products($request) {
             if (!empty($aws_ids)) {
                 $ids_ph = implode(',', array_map('intval', $aws_ids));
                 $where .= " AND p.ID IN ($ids_ph)";
-                // AWS sırasını korumak için FIELD kullanıyoruz
                 $order_by = "FIELD(p.ID, $ids_ph)";
             } else {
-                // AWS var ama sonuç yoksa zorla boş döndür
                 $where .= " AND p.ID = 0";
             }
         } else {
-            // 2. Fallback Arama (Sadece AWS yoksa)
+            // 2. Fallback Arama
             $like = '%' . $wpdb->esc_like($s) . '%';
             $where .= " AND (p.post_title LIKE %s OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s))";
             $params[] = $like; $params[] = $like;
@@ -896,11 +872,23 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id) {
     global $wpdb;
     if (empty($ids)) return [];
 
-    $ids_str = implode(',', array_map('intval', $ids));
+    $raw_ids_str = implode(',', array_map('intval', $ids));
+    
+    // Adım 1: Gelen ID'lerin varyasyonlarını ve parent'larını belirle (Tek seferde detayları çekmek için)
+    $all_ids = array_map('intval', $ids);
+    $parent_lookup = $wpdb->get_results("SELECT ID, post_parent, post_type FROM {$wpdb->posts} WHERE ID IN ($raw_ids_str)");
+    foreach ($parent_lookup as $ps) {
+        if ($ps->post_type === 'product_variation' && $ps->post_parent > 0) {
+            $all_ids[] = (int)$ps->post_parent;
+        }
+    }
+    $all_ids = array_unique($all_ids);
+    $ids_str = implode(',', $all_ids);
+    
     $stok_table = Hizli_Kasa_Database::get_tables()['stok_konumlari'];
 
-    // Sıralamayı korumak için ORDER BY FIELD kullanıyoruz
-    $posts = $wpdb->get_results("SELECT ID, post_title, post_type, post_parent FROM {$wpdb->posts} WHERE ID IN ($ids_str) ORDER BY FIELD(ID, $ids_str)");
+    // Ana veri çekme işlemi
+    $posts = $wpdb->get_results("SELECT ID, post_title, post_type, post_parent FROM {$wpdb->posts} WHERE ID IN ($ids_str)");
     $meta_raw = $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta} WHERE post_id IN ($ids_str)");
     $meta_map = [];
     if (!empty($meta_raw)) {
