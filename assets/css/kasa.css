@@ -74,6 +74,12 @@ html, body, #page, .site, #content, .site-content, .main-content, #main-content,
 }
 
 /* 3. Viewport Kilitleme */
+html, body { 
+    overflow: hidden !important; 
+    height: 100vh !important;
+    width: 100vw !important;
+    margin: 0 !important;
+    padding: 0 !important;
     background: var(--hk-bg-body) !important;
 }
 
@@ -85,11 +91,22 @@ html { margin-top: 0 !important; }
    KASA ANA YAPISI
    ============================================= */
 
+#hizli-kasa-app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    overflow: hidden;
     background: var(--hk-bg-body);
     z-index: 999999;
 }
 
 /* --- Üst Sekme Menüsü --- */
+#hizli-kasa-ust-menu {
+    height: 60px;
     background: var(--hk-bg-header);
     color: var(--hk-text-white);
     display: flex;
@@ -163,6 +180,16 @@ html { margin-top: 0 !important; }
 }
 
 /* Kasa Dış Çerçeve Ayarı */
+#kasa-dis-cerceve { 
+    position: relative !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    width: 100% !important; 
+    max-width: 100% !important; 
+    margin: 0 !important; 
+    padding: 10px !important; 
+    box-sizing: border-box;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
     background: var(--hk-bg-body);
     z-index: 1;
 }
@@ -213,6 +240,7 @@ html { margin-top: 0 !important; }
     flex-shrink: 0;
 }
 
+.sidebar-btn {
     background: var(--hk-bg-sidebar);
     border: 2px solid var(--hk-border);
     border-radius: 10px;
@@ -257,6 +285,8 @@ html { margin-top: 0 !important; }
    KASA KONTEYNER
    ============================================= */
 
+#kasa-konteyner { 
+    padding: 15px; 
     background: var(--hk-bg-card); 
     border-radius: 8px; 
     border: 1px solid var(--hk-border); 
@@ -274,12 +304,18 @@ html { margin-top: 0 !important; }
    BAŞLIK ALANI
    ============================================= */
 
+.kasa-baslik { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
     border-bottom: 2px solid var(--hk-border-dark); 
     padding-bottom: 10px; 
     margin-bottom: 10px; 
     flex-shrink: 0;
 }
 
+#durum {
+    margin: 0;
     font-size: 18px;
     color: var(--hk-text-main);
 }
@@ -568,8 +604,8 @@ html { margin-top: 0 !important; }
 
 #stok-uyari-liste li {
     padding: 10px;
-    border-bottom: 1px solid #eee;
-    color: #c0392b;
+    border-bottom: 1px solid var(--hk-border);
+    color: var(--hk-danger);
     display: flex;
     justify-content: space-between;
     font-weight: 500;
@@ -830,19 +866,20 @@ html { margin-top: 0 !important; }
 #iade-modul-konteyner {
     display: flex;
     height: 100%;
-    background: #f0f2f5;
+    background: var(--hk-bg-body);
     gap: 20px;
     padding: 15px;
     box-sizing: border-box;
 }
 
 .iade-sol-panel, .iade-sag-panel {
-    background: white;
+    background: var(--hk-bg-card);
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    border: 1px solid var(--hk-border);
 }
 
 .iade-sol-panel { flex: 3; }
@@ -850,8 +887,8 @@ html { margin-top: 0 !important; }
 
 .iade-ust-cubuk {
     padding: 15px 20px;
-    background: #f8f9fa;
-    border-bottom: 2px solid #eee;
+    background: var(--hk-bg-sidebar);
+    border-bottom: 2px solid var(--hk-border);
 }
 
 .iade-ust-cubuk h2 {
@@ -869,7 +906,9 @@ html { margin-top: 0 !important; }
 #iade-siparis-no {
     flex: 1;
     padding: 10px 15px;
-    border: 2px solid #ddd;
+    border: 2px solid var(--hk-border);
+    background: var(--hk-bg-body);
+    color: var(--hk-text-main);
     border-radius: 8px;
     font-size: 16px;
     font-weight: bold;
@@ -926,8 +965,9 @@ html { margin-top: 0 !important; }
     display: flex;
     align-items: center;
     padding: 12px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--hk-border);
     gap: 15px;
+    color: var(--hk-text-main);
 }
 
 .iade-urun-satir:last-child { border-bottom: none; }
@@ -937,7 +977,7 @@ html { margin-top: 0 !important; }
 .iade-urun-satir .urun-sku { font-size: 11px; color: #999; }
 
 .iade-urun-satir .urun-fiyat-adet { text-align: right; min-width: 100px; }
-.birim-fiyat { font-weight: bold; color: #2c3e50; }
+.birim-fiyat { font-weight: bold; color: var(--hk-text-main); }
 .mevcut-adet { font-weight: bold; color: #3498db; }
 
 .iade-ekle-btn {
@@ -958,11 +998,12 @@ html { margin-top: 0 !important; }
     display: flex;
     align-items: center;
     padding: 12px;
-    background: #fff5f5;
-    border: 1px solid #fed7d7;
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
     border-radius: 8px;
     margin-bottom: 10px;
     gap: 10px;
+    color: var(--hk-text-main);
 }
 
 .sepet-item-bilgi { flex: 1; font-size: 13px; }
@@ -982,8 +1023,8 @@ html { margin-top: 0 !important; }
 /* İade Özet */
 .iade-ozet-alani {
     padding: 20px;
-    background: #f8f9fa;
-    border-top: 2px solid #eee;
+    background: var(--hk-bg-sidebar);
+    border-top: 2px solid var(--hk-border);
 }
 
 .iade-toplam-satir {
@@ -1120,15 +1161,16 @@ html { margin-top: 0 !important; }
 }
 
 .gs-kart {
-    background: #f8f9fa;
+    background: var(--hk-bg-body);
     border-radius: 8px;
     padding: 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    border: 1px solid #eee;
+    border: 1px solid var(--hk-border);
     transition: transform 0.15s;
+    color: var(--hk-text-main);
 }
 
 .gs-kart:hover {
@@ -1577,9 +1619,11 @@ html { margin-top: 0 !important; }
 }
 
 .parent-row {
-    background: #f1f4f6 !important;
+    background: var(--hk-bg-sidebar) !important;
     font-weight: 800 !important;
     cursor: pointer !important;
+    color: var(--hk-text-main) !important;
+    border-bottom: 1px solid var(--hk-border) !important;
 }
 
 .parent-row:hover {
@@ -1587,10 +1631,11 @@ html { margin-top: 0 !important; }
 }
 
 .variation-container {
-    background: #fff;
+    background: var(--hk-bg-card);
     margin-left: 0 !important;
     padding-left: 0 !important;
     display: none; /* Varsayılan kapalı */
+    border-bottom: 1px solid var(--hk-border);
 }
 
 .variation-container.is-open {
@@ -1617,8 +1662,9 @@ html { margin-top: 0 !important; }
 
 .variation-row {
     padding-left: 50px !important;
-    background: #ffffff;
+    background: var(--hk-bg-card);
     position: relative;
+    color: var(--hk-text-main);
 }
 
 .variation-row::before {
@@ -1907,8 +1953,8 @@ html { margin-top: 0 !important; }
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 1px;
-    opacity: 0.5;
-    color: #fff;
+    opacity: 0.7;
+    color: var(--hk-text-muted);
     margin-bottom: 2px;
 }
 
@@ -1922,7 +1968,7 @@ html { margin-top: 0 !important; }
 .depo-switcher-trigger span:first-child {
     font-size: 14px;
     font-weight: 700;
-    color: #fff;
+    color: var(--hk-text-main);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1932,7 +1978,7 @@ html { margin-top: 0 !important; }
 .depo-dropdown-arrow {
     font-size: 12px;
     opacity: 0.6;
-    color: #fff;
+    color: var(--hk-text-main);
     transition: transform 0.2s;
     flex-shrink: 0;
 }
@@ -1947,8 +1993,8 @@ html { margin-top: 0 !important; }
     top: calc(100% + 8px);
     left: 0;
     min-width: 220px;
-    background: #1a2332;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
     border-radius: 10px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
     z-index: 99999;
@@ -1987,7 +2033,7 @@ html { margin-top: 0 !important; }
 .depo-item-name {
     font-size: 14px;
     font-weight: 600;
-    color: #ecf0f1;
+    color: var(--hk-text-main);
 }
 
 .depo-manage-badge {
@@ -2052,8 +2098,8 @@ html { margin-top: 0 !important; }
 }
 
 .pagination-info select option {
-    background: #1a1a1a;
-    color: #fff;
+    background: var(--hk-bg-card);
+    color: var(--hk-text-main);
 }
 
 .pagination-controls {
@@ -2095,7 +2141,7 @@ html { margin-top: 0 !important; }
 }
 
 .pagination-stats {
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--hk-text-muted);
     font-style: italic;
     font-size: 12px;
 }
