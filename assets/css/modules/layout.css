@@ -139,6 +139,34 @@
     width: 100%;
 }
 
+#kasa-konteyner { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    background: var(--hk-bg-card); 
+    border-radius: 15px; 
+    padding: 20px; 
+    box-shadow: var(--hk-shadow-md); 
+    overflow: hidden;
+    border: 1px solid var(--hk-border);
+}
+
+.kasa-baslik {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--hk-border);
+}
+
+.kasa-baslik h2 {
+    margin: 0;
+    font-size: 22px;
+    color: var(--hk-text-main);
+    font-weight: 800;
+}
+
 /* Üst Butonlar */
 .ust-buton-kucuk {
     background: #3498db !important;
