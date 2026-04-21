@@ -403,6 +403,7 @@ function hizli_kasa_ozel_arama($data) {
         if (class_exists('AWS_Search')) {
             $aws_search = new AWS_Search();
             $aws_results = $aws_search->search($s);
+            error_log('Hizli Kasa - AWS Search Result for [' . $s . ']: ' . print_r($aws_results, true));
             if (!empty($aws_results['products'])) {
                 foreach ($aws_results['products'] as $p_item) {
                     $found_ids[] = (int)$p_item['id'];
@@ -870,7 +871,8 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id) {
     $ids_str = implode(',', array_map('intval', $ids));
     $stok_table = Hizli_Kasa_Database::get_tables()['stok_konumlari'];
 
-    $posts = $wpdb->get_results("SELECT ID, post_title, post_type, post_parent FROM {$wpdb->posts} WHERE ID IN ($ids_str)");
+    // Sıralamayı korumak için ORDER BY FIELD kullanıyoruz
+    $posts = $wpdb->get_results("SELECT ID, post_title, post_type, post_parent FROM {$wpdb->posts} WHERE ID IN ($ids_str) ORDER BY FIELD(ID, $ids_str)");
     $meta_raw = $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta} WHERE post_id IN ($ids_str)");
     $meta_map = [];
     if (!empty($meta_raw)) {

@@ -147,35 +147,46 @@
             var els = this.els;
             els.aramaSonuclariListe.innerHTML = "";
 
-            if (urunler.length === 0) {
+            if (!urunler || urunler.length === 0) {
                 els.aramaSonuclariListe.innerHTML = '<li style="cursor:default; justify-content:center; color:#999;">Sonuç bulunamadı.</li>';
                 return;
             }
 
-            // Ürünleri gruplayalım (Parent -> Variations)
-            var gruplar = [];
-            var sonGrup = null;
+            // 1. Ürün hiyerarşisini kur (Map tabanlı gruplama)
+            var roots = [];
+            var productMap = {};
 
-            urunler.forEach(function(urun) {
-                if (urun.is_variable) {
-                    sonGrup = { parent: urun, variations: [] };
-                    gruplar.push(sonGrup);
-                } else if (urun.parent_id && sonGrup && urun.parent_id === sonGrup.parent.id) {
-                    sonGrup.variations.push(urun);
-                } else {
-                    gruplar.push({ parent: urun, variations: [] });
+            // Önce tüm ürünleri Map'e koy ve varyasyon listelerini temizle
+            urunler.forEach(function(u) {
+                u.tempVariations = [];
+                productMap[u.id] = u;
+            });
+
+            // Ürünleri dolaşarak ağacı oluştur
+            urunler.forEach(function(u) {
+                if (u.parent_id > 0 && productMap[u.parent_id]) {
+                    // Varyasyon: Parent'ın altına ekle (mükerrer eklemeyi önle)
+                    var parent = productMap[u.parent_id];
+                    if (!parent.tempVariations.some(v => v.id === u.id)) {
+                        parent.tempVariations.push(u);
+                    }
+                } else if (!u.parent_id || u.parent_id === 0 || u.is_variable) {
+                    // Ana ürün veya yetim varyasyon: Root olarak ekle
+                    if (!roots.some(r => r.id === u.id)) {
+                        roots.push(u);
+                    }
                 }
             });
 
-            gruplar.forEach(function(grup) {
-                var anaUrun = grup.parent;
-                var varyasyonlar = grup.variations;
+            // 2. DOM'a render et
+            roots.forEach(function(anaUrun) {
+                var varyasyonlar = anaUrun.tempVariations || [];
                 
-                // --- AKORDİYON DÜZENİ ---
+                // Ana ürün satırını oluştur
                 var li = self._urunSatiriOlustur(anaUrun, true, true);
                 els.aramaSonuclariListe.appendChild(li);
 
-                if (varyasyonlar.length > 0) {
+                if (varyasyonlar.length > 0 || anaUrun.is_variable) {
                     li.classList.add("parent-row");
                     
                     var vContainer = document.createElement("div");
@@ -196,8 +207,8 @@
                         vContainer.classList.toggle("is-open", isOpen);
                     });
 
-                    // ÖZEL DURUM: Eğer sadece tek bir ürün grubu varsa, otomatik aç
-                    if (gruplar.length === 1) {
+                    // ÖZEL DURUM: Eğer çok az root varsa, otomatik aç
+                    if (roots.length <= 2) {
                         li.classList.add("is-open");
                         vContainer.classList.add("is-open");
                     }
