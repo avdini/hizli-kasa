@@ -27,9 +27,13 @@
             
             // Eğer element henüz yoksa (sekme yüklenmemişse), yüklendiğinde tekrar dene
             if (!input) {
-                document.addEventListener('hkTabLoaded', function(e) {
-                    if (e.detail.tab === 'urunler') self.init();
-                }, { once: true });
+                var tabListener = function(e) {
+                    if (e.detail.tab === 'urunler') {
+                        document.removeEventListener('hkTabLoaded', tabListener);
+                        self.init();
+                    }
+                };
+                document.addEventListener('hkTabLoaded', tabListener);
                 return;
             }
 
