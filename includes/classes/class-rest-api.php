@@ -742,13 +742,13 @@ function hizli_kasa_terminal_products($request) {
     }
 
     $total = $wpdb->get_var($wpdb->prepare("SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p $join_extra WHERE $where", ...$params));
-    if (!$total) return ['products' => [], 'total' => 0, 'has_more' => false, 'critical_count' => 0];
+    if (!$total) return ['products' => [], 'total' => 0, 'has_more' => false, 'simple_count' => 0, 'variable_count' => 0, 'grand_total_items' => 0, 'critical_count' => 0];
 
     $id_query = $wpdb->prepare("
         SELECT DISTINCT p.ID FROM {$wpdb->posts} p $join_extra WHERE $where ORDER BY $order_by LIMIT %d OFFSET %d", array_merge($params, [$limit, $offset]));
     $target_ids = $wpdb->get_col($id_query);
 
-    if (empty($target_ids)) return ['products' => [], 'total' => (int)$total, 'has_more' => false, 'critical_count' => 0];
+    if (empty($target_ids)) return ['products' => [], 'total' => (int)$total, 'has_more' => false, 'simple_count' => 0, 'variable_count' => 0, 'grand_total_items' => 0, 'critical_count' => 0];
 
     $placeholders = implode(',', array_fill(0, count($target_ids), '%d'));
     $sql = $wpdb->prepare("
@@ -797,10 +797,63 @@ function hizli_kasa_terminal_products($request) {
         if ($item) $formatted[] = $item;
     }
 
+    // --- İstatistikleri Hesapla ---
+    
+    // 1. Basit ve Değişken Ürün Sayıları (Parent Seviyesinde)
+    $type_stats = $wpdb->get_results($wpdb->prepare("
+        SELECT tt_type.slug as p_type, COUNT(DISTINCT p.ID) as cnt
+        FROM {$wpdb->posts} p
+        $join_extra
+        LEFT JOIN {$wpdb->term_relationships} tr_type ON p.ID = tr_type.object_id
+        LEFT JOIN {$wpdb->term_taxonomy} tt_tax ON tr_type.term_taxonomy_id = tt_tax.term_taxonomy_id AND tt_tax.taxonomy = 'product_type'
+        LEFT JOIN {$wpdb->terms} tt_type ON tt_tax.term_id = tt_type.term_id
+        WHERE $where
+        GROUP BY tt_type.slug
+    ", ...$params));
+
+    $simple_count = 0;
+    $variable_count = 0;
+    foreach ($type_stats as $ts) {
+        if ($ts->p_type === 'simple') $simple_count = (int)$ts->cnt;
+        if ($ts->p_type === 'variable') $variable_count = (int)$ts->cnt;
+    }
+
+    // 2. Toplam Kalem Sayısı (Basit + Varyasyonların her biri)
+    $grand_total_items = $wpdb->get_var($wpdb->prepare("
+        SELECT COUNT(p2.ID)
+        FROM {$wpdb->posts} p
+        $join_extra
+        INNER JOIN {$wpdb->posts} p2 ON (p.ID = p2.ID OR p.ID = p2.post_parent)
+        WHERE $where 
+        AND p2.post_status = 'publish' 
+        AND p2.post_type IN ('product', 'product_variation')
+        AND p2.ID NOT IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} WHERE post_type = 'product_variation')
+    ", ...$params));
+
+    // 3. Kritik Stok Sayısı (Aktif depoda threshold altında olanlar)
+    $critical_count = $wpdb->get_var($wpdb->prepare("
+        SELECT COUNT(DISTINCT p2.ID)
+        FROM {$wpdb->posts} p
+        $join_extra
+        INNER JOIN {$wpdb->posts} p2 ON (p.ID = p2.ID OR p.ID = p2.post_parent)
+        INNER JOIN $stok_table sk_crit ON (
+            (p2.post_type = 'product' AND sk_crit.product_id = p2.ID AND sk_crit.variation_id = 0) OR
+            (p2.post_type = 'product_variation' AND sk_crit.variation_id = p2.ID)
+        )
+        WHERE $where 
+        AND p2.post_status = 'publish' 
+        AND sk_crit.location_id = %d 
+        AND sk_crit.quantity > 0 AND sk_crit.quantity <= %d
+    ", array_merge($params, [$depo_id, $threshold])));
+
     return [
-        'products' => $formatted,
-        'total'    => (int)$total,
-        'has_more' => ($offset + $limit) < $total
+        'products'          => $formatted,
+        'total'             => (int)$total,
+        'has_more'          => ($offset + $limit) < $total,
+        'simple_count'      => $simple_count,
+        'variable_count'    => $variable_count,
+        'grand_total_items' => (int)$grand_total_items,
+        'critical_count'    => (int)$critical_count
     ];
 }
 
