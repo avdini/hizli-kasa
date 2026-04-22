@@ -107,23 +107,29 @@ const RefundManager = (function () {
         const list = document.getElementById('iade-sonuc-listesi');
         
         if (!list) return;
-
         if (!results || results.length === 0) {
             list.innerHTML = '<li class="sonuc-yok">Eşleşen sipariş bulunamadı.</li>';
         } else {
-            list.innerHTML = results.map(order => `
-                <li onclick="RefundManager.selectOrder('${order.id}')">
-                    <div class="sonuc-ana">
-                        <strong>#${order.id}</strong>
-                        <span>${order.date}</span>
-                    </div>
-                    <div class="sonuc-detay">
-                        <span>💰 ${order.total} TL</span>
-                        <span>👤 ${order.telefon}</span>
-                        <span>👤 Kasiyer: ${order.kasiyer}</span>
-                    </div>
-                </li>
-            `).join('');
+            list.innerHTML = results.map(order => {
+                const isFull = order.is_fully_refunded;
+                const clickAction = isFull ? '' : `RefundManager.selectOrder('${order.id}')`;
+                const fullClass = isFull ? 'fully-refunded-row' : '';
+                const badge = isFull ? '<span class="iade-badge">Tamamı İade Edildi</span>' : '';
+
+                return `
+                    <li onclick="${clickAction}" class="${fullClass}">
+                        <div class="sonuc-ana">
+                            <strong>#${order.id} ${badge}</strong>
+                            <span>${order.date}</span>
+                        </div>
+                        <div class="sonuc-detay">
+                            <span>💰 ${order.total} TL</span>
+                            <span>👤 ${order.telefon}</span>
+                            <span>👤 Kasiyer: ${order.kasiyer}</span>
+                        </div>
+                    </li>
+                `;
+            }).join('');
         }
         
         container.style.display = 'block';
@@ -146,9 +152,12 @@ const RefundManager = (function () {
                 headers: { 'X-WP-Nonce': kasaAyar.nonce }
             });
 
-            if (!response.ok) throw new Error('Sipariş bulunamadı');
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Sipariş bulunamadı');
+            }
 
-            originalOrder = await response.json();
+            originalOrder = data;
             renderOrderDetails();
 
         } catch (error) {

@@ -641,10 +641,18 @@ function hizli_kasa_get_order_details($request) {
     $depo_names_cache = [];
 
     $items = [];
+    $is_fully_refunded = ( $order->get_meta('_hk_is_fully_refunded') === 'yes' );
+
     foreach ($order->get_items() as $item_id => $item) {
         $product = $item->get_product();
         $cikis_depo_id = (int) wc_get_order_item_meta($item_id, '_hk_cikis_depo_id', true);
         $cikis_depo_adi = wc_get_order_item_meta($item_id, '_hk_cikis_depo_adi', true);
+
+        // İade Takibi
+        $refunded_qty = (int) wc_get_order_item_meta($item_id, '_hk_refunded_qty', true);
+        $available_qty = $item->get_quantity() - $refunded_qty;
+
+        if ($available_qty <= 0) continue;
 
         // Eğer depo adı meta'sı yoksa DB'den çek
         if ($cikis_depo_id && !$cikis_depo_adi) {
@@ -664,7 +672,9 @@ function hizli_kasa_get_order_details($request) {
             'variation_id' => $item->get_variation_id(),
             'name'         => $item->get_name(),
             'sku'          => $product ? $product->get_sku() : '',
-            'qty'          => $item->get_quantity(),
+            'qty'          => $available_qty,
+            'original_qty' => $item->get_quantity(),
+            'refunded_qty' => $refunded_qty,
             'price'        => $item->get_total() / max($item->get_quantity(), 1),
             'total'        => $item->get_total(),
             'depo_id'      => $cikis_depo_id,
@@ -672,17 +682,22 @@ function hizli_kasa_get_order_details($request) {
         ];
     }
 
+    if ( empty($items) && $is_fully_refunded ) {
+        return new WP_Error('fully_refunded', 'Bu siparişteki tüm ürünler zaten iade edilmiş.', array('status' => 400));
+    }
+
     return [
-        'id'         => $order->get_id(),
-        'date'       => $order->get_date_created()->date('d.m.Y H:i'),
-        'total'      => $order->get_total(),
-        'items'      => $items,
-        'payment'    => $order->get_payment_method_title(),
-        'kasiyer'    => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
-        'kasa_no'    => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
-        'depo_id'    => (int) $order->get_meta('_hk_cikis_depo_id'),
-        'depo_adi'   => $order->get_meta('_hk_cikis_depo_adi') ?: '',
-        'telefon'    => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '',
+        'id'                 => $order->get_id(),
+        'date'               => $order->get_date_created()->date('d.m.Y H:i'),
+        'total'              => $order->get_total(),
+        'items'              => $items,
+        'payment'            => $order->get_payment_method_title(),
+        'kasiyer'            => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
+        'kasa_no'            => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
+        'depo_id'            => (int) $order->get_meta('_hk_cikis_depo_id'),
+        'depo_adi'           => $order->get_meta('_hk_cikis_depo_adi') ?: '',
+        'telefon'            => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '',
+        'is_fully_refunded'  => $is_fully_refunded
     ];
 }
 
@@ -754,11 +769,12 @@ function hizli_kasa_search_orders($request) {
         }
 
         $results[] = [
-            'id'      => $order->get_id(),
-            'date'    => $order->get_date_created()->date('d.m.Y H:i'),
-            'total'   => $total,
-            'kasiyer' => $order->get_meta('_hizli_kasa_kasiyer') ?: '-',
-            'telefon' => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '-',
+            'id'                 => $order->get_id(),
+            'date'               => $order->get_date_created()->date('d.m.Y H:i'),
+            'total'              => $total,
+            'kasiyer'            => $order->get_meta('_hizli_kasa_kasiyer') ?: '-',
+            'telefon'            => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '-',
+            'is_fully_refunded'  => ( $order->get_meta('_hk_is_fully_refunded') === 'yes' )
         ];
     }
 
@@ -804,9 +820,10 @@ function hizli_kasa_process_refund($request) {
     $total_refund = 0;
 
     foreach ($refund_items as $item) {
-        $qty = abs($item['qty']) * -1;
+        $qty = abs($item['qty']);
+        $neg_qty = $qty * -1;
         $price = abs($item['price']);
-        $line_total = $price * $qty;
+        $line_total = $price * $neg_qty;
 
         $product = wc_get_product($item['id']);
         if ($product) {
@@ -814,10 +831,17 @@ function hizli_kasa_process_refund($request) {
                 'totals' => array('subtotal' => $line_total, 'subtotal_tax' => 0, 'total' => $line_total, 'tax' => 0)
             ));
             $refund_item = $refund_order->get_item($item_id);
-            $refund_item->set_quantity($qty);
+            $refund_item->set_quantity($neg_qty);
             $refund_item->set_total($line_total);
             $refund_item->save();
             $total_refund += $line_total;
+
+            // --- Orijinal Siparişte İade Edilen Adedi Güncelle ---
+            if ( !empty($item['item_id']) ) {
+                $orig_item_id = intval($item['item_id']);
+                $current_refunded = (int) wc_get_order_item_meta($orig_item_id, '_hk_refunded_qty', true);
+                wc_update_order_item_meta($orig_item_id, '_hk_refunded_qty', $current_refunded + $qty);
+            }
         }
     }
 
@@ -901,6 +925,25 @@ function hizli_kasa_process_refund($request) {
 
     $refund_order->calculate_totals();
     $refund_order->save();
+
+    // --- Orijinal Siparişin Tamamının İade Edilip Edilmediğini Kontrol Et ---
+    if ($original_order) {
+        $all_refunded = true;
+        foreach ($original_order->get_items() as $orig_item_id => $orig_item) {
+            $orig_qty = $orig_item->get_quantity();
+            $total_refunded = (int) wc_get_order_item_meta($orig_item_id, '_hk_refunded_qty', true);
+            
+            if ($total_refunded < $orig_qty) {
+                $all_refunded = false;
+                break;
+            }
+        }
+
+        if ($all_refunded) {
+            $original_order->update_meta_data('_hk_is_fully_refunded', 'yes');
+            $original_order->save();
+        }
+    }
 
     return array(
         'success'  => true,
