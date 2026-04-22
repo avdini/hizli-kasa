@@ -145,7 +145,7 @@
 }
 
 /* Tablet ve Orta Ölçekli Ekranlar */
-@media (min-width: 769px) and (max-width: 1550px) {
+@media (min-width: 769px) and (max-width: 1500px) {
     .ust-menu-sag-aksiyonlar {
         margin-left: auto;
     }
@@ -164,8 +164,8 @@
     }
 }
 
-/* Sekme emojilerini 1080px ve altında gizle */
-@media (min-width: 769px) and (max-width: 1080px) {
+/* Sekme emojilerini 1160px ve altında gizle */
+@media (min-width: 769px) and (max-width: 1160px) {
     .sekme-ikon {
         display: none;
     }
