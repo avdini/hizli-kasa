@@ -4,7 +4,8 @@
 
 /* Modal Stilleri */
 .barkod-modal-genis {
-    max-width: 600px !important;
+    max-width: 800px !important;
+    width: 95% !important;
 }
 
 .barkod-secim-listesi {
