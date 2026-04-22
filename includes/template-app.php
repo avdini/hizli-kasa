@@ -27,6 +27,9 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
             <div class="ust-sekme" data-tab="iade">
                 <span class="sekme-ikon">↩️</span> İade
             </div>
+            <div class="ust-sekme" data-tab="barkod">
+                <span class="sekme-ikon">🏷️</span> Barkod
+            </div>
             <div class="ust-sekme" data-tab="urunler">
                 <span class="sekme-ikon">📦</span> Ürünler
             </div>
@@ -55,6 +58,7 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
         <!-- Diğer sekmeler dinamik olarak buraya eklenecek -->
         <div id="tab-content-masraf" class="tab-content"></div>
         <div id="tab-content-iade" class="tab-content"></div>
+        <div id="tab-content-barkod" class="tab-content"></div>
         <div id="tab-content-urunler" class="tab-content"></div>
         <div id="tab-content-sevk" class="tab-content"></div>
         <div id="tab-content-raporlar" class="tab-content"></div>

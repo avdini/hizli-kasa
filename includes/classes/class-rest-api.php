@@ -578,7 +578,7 @@ function hizli_kasa_terminal_update_stock($request) {
  */
 function hizli_kasa_load_tab_content($request) {
     $tab = sanitize_text_field($request->get_param('tab'));
-    $allowed_tabs = ['kasa', 'urunler', 'raporlar', 'ayarlar', 'iade', 'masraf', 'sevk'];
+    $allowed_tabs = ['kasa', 'urunler', 'raporlar', 'ayarlar', 'iade', 'masraf', 'sevk', 'barkod'];
     if (!in_array($tab, $allowed_tabs)) {
         return new WP_Error('invalid_tab', 'Geçersiz sekme adı.', array('status' => 400));
     }
