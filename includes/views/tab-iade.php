@@ -8,40 +8,54 @@ if (!defined('ABSPATH')) exit;
 <div id="iade-modul-konteyner">
     <div class="iade-sol-panel">
         <div class="iade-ust-cubuk">
-            <h2>Sipariş Sorgula</h2>
+            <div class="iade-baslik-satiri">
+                <h2>Sipariş Sorgula</h2>
+                <button id="iade-detayli-toggle-btn" class="iade-kucuk-btn">🔍 Detaylı Arama</button>
+            </div>
+            
             <div class="iade-arama-formu">
-                <div class="arama-satiri">
+                <!-- Basit Arama (Varsayılan) -->
+                <div class="arama-satiri basit-arama">
                     <div class="input-grup">
                         <label>Sipariş No / Barkod</label>
-                        <input type="text" id="iade-siparis-no" placeholder="Barkod okutun veya No yazın..." autocomplete="off">
-                    </div>
-                    <div class="input-grup">
-                        <label>Müşteri Telefonu</label>
-                        <input type="text" id="iade-arama-telefon" placeholder="0 (5xx) xxx xx xx" autocomplete="off">
-                    </div>
-                </div>
-                <div class="arama-satiri">
-                    <div class="input-grup">
-                        <label>Ürün Barkodu / SKU</label>
-                        <input type="text" id="iade-arama-urun" placeholder="Ürün barkodu okutun..." autocomplete="off">
-                    </div>
-                    <div class="input-grup">
-                        <label>Tutar Aralığı (Min - Max)</label>
-                        <div class="cift-input">
-                            <input type="number" id="iade-arama-fiyat-min" placeholder="Min" step="0.01">
-                            <input type="number" id="iade-arama-fiyat-max" placeholder="Max" step="0.01">
+                        <div class="input-buton-grup">
+                            <input type="text" id="iade-siparis-no" placeholder="Barkod okutun veya No yazın..." autocomplete="off">
+                            <button id="iade-siparis-bul-btn" class="iade-arama-btn">Getir</button>
                         </div>
                     </div>
                 </div>
-                <div class="arama-satiri">
-                    <div class="input-grup">
-                        <label>Tarih Aralığı (Başlangıç - Bitiş)</label>
-                        <div class="cift-input">
-                            <input type="date" id="iade-arama-tarih-bas">
-                            <input type="date" id="iade-arama-tarih-bit">
+
+                <!-- Detaylı Arama Alanları (Gizli) -->
+                <div id="iade-detayli-alanlar" style="display:none;">
+                    <div class="arama-satiri">
+                        <div class="input-grup">
+                            <label>Müşteri Telefonu</label>
+                            <input type="text" id="iade-arama-telefon" placeholder="0 (5xx) xxx xx xx" autocomplete="off">
+                        </div>
+                        <div class="input-grup">
+                            <label>Ürün Barkodu / SKU</label>
+                            <input type="text" id="iade-arama-urun" placeholder="Ürün barkodu okutun..." autocomplete="off">
                         </div>
                     </div>
-                    <button id="iade-detayli-ara-btn" class="iade-arama-btn">🔍 Siparişleri Bul</button>
+                    <div class="arama-satiri">
+                        <div class="input-grup">
+                            <label>Tutar Aralığı (Min - Max)</label>
+                            <div class="cift-input">
+                                <input type="number" id="iade-arama-fiyat-min" placeholder="Min" step="0.01">
+                                <input type="number" id="iade-arama-fiyat-max" placeholder="Max" step="0.01">
+                            </div>
+                        </div>
+                        <div class="input-grup">
+                            <label>Tarih Aralığı (Başlangıç - Bitiş)</label>
+                            <div class="cift-input">
+                                <input type="date" id="iade-arama-tarih-bas">
+                                <input type="date" id="iade-arama-tarih-bit">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="arama-satiri" style="margin-top:10px;">
+                        <button id="iade-detayli-ara-btn" class="iade-arama-btn tam-genislik">🔍 Seçilen Kriterlerle Siparişleri Bul</button>
+                    </div>
                 </div>
             </div>
         </div>

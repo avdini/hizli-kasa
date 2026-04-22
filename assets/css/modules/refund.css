@@ -37,6 +37,48 @@
     font-weight: 800;
 }
 
+.iade-baslik-satiri {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.iade-baslik-satiri h2 {
+    margin: 0 !important;
+}
+
+.iade-kucuk-btn {
+    padding: 6px 12px;
+    background: var(--hk-bg-hover);
+    border: 1px solid var(--hk-border);
+    border-radius: 6px;
+    color: var(--hk-text-main);
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.iade-kucuk-btn:hover, .iade-kucuk-btn.aktif {
+    background: var(--hk-accent);
+    color: white;
+    border-color: var(--hk-accent);
+}
+
+.input-buton-grup {
+    display: flex;
+    gap: 8px;
+}
+
+.input-buton-grup input {
+    flex: 1;
+}
+
+.tam-genislik {
+    width: 100%;
+}
+
 /* Gelişmiş Arama Formu */
 .iade-arama-formu {
     display: flex;

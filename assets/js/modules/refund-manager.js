@@ -16,13 +16,24 @@ const RefundManager = (function () {
     }
 
     function bindEvents() {
-        const bulBtn = document.getElementById('iade-siparis-bul-btn'); // Eski buton (belki hala vardır ama biz yenisini kullanacağız)
+        const bulBtn = document.getElementById('iade-siparis-bul-btn');
         const detayliAraBtn = document.getElementById('iade-detayli-ara-btn');
+        const toggleBtn = document.getElementById('iade-detayli-toggle-btn');
+        const detayliAlanlar = document.getElementById('iade-detayli-alanlar');
         const siparisInput = document.getElementById('iade-siparis-no');
         const onaylaBtn = document.getElementById('iade-onayla-btn');
 
         if (bulBtn) {
             bulBtn.onclick = () => fetchOrder(siparisInput.value);
+        }
+
+        if (toggleBtn && detayliAlanlar) {
+            toggleBtn.onclick = () => {
+                const isHidden = detayliAlanlar.style.display === 'none';
+                detayliAlanlar.style.display = isHidden ? 'block' : 'none';
+                toggleBtn.innerText = isHidden ? '✕ Aramayı Kapat' : '🔍 Detaylı Arama';
+                toggleBtn.classList.toggle('aktif', isHidden);
+            };
         }
 
         if (detayliAraBtn) {
