@@ -237,7 +237,7 @@
                         </div>
                         <div class="col-right">
                             <div class="attributes">
-                                <div class="attr-color">${data.attributes.color || ''}</div>
+                                <div class="attr-color">Renk: ${data.attributes.color || ''}</div>
                                 <div class="attr-size">
                                     <span class="size-label">${data.attributes.label}:</span>
                                     <span class="size-val">${data.attributes.size || ''}</span>

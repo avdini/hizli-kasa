@@ -142,8 +142,9 @@
         width: 45%;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        justify-content: flex-end; /* Aşağı kaydırmak için */
         padding-left: 1mm;
+        padding-bottom: 1mm;
         /* border-left kaldırıldı */
     }
 
@@ -171,24 +172,26 @@
 
     .attributes {
         font-size: 7pt;
+        line-height: 1.2;
     }
 
     .attr-color {
-        margin-bottom: 0.5mm;
+        margin-bottom: 0.2mm;
     }
 
     .attr-size {
-        font-weight: 800;
+        font-weight: normal; /* Etiket normal */
+        margin-bottom: 1mm; /* Fiyatla aradaki boşluğu kontrol eder */
     }
 
     .size-val {
-        font-size: 8pt;
+        font-size: 9pt;
+        font-weight: 900; /* Değer bold */
     }
 
     .price-section {
-        text-align: right; /* Sağa yasladık */
-        margin-top: auto;
-        white-space: nowrap; /* Katlanmayı önler */
+        text-align: right;
+        white-space: nowrap;
     }
 
     .price-single {
