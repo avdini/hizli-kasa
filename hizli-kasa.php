@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 3.9.2.8
+ * Version: 3.9.2.9
  * Author: Seyfullah Kurt
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH'))
 	exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '3.9.2.8');
+define('HIZLI_KASA_VERSION', '3.9.2.9');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
