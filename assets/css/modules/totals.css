@@ -95,8 +95,8 @@
     /* Daha az dikey padding */
     font-size: 11px;
     /* Daha küçük font */
-    background: #2c3e50;
-    /* Koyu Renk */
+    background: #4b6584;
+    /* Orta-Koyu Slate */
     color: white;
     border: none;
     border-radius: 8px;
@@ -120,7 +120,7 @@
 }
 
 #musteri-ekle-btn:hover {
-    background: #1a252f;
+    background: #3c526d;
     opacity: 0.9;
 }
 
