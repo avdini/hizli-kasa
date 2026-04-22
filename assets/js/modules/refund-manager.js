@@ -68,8 +68,11 @@ const RefundManager = (function () {
         if (iskontoInput) {
             iskontoInput.oninput = () => {
                 const kalan = (originalOrder.total_discount || 0) - (originalOrder.refunded_discount || 0);
-                if (parseFloat(iskontoInput.value) > kalan) {
-                    iskontoInput.value = kalan.toFixed(2);
+                const sepetToplami = refundCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                const maxDusebilir = Math.min(kalan, sepetToplami);
+                
+                if (parseFloat(iskontoInput.value) > maxDusebilir) {
+                    iskontoInput.value = maxDusebilir.toFixed(2);
                 }
                 renderRefundCart();
             };
@@ -318,7 +321,7 @@ const RefundManager = (function () {
         const currentDiscount = parseFloat(iskontoInput ? iskontoInput.value : 0) || 0;
         const finalTotal = total - currentDiscount;
 
-        totalSpan.innerText = `-${finalTotal.toFixed(2)} TL`;
+        totalSpan.innerText = `-${Math.abs(finalTotal).toFixed(2)} TL`;
         onaylaBtn.disabled = refundCart.length === 0;
     }
 
