@@ -149,12 +149,15 @@
 
     .ust-sekme {
         padding: 0 15px;
-        gap: 0;
     }
+}
 
+/* Sekme emojilerini 1440px ve altında gizle */
+@media (min-width: 769px) and (max-width: 1440px) {
     .sekme-ikon {
         display: none;
     }
-
-
+    .ust-sekme {
+        gap: 0;
+    }
 }
