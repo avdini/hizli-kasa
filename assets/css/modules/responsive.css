@@ -193,6 +193,7 @@
 }
 
 
+
 /* Ürünler Sayfası Unified Footer Responsiveliği */
 @media (max-width: 1100px) {
     .terminal-footer.unified-footer {
@@ -214,11 +215,26 @@
     .footer-stats-combined {
         order: 3;
         width: 100%;
-        display: grid;
-        grid-template-columns: 1fr 1fr; /* 2 sütunlu ızgara yapısı (2 üstte, 2 altta) */
-        gap: 12px;
+        display: flex;
+        justify-content: space-around; /* 4 tanesini yan yana diz */
+        gap: 10px;
         padding-top: 12px;
         border-top: 1px solid var(--hk-border);
+    }
+
+    .terminal-footer.unified-footer .stat-item {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 6px;
+    }
+}
+
+/* Çok küçük ekranlarda (Mobil) 2x2 formuna geç */
+@media (max-width: 600px) {
+    .footer-stats-combined {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
         text-align: center;
     }
 
