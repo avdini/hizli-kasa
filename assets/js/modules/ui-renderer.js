@@ -196,9 +196,12 @@
          * Toast bildirim gösterir
          * @param {string} msg Mesaj
          * @param {string} type 'success', 'warning', 'error', 'info'
+         * @param {boolean} requireClose Manuel kapatma gerektirir mi?
          */
-        showToast: function(msg, type) {
+        showToast: function(msg, type, requireClose) {
             type = type || 'info';
+            requireClose = requireClose || (type === 'error'); // Hatalar varsayılan olarak manuel kapatılır
+
             var container = document.getElementById('hk-toast-container');
             if (!container) return;
 
@@ -210,21 +213,39 @@
             if (type === 'warning') icon = '⚠️';
             if (type === 'error')   icon = '❌';
 
+            var closeBtnHtml = requireClose ? '<span class="toast-close" style="cursor:pointer; margin-left:auto; font-weight:bold; font-size:18px; padding-left:10px;">&times;</span>' : '';
+
             toast.innerHTML = 
                 '<span class="toast-icon">' + icon + '</span>' +
-                '<span class="toast-msg">' + msg + '</span>';
+                '<span class="toast-msg">' + msg + '</span>' +
+                closeBtnHtml;
 
             container.appendChild(toast);
 
-            // 4 saniye sonra kaldır
-            setTimeout(function() {
-                toast.classList.add('fade-out');
+            if (requireClose) {
+                var closeBtn = toast.querySelector('.toast-close');
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function() {
+                        toast.classList.add('fade-out');
+                        setTimeout(function() {
+                            if (toast.parentNode) {
+                                toast.parentNode.removeChild(toast);
+                            }
+                        }, 500);
+                    });
+                }
+            } else {
+                // 4 saniye sonra otomatik kaldır
                 setTimeout(function() {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 500);
-            }, 4000);
+                    if (!toast.parentNode) return;
+                    toast.classList.add('fade-out');
+                    setTimeout(function() {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, 500);
+                }, 4000);
+            }
         }
     };
 

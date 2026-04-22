@@ -13,6 +13,8 @@
     HK.BarcodeScanner = {
 
         aktifBarkod: "",
+        barkodKuyrugu: [],
+        islemDevamEdiyor: false,
 
         /**
          * Barkod okuyucu dinleyicisini başlat
@@ -53,10 +55,11 @@
 
                 if (e.key === "Enter") {
                     if (self.aktifBarkod.trim() !== "") {
-                        durumMetni.innerText = "Ürün aranıyor: " + self.aktifBarkod;
-                        await self._urunuBulVeEkle(self.aktifBarkod);
+                        var sku = self.aktifBarkod.trim();
+                        self.barkodKuyrugu.push(sku);
                         self.aktifBarkod = "";
                         barkodIzleme.innerText = "...";
+                        self._kuyruguIsle();
                     }
                 } else if (e.key === "Backspace") {
                     self.aktifBarkod = self.aktifBarkod.slice(0, -1);
@@ -108,6 +111,7 @@
                 if (urun) {
                     HK.CartManager.ekleUrunObjesiyle(urun);
                 } else {
+                    HK.UIRenderer.showToast("Ürün Bulunamadı: " + sku, 'error', true);
                     durumMetni.innerText = "HATA: [" + sku + "] bulunamadı!";
                     durumMetni.style.color = "#e74c3c";
                     
@@ -121,9 +125,38 @@
                 }
             } catch (error) {
                 console.error("API Hatası", error);
+                HK.UIRenderer.showToast("Sistem Hatası: " + error.message, 'error', true);
                 durumMetni.innerText = "API HATASI: " + error.message;
                 durumMetni.style.color = "red";
             }
+        },
+
+        /**
+         * Kuyruktaki barkodları sırayla işle
+         */
+        _kuyruguIsle: async function() {
+            if (this.islemDevamEdiyor) return;
+            this.islemDevamEdiyor = true;
+
+            var durumMetni = document.getElementById("durum");
+
+            while (this.barkodKuyrugu.length > 0) {
+                var islenecekBarkod = this.barkodKuyrugu.shift();
+                
+                if (durumMetni) {
+                    durumMetni.innerText = "Ürün işleniyor: " + islenecekBarkod;
+                    durumMetni.style.color = "#3498db";
+                }
+
+                await this._urunuBulVeEkle(islenecekBarkod);
+            }
+
+            if (durumMetni && !durumMetni.innerText.includes("HATA")) {
+                durumMetni.innerText = "Hazır (Barkod Bekleniyor)";
+                durumMetni.style.color = "";
+            }
+
+            this.islemDevamEdiyor = false;
         }
     };
 
