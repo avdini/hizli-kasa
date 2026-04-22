@@ -43,6 +43,7 @@ function hizli_kasa_uygulamasi()
 
     // POS Sayfasını Önbelleğe Almayı Engelle
     if (!defined('DONOTCACHEPAGE')) define('DONOTCACHEPAGE', true);
+    nocache_headers(); // Cloudflare ve Tarayıcı Cache Engelleme
 
 
     $pos_version = HIZLI_KASA_VERSION;

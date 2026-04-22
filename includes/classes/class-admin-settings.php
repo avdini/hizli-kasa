@@ -445,6 +445,8 @@ add_action('wp_ajax_hizli_kasa_clear_all_unmatched', 'hizli_kasa_ajax_clear_all_
  * Ürün ve Depo Stok Listesini Getir (Optimize)
  */
 function hizli_kasa_ajax_get_admin_stock_list() {
+    if (!defined('DONOTCACHEPAGE')) define('DONOTCACHEPAGE', true);
+    nocache_headers(); // Cache engelle
     try {
         hizli_kasa_admin_log("ADMIN_STOCK_LIST START");
         if (!current_user_can('manage_options')) {
@@ -849,6 +851,7 @@ function hizli_kasa_ajax_clear_all_unmatched() {
 // Admin Ayarlar Sayfası Arayüzü
 function hizli_kasa_ayarlar_sayfasi()
 {
+    if (!defined('DONOTCACHEPAGE')) define('DONOTCACHEPAGE', true);
     $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'genel';
 
     global $wpdb;
