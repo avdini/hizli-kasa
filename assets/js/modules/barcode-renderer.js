@@ -38,8 +38,16 @@
          * Tek bir ürün/varyant için modalı açar.
          */
         openSingleModal: function(product) {
+            console.log("Opening Single Modal", product);
             this.state.currentProduct = product;
             var container = document.getElementById('barkod-urun-listesi-konteynir');
+            var modal = document.getElementById('barkod-yazdir-modal');
+            
+            if (!container || !modal) {
+                console.error("Barkod modalı bulunamadı!");
+                return;
+            }
+
             document.getElementById('barkod-modal-baslik').innerText = 'Barkod Yazdır';
             
             container.innerHTML = `
@@ -62,8 +70,16 @@
          * Parent ürün ve tüm (stoktaki) varyasyonları için modalı açar.
          */
         openBulkModal: function(parentProduct) {
+            console.log("Opening Bulk Modal", parentProduct);
             this.state.currentProduct = parentProduct;
             var container = document.getElementById('barkod-urun-listesi-konteynir');
+            var modal = document.getElementById('barkod-yazdir-modal');
+
+            if (!container || !modal) {
+                console.error("Barkod modalı bulunamadı!");
+                return;
+            }
+
             document.getElementById('barkod-modal-baslik').innerText = 'Toplu Barkod Çıkart';
             
             var html = '';

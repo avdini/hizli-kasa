@@ -88,7 +88,7 @@ if (!defined('ABSPATH')) exit;
 </div>
 
 <!-- Stok Düzenleme Modalı -->
-<div id="stok-duzenle-modal" class="modal-cerceve" style="display:none;">
+<div id="stok-duzenle-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10007; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
     <div class="modal-icerik glass">
         <h3 id="modal-urun-adi">Ürün Adı</h3>
         <p id="modal-urun-detay">SKU: ---</p>
@@ -117,7 +117,7 @@ if (!defined('ABSPATH')) exit;
 </div>
 
 <!-- Barkod Yazdırma Modalı -->
-<div id="barkod-yazdir-modal" class="modal-cerceve" style="display:none;">
+<div id="barkod-yazdir-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10008; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
     <div class="modal-icerik glass barkod-modal-genis">
         <div class="modal-baslik-alan">
             <h3 id="barkod-modal-baslik">Barkod Yazdır</h3>

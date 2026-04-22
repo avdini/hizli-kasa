@@ -132,9 +132,14 @@
                     // Toplu Barkod Tıklama
                     if (barkodTopluBtn) {
                         e.stopPropagation();
+                        e.preventDefault();
                         var product = self.state.products.find(p => p.id === id);
                         if (product && product.variations) {
-                            HK.BarcodeRenderer.openBulkModal(product);
+                            if (window.HizliKasa.BarcodeRenderer) {
+                                window.HizliKasa.BarcodeRenderer.openBulkModal(product);
+                            } else {
+                                console.error("Barkod motoru yüklenemedi!");
+                            }
                         }
                         return;
                     }
@@ -142,12 +147,19 @@
                     // Tekli Barkod Tıklama
                     if (barkodTekliBtn) {
                         e.stopPropagation();
+                        e.preventDefault();
                         var product = self.state.products.find(p => p.id === id);
                         if (vid > 0 && product && product.variations) {
                             var variation = product.variations.find(v => v.id === vid);
-                            if (variation) HK.BarcodeRenderer.openSingleModal(variation);
+                            if (variation && window.HizliKasa.BarcodeRenderer) {
+                                window.HizliKasa.BarcodeRenderer.openSingleModal(variation);
+                            }
                         } else if (product) {
-                            HK.BarcodeRenderer.openSingleModal(product);
+                            if (window.HizliKasa.BarcodeRenderer) {
+                                window.HizliKasa.BarcodeRenderer.openSingleModal(product);
+                            } else {
+                                console.error("Barkod motoru yüklenemedi!");
+                            }
                         }
                         return;
                     }
