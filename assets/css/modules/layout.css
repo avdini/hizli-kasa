@@ -75,12 +75,13 @@
     padding: 0 5px;
 }
 
-.ust-menu-aksiyon {
+.ust-menu-aksiyon, 
+.ust-menu-aksiyon:visited {
     display: flex;
     align-items: center;
     padding: 0 15px;
     height: 100%;
-    color: #bdc3c7;
+    color: #bdc3c7 !important;
     text-decoration: none;
     font-size: 14px;
     font-weight: 500;
@@ -90,9 +91,16 @@
     cursor: pointer;
 }
 
-.ust-menu-aksiyon:hover {
+.ust-menu-aksiyon:hover,
+.ust-menu-aksiyon:focus {
     background: rgba(255, 255, 255, 0.05);
-    color: #fff;
+    color: #fff !important;
+    outline: none;
+}
+
+.ust-menu-aksiyon:active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff !important;
 }
 
 .tam-ekran-btn {
