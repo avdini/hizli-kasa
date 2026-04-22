@@ -161,6 +161,8 @@ class Hizli_Kasa_Stock_Manager {
         global $wpdb;
         $tables = Hizli_Kasa_Database::get_tables();
 
+        hizli_kasa_log("update_warehouse_stock çağrıldı: P:$product_id, V:$variation_id, L:$location_id, Change:$change_amount");
+
         $current = $wpdb->get_row($wpdb->prepare("
             SELECT id, quantity FROM {$tables['stok_konumlari']} 
             WHERE product_id = %d AND variation_id = %d AND location_id = %d
@@ -170,18 +172,19 @@ class Hizli_Kasa_Stock_Manager {
         $new_qty = $old_qty + $change_amount;
 
         if ($current) {
-            $wpdb->update($tables['stok_konumlari'], ['quantity' => $new_qty], ['id' => $current->id]);
+            $result = $wpdb->update($tables['stok_konumlari'], ['quantity' => $new_qty], ['id' => $current->id]);
+            hizli_kasa_log("DB Update (ID:{$current->id}): " . ($result !== false ? "BAŞARILI" : "HATA: " . $wpdb->last_error));
         } else {
-            $wpdb->insert($tables['stok_konumlari'], [
+            $result = $wpdb->insert($tables['stok_konumlari'], [
                 'product_id'   => $product_id,
                 'variation_id' => $variation_id,
                 'location_id'  => $location_id,
                 'quantity'     => $new_qty
             ]);
+            hizli_kasa_log("DB Insert: " . ($result !== false ? "BAŞARILI" : "HATA: " . $wpdb->last_error));
         }
 
         self::log_movement($product_id, $variation_id, $location_id, $old_qty, $new_qty, $reason);
-        // self::sync_to_wc_stock($product_id, $variation_id);
 
         return $new_qty;
     }
