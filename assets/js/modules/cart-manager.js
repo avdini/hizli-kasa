@@ -67,11 +67,6 @@ window.HizliKasa = window.HizliKasa || {};
                 state.odemeTipi = "card";
             }
 
-            // UI Güncelleme
-            document.querySelectorAll(".odeme-btn").forEach(function(btn) {
-                btn.classList.toggle("aktif", btn.dataset.tip === state.odemeTipi);
-            });
-
             if (HK.UIRenderer) {
                 HK.UIRenderer.sidebarGuncelle();
                 HK.UIRenderer.arayuzuGuncelle();

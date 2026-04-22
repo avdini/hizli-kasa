@@ -150,6 +150,11 @@
             els.araToplamArea.innerText = sepetAraToplam.toFixed(2) + " TL";
             els.genelToplamArea.innerText = sonToplam.toFixed(2) + " TL";
 
+            // Ödeme Tipi Butonlarını Senkronize Et
+            document.querySelectorAll(".odeme-btn").forEach(function(btn) {
+                btn.classList.toggle("aktif", btn.dataset.tip === state.odemeTipi);
+            });
+
             HK.CartManager.sepetiKaydet();
         },
 
@@ -160,10 +165,6 @@
             var self = this;
             document.querySelectorAll(".odeme-btn").forEach(function(btn) {
                 btn.addEventListener("click", function() {
-                    document.querySelectorAll(".odeme-btn").forEach(function(b) {
-                        b.classList.remove("aktif");
-                    });
-                    this.classList.add("aktif");
                     HK.State.odemeTipi = this.dataset.tip;
                     self.arayuzuGuncelle();
                 });

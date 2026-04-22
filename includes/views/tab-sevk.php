@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) exit;
         <span style="font-size: 64px; display: block; margin-bottom: 20px;">🏗️</span>
         <h3 style="color: var(--hk-text-main); font-size: 24px; margin-bottom: 15px;">Modül Geliştirme Aşamasında</h3>
         <p style="color: var(--hk-text-muted); max-width: 500px; margin: 0 auto; line-height: 1.6;">
-            Bu alanda depo sevkleri, transferler ve lojistik takibi yapılabilecek. Çok yakında hizmetinizde olacak.
+            Bu alanda depo sevkleri, transferler ve lojistik takibi yapılabilecek. Çok yakında hizmetinizde olacak eğer bir problem ile karşılaşıcak olursanız Seyfullah Kurt ile İletişime geçin Tel no: 0 546 605 68 06
         </p>
         <div style="margin-top: 30px;">
             <button class="hk-btn-primary" style="opacity: 0.6; cursor: not-allowed; padding: 12px 25px;">Geliştirme Devam Ediyor</button>
