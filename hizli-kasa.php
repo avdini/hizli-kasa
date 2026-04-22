@@ -81,3 +81,11 @@ $hizli_kasa_update_checker = PucFactory::buildUpdateChecker(
 // Hangi branch'i takip edeceğini belirliyoruz (main)
 $hizli_kasa_update_checker->setAuthentication('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');
 $hizli_kasa_update_checker->setBranch('main');
+
+// Laragon gibi yerel ortamlarda DNS çözümleme gecikmelerini (cURL error 28) önlemek için zaman aşımını artırıyoruz.
+add_filter('http_request_args', function($args, $url) {
+    if (strpos($url, 'api.github.com') !== false || strpos($url, 'github.com') !== false) {
+        $args['timeout'] = 30; // 30 saniyeye çıkarıyoruz
+    }
+    return $args;
+}, 10, 2);
