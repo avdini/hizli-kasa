@@ -76,3 +76,40 @@
 #sepet-listesi .btn-adet:hover {
     background: #e60000 !important;
 }
+
+/* Müşteri Bilgisi (Opsiyonel) */
+.musteri-bilgi-alani {
+    padding: 10px 15px;
+    background: var(--hk-bg-card);
+    border-top: 1px solid var(--hk-border);
+}
+
+.musteri-input-grup {
+    display: flex;
+    align-items: center;
+    background: var(--hk-bg-hover);
+    border: 1px solid var(--hk-border);
+    border-radius: 8px;
+    padding: 2px 10px;
+    transition: border-color 0.2s;
+}
+
+.musteri-input-grup:focus-within {
+    border-color: var(--hk-accent);
+}
+
+.musteri-ikon {
+    font-size: 16px;
+    margin-right: 8px;
+    opacity: 0.6;
+}
+
+.musteri-telefon-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 8px 0;
+    font-size: 14px;
+    color: var(--hk-text-main);
+    outline: none;
+}

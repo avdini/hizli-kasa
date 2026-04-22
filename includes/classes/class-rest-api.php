@@ -144,6 +144,14 @@ add_action('rest_api_init', function () {
             return current_user_can('edit_posts');
         }
     ));
+
+    register_rest_route('hizli-kasa/v1', '/search-orders', array(
+        'methods'             => 'GET',
+        'callback'            => 'hizli_kasa_search_orders',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
 });
 
 /**
@@ -674,7 +682,87 @@ function hizli_kasa_get_order_details($request) {
         'kasa_no'    => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
         'depo_id'    => (int) $order->get_meta('_hk_cikis_depo_id'),
         'depo_adi'   => $order->get_meta('_hk_cikis_depo_adi') ?: '',
+        'telefon'    => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '',
     ];
+}
+
+/**
+ * Gelişmiş sipariş arama (Telefon, Barkod, Tarih, Fiyat).
+ */
+function hizli_kasa_search_orders($request) {
+    $phone   = sanitize_text_field($request->get_param('phone'));
+    $barcode = sanitize_text_field($request->get_param('barcode'));
+    $date_bas = sanitize_text_field($request->get_param('date_start'));
+    $date_bit = sanitize_text_field($request->get_param('date_end'));
+    $price_min = floatval($request->get_param('price_min'));
+    $price_max = floatval($request->get_param('price_max'));
+
+    $args = array(
+        'limit'   => 50,
+        'status'  => array('processing', 'completed'),
+        'orderby' => 'date',
+        'order'   => 'DESC',
+    );
+
+    $meta_query = array('relation' => 'AND');
+
+    if (!empty($phone)) {
+        $meta_query[] = array(
+            'key'     => '_hizli_kasa_musteri_telefon',
+            'value'   => $phone,
+            'compare' => 'LIKE',
+        );
+    }
+
+    if (!empty($meta_query) && count($meta_query) > 1) {
+        $args['meta_query'] = $meta_query;
+    }
+
+    if (!empty($date_bas) || !empty($date_bit)) {
+        $date_query = '';
+        if ($date_bas && $date_bit) {
+            $date_query = $date_bas . '...' . $date_bit . ' 23:59:59';
+        } elseif ($date_bas) {
+            $date_query = '>=' . $date_bas;
+        } else {
+            $date_query = '<=' . $date_bit . ' 23:59:59';
+        }
+        $args['date_created'] = $date_query;
+    }
+
+    $orders = wc_get_orders($args);
+    $results = [];
+
+    foreach ($orders as $order) {
+        $total = (float) $order->get_total();
+        
+        // Fiyat filtresi (Manuel kontrol çünkü wc_get_orders ile karmaşık olabilir)
+        if ($price_min > 0 && $total < $price_min) continue;
+        if ($price_max > 0 && $total > $price_max) continue;
+
+        // Barkod/Ürün filtresi
+        if (!empty($barcode)) {
+            $found = false;
+            foreach ($order->get_items() as $item) {
+                $product = $item->get_product();
+                if ($product && ($product->get_sku() === $barcode || (string)$product->get_id() === $barcode)) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) continue;
+        }
+
+        $results[] = [
+            'id'      => $order->get_id(),
+            'date'    => $order->get_date_created()->date('d.m.Y H:i'),
+            'total'   => $total,
+            'kasiyer' => $order->get_meta('_hizli_kasa_kasiyer') ?: '-',
+            'telefon' => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '-',
+        ];
+    }
+
+    return $results;
 }
 
 /**

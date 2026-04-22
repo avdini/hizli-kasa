@@ -37,30 +37,119 @@
     font-weight: 800;
 }
 
-.iade-arama-alani {
+/* Gelişmiş Arama Formu */
+.iade-arama-formu {
     display: flex;
-    gap: 10px;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 10px;
 }
 
-#iade-siparis-no {
+.arama-satiri {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.arama-satiri .input-grup {
     flex: 1;
-    padding: 10px 15px;
-    border: 2px solid var(--hk-border);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.arama-satiri label {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--hk-text-muted);
+    text-transform: uppercase;
+}
+
+.arama-satiri input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--hk-border);
+    border-radius: 6px;
     background: var(--hk-bg-body);
     color: var(--hk-text-main);
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 13px;
 }
 
-#iade-siparis-bul-btn {
+.cift-input {
+    display: flex;
+    gap: 5px;
+}
+
+.iade-arama-btn {
     padding: 10px 20px;
-    background: #3498db;
+    background: var(--hk-accent);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     font-weight: bold;
     cursor: pointer;
+    font-size: 13px;
+    transition: opacity 0.2s;
+}
+
+.iade-arama-btn:hover {
+    opacity: 0.9;
+}
+
+/* Arama Sonuçları Listesi */
+.arama-sonuclari-konteyner {
+    padding: 0 20px 20px 20px;
+    border-bottom: 2px solid var(--hk-border);
+}
+
+.arama-sonuclari-konteyner h3 {
+    font-size: 14px;
+    color: var(--hk-text-muted);
+    margin: 15px 0 10px 0;
+}
+
+#iade-sonuc-listesi {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+#iade-sonuc-listesi li {
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    border-radius: 8px;
+    padding: 10px 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#iade-sonuc-listesi li:hover {
+    background: var(--hk-bg-hover);
+}
+
+.sonuc-ana {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.sonuc-detay {
+    display: flex;
+    gap: 15px;
+    font-size: 12px;
+    color: var(--hk-text-muted);
+}
+
+.sonuc-yok {
+    text-align: center;
+    padding: 20px;
+    color: var(--hk-text-muted);
+    font-style: italic;
 }
 
 .iade-panel-icerik {

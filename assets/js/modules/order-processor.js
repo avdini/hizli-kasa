@@ -30,16 +30,18 @@
                 }
             });
 
-            // Stok Modalı Butonları
-            document.getElementById("stok-vazgec").addEventListener("click", function() {
-                document.getElementById("stok-uyari-modal").style.display = "none";
-                document.getElementById("durum").innerText = "İşlem iptal edildi. Sepeti düzenleyebilirsiniz.";
-            });
-
-            document.getElementById("stok-devam").addEventListener("click", function() {
-                document.getElementById("stok-uyari-modal").style.display = "none";
-                self.siparisIsleminiGerceklestir();
-            });
+            // Müşteri Telefon Maskeleme
+            var phoneInput = document.getElementById("musteri-telefon");
+            if (phoneInput) {
+                phoneInput.addEventListener("input", function(e) {
+                    var x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+                    if (!x[1]) {
+                        e.target.value = '';
+                        return;
+                    }
+                    e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + (x[3] ? ') ' + x[3] : '') + (x[4] ? ' ' + x[4] : '') + (x[5] ? ' ' + x[5] : '');
+                });
+            }
         },
 
         /**
@@ -204,7 +206,8 @@
                     { key: "Ödeme (IBAN)", value: oIban.toFixed(2) + " TL" },
                     { key: "_hk_cikis_depo_id", value: (HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0).toString() },
                     { key: "_hk_cikis_depo_adi", value: HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '' },
-                    { key: "_hizli_kasa_kaynak", value: "pos_satis" }
+                    { key: "_hizli_kasa_kaynak", value: "pos_satis" },
+                    { key: "_hizli_kasa_musteri_telefon", value: document.getElementById("musteri-telefon") ? document.getElementById("musteri-telefon").value : "" }
                 ]
             };
 

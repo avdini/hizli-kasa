@@ -67,6 +67,14 @@ if (!defined('ABSPATH'))
                 </div>
             </div>
 
+            <!-- Müşteri Bilgisi (Opsiyonel) -->
+            <div class="musteri-bilgi-alani">
+                <div class="musteri-input-grup">
+                    <span class="musteri-ikon">👤</span>
+                    <input type="text" id="musteri-telefon" class="musteri-telefon-input" placeholder="Müşteri Telefonu (Opsiyonel)" autocomplete="off">
+                </div>
+            </div>
+
             <!-- Ödeme Tipi Seçici -->
             <div class="odeme-secici">
                 <div class="odeme-btn aktif" data-tip="card">💳 Kredi Kartı</div>

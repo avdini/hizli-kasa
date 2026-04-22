@@ -16,7 +16,8 @@ const RefundManager = (function () {
     }
 
     function bindEvents() {
-        const bulBtn = document.getElementById('iade-siparis-bul-btn');
+        const bulBtn = document.getElementById('iade-siparis-bul-btn'); // Eski buton (belki hala vardır ama biz yenisini kullanacağız)
+        const detayliAraBtn = document.getElementById('iade-detayli-ara-btn');
         const siparisInput = document.getElementById('iade-siparis-no');
         const onaylaBtn = document.getElementById('iade-onayla-btn');
 
@@ -24,14 +25,28 @@ const RefundManager = (function () {
             bulBtn.onclick = () => fetchOrder(siparisInput.value);
         }
 
+        if (detayliAraBtn) {
+            detayliAraBtn.onclick = advancedSearchOrders;
+        }
+
         if (siparisInput) {
             siparisInput.onkeydown = (e) => {
                 if (e.key === 'Enter') {
                     fetchOrder(siparisInput.value);
-                    siparisInput.value = ''; // Barkod okunduktan sonra temizle
+                    // Artık temizlemiyoruz ki ne okuttuğunu görsün veya hemen bulsun
                 }
             };
             siparisInput.focus();
+        }
+
+        // Telefon maskeleme (İade arama alanı için)
+        const telInput = document.getElementById('iade-arama-telefon');
+        if (telInput) {
+            telInput.addEventListener('input', function(e) {
+                var x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+                if (!x[1]) { e.target.value = ''; return; }
+                e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + (x[3] ? ') ' + x[3] : '') + (x[4] ? ' ' + x[4] : '') + (x[5] ? ' ' + x[5] : '');
+            });
         }
 
         if (onaylaBtn) {
@@ -42,11 +57,71 @@ const RefundManager = (function () {
         const container = document.getElementById('iade-modul-konteyner');
         if (container) {
             container.onclick = (e) => {
-                if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+                if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
                     siparisInput.focus();
                 }
             };
         }
+    }
+
+    async function advancedSearchOrders() {
+        const params = new URLSearchParams({
+            phone: document.getElementById('iade-arama-telefon').value,
+            barcode: document.getElementById('iade-arama-urun').value,
+            price_min: document.getElementById('iade-arama-fiyat-min').value,
+            price_max: document.getElementById('iade-arama-fiyat-max').value,
+            date_start: document.getElementById('iade-arama-tarih-bas').value,
+            date_end: document.getElementById('iade-arama-tarih-bit').value
+        });
+
+        showLoading();
+        try {
+            const apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
+            const response = await fetch(`${apiBase}hizli-kasa/v1/search-orders?${params.toString()}`, {
+                headers: { 'X-WP-Nonce': kasaAyar.nonce }
+            });
+
+            const results = await response.json();
+            renderSearchResults(results);
+
+        } catch (error) {
+            alert('Arama hatası: ' + error.message);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    function renderSearchResults(results) {
+        const container = document.getElementById('iade-arama-sonuclari');
+        const list = document.getElementById('iade-sonuc-listesi');
+        
+        if (!list) return;
+
+        if (!results || results.length === 0) {
+            list.innerHTML = '<li class="sonuc-yok">Eşleşen sipariş bulunamadı.</li>';
+        } else {
+            list.innerHTML = results.map(order => `
+                <li onclick="RefundManager.selectOrder('${order.id}')">
+                    <div class="sonuc-ana">
+                        <strong>#${order.id}</strong>
+                        <span>${order.date}</span>
+                    </div>
+                    <div class="sonuc-detay">
+                        <span>💰 ${order.total} TL</span>
+                        <span>👤 ${order.telefon}</span>
+                        <span>👤 Kasiyer: ${order.kasiyer}</span>
+                    </div>
+                </li>
+            `).join('');
+        }
+        
+        container.style.display = 'block';
+    }
+
+    function selectOrder(id) {
+        document.getElementById('iade-siparis-no').value = id;
+        document.getElementById('iade-arama-sonuclari').style.display = 'none';
+        fetchOrder(id);
     }
 
     async function fetchOrder(id) {
@@ -254,7 +329,8 @@ const RefundManager = (function () {
     return {
         init,
         addToRefundCart,
-        removeFromRefundCart
+        removeFromRefundCart,
+        selectOrder
     };
 })();
 
