@@ -191,3 +191,45 @@
         padding: 15px;
     }
 }
+
+/* Ürünler Sayfası Unified Footer Responsiveliği */
+@media (max-width: 1200px) {
+    .terminal-footer.unified-footer {
+        flex-wrap: wrap;
+        justify-content: center;
+        height: auto;
+        padding: 15px;
+        gap: 15px;
+    }
+
+    .footer-stats-combined {
+        order: 3;
+        width: 100%;
+        justify-content: space-around;
+        padding-top: 12px;
+        border-top: 1px solid var(--hk-border);
+    }
+}
+
+@media (max-width: 768px) {
+    .pagination-info {
+        order: 1;
+    }
+    
+    .pagination-controls-wrapper {
+        order: 2;
+    }
+
+    .footer-stats-combined {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        text-align: center;
+    }
+
+    .terminal-footer.unified-footer .stat-item {
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+}
