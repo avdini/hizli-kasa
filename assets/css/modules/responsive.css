@@ -141,7 +141,10 @@
 }
 
 /* Tablet ve Orta Ölçekli Ekranlar */
-@media (min-width: 769px) and (max-width: 1350px) {
+@media (min-width: 769px) and (max-width: 1400px) {
+    .ust-menu-sag-aksiyonlar {
+        margin-left: 20px;
+    }
     .logo-text {
         display: none;
     }
