@@ -202,6 +202,7 @@ window.HizliKasa = window.HizliKasa || {};
 
             if (HK.UIRenderer) {
                 HK.UIRenderer.arayuzuGuncelle();
+                HK.UIRenderer.showToast(urun.name + " eklendi.", "success");
             }
             durumMetni.innerText = urun.name + " eklendi.";
             durumMetni.style.color = "#27ae60";

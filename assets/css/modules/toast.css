@@ -16,18 +16,21 @@
 .hk-toast {
     min-width: 280px;
     max-width: 350px;
-    background: var(--hk-bg-card);
-    color: var(--hk-text-main);
-    padding: 12px 20px;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    pointer-events: auto;
-    animation: hk-toast-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-    border-left: 5px solid #27ae60;
-    font-weight: 500;
+    background: #ffffff !important; /* Beyaz yedek */
+    background: var(--hk-bg-card) !important;
+    color: #1e293b !important; /* Koyu renk yedek */
+    color: var(--hk-text-main) !important;
+    padding: 15px 20px !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    pointer-events: auto !important;
+    animation: hk-toast-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
+    border-left: 6px solid #27ae60 !important;
+    font-weight: 600 !important;
+    font-family: inherit;
 }
 
 .hk-toast.warning { border-left-color: #f39c12; }
