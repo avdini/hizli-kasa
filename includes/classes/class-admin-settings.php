@@ -82,6 +82,11 @@ function hizli_kasa_ayarlari_kaydet()
         'default' => 5,
         'sanitize_callback' => 'intval'
     ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_toplam_kasa', array(
+        'type' => 'integer',
+        'default' => 3,
+        'sanitize_callback' => 'intval'
+    ));
 }
 
 /**
@@ -930,6 +935,14 @@ function hizli_kasa_ayarlar_sayfasi()
                                 <?php $kritik_esik = get_option('hizli_kasa_kritik_stok_esigi', 5); ?>
                                 <input type="number" name="hizli_kasa_kritik_stok_esigi" value="<?php echo esc_attr($kritik_esik); ?>" min="0" step="1" class="small-text"> Adet
                                 <p class="description">Depo stoğu bu rakama ve altına düştüğünde terminalde kırmızı uyarı gösterilir.</p>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">Toplam Kasa Sayısı</th>
+                            <td>
+                                <?php $kasa_sayisi = get_option('hizli_kasa_toplam_kasa', 3); ?>
+                                <input type="number" name="hizli_kasa_toplam_kasa" value="<?php echo esc_attr($kasa_sayisi); ?>" min="1" max="20" step="1" class="small-text"> Adet
+                                <p class="description">Sistemde kaç adet terminal (kasa) olduğunu belirtin.</p>
                             </td>
                         </tr>
                         <tr valign="top">

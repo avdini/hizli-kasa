@@ -86,12 +86,15 @@ const RefundManager = (function () {
             
             <div class="iade-islem-ayarlari" style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 8px;">
                 <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px;">İadenin İşleneceği Kasa:</label>
-                <select id="iade-hedef-kasa" class="terminal-input" style="width: 100%;">
-                    <option value="1" ${kasaAyar.kasaNo == "1" ? 'selected' : ''}>Kasa 1</option>
-                    <option value="2" ${kasaAyar.kasaNo == "2" ? 'selected' : ''}>Kasa 2</option>
-                    <option value="3" ${kasaAyar.kasaNo == "3" ? 'selected' : ''}>Kasa 3</option>
-                    <option value="4" ${kasaAyar.kasaNo == "4" ? 'selected' : ''}>Kasa 4</option>
-                    <option value="5" ${kasaAyar.kasaNo == "5" ? 'selected' : ''}>Kasa 5</option>
+                <select id="iade-hedef-kasa" class="terminal-input" style="width: 100%;" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">
+                    ${(() => {
+                        let options = '';
+                        const total = kasaAyar.toplamKasa || 3;
+                        for (let i = 1; i <= total; i++) {
+                            options += `<option value="${i}" ${kasaAyar.kasaNo == i ? 'selected' : ''}>Kasa ${i}</option>`;
+                        }
+                        return options;
+                    })()}
                 </select>
             </div>
 

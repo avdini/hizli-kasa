@@ -112,6 +112,7 @@ function hizli_kasa_uygulamasi()
         'yuvarlamaAktif'  => get_option('hizli_kasa_yuvarlama_aktif', '1'),
         'yuvarlaModu'     => get_option('hizli_kasa_yuvarlama_modu', '1'),
         'kritikStokEsigi' => (int)get_option('hizli_kasa_kritik_stok_esigi', 5),
+        'toplamKasa'      => (int)get_option('hizli_kasa_toplam_kasa', 3),
         'tema'            => get_user_meta(get_current_user_id(), '_hizli_kasa_tema', true) ?: 'light'
     ));
 
