@@ -16,8 +16,9 @@
 
         init: function() {
             var self = this;
-            
-            // Modal Kapatma - Eskisini temizle ve yenisini bağla (re-init desteği)
+            if (this.initialized) return;
+
+            // Modal Kapatma
             var iptalBtn = document.getElementById('barkod-iptal');
             if (iptalBtn) {
                 iptalBtn.onclick = function() {
@@ -32,6 +33,8 @@
                     self.processAndPrint();
                 };
             }
+
+            this.initialized = true;
         },
 
         /**

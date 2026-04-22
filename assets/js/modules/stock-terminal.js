@@ -23,10 +23,12 @@
 
         init: function() {
             var self = this;
+            
+            // Çift başlatmayı önle
+            if (this.initialized) return;
+
             var input = document.getElementById('terminal-arama-input');
             
-            // Eğer element henüz yoksa (sekme yüklenmemişse) veya her yüklendiğinde 
-            // olayları tekrar bağlamak istiyorsak bu dinleyiciyi kullanıyoruz.
             if (!input) {
                 document.addEventListener('hkTabLoaded', function(e) {
                     if (e.detail.tab === 'urunler') {
@@ -35,6 +37,8 @@
                 });
                 return;
             }
+
+            this.initialized = true;
 
             // Depo değişince listeyi yenile
             document.addEventListener('hkActiveDepoChanged', function() {
