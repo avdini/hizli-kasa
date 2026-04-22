@@ -21,20 +21,23 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
             <div class="ust-sekme aktif" data-tab="kasa">
                 <span class="sekme-ikon">📠</span> Kasa
             </div>
+            <div class="ust-sekme" data-tab="masraf">
+                <span class="sekme-ikon">💸</span> Masraf
+            </div>
+            <div class="ust-sekme" data-tab="iade">
+                <span class="sekme-ikon">↩️</span> İade
+            </div>
             <div class="ust-sekme" data-tab="urunler">
                 <span class="sekme-ikon">📦</span> Ürünler
+            </div>
+            <div class="ust-sekme" data-tab="sevk">
+                <span class="sekme-ikon">🚚</span> Sevk
             </div>
             <div class="ust-sekme" data-tab="raporlar">
                 <span class="sekme-ikon">📊</span> Raporlar
             </div>
             <div class="ust-sekme" data-tab="ayarlar">
                 <span class="sekme-ikon">⚙️</span> Ayarlar
-            </div>
-            <div class="ust-sekme" data-tab="iade">
-                <span class="sekme-ikon">↩️</span> İade
-            </div>
-            <div class="ust-sekme" data-tab="masraf">
-                <span class="sekme-ikon">💸</span> Masraf
             </div>
         </div>
         <div class="kullanici-bilgi">
@@ -50,11 +53,12 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
         </div>
 
         <!-- Diğer sekmeler dinamik olarak buraya eklenecek -->
+        <div id="tab-content-masraf" class="tab-content"></div>
+        <div id="tab-content-iade" class="tab-content"></div>
         <div id="tab-content-urunler" class="tab-content"></div>
+        <div id="tab-content-sevk" class="tab-content"></div>
         <div id="tab-content-raporlar" class="tab-content"></div>
         <div id="tab-content-ayarlar" class="tab-content"></div>
-        <div id="tab-content-iade" class="tab-content"></div>
-        <div id="tab-content-masraf" class="tab-content"></div>
     </div>
 
     <!-- Global Yükleniyor Göstergesi -->
