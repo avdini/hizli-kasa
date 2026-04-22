@@ -228,8 +228,12 @@ const RefundManager = (function () {
                     ${(() => {
                         let options = '';
                         const total = kasaAyar.toplamKasa || 3;
+                        const originalKasaNo = parseInt(originalOrder.kasa_no) || 1;
+                        // Eğer orijinal kasa artık mevcut değilse (toplam sayı düşürüldüyse) 1'e çek
+                        const defaultKasa = (originalKasaNo > 0 && originalKasaNo <= total) ? originalKasaNo : 1;
+                        
                         for (let i = 1; i <= total; i++) {
-                            options += `<option value="${i}" ${kasaAyar.kasaNo == i ? 'selected' : ''}>Kasa ${i}</option>`;
+                            options += `<option value="${i}" ${defaultKasa == i ? 'selected' : ''}>Kasa ${i}</option>`;
                         }
                         return options;
                     })()}
