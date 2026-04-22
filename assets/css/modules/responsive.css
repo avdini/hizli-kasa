@@ -134,7 +134,7 @@
 }
 
 /* Tablet ve Orta Ölçekli Ekranlar */
-@media (min-width: 769px) and (max-width: 1450px) {
+@media (min-width: 769px) and (max-width: 1550px) {
     .ust-menu-sag-aksiyonlar {
         margin-left: auto;
     }
@@ -143,7 +143,7 @@
     }
     
     .kasa-logo {
-        margin-right: 20px;
+        margin-right: 10px;
         gap: 0;
     }
 
