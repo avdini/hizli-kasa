@@ -8,9 +8,11 @@
     right: 20px;
     z-index: 100000;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse; /* Yeni gelenler en altta, eskiler yukarı kayar */
     gap: 10px;
     pointer-events: none;
+    max-height: 80vh;
+    overflow: visible;
 }
 
 .hk-toast {

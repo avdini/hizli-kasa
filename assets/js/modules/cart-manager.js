@@ -171,11 +171,19 @@ window.HizliKasa = window.HizliKasa || {};
                     } else {
                         mesaj = "HATA: Yetersiz Stok! (Maksimum: " + urun.stock_quantity + ")";
                     }
+
+                    if (HK.UIRenderer) {
+                        HK.UIRenderer.showToast("Stok Yetersiz! [" + (urun.sku || 'SKU Yok') + "] - " + urun.name, 'error', true);
+                    }
+
                     durumMetni.innerText = mesaj;
                     durumMetni.style.color = "#e74c3c";
                     return;
                 }
             } else if (urun.stock_status === 'outofstock') {
+                if (HK.UIRenderer) {
+                    HK.UIRenderer.showToast("Stok Yok! [" + (urun.sku || 'SKU Yok') + "] - " + urun.name, 'error', true);
+                }
                 durumMetni.innerText = "HATA: Ürün stokta yok!";
                 durumMetni.style.color = "red";
                 return;
@@ -202,7 +210,6 @@ window.HizliKasa = window.HizliKasa || {};
 
             if (HK.UIRenderer) {
                 HK.UIRenderer.arayuzuGuncelle();
-                HK.UIRenderer.showToast(urun.name + " eklendi.", "success");
             }
             durumMetni.innerText = urun.name + " eklendi.";
             durumMetni.style.color = "#27ae60";

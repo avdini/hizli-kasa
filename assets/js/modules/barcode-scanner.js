@@ -112,7 +112,7 @@ window.HizliKasa = window.HizliKasa || {};
                 if (urun) {
                     HK.CartManager.ekleUrunObjesiyle(urun);
                 } else {
-                    HK.UIRenderer.showToast("Ürün Bulunamadı: " + sku, 'error', true);
+                    HK.UIRenderer.showToast("Ürün Bulunamadı", 'error', true);
                     durumMetni.innerText = "HATA: [" + sku + "] bulunamadı!";
                     durumMetni.style.color = "#e74c3c";
                     
