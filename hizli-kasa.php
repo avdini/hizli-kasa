@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 4.2.5
+ * Version: 4.2.6
  * Author: Seyfullah Kurt
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH'))
 	exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '4.2.5');
+define('HIZLI_KASA_VERSION', '4.2.6');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -51,6 +51,7 @@ require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-admin-settings.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-rest-api.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-shortcode.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-barcode-helper.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-menu-filter.php';
 
 // Veritabanı Aktivasyonu

@@ -1,0 +1,207 @@
+/**
+ * Hızlı Kasa - Barkod Tasarımı ve Yazdırma CSS
+ */
+
+/* Modal Stilleri */
+.barkod-modal-genis {
+    max-width: 600px !important;
+}
+
+.barkod-secim-listesi {
+    max-height: 400px;
+    overflow-y: auto;
+    margin: 20px 0;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+}
+
+.barkod-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--hk-border);
+    background: var(--hk-bg-card);
+    margin-bottom: 5px;
+    border-radius: 8px;
+}
+
+.barkod-item-row:last-child {
+    border-bottom: none;
+}
+
+.barkod-item-row .item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.barkod-item-row .item-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--hk-text-main);
+}
+
+.barkod-item-row .item-sku {
+    font-size: 12px;
+    color: var(--hk-text-muted);
+}
+
+.barkod-item-row .item-qty-input {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.barkod-item-row .print-qty {
+    width: 60px;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid var(--hk-border);
+    text-align: center;
+}
+
+/* Yazdırma Alanı - Ekranda gizli */
+#hk-barcode-print-area {
+    display: none;
+}
+
+/* YAZDIRMA MEDYASI */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    #hk-barcode-print-area, 
+    #hk-barcode-print-area * {
+        visibility: visible;
+    }
+
+    #hk-barcode-print-area {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 50mm;
+    }
+
+    /* Sayfa Ayarları */
+    @page {
+        size: 50mm 35mm;
+        margin: 0;
+    }
+
+    /* Etiket Tasarımı (50x35mm) */
+    .barcode-label {
+        width: 50mm;
+        height: 35mm;
+        padding: 2mm;
+        box-sizing: border-box;
+        background: #fff;
+        color: #000;
+        display: flex;
+        flex-direction: column;
+        page-break-after: always;
+        overflow: hidden;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .label-header {
+        text-align: center;
+        margin-bottom: 1mm;
+    }
+
+    .product-name {
+        font-size: 9pt;
+        font-weight: 800;
+        line-height: 1.1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-transform: uppercase;
+    }
+
+    .label-body {
+        display: flex;
+        flex: 1;
+        gap: 1mm;
+    }
+
+    .col-left {
+        width: 55%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .col-right {
+        width: 45%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding-left: 1mm;
+        border-left: 0.1mm solid #eee;
+    }
+
+    .model-no {
+        font-size: 6pt;
+        font-weight: 600;
+        margin-bottom: 0.5mm;
+    }
+
+    .barcode-container {
+        width: 100%;
+        text-align: center;
+    }
+
+    .barcode-svg {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .sku-text {
+        font-size: 7pt;
+        font-weight: 700;
+        margin-top: 0.5mm;
+    }
+
+    .attributes {
+        font-size: 7pt;
+    }
+
+    .attr-color {
+        margin-bottom: 0.5mm;
+    }
+
+    .attr-size {
+        font-weight: 800;
+    }
+
+    .size-val {
+        font-size: 8pt;
+    }
+
+    .price-section {
+        text-align: center;
+        margin-top: auto;
+    }
+
+    .price-single {
+        font-size: 13pt;
+        font-weight: 900;
+    }
+
+    .price-old {
+        font-size: 8pt;
+        text-decoration: line-through;
+        color: #666;
+    }
+
+    .price-new {
+        font-size: 13pt;
+        font-weight: 900;
+    }
+}

@@ -115,3 +115,24 @@ if (!defined('ABSPATH')) exit;
         </div>
     </div>
 </div>
+
+<!-- Barkod Yazdırma Modalı -->
+<div id="barkod-yazdir-modal" class="modal-cerceve" style="display:none;">
+    <div class="modal-icerik glass barkod-modal-genis">
+        <div class="modal-baslik-alan">
+            <h3 id="barkod-modal-baslik">Barkod Yazdır</h3>
+            <p id="barkod-modal-alt-baslik">Yazdırılacak adetleri kontrol edin.</p>
+        </div>
+        
+        <div id="barkod-urun-listesi-konteynir" class="barkod-secim-listesi">
+            <!-- Dinamik olarak dolacak: Ürün adı, varyant detayı ve adet girişi -->
+        </div>
+
+        <div class="modal-butonlar">
+            <button id="barkod-iptal" class="btn-secondary">Vazgeç</button>
+            <button id="barkod-onay-yazdir" class="btn-primary">
+                <span class="ikon">🖨️</span> Yazıcıya Gönder
+            </button>
+        </div>
+    </div>
+</div>

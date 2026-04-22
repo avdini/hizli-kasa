@@ -119,13 +119,41 @@
             var listContainer = document.getElementById('terminal-urun-listesi');
             if (listContainer) {
                 listContainer.addEventListener('click', function(e) {
-                    var kart = e.target.closest('.terminal-urun-kart');
+                    var target = e.target;
+                    var barkodTopluBtn = target.closest('.btn-barkod-toplu');
+                    var barkodTekliBtn = target.closest('.btn-barkod-tekli');
+                    var kart = target.closest('.terminal-urun-kart');
+                    
                     if (!kart) return;
 
                     var id = parseInt(kart.dataset.id);
                     var vid = parseInt(kart.dataset.vid || 0);
                     var isParent = kart.classList.contains('terminal-parent-card');
 
+                    // Toplu Barkod Tıklama
+                    if (barkodTopluBtn) {
+                        e.stopPropagation();
+                        var product = self.state.products.find(p => p.id === id);
+                        if (product && product.variations) {
+                            HK.BarcodeRenderer.openBulkModal(product);
+                        }
+                        return;
+                    }
+
+                    // Tekli Barkod Tıklama
+                    if (barkodTekliBtn) {
+                        e.stopPropagation();
+                        var product = self.state.products.find(p => p.id === id);
+                        if (vid > 0 && product && product.variations) {
+                            var variation = product.variations.find(v => v.id === vid);
+                            if (variation) HK.BarcodeRenderer.openSingleModal(variation);
+                        } else if (product) {
+                            HK.BarcodeRenderer.openSingleModal(product);
+                        }
+                        return;
+                    }
+
+                    // Kartın kendisine tıklanması (Stok Düzenleme veya Expand)
                     if (isParent) {
                         var childContainer = document.getElementById('vars-' + id);
                         if (childContainer) {
@@ -277,6 +305,17 @@
                             <div class="urun-ad">${p.name} ${isVariable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
                             <div class="urun-sku">${p.sku || 'SKU YOK'} | Toplam: ${p.stock_quantity}</div>
                         </div>
+                        <div class="urun-aksiyonlar">
+                            ${isVariable ? `
+                                <button class="btn-barkod-toplu" title="Tüm varyasyonlar için barkod çıkart">
+                                    <span>🏷️</span> Toplu Barkod
+                                </button>
+                            ` : `
+                                <button class="btn-barkod-tekli" title="Barkod çıkart">
+                                    <span>🏷️</span> Barkod
+                                </button>
+                            `}
+                        </div>
                         ${!isVariable ? `
                         <div class="urun-stok ${isStockOut ? 'stok-bitti' : (isCritical ? 'stok-kritik' : 'stok-tamam')}">
                             <span class="stok-sayi">${p.warehouse_stock}</span>
@@ -300,6 +339,11 @@
                                 <div class="urun-detay">
                                     <div class="urun-ad">${v.name}</div>
                                     <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${v.stock_quantity}</div>
+                                </div>
+                                <div class="urun-aksiyonlar">
+                                    <button class="btn-barkod-tekli" title="Barkod çıkart">
+                                        <span>🏷️</span> Barkod
+                                    </button>
                                 </div>
                                 <div class="urun-stok ${v.warehouse_stock <= 0 ? 'stok-bitti' : (vCritical ? 'stok-kritik' : 'stok-tamam')}">
                                     <span class="stok-sayi">${v.warehouse_stock}</span>

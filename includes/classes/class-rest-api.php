@@ -136,6 +136,14 @@ add_action('rest_api_init', function () {
             return current_user_can('edit_posts');
         }
     ));
+
+    register_rest_route('hizli-kasa/v1', '/barcode/label-data', array(
+        'methods'             => 'GET',
+        'callback'            => 'hizli_kasa_api_get_barcode_data',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
 });
 
 /**
@@ -1277,4 +1285,29 @@ function hizli_kasa_warehouse_stock_check($request) {
     }
 
     return $results;
+}
+/**
+ * Barkod etiket verilerini döner.
+ * Query: ?product_id=123&variation_id=456 (veya toplu için variation_ids=[1,2,3])
+ */
+function hizli_kasa_api_get_barcode_data($request) {
+    $product_id    = intval($request->get_param('product_id'));
+    $variation_id  = intval($request->get_param('variation_id'));
+    $variation_ids = $request->get_param('variation_ids');
+
+    if (!empty($variation_ids) && is_array($variation_ids)) {
+        $results = [];
+        foreach ($variation_ids as $vid) {
+            $data = Hizli_Kasa_Barcode_Helper::prepare_label_data($product_id, intval($vid));
+            if ($data) $results[] = $data;
+        }
+        return $results;
+    }
+
+    $data = Hizli_Kasa_Barcode_Helper::prepare_label_data($product_id, $variation_id);
+    if (!$data) {
+        return new WP_Error('not_found', 'Ürün verisi bulunamadı.', ['status' => 404]);
+    }
+
+    return $data;
 }
