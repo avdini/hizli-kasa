@@ -150,4 +150,16 @@
     .sekme-ikon {
         display: none;
     }
+
+    .site-name-text {
+        display: none;
+    }
+
+    .site-link {
+        padding: 0 10px;
+    }
+
+    .home-icon {
+        font-size: 18px;
+    }
 }

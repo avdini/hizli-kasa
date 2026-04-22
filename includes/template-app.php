@@ -50,7 +50,7 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
         </div>
         <div class="ust-menu-sag-aksiyonlar">
             <a href="<?php echo esc_url(home_url('/')); ?>" class="ust-menu-aksiyon site-link" target="_blank" title="Site Ana Sayfası">
-                <?php bloginfo('name'); ?>
+                <span class="home-icon">🏠</span> <span class="site-name-text"><?php bloginfo('name'); ?></span>
             </a>
 
             <div class="ust-menu-aksiyon depo-secici-ust" id="ust-depo-switcher-container">
