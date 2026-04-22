@@ -745,10 +745,18 @@ function hizli_kasa_process_refund($request) {
         }
 
         if ($target_depo_id && hizli_kasa_can_user_manage_depo($user_id, $target_depo_id)) {
+            // 1. DEPO STOĞUNU ARTIR
             Hizli_Kasa_Stock_Manager::update_warehouse_stock(
                 $product_id, $variation_id, $target_depo_id, $qty, 
                 "İade İşlemi (Geri Dönüş - #$original_order_id, Depo: $target_depo_id)"
             );
+
+            // 2. ANA SİTE STOĞUNU ARTIR
+            $target_product = wc_get_product($variation_id ?: $product_id);
+            if ($target_product && $target_product->managing_stock()) {
+                wc_update_product_stock($target_product, $qty, 'increase');
+                hizli_kasa_log("İade: Ana site stoğu artırıldı. Ürün: $product_id, Adet: $qty");
+            }
 
             // Özete ekle
             if (!isset($iade_depo_ozet[$target_depo_id])) $iade_depo_ozet[$target_depo_id] = 0;
