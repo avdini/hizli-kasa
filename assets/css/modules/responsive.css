@@ -109,7 +109,13 @@
     }
 
     .kullanici-bilgi {
-        display: none; /* Mobilde kullanıcı bilgisini gizle */
+        display: flex;
+        font-size: 11px;
+        padding: 0 8px;
+        border: none;
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .tam-ekran-btn {
@@ -117,10 +123,31 @@
     }
 
     .depo-secici-ust .ust-aktif-depo-adi {
-        max-width: 80px;
+        max-width: 70px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        font-size: 12px;
+        font-size: 11px;
+    }
+}
+
+/* Tablet ve Orta Ölçekli Ekranlar */
+@media (min-width: 769px) and (max-width: 1200px) {
+    .logo-text {
+        display: none;
+    }
+    
+    .kasa-logo {
+        margin-right: 20px;
+        gap: 0;
+    }
+
+    .ust-sekme {
+        padding: 0 15px;
+        gap: 0;
+    }
+
+    .sekme-ikon {
+        display: none;
     }
 }
