@@ -2,7 +2,7 @@
    MOBİL UYUMLULUK
    ============================================= */
 
-@media (max-width: 768px) {
+@media (max-width: 958px) {
     #kasa-dis-cerceve {
         height: auto !important;
         min-height: 100vh;
