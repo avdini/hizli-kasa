@@ -5,9 +5,30 @@
 #kasa-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 10px;
     width: 70px;
     flex-shrink: 0;
+    height: 100%; /* Sidebar tam yüksekliği kullansın */
+    justify-content: space-between;
+}
+
+.kasa-sekmeleri-listesi {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+}
+
+.kasa-sekmeleri-listesi::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+.kasa-sabit-butonlar {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 10px;
 }
 
 .sidebar-btn {

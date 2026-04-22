@@ -16,12 +16,21 @@ if (!defined('ABSPATH'))
     <div id="kasa-ana-duzen">
         <!-- Sidebar: Kasa Sekmeleri -->
         <div id="kasa-sidebar">
-            <div class="sidebar-btn aktif" data-id="1"><span>📠</span> Kasa 1</div>
-            <div class="sidebar-btn" data-id="2"><span>📠</span> Kasa 2</div>
-            <div class="sidebar-btn" data-id="3"><span>📠</span> Kasa 3</div>
-            <div class="sidebar-btn" data-id="4"><span>📠</span> Kasa 4</div>
-            <div id="gun-sonu-buton" class="sidebar-btn gun-sonu"><span>📋</span> Kasa Gün Sonu</div>
-            <div id="genel-rapor-buton" class="sidebar-btn genel-rapor"><span>📊</span> Genel Rapor</div>
+            <div class="kasa-sekmeleri-listesi">
+                <?php
+                $toplam_kasa = get_option('hizli_kasa_toplam_kasa', 3);
+                for ($i = 1; $i <= $toplam_kasa; $i++):
+                ?>
+                    <div class="sidebar-btn <?php echo ($i === 1) ? 'aktif' : ''; ?>" data-id="<?php echo $i; ?>">
+                        <span>📠</span> Kasa <?php echo $i; ?>
+                    </div>
+                <?php endfor; ?>
+            </div>
+            
+            <div class="kasa-sabit-butonlar">
+                <div id="gun-sonu-buton" class="sidebar-btn gun-sonu"><span>📋</span> Kasa Gün Sonu</div>
+                <div id="genel-rapor-buton" class="sidebar-btn genel-rapor"><span>📊</span> Genel Rapor</div>
+            </div>
         </div>
 
         <!-- Ana Kasa Konteyner -->
