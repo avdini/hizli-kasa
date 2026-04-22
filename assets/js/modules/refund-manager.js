@@ -90,6 +90,8 @@ const RefundManager = (function () {
     }
 
     async function advancedSearchOrders() {
+        document.querySelector('.iade-sol-panel').classList.add('searching-mode');
+
         const params = new URLSearchParams({
             phone: document.getElementById('iade-arama-telefon').value,
             barcode: document.getElementById('iade-arama-urun').value,
@@ -147,11 +149,38 @@ const RefundManager = (function () {
         }
         
         container.style.display = 'block';
+
+        // Kapatma butonu ekle (Eğer yoksa)
+        const baslik = container.querySelector('h3');
+        if (baslik && !baslik.querySelector('.iade-sonuc-kapat')) {
+            const kapatBtn = document.createElement('button');
+            kapatBtn.className = 'iade-sonuc-kapat iade-kucuk-btn';
+            kapatBtn.innerHTML = '✕ Kapat';
+            kapatBtn.onclick = closeSearchResults;
+            baslik.appendChild(kapatBtn);
+        }
+    }
+
+    function closeSearchResults() {
+        document.querySelector('.iade-sol-panel').classList.remove('searching-mode');
+        document.getElementById('iade-arama-sonuclari').style.display = 'none';
     }
 
     function selectOrder(id) {
         document.getElementById('iade-siparis-no').value = id;
-        document.getElementById('iade-arama-sonuclari').style.display = 'none';
+        closeSearchResults();
+
+        // Detaylı arama formunu kapat
+        const detayliAlanlar = document.getElementById('iade-detayli-alanlar');
+        const toggleBtn = document.getElementById('iade-detayli-toggle-btn');
+        if (detayliAlanlar && detayliAlanlar.style.display !== 'none') {
+            detayliAlanlar.style.display = 'none';
+            if (toggleBtn) {
+                toggleBtn.innerText = '🔍 Detaylı Arama';
+                toggleBtn.classList.remove('aktif');
+            }
+        }
+
         fetchOrder(id);
     }
 
@@ -393,7 +422,8 @@ const RefundManager = (function () {
         init,
         addToRefundCart,
         removeFromRefundCart,
-        selectOrder
+        selectOrder,
+        closeSearchResults
     };
 })();
 

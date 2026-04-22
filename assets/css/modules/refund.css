@@ -21,7 +21,10 @@
     border: 1px solid var(--hk-border);
 }
 
-.iade-sol-panel { flex: 3; }
+.iade-sol-panel { 
+    flex: 3; 
+    position: relative;
+}
 .iade-sag-panel { flex: 2; }
 
 .iade-ust-cubuk {
@@ -154,11 +157,40 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    max-height: 200px;
+    max-height: 250px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 8px;
+}
+
+/* Searching Mode Overlay */
+.searching-mode .arama-sonuclari-konteyner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--hk-bg-card);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.searching-mode .arama-sonuclari-konteyner h3 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--hk-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.searching-mode #iade-sonuc-listesi {
+    max-height: none;
+    flex: 1;
+    margin-top: 10px;
 }
 
 #iade-sonuc-listesi li {
