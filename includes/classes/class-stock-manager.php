@@ -15,36 +15,59 @@ class Hizli_Kasa_Stock_Manager {
     /**
      * Hookları Başlat
      */
+    /**
+     * Hookları Başlat
+     */
     public static function listen() {
         add_action('woocommerce_order_status_processing', [self::class, 'handle_online_order_stock'], 10, 2);
-        add_action('woocommerce_checkout_order_processed', [self::class, 'handle_pos_order_stock'], 10, 3);
+        // woocommerce_checkout_order_processed yerine woocommerce_new_order daha geneldir (REST API'yi de kapsar)
+        add_action('woocommerce_new_order', [self::class, 'handle_pos_order_stock'], 10, 2);
     }
 
     /**
      * POS üzerinden gelen siparişlerde personelin aktif deposundan düşüm yapar.
      * Her sipariş kalemine çıkış deposu bilgisini yazar (iade takibi için).
      */
-    public static function handle_pos_order_stock($order_id, $posted_data, $order) {
+    public static function handle_pos_order_stock($order_id, $order = false) {
+        if (!$order) {
+            $order = wc_get_order($order_id);
+        }
+
+        if (!$order) return;
+
         $kasiyer_name = $order->get_meta('_hizli_kasa_kasiyer');
+        
+        hizli_kasa_log("handle_pos_order_stock tetiklendi. Sipariş ID: $order_id, Kasiyer: " . ($kasiyer_name ?: 'Yok'));
+
         if (!$kasiyer_name) return; // POS siparişi değilse çık
 
         // Kasiyerin kullanıcı ID'sini bul (veya şu anki kullanıcıyı kullan)
         $user_id = get_current_user_id();
+        
+        // REST API çağrılarında bazen user_id 0 gelebilir, bu durumda meta'dan bulmaya çalışabiliriz
+        if (!$user_id) {
+             // Opsiyonel: Kasiyer isminden user bulma mantığı eklenebilir
+             hizli_kasa_log("Uyarı: current_user_id 0 döndü. REST API auth kontrol edilmeli.");
+        }
 
         // Yeni çoklu depo sisteminden aktif depoyu al
         $depo_id = get_user_meta($user_id, '_hizli_kasa_active_depo', true);
 
-        // Fallback: Eski sisteme bak (migrasyon henüz yapılmamışsa)
+        // Fallback: Eski sisteme bak
         if (!$depo_id) {
             $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
         }
 
-        if (!$depo_id) return; // Depo atanmamışsa çık (normal WC stok düşümü zaten olacak)
+        hizli_kasa_log("Kasiyer User ID: $user_id, Tespit Edilen Depo ID: " . ($depo_id ?: 'Yok'));
+
+        if (!$depo_id) {
+            hizli_kasa_log("HATA: Depo ID bulunamadığı için stok düşülemedi.");
+            return;
+        }
 
         global $wpdb;
         $tables = Hizli_Kasa_Database::get_tables();
 
-        // Depo adını al (sipariş meta'sı için)
         $depo_name = $wpdb->get_var($wpdb->prepare(
             "SELECT name FROM {$tables['depolar']} WHERE id = %d", $depo_id
         ));
@@ -54,19 +77,22 @@ class Hizli_Kasa_Stock_Manager {
             $variation_id = $item->get_variation_id();
             $qty = $item->get_quantity();
 
+            hizli_kasa_log("Stok Düşülüyor: Prod: $product_id, Var: $variation_id, Adet: $qty, Depo: $depo_id");
+
             // Gölge katmandan (depo) düş
             self::update_warehouse_stock($product_id, $variation_id, $depo_id, -$qty, "POS Satışı (#$order_id)");
 
-            // Sipariş kalemine çıkış deposu bilgisini yaz (iade takibi için)
+            // Sipariş kalemine çıkış deposu bilgisini yaz
             wc_update_order_item_meta($item_id, '_hk_cikis_depo_id', $depo_id);
             wc_update_order_item_meta($item_id, '_hk_cikis_depo_adet', $qty);
             wc_update_order_item_meta($item_id, '_hk_cikis_depo_adi', $depo_name ?: 'Bilinmeyen');
         }
 
-        // Sipariş geneline depo bilgisini yaz
         $order->update_meta_data('_hk_cikis_depo_id', $depo_id);
         $order->update_meta_data('_hk_cikis_depo_adi', $depo_name ?: 'Bilinmeyen');
         $order->save();
+        
+        hizli_kasa_log("Sipariş #$order_id için depo stok düşümü tamamlandı.");
     }
 
     /**
