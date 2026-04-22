@@ -127,6 +127,15 @@ add_action('rest_api_init', function () {
             return current_user_can('edit_posts');
         }
     ));
+
+    // --- Depo Stok Kontrolü (Sipariş öncesi toplu kontrol) ---
+    register_rest_route('hizli-kasa/v1', '/warehouse-stock-check', array(
+        'methods'             => 'POST',
+        'callback'            => 'hizli_kasa_warehouse_stock_check',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
 });
 
 /**
@@ -602,6 +611,7 @@ function hizli_kasa_load_tab_content($request) {
 
 /**
  * İade işlemi için sipariş detaylarını getirir.
+ * Her ürün kalemine çıkış deposu bilgisini de ekler.
  */
 function hizli_kasa_get_order_details($request) {
     $order_id = sanitize_text_field($request->get_param('id'));
@@ -611,17 +621,38 @@ function hizli_kasa_get_order_details($request) {
         return new WP_Error('no_order', 'Sipariş bulunamadı.', array('status' => 404));
     }
 
+    // Depo adlarını ID'ye göre cache'le (aynı depo birden fazla item'da olabilir)
+    $depo_names_cache = [];
+
     $items = [];
     foreach ($order->get_items() as $item_id => $item) {
         $product = $item->get_product();
+        $cikis_depo_id = (int) wc_get_order_item_meta($item_id, '_hk_cikis_depo_id', true);
+        $cikis_depo_adi = wc_get_order_item_meta($item_id, '_hk_cikis_depo_adi', true);
+
+        // Eğer depo adı meta'sı yoksa DB'den çek
+        if ($cikis_depo_id && !$cikis_depo_adi) {
+            if (!isset($depo_names_cache[$cikis_depo_id])) {
+                global $wpdb;
+                $tables = Hizli_Kasa_Database::get_tables();
+                $depo_names_cache[$cikis_depo_id] = $wpdb->get_var($wpdb->prepare(
+                    "SELECT name FROM {$tables['depolar']} WHERE id = %d", $cikis_depo_id
+                )) ?: 'Bilinmeyen';
+            }
+            $cikis_depo_adi = $depo_names_cache[$cikis_depo_id];
+        }
+
         $items[] = [
-            'item_id' => $item_id,
-            'id'      => $item->get_product_id(),
-            'name'    => $item->get_name(),
-            'sku'     => $product ? $product->get_sku() : '',
-            'qty'     => $item->get_quantity(),
-            'price'   => $item->get_total() / $item->get_quantity(),
-            'total'   => $item->get_total(),
+            'item_id'      => $item_id,
+            'id'           => $item->get_product_id(),
+            'variation_id' => $item->get_variation_id(),
+            'name'         => $item->get_name(),
+            'sku'          => $product ? $product->get_sku() : '',
+            'qty'          => $item->get_quantity(),
+            'price'        => $item->get_total() / max($item->get_quantity(), 1),
+            'total'        => $item->get_total(),
+            'depo_id'      => $cikis_depo_id,
+            'depo_adi'     => $cikis_depo_adi ?: '',
         ];
     }
 
@@ -631,12 +662,15 @@ function hizli_kasa_get_order_details($request) {
         'total'      => $order->get_total(),
         'items'      => $items,
         'payment'    => $order->get_payment_method_title(),
-        'kasiyer'    => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor'
+        'kasiyer'    => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
+        'depo_id'    => (int) $order->get_meta('_hk_cikis_depo_id'),
+        'depo_adi'   => $order->get_meta('_hk_cikis_depo_adi') ?: '',
     ];
 }
 
 /**
  * İade (Negatif Sipariş) oluşturur.
+ * Orijinal siparişin çıkış deposuna geri stok ekler.
  */
 function hizli_kasa_process_refund($request) {
     $data = $request->get_json_params();
@@ -646,6 +680,9 @@ function hizli_kasa_process_refund($request) {
     if (empty($refund_items)) {
         return new WP_Error('no_items', 'İade edilecek ürün seçilmedi.', array('status' => 400));
     }
+
+    // Orijinal siparişi yükle (depo bilgisi için)
+    $original_order = wc_get_order($original_order_id);
 
     $refund_order = wc_create_order(array('status' => 'completed', 'customer_id' => 0));
     $total_refund = 0;
@@ -675,17 +712,53 @@ function hizli_kasa_process_refund($request) {
     $refund_order->update_meta_data('_hizli_kasa_kasiyer', wp_get_current_user()->display_name);
     
     $user_id = get_current_user_id();
-    $depo_id = intval($data['active_depo_id'] ?? 0);
-    if (!$depo_id) $depo_id = hizli_kasa_get_user_active_depo($user_id);
+    $fallback_depo_id = intval($data['active_depo_id'] ?? 0);
+    if (!$fallback_depo_id) $fallback_depo_id = hizli_kasa_get_user_active_depo($user_id);
     
-    if ($depo_id && hizli_kasa_can_user_manage_depo($user_id, $depo_id)) {
-        require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
-        foreach ($refund_items as $item) {
-            $product_id = intval($item['id']);
-            $variation_id = intval($item['variation_id'] ?? 0);
-            $qty = abs($item['qty']);
-            Hizli_Kasa_Stock_Manager::update_warehouse_stock($product_id, $variation_id, $depo_id, $qty, "İade İşlemi (Geri Dönüş - #$original_order_id)");
+    // Depo stok iadesi — orijinal çıkış deposuna geri yaz
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
+    $iade_depo_ozet = []; // Hangi depoya ne kadar iade edildi
+
+    foreach ($refund_items as $item) {
+        $product_id = intval($item['id']);
+        $variation_id = intval($item['variation_id'] ?? 0);
+        $qty = abs($item['qty']);
+
+        // 1. İade item'ından gelen depo_id (JS'den gönderilen, orijinal siparişten okunan)
+        $target_depo_id = intval($item['depo_id'] ?? 0);
+
+        // 2. Fallback: Orijinal siparişin item meta'sından çıkış deposunu bul
+        if (!$target_depo_id && $original_order) {
+            foreach ($original_order->get_items() as $orig_item_id => $orig_item) {
+                $match_product = ($orig_item->get_product_id() == $product_id);
+                $match_variation = ($orig_item->get_variation_id() == $variation_id);
+                if ($match_product && ($variation_id == 0 || $match_variation)) {
+                    $target_depo_id = (int) wc_get_order_item_meta($orig_item_id, '_hk_cikis_depo_id', true);
+                    break;
+                }
+            }
         }
+
+        // 3. Son fallback: Aktif depo
+        if (!$target_depo_id) {
+            $target_depo_id = $fallback_depo_id;
+        }
+
+        if ($target_depo_id && hizli_kasa_can_user_manage_depo($user_id, $target_depo_id)) {
+            Hizli_Kasa_Stock_Manager::update_warehouse_stock(
+                $product_id, $variation_id, $target_depo_id, $qty, 
+                "İade İşlemi (Geri Dönüş - #$original_order_id, Depo: $target_depo_id)"
+            );
+
+            // Özete ekle
+            if (!isset($iade_depo_ozet[$target_depo_id])) $iade_depo_ozet[$target_depo_id] = 0;
+            $iade_depo_ozet[$target_depo_id] += $qty;
+        }
+    }
+
+    // İade siparişine de depo özetini yaz
+    if (!empty($iade_depo_ozet)) {
+        $refund_order->update_meta_data('_hk_iade_depo_ozet', json_encode($iade_depo_ozet));
     }
 
     $refund_order->calculate_totals();
@@ -1040,4 +1113,126 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id) {
         ];
     }
     return $final;
+}
+
+/**
+ * Depo Stok Kontrolü — Sipariş Onayı Öncesi Toplu Kontrol
+ * 
+ * Sepetteki tüm ürünlerin hem WooCommerce site stoğunu hem de
+ * aktif depo stoğunu tek seferde kontrol eder.
+ * 
+ * POST /hizli-kasa/v1/warehouse-stock-check
+ * Body: { items: [{product_id, variation_id, qty}], depo_id: X }
+ */
+function hizli_kasa_warehouse_stock_check($request) {
+    $data = $request->get_json_params();
+    $items = $data['items'] ?? [];
+    $depo_id = intval($data['depo_id'] ?? 0);
+
+    if (empty($items)) {
+        return new WP_Error('no_items', 'Kontrol edilecek ürün yok.', ['status' => 400]);
+    }
+
+    global $wpdb;
+    $tables = Hizli_Kasa_Database::get_tables();
+    $stok_table = $tables['stok_konumlari'];
+
+    $results = [];
+
+    foreach ($items as $item) {
+        $product_id = intval($item['product_id'] ?? 0);
+        $variation_id = intval($item['variation_id'] ?? 0);
+        $requested_qty = intval($item['qty'] ?? 0);
+        $target_id = $variation_id ?: $product_id;
+
+        if (!$target_id) continue;
+
+        // Ürün adını al
+        $product = wc_get_product($target_id);
+        $name = $product ? $product->get_name() : "Ürün #$target_id";
+
+        // 1. WooCommerce site stoğu
+        $site_stock = null;
+        $manage_stock = false;
+        $stock_status = 'instock';
+
+        if ($product) {
+            $manage_stock = $product->get_manage_stock();
+            $site_stock = $manage_stock ? (float) $product->get_stock_quantity() : null;
+            $stock_status = $product->get_stock_status();
+        }
+
+        // 2. Aktif depo stoğu
+        $depo_stock = 0;
+        if ($depo_id) {
+            if ($variation_id > 0) {
+                $depo_stock = (float) $wpdb->get_var($wpdb->prepare(
+                    "SELECT quantity FROM $stok_table WHERE variation_id = %d AND location_id = %d",
+                    $variation_id, $depo_id
+                ));
+            } else {
+                $depo_stock = (float) $wpdb->get_var($wpdb->prepare(
+                    "SELECT quantity FROM $stok_table WHERE product_id = %d AND variation_id = 0 AND location_id = %d",
+                    $product_id, $depo_id
+                ));
+            }
+        }
+
+        // 3. Diğer depolardaki toplam stok
+        $other_depo_stock = 0;
+        if ($depo_id) {
+            if ($variation_id > 0) {
+                $other_depo_stock = (float) $wpdb->get_var($wpdb->prepare(
+                    "SELECT COALESCE(SUM(quantity), 0) FROM $stok_table WHERE variation_id = %d AND location_id != %d",
+                    $variation_id, $depo_id
+                ));
+            } else {
+                $other_depo_stock = (float) $wpdb->get_var($wpdb->prepare(
+                    "SELECT COALESCE(SUM(quantity), 0) FROM $stok_table WHERE product_id = %d AND variation_id = 0 AND location_id != %d",
+                    $product_id, $depo_id
+                ));
+            }
+        }
+
+        // 4. Kontrol sonuçları
+        $site_ok = true;
+        $depo_ok = true;
+        $warning = null;
+
+        if ($manage_stock && $site_stock !== null) {
+            $site_ok = ($requested_qty <= $site_stock);
+        } elseif ($stock_status === 'outofstock') {
+            $site_ok = false;
+        }
+
+        if ($depo_id && $depo_stock !== null) {
+            $depo_ok = ($requested_qty <= $depo_stock);
+        }
+
+        // Uyarı mesajları
+        if ($site_ok && !$depo_ok) {
+            if ($other_depo_stock >= $requested_qty) {
+                $warning = "Sitede var ama bu depoda yok — başka depoda gözüküyor!";
+            } else {
+                $warning = "Depoda yetersiz stok! (Depo: " . (int)$depo_stock . ", İhtiyaç: $requested_qty)";
+            }
+        } elseif (!$site_ok) {
+            $warning = "Site stoğu yetersiz! (Site: " . ($site_stock !== null ? (int)$site_stock : 'N/A') . ", İhtiyaç: $requested_qty)";
+        }
+
+        $results[] = [
+            'product_id'       => $product_id,
+            'variation_id'     => $variation_id,
+            'name'             => $name,
+            'site_stock'       => $site_stock,
+            'depo_stock'       => (float) $depo_stock,
+            'other_depo_stock' => (float) $other_depo_stock,
+            'requested_qty'    => $requested_qty,
+            'site_ok'          => $site_ok,
+            'depo_ok'          => $depo_ok,
+            'warning'          => $warning,
+        ];
+    }
+
+    return $results;
 }

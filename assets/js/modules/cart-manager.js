@@ -167,7 +167,7 @@ window.HizliKasa = window.HizliKasa || {};
             var digerKasalardakiAdet = digerBilgi.adet;
             var toplamBekleyenAdet = sepettekiMevcutAdet + digerKasalardakiAdet + 1;
 
-            // Stok Kontrolü
+            // Stok Kontrolü (Site)
             if (urun.manage_stock && urun.stock_quantity !== null) {
                 if (toplamBekleyenAdet > urun.stock_quantity) {
                     var mesaj = "HATA: ÜRÜN BAŞKA KASADA İŞLEMDE!";
@@ -184,6 +184,14 @@ window.HizliKasa = window.HizliKasa || {};
                 durumMetni.innerText = "HATA: Ürün stokta yok!";
                 durumMetni.style.color = "red";
                 return;
+            }
+
+            // Depo Stok Kontrolü (Uyarı — engellemez)
+            var depoStok = urun.warehouse_stock;
+            if (depoStok !== undefined && depoStok !== null && toplamBekleyenAdet > depoStok) {
+                durumMetni.innerText = "⚠️ DİKKAT: Depoda yeterli stok yok! (Depo: " + depoStok + ", İhtiyaç: " + toplamBekleyenAdet + ")";
+                durumMetni.style.color = "#e67e22";
+                // Engellemiyoruz — kasiyere bırakıyoruz (fiziksel ürün kasada olabilir)
             }
 
             // Eğer ürün başka kasada varsa ama stok yetiyorsa bilgi ver

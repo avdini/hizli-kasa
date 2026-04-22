@@ -81,7 +81,11 @@
                     ? kasaAyar.rootApiUrl + 'hizli-kasa/v1/search'
                     : window.location.origin + '/wp-json/hizli-kasa/v1/search';
 
-                var response = await fetch(apiUrl + '?exact=1&s=' + encodeURIComponent(sku), {
+                // Aktif depo ID'sini gönder (depo stoğu bilgisi için)
+                var depoId = (typeof HizliKasa !== 'undefined' && HizliKasa.DepoManager)
+                    ? HizliKasa.DepoManager.getActiveDepo() : '';
+
+                var response = await fetch(apiUrl + '?exact=1&s=' + encodeURIComponent(sku) + (depoId ? '&depo_id=' + depoId : ''), {
                     headers: { 'X-WP-Nonce': (typeof kasaAyar !== 'undefined' ? kasaAyar.nonce : '') }
                 });
 

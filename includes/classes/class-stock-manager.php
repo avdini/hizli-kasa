@@ -21,7 +21,8 @@ class Hizli_Kasa_Stock_Manager {
     }
 
     /**
-     * POS üzerinden gelen siparişlerde personelin deposundan düşüm yapar.
+     * POS üzerinden gelen siparişlerde personelin aktif deposundan düşüm yapar.
+     * Her sipariş kalemine çıkış deposu bilgisini yazar (iade takibi için).
      */
     public static function handle_pos_order_stock($order_id, $posted_data, $order) {
         $kasiyer_name = $order->get_meta('_hizli_kasa_kasiyer');
@@ -29,18 +30,43 @@ class Hizli_Kasa_Stock_Manager {
 
         // Kasiyerin kullanıcı ID'sini bul (veya şu anki kullanıcıyı kullan)
         $user_id = get_current_user_id();
-        $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
+
+        // Yeni çoklu depo sisteminden aktif depoyu al
+        $depo_id = get_user_meta($user_id, '_hizli_kasa_active_depo', true);
+
+        // Fallback: Eski sisteme bak (migrasyon henüz yapılmamışsa)
+        if (!$depo_id) {
+            $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
+        }
 
         if (!$depo_id) return; // Depo atanmamışsa çık (normal WC stok düşümü zaten olacak)
 
-        foreach ($order->get_items() as $item) {
+        global $wpdb;
+        $tables = Hizli_Kasa_Database::get_tables();
+
+        // Depo adını al (sipariş meta'sı için)
+        $depo_name = $wpdb->get_var($wpdb->prepare(
+            "SELECT name FROM {$tables['depolar']} WHERE id = %d", $depo_id
+        ));
+
+        foreach ($order->get_items() as $item_id => $item) {
             $product_id = $item->get_product_id();
             $variation_id = $item->get_variation_id();
             $qty = $item->get_quantity();
 
-            // SADECE gölge katmandan düş (WC ana stoğu sync_to_wc_stock ile zaten güncellenecek)
+            // Gölge katmandan (depo) düş
             self::update_warehouse_stock($product_id, $variation_id, $depo_id, -$qty, "POS Satışı (#$order_id)");
+
+            // Sipariş kalemine çıkış deposu bilgisini yaz (iade takibi için)
+            wc_update_order_item_meta($item_id, '_hk_cikis_depo_id', $depo_id);
+            wc_update_order_item_meta($item_id, '_hk_cikis_depo_adet', $qty);
+            wc_update_order_item_meta($item_id, '_hk_cikis_depo_adi', $depo_name ?: 'Bilinmeyen');
         }
+
+        // Sipariş geneline depo bilgisini yaz
+        $order->update_meta_data('_hk_cikis_depo_id', $depo_id);
+        $order->update_meta_data('_hk_cikis_depo_adi', $depo_name ?: 'Bilinmeyen');
+        $order->save();
     }
 
     /**

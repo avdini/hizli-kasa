@@ -87,11 +87,15 @@ const RefundManager = (function () {
         `;
 
         originalOrder.items.forEach(item => {
+            var depoBadge = item.depo_adi 
+                ? '<span class="depo-badge" title="Çıkış Deposu">📦 ' + item.depo_adi + '</span>'
+                : '<span class="depo-badge depo-bilinmeyen" title="Depo bilgisi yok">📦 Bilinmeyen</span>';
+
             html += `
                 <div class="iade-urun-satir">
                     <div class="urun-bilgi">
                         <span class="urun-ad">${item.name}</span>
-                        <span class="urun-sku">SKU: ${item.sku}</span>
+                        <span class="urun-sku">SKU: ${item.sku} ${depoBadge}</span>
                     </div>
                     <div class="urun-fiyat-adet">
                         <span class="birim-fiyat">${item.price} TL</span> x <span class="mevcut-adet">${item.qty}</span>
@@ -122,7 +126,12 @@ const RefundManager = (function () {
                 alert('Siparişteki adetten fazla iade edilemez.');
             }
         } else {
-            refundCart.push({ ...item, qty: 1 });
+            refundCart.push({ 
+                ...item, 
+                qty: 1,
+                variation_id: item.variation_id || 0,
+                depo_id: item.depo_id || 0  // Orijinal çıkış deposu
+            });
         }
 
         renderRefundCart();
@@ -177,7 +186,14 @@ const RefundManager = (function () {
                 },
                 body: JSON.stringify({
                     original_order_id: originalOrder.id,
-                    items: refundCart
+                    items: refundCart.map(item => ({
+                        id: item.id,
+                        item_id: item.item_id,
+                        variation_id: item.variation_id || 0,
+                        qty: item.qty,
+                        price: item.price,
+                        depo_id: item.depo_id || 0  // Orijinal çıkış deposu (backend bu depoya iade eder)
+                    }))
                 })
             });
 

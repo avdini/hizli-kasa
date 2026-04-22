@@ -43,7 +43,7 @@
         },
 
         /**
-         * Son stok kontrolü — sipariş öncesi güncel stokları doğrula
+         * Son stok kontrolü — sipariş öncesi hem site hem depo stoklarını toplu doğrula
          * @returns {Promise<Array>} Sorunlu ürünler listesi
          */
         sonStokKontrolu: async function() {
@@ -51,40 +51,47 @@
             var durumMetni = document.getElementById("durum");
             var stokUyariListe = document.getElementById("stok-uyari-liste");
 
-            durumMetni.innerText = "Güncel stoklar kontrol ediliyor...";
+            durumMetni.innerText = "Site ve depo stokları kontrol ediliyor...";
             stokUyariListe.innerHTML = "";
             var sorunluUrunler = [];
 
+            var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
+
             try {
-                var checkPromises = state.sepet.map(async function(item) {
-                    var id = item.variation_id || item.product_id;
-                    var parentId = item.variation_id ? item.product_id : "";
-
-                    var url = item.variation_id
-                        ? kasaAyar.apiUrl + 'products/' + parentId + '/variations/' + id
-                        : kasaAyar.apiUrl + 'products/' + id;
-
-                    var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
-                    var serverUrun = await response.json();
-
-                    if (serverUrun.manage_stock && serverUrun.stock_quantity !== null) {
-                        if (item.quantity > serverUrun.stock_quantity) {
-                            sorunluUrunler.push({
-                                name: item.name,
-                                cartQty: item.quantity,
-                                serverQty: serverUrun.stock_quantity
-                            });
-                        }
-                    } else if (serverUrun.stock_status === 'outofstock') {
-                        sorunluUrunler.push({
-                            name: item.name,
-                            cartQty: item.quantity,
-                            serverQty: 0
-                        });
-                    }
+                // Toplu kontrol — tek API çağrısı
+                var checkItems = state.sepet.map(function(item) {
+                    return {
+                        product_id: item.product_id,
+                        variation_id: item.variation_id || 0,
+                        qty: item.quantity
+                    };
                 });
 
-                await Promise.all(checkPromises);
+                var apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
+                var response = await fetch(apiBase + 'hizli-kasa/v1/warehouse-stock-check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': kasaAyar.nonce
+                    },
+                    body: JSON.stringify({ items: checkItems, depo_id: depoId })
+                });
+
+                var results = await response.json();
+
+                if (Array.isArray(results)) {
+                    results.forEach(function(r) {
+                        if (!r.site_ok || !r.depo_ok) {
+                            sorunluUrunler.push({
+                                name: r.name,
+                                cartQty: r.requested_qty,
+                                serverQty: r.site_stock !== null ? r.site_stock : '?',
+                                depoQty: r.depo_stock,
+                                warning: r.warning
+                            });
+                        }
+                    });
+                }
             } catch (e) {
                 console.error("Stok kontrol hatası", e);
             }
@@ -194,7 +201,9 @@
                     { key: "_ara_toplam", value: sepetAraToplam.toFixed(2) },
                     { key: "Ödeme (Nakit)", value: oNakit.toFixed(2) + " TL" },
                     { key: "Ödeme (Kart)", value: oKart.toFixed(2) + " TL" },
-                    { key: "Ödeme (IBAN)", value: oIban.toFixed(2) + " TL" }
+                    { key: "Ödeme (IBAN)", value: oIban.toFixed(2) + " TL" },
+                    { key: "_hk_cikis_depo_id", value: (HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0).toString() },
+                    { key: "_hk_cikis_depo_adi", value: HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '' }
                 ]
             };
 
@@ -235,7 +244,12 @@
             stokUyariListe.innerHTML = "";
             sorunlar.forEach(function(u) {
                 var li = document.createElement("li");
-                li.innerHTML = '<span>' + u.name + '</span> <span>İhtiyaç: ' + u.cartQty + ' / Stok: ' + u.serverQty + '</span>';
+                var detay = 'İhtiyaç: ' + u.cartQty + ' / Site: ' + u.serverQty;
+                if (u.depoQty !== undefined) {
+                    detay += ' / Depo: ' + u.depoQty;
+                }
+                li.innerHTML = '<span>' + u.name + '</span> <span>' + detay + '</span>' +
+                    (u.warning ? '<br><small style="color:#e67e22;font-size:11px;">⚠️ ' + u.warning + '</small>' : '');
                 stokUyariListe.appendChild(li);
             });
 
