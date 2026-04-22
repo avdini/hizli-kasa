@@ -708,20 +708,24 @@ function hizli_kasa_process_refund($request) {
     $refund_order->set_payment_method('cod');
     $refund_order->set_payment_method_title('İade İşlemi');
     
+    // Kasiyer Tam Adını Al
+    $current_user = wp_get_current_user();
+    $full_name = trim($current_user->first_name . ' ' . $current_user->last_name);
+    $kasiyer = !empty($full_name) ? $full_name : $current_user->display_name;
+    
     // POS Standart Meta Verileri
-    $iade_toplam = $refund_order->get_total(); // Negatif değer döner
+    $iade_toplam = $total_refund; // Döngüde hesapladığımız toplam (negatif değer)
     $kasa_no = sanitize_text_field($data['kasa_no'] ?? '1');
-    $kasiyer = wp_get_current_user()->display_name;
 
     $refund_order->update_meta_data('_hizli_kasa_original_order', $original_order_id);
     $refund_order->update_meta_data('_hizli_kasa_is_refund', 'yes');
-    $refund_order->update_meta_data('_hizli_kasa_kaynak', 'pos_iade'); // Kaynak ayrımı
+    $refund_order->update_meta_data('_hizli_kasa_kaynak', 'pos_iade');
     $refund_order->update_meta_data('_hizli_kasa_kasiyer', $kasiyer);
     $refund_order->update_meta_data('_hizli_kasa_kasa_no', $kasa_no);
     
     // Ödeme Detayları (Varsayılan Nakit)
     $refund_order->update_meta_data('_odeme_nakit', $iade_toplam);
-    $refund_order->update_meta_data('Ödeme (Nakit)', number_format($iade_toplam, 2, '.', '') . ' TL');
+    $refund_order->update_meta_data('Ödeme (Nakit)', number_format(abs($iade_toplam), 2, '.', '') . ' TL'); // Eksi işareti kafa karıştırmasın diye abs() aldım veya istersen eksi bırakabiliriz
     
     // Toplamlar (Raporlar için)
     $refund_order->update_meta_data('_ara_toplam', $iade_toplam);
