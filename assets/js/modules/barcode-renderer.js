@@ -233,7 +233,7 @@
                             <div class="barcode-container">
                                 <svg class="barcode-svg"></svg>
                             </div>
-                            <div class="sku-text">${data.barcode_no}</div>
+                            <div class="sku-text">SKU: ${data.barcode_no}</div>
                         </div>
                         <div class="col-right">
                             <div class="attributes">
