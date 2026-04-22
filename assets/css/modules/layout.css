@@ -68,52 +68,51 @@
     margin-left: auto;
     display: flex;
     align-items: center;
-    height: 100%;
-    gap: 15px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0 5px;
 }
 
 .ust-menu-aksiyon {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 0 12px;
-    height: 36px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
+    padding: 0 15px;
+    height: 100%;
     color: #bdc3c7;
     text-decoration: none;
     font-size: 14px;
     font-weight: 500;
     transition: all 0.2s ease;
-    border: 1px solid transparent;
+    border: none;
+    background: transparent;
     cursor: pointer;
 }
 
 .ust-menu-aksiyon:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
     color: #fff;
-    border-color: rgba(255, 255, 255, 0.1);
-}
-
-.aksiyon-ikon {
-    font-size: 16px;
 }
 
 .tam-ekran-btn {
+    width: 40px;
     padding: 0;
-    width: 36px;
     justify-content: center;
+    font-size: 18px;
 }
 
 .kullanici-bilgi {
     display: flex;
     align-items: center;
-    gap: 8px;
+    padding: 0 15px;
+    height: 100%;
     font-size: 13px;
     color: #fff;
     opacity: 0.9;
-    padding: 0 5px;
     white-space: nowrap;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Depo Secici Dropdown Styles */
@@ -121,8 +120,14 @@
     position: relative;
 }
 
+.depo-secici-ust .depo-trigger {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
 .depo-secici-ust .depo-trigger.open {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
     color: #fff;
 }
 
