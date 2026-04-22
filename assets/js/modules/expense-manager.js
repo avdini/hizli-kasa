@@ -67,7 +67,7 @@
             if (!listBody) return;
 
             try {
-                const depo_id = HK.DepoManager ? HK.DepoManager.getActiveDepoId() : 0;
+                const depo_id = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
                 const apiUrl = kasaAyar.rootApiUrl + 'hizli-kasa/v1/masraflar?depo_id=' + depo_id;
                 
                 const response = await fetch(apiUrl, {
@@ -145,7 +145,7 @@
             btn.innerText = 'Kaydediliyor...';
 
             try {
-                const depo_id = HK.DepoManager ? HK.DepoManager.getActiveDepoId() : 0;
+                const depo_id = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
                 // Kasa no'yu current tab'dan alabiliriz
                 const activeKasaBtn = document.querySelector('#kasa-sidebar .sidebar-btn.aktif');
                 const kasa_no = activeKasaBtn ? activeKasaBtn.getAttribute('data-id') : '1';
