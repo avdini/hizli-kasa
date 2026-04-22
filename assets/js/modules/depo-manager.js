@@ -61,8 +61,9 @@
             // 2. Sunucuya kaydet (async, hata yutulur)
             this._saveToServer(depoId);
 
-            // 3. Dropdown UI güncelle
+            // 3. Dropdown UI'ları güncelle
             this._updateDropdownUI();
+            this._updateTopDropdownUI();
 
             // 4. Event tetikle (sayfa yenilemeden ürünleri günceller)
             if (!silent && prev !== depoId) {
@@ -263,6 +264,82 @@
             }
         },
 
+        // --- Üst Menü Switcher (Global) ---
+
+        /**
+         * Üst menüdeki depo switcher'ı başlatır.
+         */
+        initTopSwitcherUI: function() {
+            var self = this;
+            var trigger = document.getElementById('ust-depo-switcher-trigger');
+            var dropdown = document.getElementById('ust-depo-dropdown');
+
+            if (!trigger || !dropdown) return;
+
+            // Dropdown listesini doldur
+            this._renderTopDropdownItems();
+            this._updateTopDropdownUI();
+
+            // Tıklama: Dropdown aç/kapat
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var isOpen = dropdown.style.display !== 'none';
+                dropdown.style.display = isOpen ? 'none' : 'block';
+                trigger.classList.toggle('open', !isOpen);
+            });
+
+            // Dışarı tıklanınca kapat
+            document.addEventListener('click', function() {
+                dropdown.style.display = 'none';
+                trigger.classList.remove('open');
+            });
+        },
+
+        _renderTopDropdownItems: function() {
+            var self = this;
+            var dropdown = document.getElementById('ust-depo-dropdown');
+            var trigger = document.getElementById('ust-depo-switcher-trigger');
+            if (!dropdown) return;
+
+            dropdown.innerHTML = '';
+
+            // Sadece yönetebildiği depoları listele (Kullanıcı talebi)
+            var manageable = this.state.view.filter(function(d) {
+                return self.canManageDepo(d.id);
+            });
+
+            if (manageable.length === 0) {
+                dropdown.innerHTML = '<div style="padding:15px; font-size:12px; color:var(--hk-text-muted); text-align:center;">Değiştirme yetkisi yok</div>';
+                return;
+            }
+
+            manageable.forEach(function(d) {
+                var item = document.createElement('div');
+                item.className = 'depo-dropdown-item' + (d.id === self.state.activeDepoId ? ' active' : '');
+                item.dataset.depoId = d.id;
+                item.innerHTML = '<span class="depo-item-name">' + d.name + '</span>';
+                
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    self.setActiveDepo(d.id);
+                    dropdown.style.display = 'none';
+                    if (trigger) trigger.classList.remove('open');
+                });
+                dropdown.appendChild(item);
+            });
+        },
+
+        _updateTopDropdownUI: function() {
+            var nameEl = document.getElementById('ust-aktif-depo-adi');
+            if (nameEl) {
+                nameEl.textContent = this.getActiveDepoName();
+            }
+            // Dropdown aktif item'ı işaretle
+            document.querySelectorAll('#ust-depo-dropdown .depo-dropdown-item').forEach(function(el) {
+                el.classList.toggle('active', parseInt(el.dataset.depoId) === HK.DepoManager.state.activeDepoId);
+            });
+        },
+
         // --- Init ---
 
         /**
@@ -270,6 +347,9 @@
          */
         init: async function() {
             await this.load();
+
+            // Üst menü switcher'ı başlat
+            this.initTopSwitcherUI();
 
             // Ürünler sekmesi açık olduğunda switcher'ı başlat
             document.addEventListener('hkTabLoaded', function(e) {

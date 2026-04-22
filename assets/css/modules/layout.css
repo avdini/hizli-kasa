@@ -64,10 +64,101 @@
     border-bottom-color: #3498db;
 }
 
-.kullanici-bilgi {
+.ust-menu-sag-aksiyonlar {
     margin-left: auto;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    gap: 15px;
+}
+
+.ust-menu-aksiyon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    height: 36px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #bdc3c7;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.ust-menu-aksiyon:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.aksiyon-ikon {
+    font-size: 16px;
+}
+
+.tam-ekran-btn {
+    padding: 0;
+    width: 36px;
+    justify-content: center;
+}
+
+.kullanici-bilgi {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 13px;
-    opacity: 0.8;
+    color: #fff;
+    opacity: 0.9;
+    padding: 0 5px;
+    white-space: nowrap;
+}
+
+/* Depo Secici Dropdown Styles */
+.depo-secici-ust {
+    position: relative;
+}
+
+.depo-secici-ust .depo-trigger.open {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+}
+
+.depo-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 220px;
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    z-index: 1100;
+    overflow: hidden;
+    padding: 8px 0;
+}
+
+.depo-dropdown-item {
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    color: var(--hk-text-main);
+    transition: background 0.2s;
+    font-size: 14px;
+}
+
+.depo-dropdown-item:hover {
+    background: var(--hk-bg-hover);
+}
+
+.depo-dropdown-item.active {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+    font-weight: bold;
 }
 
 /* --- İçerik Alanları --- */

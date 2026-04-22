@@ -25,6 +25,29 @@ const AppNavigation = (function () {
                 });
             });
         }
+
+        initGlobalActions();
+    }
+
+    function initGlobalActions() {
+        const fsToggle = document.getElementById('tam-ekran-toggle');
+        if (fsToggle) {
+            fsToggle.addEventListener('click', () => {
+                toggleFullscreen();
+            });
+        }
+    }
+
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                console.warn('Tam ekran modu başlatılamadı:', err.message);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
     }
 
     /**

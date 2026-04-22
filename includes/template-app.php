@@ -43,8 +43,29 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
                 <span class="sekme-ikon">⚙️</span> Ayarlar
             </div>
         </div>
-        <div class="kullanici-bilgi">
-            <?php echo wp_get_current_user()->display_name; ?>
+        <div class="ust-menu-sag-aksiyonlar">
+            <a href="<?php echo esc_url(home_url('/')); ?>" class="ust-menu-aksiyon site-link" target="_blank" title="Site Ana Sayfası">
+                <span class="aksiyon-ikon">🏠</span> <?php bloginfo('name'); ?>
+            </a>
+
+            <div class="ust-menu-aksiyon depo-secici-ust" id="ust-depo-switcher-container">
+                <div id="ust-depo-switcher-trigger" class="depo-trigger">
+                    <span class="aksiyon-ikon">🏬</span>
+                    <span id="ust-aktif-depo-adi">...</span>
+                </div>
+                <div id="ust-depo-dropdown" class="depo-dropdown-menu" style="display: none;">
+                    <!-- Dinamik olarak dolacak -->
+                </div>
+            </div>
+
+            <div class="kullanici-bilgi">
+                <span class="aksiyon-ikon">👤</span>
+                <?php echo wp_get_current_user()->display_name; ?>
+            </div>
+
+            <button id="tam-ekran-toggle" class="ust-menu-aksiyon tam-ekran-btn" title="Tam Ekran (F11)">
+                <span class="aksiyon-ikon">⛶</span>
+            </button>
         </div>
     </div>
 
