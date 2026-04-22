@@ -30,8 +30,28 @@
                 }
             });
 
-            // Müşteri Telefon Maskeleme
+            // Müşteri Telefon Paneli Toggle
+            var musterEkleBtn = document.getElementById("musteri-ekle-btn");
+            var musteriPanel = document.getElementById("musteri-telefon-panel");
+            var musteriKapat = document.getElementById("musteri-telefon-kapat");
             var phoneInput = document.getElementById("musteri-telefon");
+
+            if (musterEkleBtn && musteriPanel) {
+                musterEkleBtn.addEventListener("click", function() {
+                    musteriPanel.style.display = musteriPanel.style.display === "none" ? "block" : "none";
+                    if (musteriPanel.style.display === "block" && phoneInput) {
+                        phoneInput.focus();
+                    }
+                });
+            }
+
+            if (musteriKapat && musteriPanel) {
+                musteriKapat.addEventListener("click", function() {
+                    musteriPanel.style.display = "none";
+                    if (phoneInput) phoneInput.value = ""; // Kapatınca temizle (opsiyonel)
+                });
+            }
+
             if (phoneInput) {
                 phoneInput.addEventListener("input", function(e) {
                     var x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);

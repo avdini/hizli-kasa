@@ -67,14 +67,6 @@ if (!defined('ABSPATH'))
                 </div>
             </div>
 
-            <!-- Müşteri Bilgisi (Opsiyonel) -->
-            <div class="musteri-bilgi-alani">
-                <div class="musteri-input-grup">
-                    <span class="musteri-ikon">👤</span>
-                    <input type="text" id="musteri-telefon" class="musteri-telefon-input" placeholder="Müşteri Telefonu (Opsiyonel)" autocomplete="off">
-                </div>
-            </div>
-
             <!-- Ödeme Tipi Seçici -->
             <div class="odeme-secici">
                 <div class="odeme-btn aktif" data-tip="card">💳 Kredi Kartı</div>
@@ -82,9 +74,19 @@ if (!defined('ABSPATH'))
                 <div class="odeme-btn" data-tip="iban">🏦 IBAN (-%5)</div>
             </div>
 
+            <!-- Müşteri Bilgisi (Gizli - Butonla açılır) -->
+            <div id="musteri-telefon-panel" class="musteri-bilgi-alani" style="display:none;">
+                <div class="musteri-input-grup">
+                    <span class="musteri-ikon">👤</span>
+                    <input type="text" id="musteri-telefon" class="musteri-telefon-input" placeholder="0 (5xx) xxx xx xx" autocomplete="off">
+                    <button id="musteri-telefon-kapat" class="input-temizle-btn">✕</button>
+                </div>
+            </div>
+
             <!-- İşlem Butonları -->
             <div class="islem-grubu">
                 <div class="islem-sol-grup">
+                    <button id="musteri-ekle-btn" title="Müşteri Telefonu Ekle">👤 Müşteri</button>
                     <button id="bol-buton">Ödemeyi Böl</button>
                     <button id="yuvarla-buton">Küsürat Yuvarla</button>
                     <button id="iskonto-buton">İskonto</button>
