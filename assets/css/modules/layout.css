@@ -59,6 +59,12 @@
     border-bottom: 3px solid transparent;
     gap: 8px;
     color: #bdc3c7;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.sekme-ikon {
+    flex-shrink: 0;
 }
 
 .ust-sekme:hover {
