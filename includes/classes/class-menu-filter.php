@@ -48,8 +48,9 @@ add_action('wp', 'hizli_kasa_admin_bar_gizle');
 function hizli_kasa_admin_bar_gizle() {
     if (is_page() && has_shortcode(get_post()->post_content, 'hizli_kasa')) {
         add_filter('show_admin_bar', '__return_false');
-        add_action('wp_head', function() {
-            echo '<script>document.body.classList.add("hizli-kasa-aktif");</script>';
+        add_filter('body_class', function($classes) {
+            $classes[] = 'hizli-kasa-aktif';
+            return $classes;
         });
     }
 }
