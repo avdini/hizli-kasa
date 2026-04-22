@@ -663,6 +663,7 @@ function hizli_kasa_get_order_details($request) {
         'items'      => $items,
         'payment'    => $order->get_payment_method_title(),
         'kasiyer'    => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
+        'kasa_no'    => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
         'depo_id'    => (int) $order->get_meta('_hk_cikis_depo_id'),
         'depo_adi'   => $order->get_meta('_hk_cikis_depo_adi') ?: '',
     ];
@@ -685,6 +686,25 @@ function hizli_kasa_process_refund($request) {
     $original_order = wc_get_order($original_order_id);
 
     $refund_order = wc_create_order(array('status' => 'completed', 'customer_id' => 0));
+    
+    // Kasiyer ve Kasa Bilgilerini Al
+    $current_user = wp_get_current_user();
+    $full_name = trim($current_user->first_name . ' ' . $current_user->last_name);
+    $display_name = !empty($full_name) ? $full_name : $current_user->display_name;
+    $kasa_no = sanitize_text_field($data['kasa_no'] ?? '1');
+
+    // Fatura ve Teslimat Bilgilerini Set Et (Sipariş listesinde görünmesi için)
+    $address = array(
+        'first_name' => $display_name,
+        'last_name'  => 'Kasa ' . $kasa_no,
+        'company'    => 'POS İade',
+        'address_1'  => 'POS Terminali',
+        'city'       => 'Mağaza',
+        'country'    => 'TR'
+    );
+    $refund_order->set_address($address, 'billing');
+    $refund_order->set_address($address, 'shipping');
+
     $total_refund = 0;
 
     foreach ($refund_items as $item) {
@@ -708,20 +728,14 @@ function hizli_kasa_process_refund($request) {
     $refund_order->set_payment_method('cod');
     $refund_order->set_payment_method_title('İade İşlemi');
     
-    // Kasiyer Tam Adını Al
-    $current_user = wp_get_current_user();
-    $full_name = trim($current_user->first_name . ' ' . $current_user->last_name);
-    $kasiyer = !empty($full_name) ? $full_name : $current_user->display_name;
-    
     // POS Standart Meta Verileri
     $iade_toplam = $total_refund; // Döngüde hesapladığımız toplam (negatif değer)
-    $kasa_no = sanitize_text_field($data['kasa_no'] ?? '1');
 
     $refund_order->update_meta_data('_hizli_kasa_original_order', $original_order_id);
     $refund_order->update_meta_data('_hizli_kasa_is_refund', 'yes');
     $refund_order->update_meta_data('_hizli_kasa_kaynak', 'pos_iade');
-    $refund_order->update_meta_data('_hizli_kasa_kasiyer', $kasiyer);
-    $refund_order->update_meta_data('_hizli_kasa_kasa_no', $kasa_no);
+    $refund_order->update_meta_data('_hizli_kasa_kasiyer', $display_name); // Yukarıdaki değişkeni kullan
+    $refund_order->update_meta_data('_hizli_kasa_kasa_no', $kasa_no); // Yukarıdaki değişkeni kullan
     
     // Ödeme Detayları (Varsayılan Nakit)
     $refund_order->update_meta_data('_odeme_nakit', $iade_toplam);

@@ -80,9 +80,22 @@ const RefundManager = (function () {
         let html = `
             <div class="siparis-ozet">
                 <strong>Sipariş: #${originalOrder.id}</strong> | Tarih: ${originalOrder.date} <br>
-                <span>Ödeme: ${originalOrder.payment}</span> | <span>Toplam: ${originalOrder.total} TL</span>
+                <span>Ödeme: ${originalOrder.payment}</span> | <span>Toplam: ${originalOrder.total} TL</span> <br>
+                <span class="original-kasa-bilgi">📢 Bu sipariş <strong>Kasa ${originalOrder.kasa_no || 'Bilinmiyor'}</strong> üzerinden satılmış. (Kasiyer: ${originalOrder.kasiyer || '-'})</span>
             </div>
-            <div class="urun-listesi-baslik">Siparişteki Ürünler</div>
+            
+            <div class="iade-islem-ayarlari" style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 8px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px;">İadenin İşleneceği Kasa:</label>
+                <select id="iade-hedef-kasa" class="terminal-input" style="width: 100%;">
+                    <option value="1" ${kasaAyar.kasaNo == "1" ? 'selected' : ''}>Kasa 1</option>
+                    <option value="2" ${kasaAyar.kasaNo == "2" ? 'selected' : ''}>Kasa 2</option>
+                    <option value="3" ${kasaAyar.kasaNo == "3" ? 'selected' : ''}>Kasa 3</option>
+                    <option value="4" ${kasaAyar.kasaNo == "4" ? 'selected' : ''}>Kasa 4</option>
+                    <option value="5" ${kasaAyar.kasaNo == "5" ? 'selected' : ''}>Kasa 5</option>
+                </select>
+            </div>
+
+            <div class="urun-listesi-baslik">İade Edilecek Ürünleri Seçin</div>
             <div class="iade-kaydirilabilir-liste">
         `;
 
@@ -178,6 +191,8 @@ const RefundManager = (function () {
         showLoading();
         try {
             const apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
+            const selectedKasa = document.getElementById('iade-hedef-kasa') ? document.getElementById('iade-hedef-kasa').value : (kasaAyar.kasaNo || "1");
+
             const response = await fetch(`${apiBase}hizli-kasa/v1/process-refund`, {
                 method: 'POST',
                 headers: { 
@@ -186,7 +201,7 @@ const RefundManager = (function () {
                 },
                 body: JSON.stringify({
                     original_order_id: originalOrder.id,
-                    kasa_no: (typeof kasaAyar !== 'undefined' ? kasaAyar.kasaNo : "1"),
+                    kasa_no: selectedKasa,
                     items: refundCart.map(item => ({
                         id: item.id,
                         item_id: item.item_id,
