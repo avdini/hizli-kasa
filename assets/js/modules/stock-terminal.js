@@ -25,15 +25,14 @@
             var self = this;
             var input = document.getElementById('terminal-arama-input');
             
-            // Eğer element henüz yoksa (sekme yüklenmemişse), yüklendiğinde tekrar dene
+            // Eğer element henüz yoksa (sekme yüklenmemişse) veya her yüklendiğinde 
+            // olayları tekrar bağlamak istiyorsak bu dinleyiciyi kullanıyoruz.
             if (!input) {
-                var tabListener = function(e) {
+                document.addEventListener('hkTabLoaded', function(e) {
                     if (e.detail.tab === 'urunler') {
-                        document.removeEventListener('hkTabLoaded', tabListener);
                         self.init();
                     }
-                };
-                document.addEventListener('hkTabLoaded', tabListener);
+                });
                 return;
             }
 

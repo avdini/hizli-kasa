@@ -39,6 +39,11 @@ document.addEventListener("DOMContentLoaded", function() {
         HK.ThemeManager.init();
     }
 
+    // 7.5 Barkod Render Motorunu başlat
+    if (HK.BarcodeRenderer) {
+        HK.BarcodeRenderer.init();
+    }
+
     // 8. Depo Yöneticisini başlat (async — aktif depoyu server'dan/localStorage'dan yükler)
     if (HK.DepoManager) {
         HK.DepoManager.init().then(function() {

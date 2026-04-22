@@ -17,20 +17,20 @@
         init: function() {
             var self = this;
             
-            // Modal Kapatma
+            // Modal Kapatma - Eskisini temizle ve yenisini bağla (re-init desteği)
             var iptalBtn = document.getElementById('barkod-iptal');
             if (iptalBtn) {
-                iptalBtn.addEventListener('click', () => {
+                iptalBtn.onclick = function() {
                     document.getElementById('barkod-yazdir-modal').style.display = 'none';
-                });
+                };
             }
 
             // Yazdır Butonu
             var yazdirBtn = document.getElementById('barkod-onay-yazdir');
             if (yazdirBtn) {
-                yazdirBtn.addEventListener('click', () => {
+                yazdirBtn.onclick = function() {
                     self.processAndPrint();
-                });
+                };
             }
         },
 
@@ -237,9 +237,11 @@
         }
     };
 
-    // Sayfa yüklendiğinde başlat
-    document.addEventListener('DOMContentLoaded', function() {
-        HK.BarcodeRenderer.init();
+    // Sekme yüklendiğinde başlat (özellikle urunler sekmesi AJAX ile gelirse)
+    document.addEventListener('hkTabLoaded', function(e) {
+        if (e.detail.tab === 'urunler') {
+            HK.BarcodeRenderer.init();
+        }
     });
 
 })(window.HizliKasa = window.HizliKasa || {});
