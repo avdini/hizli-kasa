@@ -186,6 +186,7 @@ const RefundManager = (function () {
                 },
                 body: JSON.stringify({
                     original_order_id: originalOrder.id,
+                    kasa_no: (typeof kasaAyar !== 'undefined' ? kasaAyar.kasaNo : "1"),
                     items: refundCart.map(item => ({
                         id: item.id,
                         item_id: item.item_id,

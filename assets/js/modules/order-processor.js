@@ -203,7 +203,8 @@
                     { key: "Ödeme (Kart)", value: oKart.toFixed(2) + " TL" },
                     { key: "Ödeme (IBAN)", value: oIban.toFixed(2) + " TL" },
                     { key: "_hk_cikis_depo_id", value: (HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0).toString() },
-                    { key: "_hk_cikis_depo_adi", value: HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '' }
+                    { key: "_hk_cikis_depo_adi", value: HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '' },
+                    { key: "_hizli_kasa_kaynak", value: "pos_satis" }
                 ]
             };
 

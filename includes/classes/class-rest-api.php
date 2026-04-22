@@ -707,9 +707,25 @@ function hizli_kasa_process_refund($request) {
 
     $refund_order->set_payment_method('cod');
     $refund_order->set_payment_method_title('İade İşlemi');
+    
+    // POS Standart Meta Verileri
+    $iade_toplam = $refund_order->get_total(); // Negatif değer döner
+    $kasa_no = sanitize_text_field($data['kasa_no'] ?? '1');
+    $kasiyer = wp_get_current_user()->display_name;
+
     $refund_order->update_meta_data('_hizli_kasa_original_order', $original_order_id);
     $refund_order->update_meta_data('_hizli_kasa_is_refund', 'yes');
-    $refund_order->update_meta_data('_hizli_kasa_kasiyer', wp_get_current_user()->display_name);
+    $refund_order->update_meta_data('_hizli_kasa_kaynak', 'pos_iade'); // Kaynak ayrımı
+    $refund_order->update_meta_data('_hizli_kasa_kasiyer', $kasiyer);
+    $refund_order->update_meta_data('_hizli_kasa_kasa_no', $kasa_no);
+    
+    // Ödeme Detayları (Varsayılan Nakit)
+    $refund_order->update_meta_data('_odeme_nakit', $iade_toplam);
+    $refund_order->update_meta_data('Ödeme (Nakit)', number_format($iade_toplam, 2, '.', '') . ' TL');
+    
+    // Toplamlar (Raporlar için)
+    $refund_order->update_meta_data('_ara_toplam', $iade_toplam);
+    $refund_order->update_meta_data('_etiket_toplami', $iade_toplam);
     
     $user_id = get_current_user_id();
     $fallback_depo_id = intval($data['active_depo_id'] ?? 0);
