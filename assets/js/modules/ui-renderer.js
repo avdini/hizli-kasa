@@ -7,6 +7,7 @@
  * @package HizliKasa
  */
 
+window.HizliKasa = window.HizliKasa || {};
 (function(HK) {
     'use strict';
 
@@ -199,11 +200,19 @@
          * @param {boolean} requireClose Manuel kapatma gerektirir mi?
          */
         showToast: function(msg, type, requireClose) {
+            console.log("HK Toast:", type, msg); // Debug log
+            
             type = type || 'info';
-            requireClose = requireClose || (type === 'error'); // Hatalar varsayılan olarak manuel kapatılır
+            // Hatalar veya açıkça istenen durumlar manuel kapatılır
+            requireClose = (requireClose === true) || (type === 'error'); 
 
             var container = document.getElementById('hk-toast-container');
-            if (!container) return;
+            if (!container) {
+                console.error("Toast container (hk-toast-container) bulunamadı!");
+                // Yedek: Eğer konteyner yoksa ama çok gerekliyse (hata) alert bas
+                if (type === 'error') alert("HATA: " + msg);
+                return;
+            }
 
             var toast = document.createElement('div');
             toast.className = 'hk-toast ' + type;
@@ -213,7 +222,7 @@
             if (type === 'warning') icon = '⚠️';
             if (type === 'error')   icon = '❌';
 
-            var closeBtnHtml = requireClose ? '<span class="toast-close" style="cursor:pointer; margin-left:auto; font-weight:bold; font-size:18px; padding-left:10px;">&times;</span>' : '';
+            var closeBtnHtml = requireClose ? '<span class="toast-close" style="cursor:pointer; margin-left:auto; font-weight:bold; font-size:20px; padding:0 5px; line-height:1;">&times;</span>' : '';
 
             toast.innerHTML = 
                 '<span class="toast-icon">' + icon + '</span>' +
@@ -225,25 +234,24 @@
             if (requireClose) {
                 var closeBtn = toast.querySelector('.toast-close');
                 if (closeBtn) {
-                    closeBtn.addEventListener('click', function() {
+                    closeBtn.onclick = function() {
+                        toast.classList.add('fade-out');
+                        setTimeout(function() {
+                            if (toast.parentNode) toast.parentNode.removeChild(toast);
+                        }, 500);
+                    };
+                }
+            } else {
+                // 4 saniye sonra otomatik kaldır
+                setTimeout(function() {
+                    if (toast && toast.parentNode) {
                         toast.classList.add('fade-out');
                         setTimeout(function() {
                             if (toast.parentNode) {
                                 toast.parentNode.removeChild(toast);
                             }
                         }, 500);
-                    });
-                }
-            } else {
-                // 4 saniye sonra otomatik kaldır
-                setTimeout(function() {
-                    if (!toast.parentNode) return;
-                    toast.classList.add('fade-out');
-                    setTimeout(function() {
-                        if (toast.parentNode) {
-                            toast.parentNode.removeChild(toast);
-                        }
-                    }, 500);
+                    }
                 }, 4000);
             }
         }

@@ -7,6 +7,7 @@
  * @package HizliKasa
  */
 
+window.HizliKasa = window.HizliKasa || {};
 (function(HK) {
     'use strict';
 
