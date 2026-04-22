@@ -118,14 +118,7 @@
         text-overflow: ellipsis;
     }
 
-    .site-name-text {
-        display: none;
-    }
 
-    .home-icon {
-        display: inline-block;
-        font-size: 18px;
-    }
 
     .tam-ekran-btn {
         display: none !important; /* Kullanıcı isteği: mobilde tam ekran butonuna gerek yok */
@@ -163,16 +156,5 @@
         display: none;
     }
 
-    .site-name-text {
-        display: none;
-    }
 
-    .site-link {
-        padding: 0 10px;
-    }
-
-    .home-icon {
-        display: inline-block;
-        font-size: 18px;
-    }
 }
