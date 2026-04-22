@@ -9,45 +9,55 @@
         padding: 5px !important;
         overflow: visible;
     }
+
     #kasa-ana-duzen {
         flex-direction: column;
     }
+
     #kasa-sidebar {
         flex-direction: row;
         width: 100%;
         overflow-x: auto;
         padding-bottom: 5px;
     }
+
     .sidebar-btn {
         flex: 1;
         min-width: 60px;
         padding: 8px 0;
     }
+
     #kasa-konteyner {
         padding: 10px;
         border-radius: 0;
         border: none;
         height: auto !important;
     }
+
     #sepet-listesi {
         max-height: 400px;
         min-height: 200px;
     }
+
     .toplam-deger {
         font-size: 24px !important;
     }
+
     #onayla-buton {
         padding: 12px;
         font-size: 16px;
     }
+
     #iskonto-buton {
         padding: 12px;
         font-size: 12px;
     }
+
     .ust-buton-kucuk {
         padding: 5px 10px !important;
         font-size: 12px !important;
     }
+
     .modal-icerik {
         width: 95% !important;
         padding: 15px;
@@ -80,7 +90,7 @@
         background: var(--hk-bg-header);
         flex-direction: column;
         transition: 0.3s ease-in-out;
-        box-shadow: 10px 0 20px rgba(0,0,0,0.3);
+        box-shadow: 10px 0 20px rgba(0, 0, 0, 0.3);
         z-index: 999;
         overflow-y: auto;
     }
@@ -91,14 +101,14 @@
 
     .ust-sekme {
         padding: 15px 25px;
-        border-bottom: 1px solid rgba(255,255,255,0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         border-left: 4px solid transparent;
         width: 100%;
         height: auto;
     }
 
     .ust-sekme.aktif {
-        border-bottom-color: rgba(255,255,255,0.05);
+        border-bottom-color: rgba(255, 255, 255, 0.05);
         border-left-color: #3498db;
     }
 
@@ -121,7 +131,8 @@
 
 
     .tam-ekran-btn {
-        display: none !important; /* Kullanıcı isteği: mobilde tam ekran butonuna gerek yok */
+        display: none !important;
+        /* Kullanıcı isteği: mobilde tam ekran butonuna gerek yok */
     }
 
     .depo-secici-ust .ust-aktif-depo-adi {
@@ -138,10 +149,11 @@
     .ust-menu-sag-aksiyonlar {
         margin-left: auto;
     }
+
     .logo-text {
         display: none;
     }
-    
+
     .kasa-logo {
         margin-right: 10px;
         gap: 0;
@@ -152,11 +164,12 @@
     }
 }
 
-/* Sekme emojilerini 1440px ve altında gizle */
-@media (min-width: 769px) and (max-width: 1440px) {
+/* Sekme emojilerini 1080px ve altında gizle */
+@media (min-width: 769px) and (max-width: 1080px) {
     .sekme-ikon {
         display: none;
     }
+
     .ust-sekme {
         gap: 0;
     }
