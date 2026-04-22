@@ -14,10 +14,15 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
 <div id="hizli-kasa-app" class="theme-<?php echo esc_attr($user_theme); ?>">
     <!-- Üst Sekme Menüsü -->
     <div id="hizli-kasa-ust-menu">
+        <button id="mobile-menu-toggle" class="mobile-toggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
         <div class="kasa-logo">
-            <span>🚀</span> HIZLI KASA
+            <span>🚀</span> <span class="logo-text">HIZLI KASA</span>
         </div>
-        <div class="ust-sekme-listesi">
+        <div class="ust-sekme-listesi" id="ust-sekme-listesi">
             <div class="ust-sekme aktif" data-tab="kasa">
                 <span class="sekme-ikon">📠</span> Kasa
             </div>

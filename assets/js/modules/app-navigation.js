@@ -8,6 +8,8 @@ const AppNavigation = (function () {
     let tabs = null;
     let contents = null;
     let loadingOverlay = null;
+    let mobileToggle = null;
+    let menuList = null;
 
     // Aktif sekmeleri ve içerikleri tutar
     let loadedTabs = ['kasa']; // Kasa varsayılan olarak yüklüdür
@@ -16,13 +18,26 @@ const AppNavigation = (function () {
         tabs = document.querySelectorAll('.ust-sekme');
         contents = document.querySelectorAll('.tab-content');
         loadingOverlay = document.getElementById('app-loading');
+        mobileToggle = document.getElementById('mobile-menu-toggle');
+        menuList = document.getElementById('ust-sekme-listesi');
 
         if (tabs) {
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     const targetTab = tab.getAttribute('data-tab');
                     handleTabSwitch(targetTab);
+                    
+                    // Mobilde menü açıksa kapat
+                    if (menuList && menuList.classList.contains('open')) {
+                        toggleMobileMenu();
+                    }
                 });
+            });
+        }
+
+        if (mobileToggle) {
+            mobileToggle.addEventListener('click', () => {
+                toggleMobileMenu();
             });
         }
 
@@ -47,6 +62,13 @@ const AppNavigation = (function () {
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             }
+        }
+    }
+
+    function toggleMobileMenu() {
+        if (mobileToggle && menuList) {
+            mobileToggle.classList.toggle('open');
+            menuList.classList.toggle('open');
         }
     }
 

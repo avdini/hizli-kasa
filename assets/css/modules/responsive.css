@@ -52,4 +52,75 @@
         width: 95% !important;
         padding: 15px;
     }
+
+    /* Üst Menü Mobil Düzenlemeleri */
+    #hizli-kasa-ust-menu {
+        justify-content: space-between;
+        padding: 0 15px;
+    }
+
+    .mobile-toggle {
+        display: flex;
+    }
+
+    .logo-text {
+        display: none;
+    }
+
+    .kasa-logo {
+        margin-right: 0;
+    }
+
+    .ust-sekme-listesi {
+        position: fixed;
+        top: 60px;
+        left: -100%;
+        width: 260px;
+        height: calc(100vh - 60px);
+        background: var(--hk-bg-header);
+        flex-direction: column;
+        transition: 0.3s ease-in-out;
+        box-shadow: 10px 0 20px rgba(0,0,0,0.3);
+        z-index: 999;
+        overflow-y: auto;
+    }
+
+    .ust-sekme-listesi.open {
+        left: 0;
+    }
+
+    .ust-sekme {
+        padding: 15px 25px;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        border-left: 4px solid transparent;
+        width: 100%;
+        height: auto;
+    }
+
+    .ust-sekme.aktif {
+        border-bottom-color: rgba(255,255,255,0.05);
+        border-left-color: #3498db;
+    }
+
+    .ust-menu-sag-aksiyonlar {
+        background: transparent;
+        border: none;
+        padding: 0;
+    }
+
+    .kullanici-bilgi {
+        display: none; /* Mobilde kullanıcı bilgisini gizle */
+    }
+
+    .tam-ekran-btn {
+        display: none !important; /* Kullanıcı isteği: mobilde tam ekran butonuna gerek yok */
+    }
+
+    .depo-secici-ust .ust-aktif-depo-adi {
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 12px;
+    }
 }
