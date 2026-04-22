@@ -88,6 +88,17 @@ if (!defined('ABSPATH')) exit;
         </div>
 
         <div class="iade-ozet-alani">
+            <div id="iade-iskonto-konteyner" style="display:none; margin-bottom:15px; padding:12px; background:rgba(255,193,7,0.1); border:1px dashed #f1c40f; border-radius:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <span style="font-size:13px; font-weight:bold; color:#856404;">Düşülecek İskonto (TL):</span>
+                    <input type="number" id="iade-iskonto-input" class="terminal-input" style="width:100px; text-align:right; font-weight:bold;" min="0" step="0.01" value="0">
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:11px; color:#666;">
+                    <span>Kalan İskonto Limiti:</span>
+                    <span id="iade-kalan-iskonto" style="font-weight:bold;">0.00 TL</span>
+                </div>
+            </div>
+
             <div class="iade-toplam-satir">
                 <span>İADE EDİLECEK TOPLAM:</span>
                 <span id="iade-toplam-tutar">0.00 TL</span>

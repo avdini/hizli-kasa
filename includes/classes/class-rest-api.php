@@ -697,8 +697,23 @@ function hizli_kasa_get_order_details($request) {
         'depo_id'            => (int) $order->get_meta('_hk_cikis_depo_id'),
         'depo_adi'           => $order->get_meta('_hk_cikis_depo_adi') ?: '',
         'telefon'            => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '',
-        'is_fully_refunded'  => $is_fully_refunded
+        'is_fully_refunded'  => $is_fully_refunded,
+        'total_discount'     => hizli_kasa_get_order_total_discount($order),
+        'refunded_discount'  => (float) $order->get_meta('_hk_refunded_discount')
     ];
+}
+
+/**
+ * Siparişteki toplam iskonto tutarını hesaplar (Fee olarak eklenenler).
+ */
+function hizli_kasa_get_order_total_discount($order) {
+    $total_discount = 0;
+    foreach ($order->get_fees() as $fee) {
+        if (strpos(strtolower($fee->get_name()), 'iskonto') !== false) {
+            $total_discount += abs((float) $fee->get_total());
+        }
+    }
+    return $total_discount;
 }
 
 /**
@@ -850,6 +865,23 @@ function hizli_kasa_process_refund($request) {
         }
     }
 
+    // --- İade İskonto Kesintisi Ekle ---
+    $refund_discount = floatval($data['refund_discount'] ?? 0);
+    if ($refund_discount > 0) {
+        $fee = new WC_Order_Item_Fee();
+        $fee->set_name('İade İskonto Kesintisi');
+        $fee->set_amount($refund_discount);
+        $fee->set_total($refund_discount);
+        $refund_order->add_item($fee);
+
+        // Orijinal siparişteki iade edilen iskonto bilgisini güncelle
+        if ($original_order) {
+            $current_refunded_discount = (float) $original_order->get_meta('_hk_refunded_discount');
+            $original_order->update_meta_data('_hk_refunded_discount', $current_refunded_discount + $refund_discount);
+            $original_order->save();
+        }
+    }
+
     $refund_order->set_payment_method('cod');
     $refund_order->set_payment_method_title('İade İşlemi');
     
@@ -863,12 +895,13 @@ function hizli_kasa_process_refund($request) {
     $refund_order->update_meta_data('_hizli_kasa_kasa_no', $kasa_no); // Yukarıdaki değişkeni kullan
     
     // Ödeme Detayları (Varsayılan Nakit)
-    $refund_order->update_meta_data('_odeme_nakit', $iade_toplam);
-    $refund_order->update_meta_data('Ödeme (Nakit)', number_format(abs($iade_toplam), 2, '.', '') . ' TL'); // Eksi işareti kafa karıştırmasın diye abs() aldım veya istersen eksi bırakabiliriz
+    $final_refund_total = $total_refund + $refund_discount;
+    $refund_order->update_meta_data('_odeme_nakit', $final_refund_total);
+    $refund_order->update_meta_data('Ödeme (Nakit)', number_format(abs($final_refund_total), 2, '.', '') . ' TL'); // Eksi işareti kafa karıştırmasın diye abs() aldım veya istersen eksi bırakabiliriz
     
     // Toplamlar (Raporlar için)
-    $refund_order->update_meta_data('_ara_toplam', $iade_toplam);
-    $refund_order->update_meta_data('_etiket_toplami', $iade_toplam);
+    $refund_order->update_meta_data('_ara_toplam', $final_refund_total);
+    $refund_order->update_meta_data('_etiket_toplami', $final_refund_total);
     
     $user_id = get_current_user_id();
     $fallback_depo_id = intval($data['active_depo_id'] ?? 0);

@@ -64,6 +64,17 @@ const RefundManager = (function () {
             onaylaBtn.onclick = processRefund;
         }
 
+        const iskontoInput = document.getElementById('iade-iskonto-input');
+        if (iskontoInput) {
+            iskontoInput.oninput = () => {
+                const kalan = (originalOrder.total_discount || 0) - (originalOrder.refunded_discount || 0);
+                if (parseFloat(iskontoInput.value) > kalan) {
+                    iskontoInput.value = kalan.toFixed(2);
+                }
+                renderRefundCart();
+            };
+        }
+
         // Modül konteynerine tıklandığında input'u tekrar odakla (Hızlı barkod için)
         const container = document.getElementById('iade-modul-konteyner');
         if (container) {
@@ -221,6 +232,9 @@ const RefundManager = (function () {
         
         // Sepeti sıfırla
         refundCart = [];
+        const iskontoInput = document.getElementById('iade-iskonto-input');
+        if (iskontoInput) iskontoInput.value = 0;
+        
         renderRefundCart();
     }
 
@@ -279,7 +293,27 @@ const RefundManager = (function () {
         });
 
         list.innerHTML = html || '<p class="iade-bos-sepet">İade edilecek ürün seçilmedi.</p>';
-        totalSpan.innerText = `-${total.toFixed(2)} TL`;
+        
+        // İskonto Yönetimi
+        const iskontoKonteyner = document.getElementById('iade-iskonto-konteyner');
+        const iskontoInput = document.getElementById('iade-iskonto-input');
+        const kalanIskontoSpan = document.getElementById('iade-kalan-iskonto');
+        
+        const kalanIskonto = (originalOrder.total_discount || 0) - (originalOrder.refunded_discount || 0);
+        
+        if (kalanIskonto > 0 && refundCart.length > 0) {
+            iskontoKonteyner.style.display = 'block';
+            kalanIskontoSpan.innerText = `${kalanIskonto.toFixed(2)} TL`;
+            iskontoInput.max = kalanIskonto;
+        } else {
+            iskontoKonteyner.style.display = 'none';
+            if (iskontoInput) iskontoInput.value = 0;
+        }
+
+        const currentDiscount = parseFloat(iskontoInput ? iskontoInput.value : 0) || 0;
+        const finalTotal = total - currentDiscount;
+
+        totalSpan.innerText = `-${finalTotal.toFixed(2)} TL`;
         onaylaBtn.disabled = refundCart.length === 0;
     }
 
@@ -300,6 +334,7 @@ const RefundManager = (function () {
                 body: JSON.stringify({
                     original_order_id: originalOrder.id,
                     kasa_no: selectedKasa,
+                    refund_discount: parseFloat(document.getElementById('iade-iskonto-input')?.value || 0),
                     items: refundCart.map(item => ({
                         id: item.id,
                         item_id: item.item_id,
