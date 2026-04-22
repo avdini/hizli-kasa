@@ -703,14 +703,17 @@ function hizli_kasa_get_order_details($request) {
     ];
 }
 
-/**
- * Siparişteki toplam iskonto tutarını hesaplar (Fee olarak eklenenler).
- */
 function hizli_kasa_get_order_total_discount($order) {
-    $total_discount = 0;
+    // 1. WooCommerce'in standart indirim toplamını al (Kuponlar vb.)
+    $total_discount = (float) $order->get_discount_total();
+
+    // 2. Özel 'Fee' (Ek Ücret) olarak eklenen iskontoları da tara
     foreach ($order->get_fees() as $fee) {
-        if (strpos(mb_strtolower($fee->get_name(), 'UTF-8'), 'iskonto') !== false) {
-            $total_discount += abs((float) $fee->get_total());
+        $name = $fee->get_name();
+        $total = (float) $fee->get_total();
+        
+        if (preg_match('/iskonto|indirim/ui', $name) || $total < 0) {
+            $total_discount += abs($total);
         }
     }
     return $total_discount;

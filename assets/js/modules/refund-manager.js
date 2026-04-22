@@ -300,6 +300,11 @@ const RefundManager = (function () {
         const kalanIskontoSpan = document.getElementById('iade-kalan-iskonto');
         
         const kalanIskonto = (originalOrder.total_discount || 0) - (originalOrder.refunded_discount || 0);
+        console.log('İskonto Bilgisi:', { 
+            total: originalOrder.total_discount, 
+            refunded: originalOrder.refunded_discount, 
+            kalan: kalanIskonto 
+        });
         
         if (kalanIskonto > 0) {
             iskontoKonteyner.style.display = 'block';
