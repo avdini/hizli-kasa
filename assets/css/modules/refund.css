@@ -357,3 +357,54 @@
     font-weight: 500;
     vertical-align: middle;
 }
+
+/* İade İskonto Alanı */
+#iade-iskonto-konteyner {
+    transition: all 0.3s ease;
+    border: 1px dashed #f1c40f !important;
+    background: rgba(241, 196, 15, 0.05) !important;
+    margin-bottom: 15px;
+    padding: 12px;
+    border-radius: 10px;
+}
+
+#iade-iskonto-konteyner span {
+    color: var(--hk-text-main);
+    font-size: 13px;
+}
+
+.iskonto-girdi-satiri, .iskonto-limit-satiri {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.iskonto-girdi-satiri {
+    margin-bottom: 8px;
+}
+
+.iskonto-girdi-satiri span {
+    font-weight: bold;
+    color: #856404 !important;
+}
+
+.iskonto-limit-satiri span:first-child {
+    font-size: 11px;
+    color: var(--hk-text-muted);
+}
+
+#iade-iskonto-input {
+    background: var(--hk-bg-body);
+    color: var(--hk-text-main);
+    border: 1px solid var(--hk-border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    width: 100px;
+    text-align: right;
+    font-weight: bold;
+}
+
+#iade-kalan-iskonto {
+    color: #f39c12 !important;
+    font-weight: bold;
+}

@@ -709,7 +709,7 @@ function hizli_kasa_get_order_details($request) {
 function hizli_kasa_get_order_total_discount($order) {
     $total_discount = 0;
     foreach ($order->get_fees() as $fee) {
-        if (strpos(strtolower($fee->get_name()), 'iskonto') !== false) {
+        if (strpos(mb_strtolower($fee->get_name(), 'UTF-8'), 'iskonto') !== false) {
             $total_discount += abs((float) $fee->get_total());
         }
     }

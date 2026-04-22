@@ -301,7 +301,7 @@ const RefundManager = (function () {
         
         const kalanIskonto = (originalOrder.total_discount || 0) - (originalOrder.refunded_discount || 0);
         
-        if (kalanIskonto > 0 && refundCart.length > 0) {
+        if (kalanIskonto > 0) {
             iskontoKonteyner.style.display = 'block';
             kalanIskontoSpan.innerText = `${kalanIskonto.toFixed(2)} TL`;
             iskontoInput.max = kalanIskonto;
