@@ -70,7 +70,7 @@
     transition: all 0.2s;
 }
 
-#bol-buton, #iskonto-buton, #yuvarla-buton {
+#bol-buton, #iskonto-buton, #yuvarla-buton, #musteri-ekle-btn {
     flex: 1 !important;
     padding: 15px 5px;
     font-size: 13px;
@@ -91,7 +91,7 @@
     transform: scale(1.02);
 }
 
-#bol-buton:hover, #iskonto-buton:hover, #yuvarla-buton:hover {
+#bol-buton:hover, #iskonto-buton:hover, #yuvarla-buton:hover, #musteri-ekle-btn:hover {
     background: #7f8c8d;
 }
 

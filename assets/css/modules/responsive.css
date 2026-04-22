@@ -48,7 +48,7 @@
         font-size: 16px;
     }
 
-    #iskonto-buton {
+    #iskonto-buton, #bol-buton, #yuvarla-buton, #musteri-ekle-btn {
         padding: 12px;
         font-size: 12px;
     }
