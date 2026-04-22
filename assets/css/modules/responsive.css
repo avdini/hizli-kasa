@@ -48,9 +48,14 @@
         font-size: 16px;
     }
 
-    #iskonto-buton, #bol-buton, #yuvarla-buton, #musteri-ekle-btn {
+    #iskonto-buton, #bol-buton, #yuvarla-buton {
         padding: 12px;
         font-size: 12px;
+    }
+
+    #musteri-ekle-btn {
+        padding: 8px;
+        font-size: 10px;
     }
 
     .ust-buton-kucuk {
