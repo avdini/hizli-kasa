@@ -1549,6 +1549,7 @@ function hizli_kasa_get_recent_orders($request) {
             'payment_method' => $order->get_payment_method(),
             'payment_title'  => $order->get_payment_method_title(),
             'date'           => $order->get_date_created()->date('H:i'),
+            'has_refund'     => !empty($order->get_refunds()),
             'items'          => $items
         ];
     }

@@ -76,17 +76,21 @@
 
                 orders.forEach(function(order) {
                     var div = document.createElement("div");
-                    div.className = "recent-order-item";
+                    div.className = "recent-order-item" + (order.has_refund ? " is-refunded" : "");
                     div.innerHTML = `
                         <div class="recent-order-info">
-                            <span class="recent-order-id">#${order.id}</span>
+                            <span class="recent-order-id">#${order.id} ${order.has_refund ? '<small style="color:#d63031;">(İade İşlemi Gördü)</small>' : ''}</span>
                             <span class="recent-order-meta">${order.date} | ${order.payment_title}</span>
                         </div>
                         <div class="recent-order-total">${parseFloat(order.total).toFixed(2)} TL</div>
                     `;
-                    div.addEventListener("click", function() {
-                        self.selectOrder(order);
-                    });
+                    
+                    if (!order.has_refund) {
+                        div.addEventListener("click", function() {
+                            self.selectOrder(order);
+                        });
+                    }
+                    
                     container.appendChild(div);
                 });
 

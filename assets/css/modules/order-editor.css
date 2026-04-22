@@ -132,3 +132,11 @@
     opacity: 0.5;
     background: #fee2e2 !important;
 }
+
+.recent-order-item.is-refunded {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(1);
+}
+
