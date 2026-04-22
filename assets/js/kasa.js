@@ -44,6 +44,16 @@ document.addEventListener("DOMContentLoaded", function() {
         HK.BarcodeRenderer.init();
     }
 
+    // 7.6 Sipariş Düzenleyiciyi başlat
+    if (HK.OrderEditor) {
+        HK.OrderEditor.init();
+    }
+
+    // 7.7 Rapor modüllerini başlat
+    if (HK.OrderEditReports) {
+        HK.OrderEditReports.init();
+    }
+
     // 8. Depo Yöneticisini başlat (async — aktif depoyu server'dan/localStorage'dan yükler)
     if (HK.DepoManager) {
         HK.DepoManager.init().then(function() {

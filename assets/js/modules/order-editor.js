@@ -1,0 +1,213 @@
+/**
+ * Hızlı Kasa - Sipariş Düzenleyici (Order Editor)
+ *
+ * Kasiyerin son siparişleri düzenlemesini sağlar.
+ * 
+ * @package HizliKasa
+ */
+
+(function(HK) {
+    'use strict';
+
+    HK.OrderEditor = {
+        activeOrder: null,
+        editedItems: {}, // item_id -> new_qty
+
+        init: function() {
+            var self = this;
+            var editBtn = document.getElementById("siparis-duzenle-buton");
+            var closeBtn = document.getElementById("order-edit-kapat");
+            var backBtn = document.getElementById("order-edit-back");
+            var saveBtn = document.getElementById("order-edit-save");
+
+            if (editBtn) {
+                editBtn.addEventListener("click", function() {
+                    self.openModal();
+                });
+            }
+
+            if (closeBtn) {
+                closeBtn.addEventListener("click", function() {
+                    document.getElementById("order-edit-modal").style.display = "none";
+                });
+            }
+
+            if (backBtn) {
+                backBtn.addEventListener("click", function() {
+                    document.getElementById("order-edit-detail-view").style.display = "none";
+                    document.getElementById("order-edit-list-view").style.display = "block";
+                });
+            }
+
+            if (saveBtn) {
+                saveBtn.addEventListener("click", function() {
+                    self.saveChanges();
+                });
+            }
+        },
+
+        openModal: function() {
+            document.getElementById("order-edit-modal").style.display = "flex";
+            document.getElementById("order-edit-detail-view").style.display = "none";
+            document.getElementById("order-edit-list-view").style.display = "block";
+            this.loadRecentOrders();
+        },
+
+        loadRecentOrders: async function() {
+            var container = document.getElementById("recent-orders-container");
+            var loading = document.getElementById("recent-orders-loading");
+            var self = this;
+
+            loading.style.display = "block";
+            container.innerHTML = "";
+
+            try {
+                var response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/recent-orders?kasa_no=' + HK.State.aktifKasaId, {
+                    headers: { 'X-WP-Nonce': kasaAyar.nonce }
+                });
+                var orders = await response.json();
+
+                loading.style.display = "none";
+
+                if (orders.length === 0) {
+                    container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--hk-text-muted);">Bugün yapılmış düzenlenebilir sipariş bulunamadı.</div>';
+                    return;
+                }
+
+                orders.forEach(function(order) {
+                    var div = document.createElement("div");
+                    div.className = "recent-order-item";
+                    div.innerHTML = `
+                        <div class="recent-order-info">
+                            <span class="recent-order-id">#${order.id}</span>
+                            <span class="recent-order-meta">${order.date} | ${order.payment_title}</span>
+                        </div>
+                        <div class="recent-order-total">${parseFloat(order.total).toFixed(2)} TL</div>
+                    `;
+                    div.addEventListener("click", function() {
+                        self.selectOrder(order);
+                    });
+                    container.appendChild(div);
+                });
+
+            } catch (e) {
+                console.error("Recent orders error", e);
+                loading.innerText = "Hata oluştu!";
+            }
+        },
+
+        selectOrder: function(order) {
+            this.activeOrder = order;
+            this.editedItems = {};
+            
+            document.getElementById("order-edit-list-view").style.display = "none";
+            document.getElementById("order-edit-detail-view").style.display = "block";
+            
+            document.getElementById("edit-order-payment").value = order.payment_method;
+            this.renderItems();
+        },
+
+        renderItems: function() {
+            var self = this;
+            var container = document.getElementById("order-edit-items-container");
+            container.innerHTML = "";
+
+            this.activeOrder.items.forEach(function(item) {
+                var currentQty = self.editedItems[item.item_id] !== undefined ? self.editedItems[item.item_id] : item.qty;
+                var isRemoved = currentQty === 0;
+
+                var div = document.createElement("div");
+                div.className = "edit-item-row" + (isRemoved ? " removed-item" : "");
+                div.innerHTML = `
+                    <div class="edit-item-info">
+                        <span class="edit-item-name">${item.name}</span>
+                        <span class="edit-item-price">${parseFloat(item.total / item.qty).toFixed(2)} TL / Adet</span>
+                    </div>
+                    <div class="edit-item-actions">
+                        <div class="edit-qty-control">
+                            <button class="edit-qty-btn minus" data-id="${item.item_id}">-</button>
+                            <span class="edit-qty-val">${currentQty}</span>
+                            <button class="edit-qty-btn plus" data-id="${item.item_id}" disabled style="opacity:0.3; cursor:not-allowed;">+</button>
+                        </div>
+                        <button class="remove-item-btn" data-id="${item.item_id}">${isRemoved ? 'Geri Al' : 'Kaldır'}</button>
+                    </div>
+                `;
+
+                // Azaltma butonu
+                div.querySelector(".minus").addEventListener("click", function() {
+                    if (currentQty > 0) self.updateItemQty(item.item_id, currentQty - 1);
+                });
+
+                // Kaldırma/Geri Al butonu
+                div.querySelector(".remove-item-btn").addEventListener("click", function() {
+                    if (isRemoved) {
+                        self.updateItemQty(item.item_id, item.qty);
+                    } else {
+                        self.updateItemQty(item.item_id, 0);
+                    }
+                });
+
+                container.appendChild(div);
+            });
+        },
+
+        updateItemQty: function(itemId, newQty) {
+            this.editedItems[itemId] = newQty;
+            this.renderItems();
+        },
+
+        saveChanges: async function() {
+            var self = this;
+            var paymentMethod = document.getElementById("edit-order-payment").value;
+            var changes = [];
+
+            for (var itemId in this.editedItems) {
+                changes.push({
+                    item_id: itemId,
+                    qty: this.editedItems[itemId]
+                });
+            }
+
+            if (changes.length === 0 && paymentMethod === this.activeOrder.payment_method) {
+                HK.UIRenderer.showToast("Herhangi bir değişiklik yapılmadı.", 'info');
+                return;
+            }
+
+            if (!confirm("Sipariş düzenlenecek ve stoklar güncellenecek. Emin misiniz?")) return;
+
+            var saveBtn = document.getElementById("order-edit-save");
+            saveBtn.disabled = true;
+            saveBtn.innerText = "Kaydediliyor...";
+
+            try {
+                var response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/update-order', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': kasaAyar.nonce 
+                    },
+                    body: JSON.stringify({
+                        order_id: this.activeOrder.id,
+                        payment_method: paymentMethod,
+                        items: changes
+                    })
+                });
+                var result = await response.json();
+
+                if (result.success) {
+                    HK.UIRenderer.showToast("Sipariş başarıyla güncellendi.", 'success');
+                    document.getElementById("order-edit-modal").style.display = "none";
+                } else {
+                    HK.UIRenderer.showToast("Hata: " + result.message, 'error');
+                }
+            } catch (e) {
+                console.error("Save edit error", e);
+                HK.UIRenderer.showToast("İşlem sırasında bir hata oluştu.", 'error');
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerText = "Değişiklikleri Kaydet";
+            }
+        }
+    };
+
+})(window.HizliKasa);

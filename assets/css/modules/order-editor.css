@@ -1,0 +1,134 @@
+/* Sipariş Düzenleme Modalı Stilleri */
+.recent-orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.recent-order-item {
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.recent-order-item:hover {
+    background: var(--hk-bg-hover);
+    border-color: var(--hk-accent);
+    transform: translateX(5px);
+}
+
+.recent-order-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.recent-order-id {
+    font-weight: 800;
+    color: var(--hk-accent);
+    font-size: 16px;
+}
+
+.recent-order-meta {
+    font-size: 13px;
+    color: var(--hk-text-muted);
+}
+
+.recent-order-total {
+    font-weight: 800;
+    font-size: 18px;
+    color: var(--hk-text-main);
+}
+
+/* Düzenleme Detay Görünümü */
+.edit-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--hk-border);
+    background: var(--hk-bg-card);
+}
+
+.edit-item-row:last-child {
+    border-bottom: none;
+}
+
+.edit-item-info {
+    flex: 1;
+}
+
+.edit-item-name {
+    font-weight: 600;
+    display: block;
+}
+
+.edit-item-price {
+    font-size: 12px;
+    color: var(--hk-text-muted);
+}
+
+.edit-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.edit-qty-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--hk-bg-body);
+    border-radius: 8px;
+    padding: 5px 10px;
+}
+
+.edit-qty-btn {
+    background: var(--hk-border);
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-qty-btn:hover {
+    background: var(--hk-accent);
+    color: white;
+}
+
+.edit-qty-val {
+    font-weight: 800;
+    min-width: 20px;
+    text-align: center;
+}
+
+.remove-item-btn {
+    background: #ff4757;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.remove-item-btn:hover {
+    background: #ff6b81;
+}
+
+.removed-item {
+    opacity: 0.5;
+    background: #fee2e2 !important;
+}

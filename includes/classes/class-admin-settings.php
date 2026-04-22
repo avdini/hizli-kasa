@@ -87,6 +87,11 @@ function hizli_kasa_ayarlari_kaydet()
         'default' => 3,
         'sanitize_callback' => 'intval'
     ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_edit_order_limit', array(
+        'type' => 'integer',
+        'default' => 5,
+        'sanitize_callback' => 'intval'
+    ));
 }
 
 /**
@@ -943,6 +948,14 @@ function hizli_kasa_ayarlar_sayfasi()
                                 <?php $kasa_sayisi = get_option('hizli_kasa_toplam_kasa', 3); ?>
                                 <input type="number" name="hizli_kasa_toplam_kasa" value="<?php echo esc_attr($kasa_sayisi); ?>" min="1" max="20" step="1" class="small-text"> Adet
                                 <p class="description">Sistemde kaç adet terminal (kasa) olduğunu belirtin.</p>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">Düzenlenebilir Sipariş Sayısı</th>
+                            <td>
+                                <?php $edit_limit = get_option('hizli_kasa_edit_order_limit', 5); ?>
+                                <input type="number" name="hizli_kasa_edit_order_limit" value="<?php echo esc_attr($edit_limit); ?>" min="1" max="50" step="1" class="small-text"> Adet
+                                <p class="description">Kasiyerin kasa sayfasından düzenleyebileceği (aynı gün içindeki) son sipariş sayısı.</p>
                             </td>
                         </tr>
                         <tr valign="top">

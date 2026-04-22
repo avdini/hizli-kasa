@@ -152,6 +152,30 @@ add_action('rest_api_init', function () {
             return current_user_can('edit_posts');
         }
     ));
+
+    register_rest_route('hizli-kasa/v1', '/recent-orders', array(
+        'methods'             => 'GET',
+        'callback'            => 'hizli_kasa_get_recent_orders',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
+
+    register_rest_route('hizli-kasa/v1', '/update-order', array(
+        'methods'             => 'POST',
+        'callback'            => 'hizli_kasa_update_order',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
+
+    register_rest_route('hizli-kasa/v1', '/edit-logs', array(
+        'methods'             => 'GET',
+        'callback'            => 'hizli_kasa_get_edit_logs',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
 });
 
 /**
@@ -1482,4 +1506,167 @@ function hizli_kasa_api_get_barcode_data($request) {
     }
 
     return $data;
+}
+
+/**
+ * Kasiyerin düzenleyebileceği son siparişleri getirir.
+ */
+function hizli_kasa_get_recent_orders($request) {
+    $kasa_no = sanitize_text_field($request->get_param('kasa_no'));
+    $limit = get_option('hizli_kasa_edit_order_limit', 5);
+
+    $args = array(
+        'limit'        => $limit,
+        'status'       => array('processing', 'completed'),
+        'date_created' => current_time('Y-m-d') . ' 00:00:00...' . current_time('Y-m-d') . ' 23:59:59',
+        'orderby'      => 'date',
+        'order'        => 'DESC',
+        'meta_key'     => '_hizli_kasa_kasa_no',
+        'meta_value'   => $kasa_no,
+    );
+
+    $orders = wc_get_orders($args);
+    $results = [];
+
+    foreach ($orders as $order) {
+        if ($order->get_meta('_hizli_kasa_is_refund') === 'yes') continue;
+
+        $items = [];
+        foreach ($order->get_items() as $item_id => $item) {
+            $items[] = [
+                'item_id' => $item_id,
+                'name'    => $item->get_name(),
+                'qty'     => $item->get_quantity(),
+                'total'   => $item->get_total(),
+                'product_id' => $item->get_product_id(),
+                'variation_id' => $item->get_variation_id()
+            ];
+        }
+
+        $results[] = [
+            'id'             => $order->get_id(),
+            'total'          => $order->get_total(),
+            'payment_method' => $order->get_payment_method(),
+            'payment_title'  => $order->get_payment_method_title(),
+            'date'           => $order->get_date_created()->date('H:i'),
+            'items'          => $items
+        ];
+    }
+
+    return $results;
+}
+
+/**
+ * Sipariş düzenleme işlemini gerçekleştirir.
+ */
+function hizli_kasa_update_order($request) {
+    $data = $request->get_json_params();
+    $order_id = intval($data['order_id']);
+    $new_payment = sanitize_text_field($data['payment_method'] ?? '');
+    $item_changes = $data['items'] ?? [];
+
+    $order = wc_get_order($order_id);
+    if (!$order) return new WP_Error('no_order', 'Sipariş bulunamadı.');
+
+    $old_data = [
+        'total' => $order->get_total(),
+        'payment' => $order->get_payment_method(),
+        'items' => []
+    ];
+
+    $depo_id = (int)$order->get_meta('_hk_cikis_depo_id');
+    $log_details = [];
+
+    // 1. Ödeme Yöntemi Değişikliği
+    if ($new_payment && $new_payment !== $order->get_payment_method()) {
+        $payment_titles = [
+            'cod'   => 'Nakit',
+            'bacs'  => 'IBAN / Havale',
+            'other' => 'Kredi Kartı',
+            'split' => 'Bölünmüş Ödeme'
+        ];
+        $old_p = $order->get_payment_method();
+        $order->set_payment_method($new_payment);
+        $order->set_payment_method_title($payment_titles[$new_payment] ?? $new_payment);
+        $log_details[] = "Ödeme: $old_p -> $new_payment";
+    }
+
+    // 2. Ürün ve Adet Değişiklikleri
+    foreach ($item_changes as $change) {
+        $item_id = intval($change['item_id']);
+        $new_qty = intval($change['qty']);
+        $item = $order->get_item($item_id);
+
+        if ($item) {
+            $old_qty = $item->get_quantity();
+            $old_data['items'][$item_id] = $old_qty;
+
+            if ($new_qty < $old_qty) {
+                $diff = $old_qty - $new_qty;
+                
+                // Stok İadesi
+                if ($depo_id) {
+                    require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
+                    Hizli_Kasa_Stock_Manager::update_warehouse_stock(
+                        $item->get_product_id(),
+                        $item->get_variation_id(),
+                        $depo_id,
+                        $diff,
+                        "Sipariş Düzenleme (#$order_id) - İade"
+                    );
+                }
+
+                if ($new_qty <= 0) {
+                    $order->remove_item($item_id);
+                    $log_details[] = $item->get_name() . " çıkarıldı.";
+                } else {
+                    $item->set_quantity($new_qty);
+                    $item->set_subtotal(($item->get_subtotal() / $old_qty) * $new_qty);
+                    $item->set_total(($item->get_total() / $old_qty) * $new_qty);
+                    $item->save();
+                    $log_details[] = $item->get_name() . ": $old_qty -> $new_qty";
+                }
+            }
+        }
+    }
+
+    $order->calculate_totals();
+    $order->save();
+
+    // 3. Log Kaydı
+    global $wpdb;
+    $table = Hizli_Kasa_Database::get_tables()['order_edits'];
+    $wpdb->insert($table, [
+        'order_id'    => $order_id,
+        'kasa_no'     => $order->get_meta('_hizli_kasa_kasa_no'),
+        'user_id'     => get_current_user_id(),
+        'action_type' => 'manual_edit',
+        'old_data'    => json_encode($old_data),
+        'new_data'    => json_encode($log_details),
+        'created_at'  => current_time('mysql')
+    ]);
+
+    return ['success' => true, 'new_total' => $order->get_total()];
+}
+
+/**
+ * Düzenleme loglarını raporlar için getirir.
+ */
+function hizli_kasa_get_edit_logs($request) {
+    global $wpdb;
+    $table = Hizli_Kasa_Database::get_tables()['order_edits'];
+    
+    $date_start = $request->get_param('date_start') ?: current_time('Y-m-d');
+    $date_end   = $request->get_param('date_end') ?: current_time('Y-m-d');
+
+    $results = $wpdb->get_results($wpdb->prepare(
+        "SELECT l.*, u.display_name as user_name 
+         FROM $table l 
+         LEFT JOIN {$wpdb->users} u ON l.user_id = u.ID 
+         WHERE DATE(l.created_at) BETWEEN %s AND %s 
+         ORDER BY l.created_at DESC",
+        $date_start, $date_end
+    ));
+
+    return $results;
 }

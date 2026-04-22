@@ -52,7 +52,7 @@ function hizli_kasa_uygulamasi()
     $css_modules = [
         'theme-vars', 'reset', 'utilities', 'layout', 'sidebar',
         'cart', 'barcode', 'totals', 'modals', 'refund',
-        'stock-terminal', 'reports', 'toast', 'print', 'responsive', 'barcode-print'
+        'stock-terminal', 'reports', 'toast', 'print', 'responsive', 'barcode-print', 'order-editor'
     ];
 
     foreach ($css_modules as $module) {
@@ -84,6 +84,8 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-theme-manager', $js_base . 'modules/theme-manager.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-depo-manager',   $js_base . 'modules/depo-manager.js',   array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-barcode-renderer', $js_base . 'modules/barcode-renderer.js', array('kasa-ui-renderer', 'jsbarcode'), $pos_version, true);
+    wp_enqueue_script('kasa-order-editor', $js_base . 'modules/order-editor.js', array('kasa-ui-renderer'), $pos_version, true);
+    wp_enqueue_script('kasa-order-edit-reports', $js_base . 'modules/order-edit-reports.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-js', $js_base . 'kasa.js', array(
         'kasa-cart-manager',
         'kasa-ui-renderer',
@@ -95,7 +97,9 @@ function hizli_kasa_uygulamasi()
         'kasa-app-navigation',
         'kasa-refund-manager',
         'kasa-stock-terminal',
-        'kasa-barcode-renderer'
+        'kasa-barcode-renderer',
+        'kasa-order-editor',
+        'kasa-order-edit-reports'
     ), $pos_version, true);
 
     // JavaScript'e veri aktarımı

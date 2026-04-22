@@ -28,6 +28,7 @@ if (!defined('ABSPATH'))
             </div>
             
             <div class="kasa-sabit-butonlar">
+                <div id="siparis-duzenle-buton" class="sidebar-btn siparis-duzenle" style="background: var(--hk-accent); color: white; margin-bottom: 5px;"><span>✏️</span> Sipariş Düzenle</div>
                 <div id="gun-sonu-buton" class="sidebar-btn gun-sonu"><span>📋</span> Kasa Gün Sonu</div>
                 <div id="genel-rapor-buton" class="sidebar-btn genel-rapor"><span>📊</span> Genel Rapor</div>
             </div>
@@ -297,5 +298,39 @@ if (!defined('ABSPATH'))
     <!-- Gün Sonu Fiş Şablonu (Sadece Yazdırma İçin) -->
     <div id="gun-sonu-sablon">
         <!-- JS tarafından doldurulacak -->
+    </div>
+
+    <!-- Sipariş Düzenleme Modalı -->
+    <div id="order-edit-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10008; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+        <div class="modal-icerik" style="width: 800px !important; max-height: 90vh; overflow-y: auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--hk-border); padding-bottom:10px;">
+                <h3 style="margin:0;">✏️ Son Siparişleri Düzenle</h3>
+                <button class="modal-kapat" id="order-edit-kapat" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--hk-text-muted);">×</button>
+            </div>
+            
+            <div id="order-edit-list-view">
+                <div id="recent-orders-loading" style="text-align:center; padding:20px;">Siparişler yükleniyor...</div>
+                <div id="recent-orders-container" class="recent-orders-list"></div>
+            </div>
+
+            <div id="order-edit-detail-view" style="display:none;">
+                <button id="order-edit-back" class="hk-btn-secondary" style="margin-bottom:15px;">← Geri Dön</button>
+                <div id="order-edit-items-container"></div>
+                
+                <div style="margin-top:20px; padding-top:15px; border-top:1px solid var(--hk-border);">
+                    <label><strong>Ödeme Yöntemi:</strong></label>
+                    <select id="edit-order-payment" class="hk-input" style="margin-top:5px;">
+                        <option value="other">Kredi Kartı</option>
+                        <option value="cod">Nakit</option>
+                        <option value="bacs">IBAN / Havale</option>
+                        <option value="split">Bölünmüş Ödeme</option>
+                    </select>
+                </div>
+
+                <div class="modal-butonlar" style="margin-top:30px;">
+                    <button id="order-edit-save" class="hk-btn-primary" style="width:100%; padding:15px;">Değişiklikleri Kaydet</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
