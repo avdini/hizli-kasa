@@ -749,6 +749,11 @@ function hizli_kasa_search_orders($request) {
     $results = [];
 
     foreach ($orders as $order) {
+        // İade işlemi olarak oluşturulan negatif siparişleri listeleme
+        if ( $order->get_meta('_hizli_kasa_is_refund') === 'yes' ) {
+            continue;
+        }
+
         $total = (float) $order->get_total();
         
         // Fiyat filtresi (Manuel kontrol çünkü wc_get_orders ile karmaşık olabilir)
