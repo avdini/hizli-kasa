@@ -2,14 +2,14 @@
    TOPLAM ALANI
    ============================================= */
 
-.toplam-alani { 
-    padding: 10px 0 !important; 
+.toplam-alani {
+    padding: 10px 0 !important;
     margin-top: auto !important;
-    border: none !important; 
-    display: flex !important; 
-    flex-direction: column !important; 
-    align-items: flex-end !important; 
-    gap: 2px !important; 
+    border: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 2px !important;
     flex-shrink: 0;
 }
 
@@ -70,7 +70,9 @@
     transition: all 0.2s;
 }
 
-#bol-buton, #iskonto-buton, #yuvarla-buton {
+#bol-buton,
+#iskonto-buton,
+#yuvarla-buton {
     flex: 1 !important;
     padding: 15px 5px;
     font-size: 13px;
@@ -87,10 +89,14 @@
 }
 
 #musteri-ekle-btn {
-    flex: 0.8 !important; /* Bir tık daha dar */
-    padding: 10px 5px;   /* Daha az dikey padding */
-    font-size: 11px;     /* Daha küçük font */
-    background: #3498db; /* Farklı renk (Mavi) */
+    flex: 0.5 !important;
+    /* Bir tık daha dar */
+    padding: 10px 5px;
+    /* Daha az dikey padding */
+    font-size: 11px;
+    /* Daha küçük font */
+    background: #3498db;
+    /* Farklı renk (Mavi) */
     color: white;
     border: none;
     border-radius: 8px;
@@ -107,7 +113,9 @@
     transform: scale(1.02);
 }
 
-#bol-buton:hover, #iskonto-buton:hover, #yuvarla-buton:hover {
+#bol-buton:hover,
+#iskonto-buton:hover,
+#yuvarla-buton:hover {
     background: #7f8c8d;
 }
 
@@ -124,24 +132,24 @@
     flex-shrink: 0;
 }
 
-.odeme-btn { 
-    flex: 1; 
-    padding: 12px; 
-    border: 2px solid var(--hk-border); 
-    background: var(--hk-bg-sidebar); 
+.odeme-btn {
+    flex: 1;
+    padding: 12px;
+    border: 2px solid var(--hk-border);
+    background: var(--hk-bg-sidebar);
     color: var(--hk-text-main);
-    border-radius: 8px; 
-    cursor: pointer; 
-    font-weight: bold; 
-    font-size: 14px; 
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
     transition: all 0.2s;
     text-align: center;
 }
 
-.odeme-btn.aktif { 
-    background: #2c3e50; 
-    color: white; 
-    border-color: #2c3e50; 
+.odeme-btn.aktif {
+    background: #2c3e50;
+    color: white;
+    border-color: #2c3e50;
 }
 
 .odeme-btn:not(.aktif):hover {
