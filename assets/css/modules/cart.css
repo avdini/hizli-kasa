@@ -7,6 +7,8 @@
     list-style-type: none; 
     background: var(--hk-bg-card); 
     overflow-y: auto; 
+    padding: 0;
+    margin: 0;
 }
 
 #sepet-listesi li {
