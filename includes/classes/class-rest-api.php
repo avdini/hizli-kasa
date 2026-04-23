@@ -176,6 +176,22 @@ add_action('rest_api_init', function () {
             return current_user_can('edit_posts');
         }
     ));
+
+    register_rest_route('hizli-kasa/v1', '/reports/orders', array(
+        'methods'             => 'GET',
+        'callback'            => 'hizli_kasa_get_reports_orders',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
+
+    register_rest_route('hizli-kasa/v1', '/reports/refunds', array(
+        'methods'             => 'GET',
+        'callback'            => 'hizli_kasa_get_reports_refunds',
+        'permission_callback' => function () {
+            return current_user_can('edit_posts');
+        }
+    ));
 });
 
 /**
@@ -1831,4 +1847,122 @@ function hizli_kasa_get_edit_logs($request) {
     ));
 
     return $results;
+}
+
+/**
+ * Raporlar için tüm POS siparişlerini getirir.
+ */
+function hizli_kasa_get_reports_orders($request) {
+    return hizli_kasa_get_reports_data($request, false);
+}
+
+/**
+ * Raporlar için tüm POS iadelerini getirir.
+ */
+function hizli_kasa_get_reports_refunds($request) {
+    return hizli_kasa_get_reports_data($request, true);
+}
+
+/**
+ * Rapor verilerini çeken ortak fonksiyon.
+ */
+function hizli_kasa_get_reports_data($request, $is_refund = false) {
+    $paged    = $request->get_param('page') ? intval($request->get_param('page')) : 1;
+    $per_page = $request->get_param('per_page') ? intval($request->get_param('per_page')) : 20;
+    $date_start = $request->get_param('date_start');
+    $date_end   = $request->get_param('date_end');
+    $search     = $request->get_param('search');
+
+    $args = array(
+        'limit'    => $per_page,
+        'offset'   => ($paged - 1) * $per_page,
+        'paginate' => true,
+        'orderby'  => 'date',
+        'order'    => 'DESC',
+    );
+
+    $meta_query = array();
+
+    // Sadece POS siparişlerini getir
+    $meta_query[] = array(
+        'key'     => '_hizli_kasa_kasa_no',
+        'compare' => 'EXISTS',
+    );
+
+    if ($is_refund) {
+        $meta_query[] = array(
+            'key'     => '_hizli_kasa_is_refund',
+            'value'   => 'yes',
+            'compare' => '=',
+        );
+    } else {
+        $meta_query[] = array(
+            'key'     => '_hizli_kasa_is_refund',
+            'compare' => 'NOT EXISTS',
+        );
+    }
+
+    if (!empty($date_start) && !empty($date_end)) {
+        $args['date_created'] = $date_start . '...' . $date_end;
+    }
+
+    if (!empty($search)) {
+        $args['s'] = $search;
+    }
+
+    $args['meta_query'] = $meta_query;
+
+    $results = wc_get_orders($args);
+    $orders  = $results->orders;
+    
+    $data = array();
+    foreach ($orders as $order) {
+        $order_data = array(
+            'id'         => $order->get_id(),
+            'date'       => $order->get_date_created()->date('Y-m-d H:i:s'),
+            'total'      => $order->get_total(),
+            'cashier'    => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
+            'kasa_no'    => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
+            'payment'    => $order->get_payment_method_title(),
+            'items'      => array(),
+            'meta'       => array(),
+        );
+
+        // Ürünleri topla
+        foreach ($order->get_items() as $item) {
+            $product_meta = array();
+            // Ürün meta'larını al (HK ile ilgili olanlar)
+            $all_item_meta = $item->get_all_meta_data();
+            foreach ($all_item_meta as $m) {
+                if (strpos($m->key, '_hk_') === 0 || strpos($m->key, '_hizli_kasa') === 0) {
+                    $product_meta[$m->key] = $m->value;
+                }
+            }
+
+            $order_data['items'][] = array(
+                'name' => $item->get_name(),
+                'qty'  => $item->get_quantity(),
+                'meta' => $product_meta
+            );
+        }
+
+        // Sipariş meta'larını al
+        $all_meta = $order->get_meta_data();
+        foreach ($all_meta as $m) {
+            $key = $m->key;
+            // Göstermek istediğimiz özel metaları filtrele
+            if (strpos($key, '_hizli_kasa') === 0 || strpos($key, '_hk_') === 0 || strpos($key, '_odeme_') === 0 || strpos($key, 'Ödeme (') === 0) {
+                $order_data['meta'][$key] = $m->value;
+            }
+        }
+
+        $data[] = $order_data;
+    }
+
+    return array(
+        'orders'     => $data,
+        'total'      => $results->total,
+        'max_pages'  => $results->max_num_pages,
+        'page'       => $paged
+    );
 }

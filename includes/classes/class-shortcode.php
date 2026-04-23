@@ -87,6 +87,7 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-barcode-renderer', $js_base . 'modules/barcode-renderer.js', array('kasa-ui-renderer', 'jsbarcode'), $pos_version, true);
     wp_enqueue_script('kasa-order-editor', $js_base . 'modules/order-editor.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-order-edit-reports', $js_base . 'modules/order-edit-reports.js', array('kasa-ui-renderer'), $pos_version, true);
+    wp_enqueue_script('kasa-detailed-reports', $js_base . 'modules/detailed-reports.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-js', $js_base . 'kasa.js', array(
         'kasa-cart-manager',
         'kasa-ui-renderer',
@@ -100,7 +101,8 @@ function hizli_kasa_uygulamasi()
         'kasa-stock-terminal',
         'kasa-barcode-renderer',
         'kasa-order-editor',
-        'kasa-order-edit-reports'
+        'kasa-order-edit-reports',
+        'kasa-detailed-reports'
     ), $pos_version, true);
 
     // JavaScript'e veri aktarımı
