@@ -297,8 +297,8 @@ if (!defined('ABSPATH'))
             <!-- Butonlar -->
             <div class="modal-butonlar" style="margin-top:20px; flex-shrink:0;">
                 <button id="gun-sonu-kapat" style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">Kapat</button>
-                <button id="gun-sonu-yazdir-ozet" style="background:var(--hk-border); color:var(--hk-text-main); display:none;">🖨️ Yazdır</button>
-                <button id="gun-sonu-yazdir" class="hk-btn-primary" style="display:none; padding:12px; width:auto; min-width:200px;">🖨️ Detaylı Yazdır</button>
+                <button id="gun-sonu-yazdir-ozet" class="hk-btn-primary" style="display:none; padding:12px; width:auto; min-width:150px;">🖨️ Yazdır</button>
+                <button id="gun-sonu-yazdir" style="background:var(--hk-border); color:var(--hk-text-main); display:none; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;">🖨️ Detaylı Yazdır</button>
             </div>
         </div>
     </div>
