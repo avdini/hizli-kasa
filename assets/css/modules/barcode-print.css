@@ -70,13 +70,14 @@
 
 /* YAZDIRMA MEDYASI */
 @media print {
-    body * {
-        visibility: hidden;
+    /* Ana çerçeveyi gizle ki hayalet boşluk bırakmasın */
+    #kasa-dis-cerceve, #wpadminbar {
+        display: none !important;
     }
 
     #hk-barcode-print-area,
     #hk-barcode-print-area * {
-        visibility: visible;
+        visibility: visible !important;
     }
 
     #hk-barcode-print-area {
