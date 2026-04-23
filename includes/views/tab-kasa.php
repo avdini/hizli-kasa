@@ -112,7 +112,6 @@ if (!defined('ABSPATH'))
                 <button id="onayla-buton">Sipariş Oluştur</button>
             </div>
 
-            <div class="v-check">POS v<?php echo HIZLI_KASA_VERSION; ?> - Stok Kontrolü Aktif</div>
         </div>
     </div>
 

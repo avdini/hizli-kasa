@@ -341,13 +341,7 @@
     opacity: 0.9 !important;
 }
 
-/* Versiyon Etiketi */
-.v-check {
-    font-size: 10px;
-    color: #ccc;
-    text-align: center;
-    margin-top: 10px;
-}
+
 .site-name-text {
     max-width: 150px;
     overflow: hidden;
