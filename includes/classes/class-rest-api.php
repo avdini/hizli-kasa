@@ -1867,6 +1867,8 @@ function hizli_kasa_get_reports_refunds($request) {
  * Rapor verilerini çeken ortak fonksiyon.
  */
 function hizli_kasa_get_reports_data($request, $is_refund = false) {
+    hizli_kasa_log("REPORTS_DATA_HIT: is_refund=" . ($is_refund ? 'yes' : 'no'));
+
     $paged    = $request->get_param('page') ? intval($request->get_param('page')) : 1;
     $per_page = $request->get_param('per_page') ? intval($request->get_param('per_page')) : 20;
     $date_start = $request->get_param('date_start');
@@ -1879,11 +1881,21 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
         'paginate' => true,
         'orderby'  => 'date',
         'order'    => 'DESC',
+        'status'   => array('processing', 'completed', 'on-hold', 'pending'),
     );
 
-    $meta_query = array();
+    if (!empty($date_start) && !empty($date_end)) {
+        // Tarih aralığını gün sonuna kadar genişletelim
+        $args['date_created'] = $date_start . ' 00:00:00...' . $date_end . ' 23:59:59';
+    }
 
-    // Sadece POS siparişlerini getir
+    if (!empty($search)) {
+        $args['s'] = $search;
+    }
+
+    $meta_query = array();
+    
+    // Sadece POS siparişleri (Kasa numarası olanlar)
     $meta_query[] = array(
         'key'     => '_hizli_kasa_kasa_no',
         'compare' => 'EXISTS',
@@ -1896,21 +1908,17 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
             'compare' => '=',
         );
     } else {
+        // İade olmayanlar: ya meta hiç yok ya da 'yes' değil
         $meta_query[] = array(
             'key'     => '_hizli_kasa_is_refund',
-            'compare' => 'NOT EXISTS',
+            'value'   => 'yes',
+            'compare' => '!=',
         );
     }
 
-    if (!empty($date_start) && !empty($date_end)) {
-        $args['date_created'] = $date_start . '...' . $date_end;
-    }
-
-    if (!empty($search)) {
-        $args['s'] = $search;
-    }
-
     $args['meta_query'] = $meta_query;
+
+    hizli_kasa_log('Hizli Kasa Report Final Args: ' . print_r($args, true));
 
     $results = wc_get_orders($args);
     $orders  = $results->orders;
