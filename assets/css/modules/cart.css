@@ -27,10 +27,17 @@
     background-color: #fcfcfc !important;
 }
 
+#sepet-listesi .urun-sol-kolon {
+    flex: 0 0 35% !important;
+    display: flex !important;
+    align-items: center !important;
+    overflow: hidden !important;
+    min-width: 0 !important;
+}
+
 #sepet-listesi .urun-bilgi {
     flex: 1 !important;
     overflow: hidden !important;
-    min-width: 0 !important;
     display: flex !important;
     flex-direction: column !important;
 }
@@ -50,9 +57,10 @@
 }
 
 #sepet-listesi .urun-orta-detay {
-    flex: 1 !important;
+    flex: 0 0 40% !important;
     text-align: left !important;
     padding: 0 10px !important;
+    overflow: hidden !important;
 }
 
 #sepet-listesi .urun-detay-metin {
@@ -63,10 +71,11 @@
 }
 
 #sepet-listesi .urun-sag-aksiyonlar {
+    flex: 0 0 25% !important;
     display: flex !important;
     align-items: center !important;
     gap: 10px !important;
-    margin-left: auto !important;
+    justify-content: flex-end !important;
     flex-shrink: 0 !important;
 }
 
