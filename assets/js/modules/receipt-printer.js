@@ -73,18 +73,18 @@
                 
                 // Üç katmanlı fiyat gösterimi
                 if (satirEtiketToplam > satirKampanyaToplam) {
-                    fiyatHTML += '<div style="font-size: 11px; color: #000; text-decoration: line-through; font-weight: normal;">' + satirEtiketToplam.toFixed(2) + ' TL</div>';
+                    fiyatHTML += '<div style="font-size: 10px; color: #999; text-decoration: line-through;">' + satirEtiketToplam.toFixed(2) + ' TL</div>';
                 }
                 if (satirKampanyaToplam > satirNetToplam) {
-                    fiyatHTML += '<div style="font-size: 11px; color: #000; text-decoration: line-through; font-weight: normal;">' + satirKampanyaToplam.toFixed(2) + ' TL</div>';
+                    fiyatHTML += '<div style="font-size: 10px; color: #999; text-decoration: line-through;">' + satirKampanyaToplam.toFixed(2) + ' TL</div>';
                 }
-                fiyatHTML += '<div style="font-weight: bold; font-size: 14px; color: #000;">' + satirNetToplam.toFixed(2) + ' TL</div>';
+                fiyatHTML += '<div style="font-weight: bold; font-size: 13px;">' + satirNetToplam.toFixed(2) + ' TL</div>';
 
-                tr.innerHTML = '<td style="padding:1px 0; line-height: 1.1; color: #000;">' + 
-                        '<span style="font-weight: 600; font-size: 11px;">' + item.name + '</span><br>' +
-                        '<span style="font-size: 10px; color: #000;">' + (item.sku ? item.sku : '') + ' | ' + item.quantity + ' Adet</span>' +
+                tr.innerHTML = '<td style="padding:5px 0; line-height: 1.2;">' + 
+                        item.name + ' <br>' +
+                        '<small style="color: #666;">' + (item.sku ? item.sku : '') + ' | ' + item.quantity + ' Adet</small>' +
                     '</td>' +
-                    '<td style="text-align:right; padding:1px 0; vertical-align: middle;">' + fiyatHTML + '</td>';
+                    '<td style="text-align:right; padding:5px 0; vertical-align: middle;">' + fiyatHTML + '</td>';
                 els.fisUrunlerBody.appendChild(tr);
             });
 
@@ -143,7 +143,7 @@
                     JsBarcode("#fis-barkod", (order.id || order.number).toString(), {
                         format: "CODE128",
                         width: 2,
-                        height: 40,
+                        height: 50,
                         displayValue: false,
                         margin: 0,
                         background: "#ffffff",
@@ -162,17 +162,7 @@
             var els = this.els;
 
             els.fisYazdirTetik.addEventListener("click", function() {
-                // Gün sonu şablonunu gizle (çakışma önleme)
-                var gsSablon = document.getElementById("gun-sonu-sablon");
-                if (gsSablon) gsSablon.style.display = "none";
-
-                if (HK.PrintHelper) {
-                    HK.PrintHelper.setPageStyle(
-                        'size: auto; margin: 0;',
-                        '#fis-sablon { display: block !important; visibility: visible !important; position: relative !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }'
-                    );
-                }
-                window.print();
+                HK.PrintManager.print('receipt');
             });
 
             els.fisYazdirKapat.addEventListener("click", function() {
@@ -182,13 +172,7 @@
             document.addEventListener("keydown", function(e) {
                 if (els.fisOnayModal.style.display === "flex") {
                     if (e.key === "Enter") {
-                        if (HK.PrintHelper) {
-                            HK.PrintHelper.setPageStyle(
-                                'size: auto; margin: 0;',
-                                '#fis-sablon { display: block !important; visibility: visible !important; position: relative !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }'
-                            );
-                        }
-                        window.print();
+                        HK.PrintManager.print('receipt');
                     } else if (e.key === "Escape") {
                         els.fisOnayModal.style.display = "none";
                     }

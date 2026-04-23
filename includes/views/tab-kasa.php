@@ -224,7 +224,53 @@ if (!defined('ABSPATH'))
         </div>
     </div>
 
+    <!-- Gizli Fiş Şablonu (Sadece Yazdırma İçin) -->
+    <div id="fis-sablon">
+        <div style="text-align:center; margin-bottom:10px; border-bottom:1px dashed #000; padding-bottom:10px;">
+            <h2 style="margin:0; font-size:18px;"><?php echo get_bloginfo('name'); ?></h2>
+            <p style="margin:5px 0; font-size:12px;">HIZLI KASA SATIŞ FİŞİ</p>
+            <p id="fis-tarih" style="margin:0; font-size:11px;"></p>
+            <p id="fis-no-text" style="font-weight:bold; margin:5px 0; font-size:14px;"></p>
+            <div style="text-align:center; margin-bottom:10px;">
+                <svg id="fis-barkod" style="max-width:100%; height:auto;"></svg>
+            </div>
+        </div>
+        
+        <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:10px;">
+            <thead>
+                <tr style="border-bottom:1px solid #000;">
+                    <th style="text-align:left; padding:5px 0;">Ürün</th>
+                    <th style="text-align:right; padding:5px 0;">Toplam</th>
+                </tr>
+            </thead>
+            <tbody id="fis-urunler-body">
+                <!-- Ürünler buraya gelecek -->
+            </tbody>
+        </table>
 
+        <div style="border-top:1px dashed #000; padding-top:10px; font-size:13px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:3px;" id="fis-liste-toplami-satiri">
+                <span>Etiket Toplamı:</span>
+                <span id="fis-liste-toplami-tutar"></span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:3px; display:none;" id="fis-nakit-indirim-satiri">
+                <span id="fis-nakit-indirim-etiket">İndirim (%5):</span>
+                <span id="fis-nakit-indirim-tutar"></span>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:3px;" id="fis-iskonto-satiri">
+                <span>İskonto:</span>
+                <span id="fis-iskonto-tutar"></span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:16px; margin-top:5px;">
+                <span>TOPLAM:</span>
+                <span id="fis-genel-toplam"></span>
+            </div>
+        </div>
+
+        <div style="text-align:center; margin-top:20px; font-size:11px; border-top:1px solid #000; padding-top:10px;">
+            Bizi tercih ettiğiniz için teşekkür ederiz.
+        </div>
+    </div>
 
     <!-- ==================== GÜN SONU RAPORU ==================== -->
 
@@ -249,7 +295,10 @@ if (!defined('ABSPATH'))
         </div>
     </div>
 
-
+    <!-- Gün Sonu Fiş Şablonu (Sadece Yazdırma İçin) -->
+    <div id="gun-sonu-sablon">
+        <!-- JS tarafından doldurulacak -->
+    </div>
 
     <!-- Sipariş Düzenleme Modalı -->
     <div id="order-edit-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10008; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
@@ -284,56 +333,4 @@ if (!defined('ABSPATH'))
             </div>
         </div>
     </div>
-</div>
-
-<!-- Yazdırma Şablonları (DOM akışından etkilenmemesi için en dışta) -->
-<div id="fis-sablon">
-    <div style="text-align:center; margin-bottom:5px; padding-bottom:5px;">
-        <h2 style="margin:0; font-size:16px; color:#000; font-weight:bold;"><?php echo get_bloginfo('name'); ?></h2>
-        <p style="margin:2px 0; font-size:11px; color:#000;">HIZLI KASA SATIŞ FİŞİ</p>
-        <p id="fis-tarih" style="margin:0; font-size:10px; color:#000;"></p>
-        <p id="fis-no-text" style="font-weight:bold; margin:2px 0; font-size:12px; color:#000;"></p>
-        <div style="text-align:center; margin-bottom:5px;">
-            <svg id="fis-barkod" style="max-width:100%; height:auto;"></svg>
-        </div>
-    </div>
-    
-    <table style="width:100%; border-collapse:collapse; font-size:11px; margin-bottom:5px; color:#000;">
-        <thead>
-            <tr style="border-bottom:1px solid #000;">
-                <th style="text-align:left; padding:2px 0;">Ürün</th>
-                <th style="text-align:right; padding:2px 0;">Toplam</th>
-            </tr>
-        </thead>
-        <tbody id="fis-urunler-body">
-            <!-- Ürünler buraya gelecek -->
-        </tbody>
-    </table>
-
-    <div style="padding-top:5px; font-size:12px; color:#000;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:3px;" id="fis-liste-toplami-satiri">
-            <span>Etiket Toplamı:</span>
-            <span id="fis-liste-toplami-tutar"></span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:3px; display:none;" id="fis-nakit-indirim-satiri">
-            <span id="fis-nakit-indirim-etiket">İndirim (%5):</span>
-            <span id="fis-nakit-indirim-tutar"></span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:3px;" id="fis-iskonto-satiri">
-            <span>İskonto:</span>
-            <span id="fis-iskonto-tutar"></span>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:16px; margin-top:5px;">
-            <span>TOPLAM:</span>
-            <span id="fis-genel-toplam"></span>
-        </div>
-    </div>
-
-    <div style="text-align:center; margin-top:10px; font-size:10px; color:#000;">
-        Bizi tercih ettiğiniz için teşekkür ederiz.
-    </div>
-</div>
-
-<div id="gun-sonu-sablon">
-    <!-- JS tarafından doldurulacak -->
 </div>

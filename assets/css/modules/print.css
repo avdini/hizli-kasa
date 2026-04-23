@@ -5,41 +5,46 @@
 #fis-sablon {
     display: none;
     font-family: 'Courier New', Courier, monospace;
-    width: 100%;
-    max-width: 100%;
+    width: 80mm;
     padding: 5mm;
     background: white;
     color: black;
 }
 
 @media print {
-    /* WP Admin bar ve ana uygulama kabuğunu tamamen gizle */
-    #wpadminbar, #hizli-kasa-app {
-        display: none !important;
+    /* Normal Satış Fişi Modu */
+    body.print-mode-receipt * {
+        visibility: hidden;
+    }
+    body.print-mode-receipt #fis-sablon, 
+    body.print-mode-receipt #fis-sablon * {
+        visibility: visible;
+    }
+    body.print-mode-receipt #fis-sablon {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 2mm;
     }
 
-    html, body {
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #fff !important;
+    /* Gün Sonu Rapor Modu */
+    body.print-mode-report * {
+        visibility: hidden;
     }
-
-    /* Şablonları varsayılan olarak gizli tut, JS ile açılacak */
-    #fis-sablon, #gun-sonu-sablon, #hk-barcode-print-area {
-        display: none !important;
-        visibility: hidden !important;
+    body.print-mode-report #gun-sonu-sablon, 
+    body.print-mode-report #gun-sonu-sablon * {
+        visibility: visible;
     }
-
-    #fis-sablon *, #gun-sonu-sablon *, #hk-barcode-print-area * {
-        color: #000 !important;
-        border-color: #000 !important;
-        background: transparent !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
-
-    /* Tablo çizgilerini tamamen kaldır */
-    #fis-sablon table, #fis-sablon td, #fis-sablon th, #fis-sablon tr {
-        border: none !important;
+    body.print-mode-report #gun-sonu-sablon {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 2mm;
     }
 }

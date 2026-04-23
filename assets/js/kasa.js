@@ -16,33 +16,6 @@ document.addEventListener("DOMContentLoaded", function() {
         return;
     }
 
-    /**
-     * Yazdırma işlemlerinde kağıt boyutunu dinamik yönetmek için yardımcı araç
-     */
-    HK.PrintHelper = {
-        /**
-         * Yazdırma stili enjekte et
-         * @param {string} pageCss @page kuralı içeriği (örn: 'size: auto; margin: 0;')
-         * @param {string} globalCss @media print bloğuna eklenecek genel CSS
-         */
-        setPageStyle: function(pageCss, globalCss) {
-            var styleId = 'hk-dynamic-print-style';
-            var styleEl = document.getElementById(styleId);
-            if (!styleEl) {
-                styleEl = document.createElement('style');
-                styleEl.id = styleId;
-                document.head.appendChild(styleEl);
-            }
-            
-            var css = '@media print { ';
-            if (pageCss) css += ' @page { ' + pageCss + ' } ';
-            if (globalCss) css += globalCss;
-            css += ' }';
-            
-            styleEl.innerHTML = css;
-        }
-    };
-
     // 1. UI Renderer'ı başlat (DOM elementlerini cache'le)
     HK.UIRenderer.init();
 

@@ -339,13 +339,7 @@
             if (normalFis) normalFis.style.display = "none";
 
             sablon.style.display = "block";
-            if (HK.PrintHelper) {
-                HK.PrintHelper.setPageStyle(
-                    'size: auto; margin: 0;',
-                    '#gun-sonu-sablon { display: block !important; visibility: visible !important; position: relative !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }'
-                );
-            }
-            window.print();
+            HK.PrintManager.print('report');
             sablon.style.display = "none";
         }
     };

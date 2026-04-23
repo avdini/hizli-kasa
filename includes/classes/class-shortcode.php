@@ -70,6 +70,7 @@ function hizli_kasa_uygulamasi()
     // Barkod Kütüphanesi
     wp_enqueue_script('jsbarcode', 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js', array(), '3.11.0', true);
 
+    wp_enqueue_script('kasa-print-manager', $js_base . 'modules/print-manager.js', array(), $pos_version, true);
     wp_enqueue_script('kasa-cart-manager', $js_base . 'modules/cart-manager.js', array(), $pos_version, true);
     wp_enqueue_script('kasa-ui-renderer', $js_base . 'modules/ui-renderer.js', array('kasa-cart-manager'), $pos_version, true);
     wp_enqueue_script('kasa-barcode-scanner', $js_base . 'modules/barcode-scanner.js', array('kasa-cart-manager', 'kasa-ui-renderer'), $pos_version, true);

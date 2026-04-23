@@ -16,14 +16,13 @@
 
         init: function() {
             var self = this;
-            console.log("BarcodeRenderer init called");
+            if (this.initialized) return;
 
             // Modal Kapatma
             var iptalBtn = document.getElementById('barkod-iptal');
             if (iptalBtn) {
                 iptalBtn.onclick = function() {
-                    var modal = document.getElementById('barkod-yazdir-modal');
-                    if (modal) modal.style.display = 'none';
+                    document.getElementById('barkod-yazdir-modal').style.display = 'none';
                 };
             }
 
@@ -42,7 +41,6 @@
          * Tek bir ürün/varyant için modalı açar.
          */
         openSingleModal: function(product) {
-            this.init(); // Listener'ları tazele
             console.log("Opening Single Modal", product);
             this.state.currentProduct = product;
             var container = document.getElementById('barkod-urun-listesi-konteynir');
@@ -75,7 +73,6 @@
          * Parent ürün ve tüm (stoktaki) varyasyonları için modalı açar.
          */
         openBulkModal: function(parentProduct) {
-            this.init(); // Listener'ları tazele
             console.log("Opening Bulk Modal", parentProduct);
             this.state.currentProduct = parentProduct;
             var container = document.getElementById('barkod-urun-listesi-konteynir');
@@ -143,21 +140,19 @@
             try {
                 var printData = [];
                 
-                // Tüm kalemler için verileri paralel olarak çek
-                var fetchPromises = requests.map(req => {
+                // Her bir kalem için detaylı etiket verisini çek
+                for (var req of requests) {
                     var url = kasaAyar.rootApiUrl + 'hizli-kasa/v1/barcode/label-data?product_id=' + req.product_id + '&variation_id=' + req.variation_id;
-                    return fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data && !data.code) {
-                                return { label: data, qty: req.qty };
-                            }
-                            return null;
+                    var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
+                    var data = await response.json();
+                    
+                    if (data && !data.code) {
+                        printData.push({
+                            label: data,
+                            qty: req.qty
                         });
-                });
-
-                var results = await Promise.all(fetchPromises);
-                printData = results.filter(r => r !== null);
+                    }
+                }
 
                 this.renderPrintOutput(printData);
 
@@ -212,13 +207,7 @@
 
             // Yazdırma işlemini başlat
             setTimeout(() => {
-                if (HK.PrintHelper) {
-                    HK.PrintHelper.setPageStyle(
-                        'size: 50mm 35mm; margin: 0;',
-                        '#hk-barcode-print-area { display: block !important; visibility: visible !important; width: 50mm !important; margin: 0 !important; padding: 0 !important; }'
-                    );
-                }
-                window.print();
+                HK.PrintManager.print('barcode');
             }, 500);
         },
 

@@ -70,28 +70,22 @@
 
 /* YAZDIRMA MEDYASI */
 @media print {
-    /* Ana çerçeveyi gizle ki hayalet boşluk bırakmasın */
-    #kasa-dis-cerceve, #wpadminbar {
-        display: none !important;
+    body.print-mode-barcode * {
+        visibility: hidden;
     }
 
-    #hk-barcode-print-area,
-    #hk-barcode-print-area * {
-        visibility: visible !important;
+    body.print-mode-barcode #hk-barcode-print-area,
+    body.print-mode-barcode #hk-barcode-print-area * {
+        visibility: visible;
     }
 
-    #hk-barcode-print-area {
+    body.print-mode-barcode #hk-barcode-print-area {
         display: block !important;
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 50mm !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        z-index: 999999 !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 50mm;
     }
-
-    /* Sayfa Ayarları JS (PrintHelper) tarafından dinamik yönetilir */
 
     /* Etiket Tasarımı (50x35mm) */
     .barcode-label {
