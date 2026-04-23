@@ -28,7 +28,7 @@
 }
 
 #sepet-listesi .urun-sol-kolon {
-    flex: 0 0 35% !important;
+    flex: 0 0 30% !important;
     display: flex !important;
     align-items: center !important;
     overflow: hidden !important;
@@ -38,6 +38,7 @@
 #sepet-listesi .urun-bilgi {
     flex: 1 !important;
     overflow: hidden !important;
+    min-width: 0 !important;
     display: flex !important;
     flex-direction: column !important;
 }
@@ -46,7 +47,9 @@
     font-weight: bold !important;
     font-size: 15px !important;
     margin-bottom: 2px !important;
-    white-space: normal !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
     line-height: 1.2 !important;
 }
 
@@ -61,6 +64,7 @@
     text-align: left !important;
     padding: 0 10px !important;
     overflow: hidden !important;
+    min-width: 0 !important;
 }
 
 #sepet-listesi .urun-detay-metin {
@@ -71,11 +75,12 @@
 }
 
 #sepet-listesi .urun-sag-aksiyonlar {
-    flex: 0 0 25% !important;
+    flex: 0 0 30% !important;
     display: flex !important;
     align-items: center !important;
-    gap: 10px !important;
     justify-content: flex-end !important;
+    gap: 10px !important;
+    margin-left: auto !important;
     flex-shrink: 0 !important;
 }
 
