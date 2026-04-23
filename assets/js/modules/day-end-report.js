@@ -339,6 +339,9 @@
             if (normalFis) normalFis.style.display = "none";
 
             sablon.style.display = "block";
+            if (HK.PrintHelper) {
+                HK.PrintHelper.setPageStyle('size: auto; margin: 0;');
+            }
             window.print();
             sablon.style.display = "none";
         }

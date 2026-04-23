@@ -5,7 +5,8 @@
 #fis-sablon {
     display: none;
     font-family: 'Courier New', Courier, monospace;
-    width: 80mm;
+    width: 100%;
+    max-width: 100%;
     padding: 5mm;
     background: white;
     color: black;
@@ -43,7 +44,5 @@
         padding: 2mm;
     }
 
-    @page {
-        margin: 0;
-    }
+    /* Sayfa Ayarları JS (PrintHelper) tarafından dinamik yönetilir */
 }

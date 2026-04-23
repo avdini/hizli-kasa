@@ -207,6 +207,9 @@
 
             // Yazdırma işlemini başlat
             setTimeout(() => {
+                if (HK.PrintHelper) {
+                    HK.PrintHelper.setPageStyle('size: 50mm 35mm; margin: 0;');
+                }
                 window.print();
             }, 500);
         },

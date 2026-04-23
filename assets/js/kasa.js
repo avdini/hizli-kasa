@@ -16,6 +16,22 @@ document.addEventListener("DOMContentLoaded", function() {
         return;
     }
 
+    /**
+     * Yazdırma işlemlerinde kağıt boyutunu dinamik yönetmek için yardımcı araç
+     */
+    HK.PrintHelper = {
+        setPageStyle: function(cssString) {
+            var styleId = 'hk-dynamic-print-style';
+            var styleEl = document.getElementById(styleId);
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = styleId;
+                document.head.appendChild(styleEl);
+            }
+            styleEl.innerHTML = '@media print { @page { ' + cssString + ' } }';
+        }
+    };
+
     // 1. UI Renderer'ı başlat (DOM elementlerini cache'le)
     HK.UIRenderer.init();
 

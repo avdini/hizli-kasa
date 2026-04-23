@@ -165,6 +165,10 @@
                 // Gün sonu şablonunu gizle (çakışma önleme)
                 var gsSablon = document.getElementById("gun-sonu-sablon");
                 if (gsSablon) gsSablon.style.display = "none";
+
+                if (HK.PrintHelper) {
+                    HK.PrintHelper.setPageStyle('size: auto; margin: 0;');
+                }
                 window.print();
             });
 
@@ -175,6 +179,9 @@
             document.addEventListener("keydown", function(e) {
                 if (els.fisOnayModal.style.display === "flex") {
                     if (e.key === "Enter") {
+                        if (HK.PrintHelper) {
+                            HK.PrintHelper.setPageStyle('size: auto; margin: 0;');
+                        }
                         window.print();
                     } else if (e.key === "Escape") {
                         els.fisOnayModal.style.display = "none";
