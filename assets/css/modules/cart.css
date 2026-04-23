@@ -62,11 +62,19 @@
     white-space: nowrap !important;
 }
 
-#sepet-listesi .urun-fiyat-grup {
+#sepet-listesi .urun-sag-aksiyonlar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
     margin-left: auto !important;
+    flex-shrink: 0 !important;
+}
+
+#sepet-listesi .urun-fiyat-grup {
     text-align: right !important;
     white-space: nowrap !important;
     padding: 0 10px !important;
+    flex-shrink: 0 !important;
 }
 
 #sepet-listesi .ara-toplam {

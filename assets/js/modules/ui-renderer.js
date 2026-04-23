@@ -95,12 +95,15 @@ window.HizliKasa = window.HizliKasa || {};
                     '<div class="urun-orta-detay" style="flex:1; text-align:left;">' +
                         '<span class="urun-detay-metin" style="font-size:15px; font-weight:bold; color:var(--hk-text-main);">' + item.quantity + ' Adet x ' + fiyatGosterim + '</span>' +
                     '</div>' +
-                    '<span class="urun-fiyat-grup">' +
-                        (etiketFiyat > kampanyaFiyat ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + etiketFiyat.toFixed(2) + ' TL</div>' : '') +
-                        (kampanyaFiyat > netFiyat ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + kampanyaFiyat.toFixed(2) + ' TL</div>' : '') +
-                        '<div class="ara-toplam" style="font-size: 19px; color: #27ae60; font-weight: 800; line-height: 1.1; margin-top: 2px;">' + netFiyat.toFixed(2) + ' TL</div>' +
-                    '</span>';
+                    '<div class="urun-sag-aksiyonlar" style="display:flex; align-items:center; gap:10px; margin-left:auto; flex-shrink:0;">' +
+                        '<span class="urun-fiyat-grup" style="text-align:right; flex-shrink:0;">' +
+                            (etiketFiyat > kampanyaFiyat ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + etiketFiyat.toFixed(2) + ' TL</div>' : '') +
+                            (kampanyaFiyat > netFiyat ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + kampanyaFiyat.toFixed(2) + ' TL</div>' : '') +
+                            '<div class="ara-toplam" style="font-size: 19px; color: #27ae60; font-weight: 800; line-height: 1.1; margin-top: 2px;">' + netFiyat.toFixed(2) + ' TL</div>' +
+                        '</span>' +
+                    '</div>';
 
+                var sagAksiyonlar = li.querySelector(".urun-sag-aksiyonlar");
                 var azaltButon = document.createElement("button");
                 azaltButon.innerText = "-";
                 azaltButon.className = "btn-adet";
@@ -115,7 +118,7 @@ window.HizliKasa = window.HizliKasa || {};
                     };
                 })(index));
 
-                li.appendChild(azaltButon);
+                sagAksiyonlar.appendChild(azaltButon);
                 els.sepetListesi.appendChild(li);
             });
 

@@ -60,8 +60,10 @@
         font-size: 13px !important;
     }
 
-    .urun-fiyat-grup {
+    .urun-sag-aksiyonlar {
         order: 2;
+        margin-left: auto !important;
+        flex-shrink: 0 !important;
     }
 
     .toplam-deger {
