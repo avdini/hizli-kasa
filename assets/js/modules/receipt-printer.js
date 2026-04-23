@@ -73,16 +73,16 @@
                 
                 // Üç katmanlı fiyat gösterimi
                 if (satirEtiketToplam > satirKampanyaToplam) {
-                    fiyatHTML += '<div style="font-size: 10px; color: #999; text-decoration: line-through;">' + satirEtiketToplam.toFixed(2) + ' TL</div>';
+                    fiyatHTML += '<div style="font-size: 11px; color: #000; text-decoration: line-through; font-weight: normal;">' + satirEtiketToplam.toFixed(2) + ' TL</div>';
                 }
                 if (satirKampanyaToplam > satirNetToplam) {
-                    fiyatHTML += '<div style="font-size: 10px; color: #999; text-decoration: line-through;">' + satirKampanyaToplam.toFixed(2) + ' TL</div>';
+                    fiyatHTML += '<div style="font-size: 11px; color: #000; text-decoration: line-through; font-weight: normal;">' + satirKampanyaToplam.toFixed(2) + ' TL</div>';
                 }
-                fiyatHTML += '<div style="font-weight: bold; font-size: 13px;">' + satirNetToplam.toFixed(2) + ' TL</div>';
+                fiyatHTML += '<div style="font-weight: bold; font-size: 14px; color: #000;">' + satirNetToplam.toFixed(2) + ' TL</div>';
 
-                tr.innerHTML = '<td style="padding:5px 0; line-height: 1.2;">' + 
-                        item.name + ' <br>' +
-                        '<small style="color: #666;">' + (item.sku ? item.sku : '') + ' | ' + item.quantity + ' Adet</small>' +
+                tr.innerHTML = '<td style="padding:5px 0; line-height: 1.2; color: #000;">' + 
+                        '<span style="font-weight: 600;">' + item.name + '</span><br>' +
+                        '<span style="font-size: 11px; color: #000;">' + (item.sku ? item.sku : '') + ' | ' + item.quantity + ' Adet</span>' +
                     '</td>' +
                     '<td style="text-align:right; padding:5px 0; vertical-align: middle;">' + fiyatHTML + '</td>';
                 els.fisUrunlerBody.appendChild(tr);

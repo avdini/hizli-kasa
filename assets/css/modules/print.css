@@ -18,6 +18,17 @@
         padding: 0 !important;
     }
 
+    #hk-barcode-print-area {
+        display: block !important;
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 50mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        z-index: 999999 !important;
+    }
+
     #wpadminbar {
         display: none !important;
     }
@@ -30,27 +41,28 @@
     #fis-sablon, #fis-sablon * {
         visibility: visible;
     }
-    #fis-sablon {
-        display: block !important;
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 1mm 2mm;
+    #fis-sablon, #gun-sonu-sablon {
+        display: flex !important;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0mm 2mm !important;
+        background: white !important;
+        color: #000 !important;
+        z-index: 999999 !important;
     }
 
-    /* Gün Sonu Rapor Fişi */
-    #gun-sonu-sablon, #gun-sonu-sablon * {
-        visibility: visible;
-    }
-    #gun-sonu-sablon {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 1mm 2mm;
+    #fis-sablon *, #gun-sonu-sablon * {
+        visibility: visible !important;
+        color: #000 !important;
+        border-color: #000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 
     /* Sayfa Ayarları JS (PrintHelper) tarafından dinamik yönetilir */

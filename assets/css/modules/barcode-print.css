@@ -81,10 +81,13 @@
 
     #hk-barcode-print-area {
         display: block !important;
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 50mm;
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 50mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        z-index: 999999 !important;
     }
 
     /* Sayfa Ayarları JS (PrintHelper) tarafından dinamik yönetilir */
