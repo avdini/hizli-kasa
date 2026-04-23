@@ -62,24 +62,17 @@
     white-space: nowrap !important;
 }
 
-#sepet-listesi .urun-sag-kolon {
-    margin-left: auto !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 15px !important;
-    flex-shrink: 0;
-}
-
 #sepet-listesi .urun-fiyat-grup {
+    margin-left: auto !important;
     text-align: right !important;
     white-space: nowrap !important;
-    padding: 0 5px !important;
+    padding: 0 10px !important;
 }
 
 #sepet-listesi .ara-toplam {
     font-weight: bold !important;
     color: #2c3e50 !important;
-    font-size: 19px !important;
+    font-size: 16px !important;
 }
 
 #sepet-listesi .btn-adet { 
