@@ -2,13 +2,19 @@
    YAZDIRMA STİLLERİ
    ============================================= */
 
-#fis-sablon {
+#fis-sablon, #gun-sonu-sablon {
     display: none;
     font-family: 'Courier New', Courier, monospace;
     width: 80mm;
-    padding: 5mm;
+    padding: 3mm;
     background: white;
-    color: black;
+    color: #000 !important;
+}
+
+#fis-sablon table, #gun-sonu-sablon table {
+    border-collapse: collapse;
+    width: 100%;
+    color: #000 !important;
 }
 
 @media print {

@@ -71,20 +71,20 @@
                 var tr = document.createElement("tr");
                 var fiyatHTML = "";
                 
-                // Üç katmanlı fiyat gösterimi
+                // Üç katmanlı fiyat gösterimi - SADECE SİYAH
                 if (satirEtiketToplam > satirKampanyaToplam) {
-                    fiyatHTML += '<div style="font-size: 10px; color: #999; text-decoration: line-through;">' + satirEtiketToplam.toFixed(2) + ' TL</div>';
+                    fiyatHTML += '<div style="font-size: 10px; text-decoration: line-through;">' + satirEtiketToplam.toFixed(2) + '</div>';
                 }
                 if (satirKampanyaToplam > satirNetToplam) {
-                    fiyatHTML += '<div style="font-size: 10px; color: #999; text-decoration: line-through;">' + satirKampanyaToplam.toFixed(2) + ' TL</div>';
+                    fiyatHTML += '<div style="font-size: 10px; text-decoration: line-through;">' + satirKampanyaToplam.toFixed(2) + '</div>';
                 }
-                fiyatHTML += '<div style="font-weight: bold; font-size: 13px;">' + satirNetToplam.toFixed(2) + ' TL</div>';
+                fiyatHTML += '<div style="font-weight: bold; font-size: 13px;">' + satirNetToplam.toFixed(2) + '</div>';
 
-                tr.innerHTML = '<td style="padding:5px 0; line-height: 1.2;">' + 
-                        item.name + ' <br>' +
-                        '<small style="color: #666;">' + (item.sku ? item.sku : '') + ' | ' + item.quantity + ' Adet</small>' +
+                tr.innerHTML = '<td style="padding:1px 0; line-height: 1.1;">' + 
+                        '<div style="font-weight:bold; font-size:12px; text-transform:uppercase;">' + item.name + '</div>' +
+                        '<div style="font-size:10px;">' + (item.sku ? item.sku + ' | ' : '') + item.quantity + ' Adet</div>' +
                     '</td>' +
-                    '<td style="text-align:right; padding:5px 0; vertical-align: middle;">' + fiyatHTML + '</td>';
+                    '<td style="text-align:right; padding:1px 0; vertical-align: middle; white-space:nowrap; padding-left:10px;">' + fiyatHTML + '</td>';
                 els.fisUrunlerBody.appendChild(tr);
             });
 
@@ -102,7 +102,7 @@
                 // Eğer yoksa Etiket Toplamı'ndan sonra ekle
                 var yeniSatir = document.createElement("div");
                 yeniSatir.id = "fis-ara-toplam-satiri";
-                yeniSatir.style = "display:flex; justify-content:space-between; margin-bottom:3px;";
+                yeniSatir.style = "display:flex; justify-content:space-between; margin-bottom:2px; font-size:12px;";
                 yeniSatir.innerHTML = '<span>ARA TOPLAM:</span> <span id="fis-ara-toplam-tutar"></span>';
                 els.fisListeToplamiSatiri.parentNode.insertBefore(yeniSatir, els.fisNakitIndirimSatiri);
                 araToplamElemen = yeniSatir;
@@ -110,11 +110,7 @@
             document.getElementById("fis-ara-toplam-tutar").innerText = araToplam.toFixed(2) + " TL";
 
             var autoDiscountLabel = order.payment_method === "cod" ? "Nakit İndirimi (%5):" : (order.payment_method === "bacs" ? "Havale İndirimi (%5):" : "İndirim (%5):");
-            var isAutoDiscount = (order.payment_method === "cod" || order.payment_method === "bacs") && (order.payment_method !== "split");
-
-            // Otomatik indirim kontrolü (Sipariş notlarından veya fee lines'dan da bakılabilir ama metadan bakmak daha sağlıklı)
-            // Ancak şu anki mantıkta net toplam zaten hesaplanmış durumda.
-            // Sadece görsel olarak indirimi gösterelim.
+            
             var indirimFarki = araToplam - parseFloat(order.total);
             var iskontoFee = order.fee_lines.find(function(f) { return f.name === "İskonto"; });
             var iskontoTutar = iskontoFee ? Math.abs(parseFloat(iskontoFee.total)) : 0;
@@ -122,6 +118,7 @@
 
             if (nakitIndirimTutar > 0.01) {
                 els.fisNakitIndirimSatiri.style.display = "flex";
+                els.fisNakitIndirimSatiri.style.fontSize = "12px";
                 document.getElementById("fis-nakit-indirim-etiket").innerText = autoDiscountLabel;
                 els.fisNakitIndirimTutar.innerText = "-" + nakitIndirimTutar.toFixed(2) + " TL";
             } else {
@@ -130,11 +127,14 @@
 
             if (iskontoTutar > 0) {
                 els.fisIskontoSatiri.style.display = "flex";
+                els.fisIskontoSatiri.style.fontSize = "12px";
                 els.fisIskontoTutar.innerText = "-" + iskontoTutar.toFixed(2) + " TL";
             } else {
                 els.fisIskontoSatiri.style.display = "none";
             }
 
+            els.fisGenelToplam.style.borderTop = "1px solid #000";
+            els.fisGenelToplam.style.paddingTop = "5px";
             els.fisGenelToplam.innerText = parseFloat(order.total).toFixed(2) + " TL";
 
             // Barkod Üret (CODE128)

@@ -228,9 +228,9 @@
             // ─── BAŞLIK ───
             var baslik = (rapor.kasa_no === 'Genel') ? 'GENEL GÜN SONU RAPORU' : 'GÜN SONU RAPORU';
             
-            html += '<div style="text-align:center; margin-bottom:8px; border-bottom:2px double #000; padding-bottom:8px;">';
+            html += '<div style="text-align:center; margin-bottom:8px; border-bottom:1px solid #000; padding-bottom:8px;">';
             html += '<h2 style="margin:0; font-size:16px;">' + (document.querySelector('#fis-sablon h2') ? document.querySelector('#fis-sablon h2').innerText : 'MAĞAZA') + '</h2>';
-            html += '<p style="margin:3px 0; font-size:13px; font-weight:bold;">═══ ' + baslik + ' ═══</p>';
+            html += '<p style="margin:3px 0; font-size:13px; font-weight:bold;">' + baslik + '</p>';
             html += '<p style="margin:2px 0; font-size:11px;">Kasa: ' + rapor.kasa_no + '</p>';
             html += '<p style="margin:2px 0; font-size:11px;">' + rapor.tarih_okunabilir + '</p>';
             html += '<p style="margin:2px 0; font-size:10px;">Rapor: ' + rapor.rapor_zamani + '</p>';
@@ -244,7 +244,7 @@
 
             // ─── GENEL ÖZET ───
             html += '<div style="margin-bottom:8px;">';
-            html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px dashed #000;">GENEL ÖZET</p>';
+            html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">GENEL ÖZET</p>';
             html += '<table style="width:100%; font-size:12px; border-collapse:collapse;">';
             html += '<tr><td>Sipariş Sayısı</td><td style="text-align:right; font-weight:bold;">' + rapor.siparis_sayisi + '</td></tr>';
             html += '<tr><td>Satılan Ürün Adedi</td><td style="text-align:right; font-weight:bold;">' + ozet.urun_adet_toplam + '</td></tr>';
@@ -254,7 +254,7 @@
 
             // ─── ÖDEME DAĞILIMI ───
             html += '<div style="margin-bottom:8px;">';
-            html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px dashed #000;">ÖDEME DAĞILIMI</p>';
+            html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">ÖDEME DAĞILIMI</p>';
             html += '<table style="width:100%; font-size:12px; border-collapse:collapse;">';
             html += '<tr><td>Nakit</td><td style="text-align:right;">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>Kredi Kartı</td><td style="text-align:right;">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>';
@@ -266,15 +266,15 @@
             // ─── ÜRÜN DAĞILIMI ───
             if (includeDetails && rapor.urun_dagilimi && rapor.urun_dagilimi.length > 0) {
                 html += '<div style="margin-bottom:8px;">';
-                html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px dashed #000;">ÜRÜN DAĞILIMI</p>';
+                html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">ÜRÜN DAĞILIMI</p>';
                 html += '<table style="width:100%; font-size:11px; border-collapse:collapse;">';
                 html += '<tr style="border-bottom:1px solid #000;"><th style="text-align:left;">Ürün</th><th style="text-align:right;">Ad.</th><th style="text-align:right;">Tutar</th></tr>';
 
                 rapor.urun_dagilimi.forEach(function(u) {
                     html += '<tr>' +
-                        '<td style="padding:2px 0; max-width:100px; overflow:hidden; text-overflow:ellipsis;">' + u.name + '</td>' +
-                        '<td style="text-align:right; padding:2px 0;">' + u.qty + '</td>' +
-                        '<td style="text-align:right; padding:2px 0;">' + u.total.toFixed(2) + '</td>' +
+                        '<td style="padding:1px 0; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + u.name + '</td>' +
+                        '<td style="text-align:right; padding:1px 0;">' + u.qty + '</td>' +
+                        '<td style="text-align:right; padding:1px 0;">' + u.total.toFixed(2) + '</td>' +
                     '</tr>';
                 });
                 html += '</table>';
@@ -284,26 +284,26 @@
             // ─── SİPARİŞ LİSTESİ ───
             if (includeDetails) {
                 html += '<div style="margin-bottom:8px;">';
-            html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px dashed #000;">SİPARİŞLER (' + rapor.siparis_sayisi + ')</p>';
-            html += '<table style="width:100%; font-size:11px; border-collapse:collapse;">';
-            html += '<tr style="border-bottom:1px solid #000;"><th style="text-align:left;">Saat</th><th style="text-align:left;">No</th><th style="text-align:left;">Ödm.</th><th style="text-align:right;">Tutar</th></tr>';
+                html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">SİPARİŞLER (' + rapor.siparis_sayisi + ')</p>';
+                html += '<table style="width:100%; font-size:11px; border-collapse:collapse;">';
+                html += '<tr style="border-bottom:1px solid #000;"><th style="text-align:left;">Saat</th><th style="text-align:left;">No</th><th style="text-align:left;">Ödm.</th><th style="text-align:right;">Tutar</th></tr>';
 
-            rapor.siparisler.forEach(function(s) {
-                html += '<tr>' +
-                    '<td style="padding:1px 0;">' + s.saat + '</td>' +
-                    '<td style="padding:1px 0;">#' + s.id + '</td>' +
-                    '<td style="padding:1px 0; max-width:50px; overflow:hidden;">' + s.odeme_tipi.substring(0, 6) + '</td>' +
-                    '<td style="text-align:right; padding:1px 0;">' + s.toplam.toFixed(2) + '</td>' +
-                '</tr>';
-            });
-            html += '</table>';
-            html += '</div>';
+                rapor.siparisler.forEach(function(s) {
+                    html += '<tr>' +
+                        '<td style="padding:1px 0;">' + s.saat + '</td>' +
+                        '<td style="padding:1px 0;">#' + s.id + '</td>' +
+                        '<td style="padding:1px 0; max-width:50px; overflow:hidden;">' + s.odeme_tipi.substring(0, 6) + '</td>' +
+                        '<td style="text-align:right; padding:1px 0;">' + s.toplam.toFixed(2) + '</td>' +
+                    '</tr>';
+                });
+                html += '</table>';
+                html += '</div>';
             }
 
             // ─── KASİYERLER ───
             if (rapor.kasiyerler && Object.keys(rapor.kasiyerler).length > 0) {
                 html += '<div style="margin-bottom:8px;">';
-                html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px dashed #000;">KASİYERLER</p>';
+                html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">KASİYERLER</p>';
                 html += '<table style="width:100%; font-size:11px; border-collapse:collapse;">';
                 for (var kasiyer in rapor.kasiyerler) {
                     html += '<tr><td>' + kasiyer + '</td><td style="text-align:right;">' + rapor.kasiyerler[kasiyer] + ' sipariş</td></tr>';
@@ -313,7 +313,7 @@
             }
 
             // ─── ALT BİLGİ ───
-            html += '<div style="text-align:center; margin-top:10px; padding-top:8px; border-top:2px double #000; font-size:10px;">';
+            html += '<div style="text-align:center; margin-top:10px; padding-top:8px; border-top:1px solid #000; font-size:10px;">';
             html += '<p style="margin:0;">Bu rapor Hızlı Kasa POS<br>sistemi tarafından üretilmiştir.</p>';
             html += '</div>';
 
