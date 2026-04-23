@@ -16,9 +16,8 @@
 
         init: function() {
             var self = this;
-            if (this.initialized) return;
-
-            // Modal Kapatma
+            
+            // Modal Kapatma (Vazgeç)
             var iptalBtn = document.getElementById('barkod-iptal');
             if (iptalBtn) {
                 iptalBtn.onclick = function() {
@@ -26,7 +25,7 @@
                 };
             }
 
-            // Yazdır Butonu
+            // Yazdır Butonu (Yazıcıya Gönder)
             var yazdirBtn = document.getElementById('barkod-onay-yazdir');
             if (yazdirBtn) {
                 yazdirBtn.onclick = function() {
@@ -35,6 +34,7 @@
             }
 
             this.initialized = true;
+            console.log("BarcodeRenderer (re)initialized");
         },
 
         /**
@@ -256,11 +256,16 @@
         }
     };
 
-    // Sekme yüklendiğinde başlat (özellikle urunler sekmesi AJAX ile gelirse)
+    // Sekme yüklendiğinde başlat
     document.addEventListener('hkTabLoaded', function(e) {
         if (e.detail.tab === 'urunler') {
             HK.BarcodeRenderer.init();
         }
     });
+
+    // Sayfa ilk yüklendiğinde eğer elementler varsa başlat
+    if (document.getElementById('barkod-yazdir-modal')) {
+        HK.BarcodeRenderer.init();
+    }
 
 })(window.HizliKasa = window.HizliKasa || {});
