@@ -327,6 +327,12 @@ if (!defined('ABSPATH'))
                     </select>
                 </div>
 
+                <div style="margin-top:15px;">
+                    <label><strong>İskonto (TL):</strong></label>
+                    <input type="number" id="edit-order-discount" class="hk-input" placeholder="0.00" step="0.01" min="0" style="margin-top:5px;">
+                    <small style="color:var(--hk-text-muted);">Mevcut iskonto otomatik yüklenir.</small>
+                </div>
+
                 <div class="modal-butonlar" style="margin-top:30px;">
                     <button id="order-edit-save" class="hk-btn-primary" style="width:100%; padding:15px;">Değişiklikleri Kaydet</button>
                 </div>

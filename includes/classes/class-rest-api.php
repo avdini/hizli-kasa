@@ -953,6 +953,7 @@ function hizli_kasa_process_refund($request) {
         if ($original_order) {
             $current_refunded_discount = (float) $original_order->get_meta('_hk_refunded_discount');
             $original_order->update_meta_data('_hk_refunded_discount', $current_refunded_discount + $refund_discount);
+            $original_order->update_meta_data('_hk_has_refund', 'yes');
             $original_order->save();
         }
     }
@@ -1562,6 +1563,8 @@ function hizli_kasa_api_get_barcode_data($request) {
 function hizli_kasa_get_recent_orders($request) {
     $kasa_no = sanitize_text_field($request->get_param('kasa_no'));
     $limit = get_option('hizli_kasa_edit_order_limit', 5);
+    $user_id = get_current_user_id();
+    $depo_id = hizli_kasa_get_user_active_depo($user_id);
 
     $args = array(
         'limit'        => $limit,
@@ -1576,28 +1579,58 @@ function hizli_kasa_get_recent_orders($request) {
     $orders = wc_get_orders($args);
     $results = [];
 
+    global $wpdb;
+    $tables = Hizli_Kasa_Database::get_tables();
+    $stok_table = $tables['stok_konumlari'];
+
     foreach ($orders as $order) {
         if ($order->get_meta('_hizli_kasa_is_refund') === 'yes') continue;
 
         $items = [];
         foreach ($order->get_items() as $item_id => $item) {
+            $p_id = $item->get_product_id();
+            $v_id = $item->get_variation_id();
+            $target_id = $v_id ?: $p_id;
+            $product = $item->get_product();
+
+            // Site Stoku
+            $site_stock = $product && $product->managing_stock() ? (float)$product->get_stock_quantity() : 999;
+            
+            // Depo Stoku
+            $depo_stock = 0;
+            if ($depo_id) {
+                $depo_stock = (float) $wpdb->get_var($wpdb->prepare(
+                    "SELECT quantity FROM $stok_table WHERE product_id = %d AND variation_id = %d AND location_id = %d",
+                    $p_id, $v_id, $depo_id
+                ));
+            }
+
             $items[] = [
                 'item_id' => $item_id,
                 'name'    => $item->get_name(),
                 'qty'     => $item->get_quantity(),
                 'total'   => $item->get_total(),
-                'product_id' => $item->get_product_id(),
-                'variation_id' => $item->get_variation_id()
+                'product_id' => $p_id,
+                'variation_id' => $v_id,
+                'site_stock' => $site_stock,
+                'depo_stock' => $depo_stock,
+                'max_qty' => $item->get_quantity() + min($site_stock, $depo_stock)
             ];
         }
+
+        $payment_method = $order->get_payment_method();
+        $is_split = ($payment_method === 'split');
+        $has_refund = (!empty($order->get_refunds()) || $order->get_meta('_hk_has_refund') === 'yes' || $order->get_meta('_hk_is_fully_refunded') === 'yes');
 
         $results[] = [
             'id'             => $order->get_id(),
             'total'          => $order->get_total(),
-            'payment_method' => $order->get_payment_method(),
+            'payment_method' => $payment_method,
             'payment_title'  => $order->get_payment_method_title(),
             'date'           => $order->get_date_created()->date('H:i'),
-            'has_refund'     => !empty($order->get_refunds()),
+            'has_refund'     => $has_refund,
+            'is_split'       => $is_split,
+            'discount'       => hizli_kasa_get_order_total_discount($order),
             'items'          => $items
         ];
     }
@@ -1612,21 +1645,47 @@ function hizli_kasa_update_order($request) {
     $data = $request->get_json_params();
     $order_id = intval($data['order_id']);
     $new_payment = sanitize_text_field($data['payment_method'] ?? '');
+    $new_discount = isset($data['discount']) ? floatval($data['discount']) : null;
     $item_changes = $data['items'] ?? [];
 
     $order = wc_get_order($order_id);
     if (!$order) return new WP_Error('no_order', 'Sipariş bulunamadı.');
 
+    // Guard: Bölünmüş ödeme veya iade görmüş sipariş düzenlenemez
+    $has_refund = (!empty($order->get_refunds()) || $order->get_meta('_hk_has_refund') === 'yes' || $order->get_meta('_hk_is_fully_refunded') === 'yes');
+    if ($order->get_payment_method() === 'split' || $has_refund) {
+        return new WP_Error('edit_not_allowed', 'Bu sipariş iade işlemi gördüğü veya bölünmüş ödeme olduğu için düzenlenemez.');
+    }
+
     $old_data = [
         'total' => $order->get_total(),
         'payment' => $order->get_payment_method(),
+        'discount' => hizli_kasa_get_order_total_discount($order),
         'items' => []
     ];
 
     $depo_id = (int)$order->get_meta('_hk_cikis_depo_id');
     $log_details = [];
 
-    // 1. Ödeme Yöntemi Değişikliği
+    // 1. İskonto Güncelleme
+    if ($new_discount !== null && round($new_discount, 2) != round($old_data['discount'], 2)) {
+        // Mevcut fee'leri (iskonto olanları) sil
+        foreach ($order->get_fees() as $fee_id => $fee) {
+            if (preg_match('/iskonto|indirim/ui', $fee->get_name()) || (float)$fee->get_total() < 0) {
+                $order->remove_item($fee_id);
+            }
+        }
+        if ($new_discount > 0) {
+            $item_fee = new WC_Order_Item_Fee();
+            $item_fee->set_name('Düzenlenmiş İskonto');
+            $item_fee->set_amount(-$new_discount);
+            $item_fee->set_total(-$new_discount);
+            $order->add_item($item_fee);
+        }
+        $log_details[] = "İskonto: " . $old_data['discount'] . " -> " . $new_discount;
+    }
+
+    // 2. Ödeme Yöntemi Değişikliği
     if ($new_payment && $new_payment !== $order->get_payment_method()) {
         $payment_titles = [
             'cod'   => 'Nakit',
@@ -1640,7 +1699,9 @@ function hizli_kasa_update_order($request) {
         $log_details[] = "Ödeme: $old_p -> $new_payment";
     }
 
-    // 2. Ürün ve Adet Değişiklikleri
+    // 3. Ürün ve Adet Değişiklikleri
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
+
     foreach ($item_changes as $change) {
         $item_id = intval($change['item_id']);
         $new_qty = intval($change['qty']);
@@ -1648,21 +1709,28 @@ function hizli_kasa_update_order($request) {
 
         if ($item) {
             $old_qty = $item->get_quantity();
+            if ($new_qty == $old_qty) continue;
+
             $old_data['items'][$item_id] = $old_qty;
+            $product_id = $item->get_product_id();
+            $variation_id = $item->get_variation_id();
+            $product = $item->get_product();
 
             if ($new_qty < $old_qty) {
+                // Azaltma veya Kaldırma
                 $diff = $old_qty - $new_qty;
                 
-                // Stok İadesi
+                // Depo Stoğu İadesi
                 if ($depo_id) {
-                    require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
                     Hizli_Kasa_Stock_Manager::update_warehouse_stock(
-                        $item->get_product_id(),
-                        $item->get_variation_id(),
-                        $depo_id,
-                        $diff,
+                        $product_id, $variation_id, $depo_id, $diff,
                         "Sipariş Düzenleme (#$order_id) - İade"
                     );
+                }
+
+                // Site Stoğu İadesi
+                if ($product && $product->managing_stock()) {
+                    wc_update_product_stock($product, $diff, 'increase');
                 }
 
                 if ($new_qty <= 0) {
@@ -1675,14 +1743,59 @@ function hizli_kasa_update_order($request) {
                     $item->save();
                     $log_details[] = $item->get_name() . ": $old_qty -> $new_qty";
                 }
+            } else {
+                // Arttırma
+                $diff = $new_qty - $old_qty;
+                
+                // Depo Stoğu Düşümü
+                if ($depo_id) {
+                    Hizli_Kasa_Stock_Manager::update_warehouse_stock(
+                        $product_id, $variation_id, $depo_id, -$diff,
+                        "Sipariş Düzenleme (#$order_id) - Arttırma"
+                    );
+                }
+
+                // Site Stoğu Düşümü
+                if ($product && $product->managing_stock()) {
+                    wc_update_product_stock($product, $diff, 'decrease');
+                }
+
+                $item->set_quantity($new_qty);
+                $item->set_subtotal(($item->get_subtotal() / $old_qty) * $new_qty);
+                $item->set_total(($item->get_total() / $old_qty) * $new_qty);
+                $item->save();
+                $log_details[] = $item->get_name() . ": $old_qty -> $new_qty";
             }
         }
     }
 
     $order->calculate_totals();
+
+    // 4. Ödeme Metalarını Güncelle
+    $final_total = (float)$order->get_total();
+    $payment_method = $order->get_payment_method();
+    
+    $order->update_meta_data('_odeme_nakit', 0);
+    $order->update_meta_data('_odeme_kart', 0);
+    $order->update_meta_data('_odeme_iban', 0);
+    $order->delete_meta_data('Ödeme (Nakit)');
+    $order->delete_meta_data('Ödeme (Kredi Kartı)');
+    $order->delete_meta_data('Ödeme (IBAN)');
+
+    if ($payment_method === 'cod') {
+        $order->update_meta_data('_odeme_nakit', $final_total);
+        $order->update_meta_data('Ödeme (Nakit)', number_format($final_total, 2, '.', '') . ' TL');
+    } elseif ($payment_method === 'other') {
+        $order->update_meta_data('_odeme_kart', $final_total);
+        $order->update_meta_data('Ödeme (Kredi Kartı)', number_format($final_total, 2, '.', '') . ' TL');
+    } elseif ($payment_method === 'bacs') {
+        $order->update_meta_data('_odeme_iban', $final_total);
+        $order->update_meta_data('Ödeme (IBAN)', number_format($final_total, 2, '.', '') . ' TL');
+    }
+
     $order->save();
 
-    // 3. Log Kaydı
+    // 5. Log Kaydı
     global $wpdb;
     $table = Hizli_Kasa_Database::get_tables()['order_edits'];
     $wpdb->insert($table, [

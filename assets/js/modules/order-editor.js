@@ -76,19 +76,27 @@
 
                 orders.forEach(function(order) {
                     var div = document.createElement("div");
-                    div.className = "recent-order-item" + (order.has_refund ? " is-refunded" : "");
+                    var isLocked = order.has_refund || order.is_split;
+                    var lockReason = "";
+                    if (order.has_refund) lockReason = "(İade İşlemi Gördü)";
+                    else if (order.is_split) lockReason = "(Bölünmüş Ödeme)";
+
+                    div.className = "recent-order-item" + (isLocked ? " is-locked" : "");
                     div.innerHTML = `
                         <div class="recent-order-info">
-                            <span class="recent-order-id">#${order.id} ${order.has_refund ? '<small style="color:#d63031;">(İade İşlemi Gördü)</small>' : ''}</span>
+                            <span class="recent-order-id">#${order.id} ${lockReason ? '<small style="color:#d63031;">' + lockReason + '</small>' : ''}</span>
                             <span class="recent-order-meta">${order.date} | ${order.payment_title}</span>
                         </div>
                         <div class="recent-order-total">${parseFloat(order.total).toFixed(2)} TL</div>
                     `;
                     
-                    if (!order.has_refund) {
+                    if (!isLocked) {
                         div.addEventListener("click", function() {
                             self.selectOrder(order);
                         });
+                    } else {
+                        div.style.opacity = "0.6";
+                        div.style.cursor = "not-allowed";
                     }
                     
                     container.appendChild(div);
@@ -108,6 +116,7 @@
             document.getElementById("order-edit-detail-view").style.display = "block";
             
             document.getElementById("edit-order-payment").value = order.payment_method;
+            document.getElementById("edit-order-discount").value = parseFloat(order.discount || 0).toFixed(2);
             this.renderItems();
         },
 
@@ -119,6 +128,7 @@
             this.activeOrder.items.forEach(function(item) {
                 var currentQty = self.editedItems[item.item_id] !== undefined ? self.editedItems[item.item_id] : item.qty;
                 var isRemoved = currentQty === 0;
+                var maxQty = item.max_qty || item.qty;
 
                 var div = document.createElement("div");
                 div.className = "edit-item-row" + (isRemoved ? " removed-item" : "");
@@ -126,12 +136,13 @@
                     <div class="edit-item-info">
                         <span class="edit-item-name">${item.name}</span>
                         <span class="edit-item-price">${parseFloat(item.total / item.qty).toFixed(2)} TL / Adet</span>
+                        ${maxQty > item.qty ? '<small style="color:var(--hk-success); display:block;">Stokta var: Max ' + maxQty + '</small>' : ''}
                     </div>
                     <div class="edit-item-actions">
                         <div class="edit-qty-control">
                             <button class="edit-qty-btn minus" data-id="${item.item_id}">-</button>
                             <span class="edit-qty-val">${currentQty}</span>
-                            <button class="edit-qty-btn plus" data-id="${item.item_id}" disabled style="opacity:0.3; cursor:not-allowed;">+</button>
+                            <button class="edit-qty-btn plus" data-id="${item.item_id}" ${currentQty >= maxQty ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''}>+</button>
                         </div>
                         <button class="remove-item-btn" data-id="${item.item_id}">${isRemoved ? 'Geri Al' : 'Kaldır'}</button>
                     </div>
@@ -140,6 +151,11 @@
                 // Azaltma butonu
                 div.querySelector(".minus").addEventListener("click", function() {
                     if (currentQty > 0) self.updateItemQty(item.item_id, currentQty - 1);
+                });
+
+                // Arttırma butonu
+                div.querySelector(".plus").addEventListener("click", function() {
+                    if (currentQty < maxQty) self.updateItemQty(item.item_id, currentQty + 1);
                 });
 
                 // Kaldırma/Geri Al butonu
@@ -163,6 +179,7 @@
         saveChanges: async function() {
             var self = this;
             var paymentMethod = document.getElementById("edit-order-payment").value;
+            var discount = parseFloat(document.getElementById("edit-order-discount").value || 0);
             var changes = [];
 
             for (var itemId in this.editedItems) {
@@ -172,7 +189,7 @@
                 });
             }
 
-            if (changes.length === 0 && paymentMethod === this.activeOrder.payment_method) {
+            if (changes.length === 0 && paymentMethod === this.activeOrder.payment_method && discount === parseFloat(this.activeOrder.discount || 0)) {
                 HK.UIRenderer.showToast("Herhangi bir değişiklik yapılmadı.", 'info');
                 return;
             }
@@ -193,6 +210,7 @@
                     body: JSON.stringify({
                         order_id: this.activeOrder.id,
                         payment_method: paymentMethod,
+                        discount: discount,
                         items: changes
                     })
                 });
@@ -202,7 +220,7 @@
                     HK.UIRenderer.showToast("Sipariş başarıyla güncellendi.", 'success');
                     document.getElementById("order-edit-modal").style.display = "none";
                 } else {
-                    HK.UIRenderer.showToast("Hata: " + result.message, 'error');
+                    HK.UIRenderer.showToast("Hata: " + (result.message || "Bilinmeyen bir hata"), 'error');
                 }
             } catch (e) {
                 console.error("Save edit error", e);
