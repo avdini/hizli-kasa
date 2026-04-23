@@ -1850,7 +1850,7 @@ function hizli_kasa_get_edit_logs($request) {
 }
 
 /**
- * Raporlar için tüm POS siparişlerini getirir.
+ * Raporlar için tüm Kasa siparişlerini getirir.
  */
 function hizli_kasa_get_reports_orders($request) {
     return hizli_kasa_get_reports_data($request, false);
@@ -1877,7 +1877,7 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
 
     $args = array(
         'limit'    => $per_page,
-        'offset'   => ($paged - 1) * $per_page,
+        'page'     => $paged,
         'paginate' => true,
         'status'   => array('processing', 'completed', 'on-hold'),
         'orderby'  => 'date',

@@ -10,7 +10,7 @@
     HK.DetailedReports = {
         currentPageOrders: 1,
         currentPageRefunds: 1,
-        perPage: 20,
+        perPage: 50,
 
         init: function() {
             var self = this;

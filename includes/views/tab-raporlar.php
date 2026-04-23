@@ -1,5 +1,5 @@
 <?php if (!defined('ABSPATH')) exit; ?>
-<div class="hk-tab-container" style="padding: 20px;">
+<div class="hk-tab-container" style="padding: 20px; height: 100%; overflow-y: auto; box-sizing: border-box;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--hk-border); padding-bottom: 15px;">
         <h2 style="margin:0;">📊 Detaylı Raporlar</h2>
         <div class="rapor-filtre-bar" style="display:flex; gap:10px;">
@@ -43,7 +43,7 @@
     <div id="rapor-tum-siparisler" class="rapor-icerik-paneli">
         <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="margin:0; color:var(--hk-accent);">Tüm POS Siparişleri</h3>
+                <h3 style="margin:0; color:var(--hk-accent);">Tüm Kasa Siparişleri</h3>
                 <input type="text" id="order-search-input" class="hk-input" placeholder="Sipariş ID veya Ürün Ara..." style="width:250px;">
             </div>
             
@@ -130,12 +130,19 @@
     width: 100%;
     border-collapse: collapse;
 }
+#all-orders-table th,
+#refund-list-table th,
 #edit-logs-table th {
     text-align: left;
     padding: 12px;
     background: var(--hk-bg-body);
     border-bottom: 2px solid var(--hk-border);
+    position: sticky;
+    top: -20px; /* Adjusting for container padding */
+    z-index: 10;
 }
+#all-orders-table td,
+#refund-list-table td,
 #edit-logs-table td {
     padding: 12px;
     border-bottom: 1px solid var(--hk-border);
