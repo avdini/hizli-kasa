@@ -92,7 +92,7 @@ window.HizliKasa = window.HizliKasa || {};
                             '<span class="urun-sku" style="color:#666; font-size:13px; font-weight:bold; margin-bottom:2px;">' + item.sku + '</span>' +
                         '</span>' +
                     '</div>' +
-                    '<div class="urun-orta-detay" style="flex:1; text-align:center;">' +
+                    '<div class="urun-orta-detay" style="flex:1; text-align:left;">' +
                         '<span class="urun-detay-metin" style="font-size:15px; font-weight:bold; color:var(--hk-text-main);">' + item.quantity + ' Adet x ' + fiyatGosterim + '</span>' +
                     '</div>' +
                     '<span class="urun-fiyat-grup">' +
