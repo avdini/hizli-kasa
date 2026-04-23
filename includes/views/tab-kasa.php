@@ -225,8 +225,8 @@ if (!defined('ABSPATH'))
     </div>
 
     <!-- Gizli Fiş Şablonu (Sadece Yazdırma İçin) -->
-    <div id="fis-sablon">
-        <div style="text-align:center; margin-bottom:10px; border-bottom:1px dashed #000; padding-bottom:10px;">
+    <div id="fis-sablon" style="color:#000;">
+        <div style="text-align:center; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:10px;">
             <h2 style="margin:0; font-size:18px;"><?php echo get_bloginfo('name'); ?></h2>
             <p style="margin:5px 0; font-size:12px;">HIZLI KASA SATIŞ FİŞİ</p>
             <p id="fis-tarih" style="margin:0; font-size:11px;"></p>
@@ -248,7 +248,7 @@ if (!defined('ABSPATH'))
             </tbody>
         </table>
 
-        <div style="border-top:1px dashed #000; padding-top:10px; font-size:13px;">
+        <div style="border-top:1px solid #000; padding-top:10px; font-size:13px;">
             <div style="display:flex; justify-content:space-between; margin-bottom:3px;" id="fis-liste-toplami-satiri">
                 <span>Etiket Toplamı:</span>
                 <span id="fis-liste-toplami-tutar"></span>

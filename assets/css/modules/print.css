@@ -11,10 +11,24 @@
     color: #000 !important;
 }
 
+#fis-sablon *, #gun-sonu-sablon * {
+    color: #000 !important;
+    border-color: #000 !important;
+    box-shadow: none !important;
+}
+
 #fis-sablon table, #gun-sonu-sablon table {
     border-collapse: collapse;
     width: 100%;
-    color: #000 !important;
+    border: none !important;
+}
+
+#fis-sablon td, #fis-sablon th, #gun-sonu-sablon td, #gun-sonu-sablon th,
+#fis-sablon tr, #gun-sonu-sablon tr,
+#fis-sablon thead, #gun-sonu-sablon thead,
+#fis-sablon tbody, #gun-sonu-sablon tbody {
+    border: none !important;
+    padding: 2px 0;
 }
 
 @media print {
