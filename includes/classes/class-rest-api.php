@@ -1871,6 +1871,7 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
 
     $paged    = $request->get_param('page') ? intval($request->get_param('page')) : 1;
     $per_page = $request->get_param('per_page') ? intval($request->get_param('per_page')) : 20;
+    if ($per_page < 1) $per_page = 20;
     $date_start = $request->get_param('date_start');
     $date_end   = $request->get_param('date_end');
     $search     = $request->get_param('search');

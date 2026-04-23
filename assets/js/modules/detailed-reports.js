@@ -99,7 +99,7 @@
             var search = document.getElementById("order-search-input").value;
 
             try {
-                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/orders?page=${this.currentPageOrders}&per_page=${this.per_page}&date_start=${dateStart}&date_end=${dateEnd}&search=${encodeURIComponent(search)}`;
+                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/orders?page=${this.currentPageOrders}&per_page=${this.perPage}&date_start=${dateStart}&date_end=${dateEnd}&search=${encodeURIComponent(search)}`;
                 console.log("HK.DetailedReports: Fetching orders from:", url);
                 
                 var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
@@ -133,7 +133,7 @@
             var search = document.getElementById("refund-search-input").value;
 
             try {
-                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/refunds?page=${this.currentPageRefunds}&per_page=${this.per_page}&date_start=${dateStart}&date_end=${dateEnd}&search=${encodeURIComponent(search)}`;
+                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/refunds?page=${this.currentPageRefunds}&per_page=${this.perPage}&date_start=${dateStart}&date_end=${dateEnd}&search=${encodeURIComponent(search)}`;
                 console.log("HK.DetailedReports: Fetching refunds from:", url);
                 
                 var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
