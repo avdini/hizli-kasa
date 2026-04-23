@@ -41,9 +41,22 @@
     line-height: 1.2 !important;
 }
 
-#sepet-listesi .urun-detay {
-    font-size: 12px !important;
+#sepet-listesi .urun-sku {
+    font-size: 13px !important;
+    font-weight: bold !important;
     color: #666 !important;
+}
+
+#sepet-listesi .urun-orta-detay {
+    flex: 1 !important;
+    text-align: center !important;
+    padding: 0 10px !important;
+}
+
+#sepet-listesi .urun-detay-metin {
+    font-size: 15px !important;
+    font-weight: bold !important;
+    color: var(--hk-text-main) !important;
     white-space: nowrap !important;
 }
 

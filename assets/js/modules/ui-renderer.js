@@ -85,13 +85,15 @@ window.HizliKasa = window.HizliKasa || {};
                 }
 
                 li.innerHTML =
-                    '<div style="display:flex; align-items:center; flex:1; overflow:hidden;">' +
+                    '<div class="urun-sol-kolon" style="display:flex; align-items:center; flex:1.5; overflow:hidden;">' +
                         (item.image ? '<img src="' + item.image + '" class="urun-resim" style="width:40px; height:40px; object-fit:cover; border-radius:4px; margin-right:10px; flex-shrink:0;">' : '<div style="width:40px; height:40px; background:#eee; border-radius:4px; margin-right:10px; flex-shrink:0;"></div>') +
                         '<span class="urun-bilgi">' +
                             '<strong class="urun-ad">' + item.name + '</strong>' +
-                            '<span style="color:#999; font-size:12px; margin-bottom:2px;">' + item.sku + '</span>' +
-                            '<small class="urun-detay">' + item.quantity + ' Adet x ' + fiyatGosterim + '</small>' +
+                            '<span class="urun-sku" style="color:#666; font-size:13px; font-weight:bold; margin-bottom:2px;">' + item.sku + '</span>' +
                         '</span>' +
+                    '</div>' +
+                    '<div class="urun-orta-detay" style="flex:1; text-align:center;">' +
+                        '<span class="urun-detay-metin" style="font-size:15px; font-weight:bold; color:var(--hk-text-main);">' + item.quantity + ' Adet x ' + fiyatGosterim + '</span>' +
                     '</div>' +
                     '<span class="urun-fiyat-grup">' +
                         (etiketFiyat > kampanyaFiyat ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + etiketFiyat.toFixed(2) + ' TL</div>' : '') +
