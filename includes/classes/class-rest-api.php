@@ -76,8 +76,8 @@ add_action('rest_api_init', function () {
      * Response: { view: [{id, name}], manage_ids: [1,3], active_depo_id: 2 }
      */
     register_rest_route('hizli-kasa/v1', '/user/depolar', array(
-        'methods'             => 'GET',
-        'callback'            => 'hizli_kasa_api_user_depolar',
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_api_user_depolar',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
@@ -88,8 +88,8 @@ add_action('rest_api_init', function () {
      * Body: { depo_id: 5 }
      */
     register_rest_route('hizli-kasa/v1', '/user/set-active-depo', array(
-        'methods'             => 'POST',
-        'callback'            => 'hizli_kasa_api_set_active_depo',
+        'methods' => 'POST',
+        'callback' => 'hizli_kasa_api_set_active_depo',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
@@ -97,32 +97,32 @@ add_action('rest_api_init', function () {
 
     // --- Masraf Yönetimi Endpoint'leri ---
     register_rest_route('hizli-kasa/v1', '/masraflar', array(
-        'methods'             => 'GET',
-        'callback'            => 'hizli_kasa_get_masraflar',
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_get_masraflar',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
     ));
 
     register_rest_route('hizli-kasa/v1', '/masraflar', array(
-        'methods'             => 'POST',
-        'callback'            => 'hizli_kasa_add_masraf',
+        'methods' => 'POST',
+        'callback' => 'hizli_kasa_add_masraf',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
     ));
 
     register_rest_route('hizli-kasa/v1', '/masraflar/(?P<id>\d+)', array(
-        'methods'             => 'DELETE',
-        'callback'            => 'hizli_kasa_delete_masraf',
+        'methods' => 'DELETE',
+        'callback' => 'hizli_kasa_delete_masraf',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
     ));
 
     register_rest_route('hizli-kasa/v1', '/user/set-theme', array(
-        'methods'             => 'POST',
-        'callback'            => 'hizli_kasa_api_set_user_theme',
+        'methods' => 'POST',
+        'callback' => 'hizli_kasa_api_set_user_theme',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
@@ -130,64 +130,64 @@ add_action('rest_api_init', function () {
 
     // --- Depo Stok Kontrolü (Sipariş öncesi toplu kontrol) ---
     register_rest_route('hizli-kasa/v1', '/warehouse-stock-check', array(
-        'methods'             => 'POST',
-        'callback'            => 'hizli_kasa_warehouse_stock_check',
+        'methods' => 'POST',
+        'callback' => 'hizli_kasa_warehouse_stock_check',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
     ));
 
     register_rest_route('hizli-kasa/v1', '/barcode/label-data', array(
-        'methods'             => 'GET',
-        'callback'            => 'hizli_kasa_api_get_barcode_data',
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_api_get_barcode_data',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
     ));
 
     register_rest_route('hizli-kasa/v1', '/search-orders', array(
-        'methods'             => 'GET',
-        'callback'            => 'hizli_kasa_search_orders',
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_search_orders',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
     ));
 
     register_rest_route('hizli-kasa/v1', '/recent-orders', array(
-        'methods'             => 'GET',
-        'callback'            => 'hizli_kasa_get_recent_orders',
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_get_recent_orders',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
     ));
 
     register_rest_route('hizli-kasa/v1', '/update-order', array(
-        'methods'             => 'POST',
-        'callback'            => 'hizli_kasa_update_order',
+        'methods' => 'POST',
+        'callback' => 'hizli_kasa_update_order',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
     ));
 
     register_rest_route('hizli-kasa/v1', '/edit-logs', array(
-        'methods'             => 'GET',
-        'callback'            => 'hizli_kasa_get_edit_logs',
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_get_edit_logs',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
     ));
 
     register_rest_route('hizli-kasa/v1', '/reports/orders', array(
-        'methods'             => 'GET',
-        'callback'            => 'hizli_kasa_get_reports_orders',
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_get_reports_orders',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
     ));
 
     register_rest_route('hizli-kasa/v1', '/reports/refunds', array(
-        'methods'             => 'GET',
-        'callback'            => 'hizli_kasa_get_reports_refunds',
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_get_reports_refunds',
         'permission_callback' => function () {
             return current_user_can('edit_posts');
         }
@@ -197,18 +197,19 @@ add_action('rest_api_init', function () {
 /**
  * Kullanıcının depo listesini ve aktif deposunu döner.
  */
-function hizli_kasa_api_user_depolar($request) {
+function hizli_kasa_api_user_depolar($request)
+{
     $user_id = get_current_user_id();
 
     // Admin ise tüm depoları görebilir
     if (current_user_can('manage_options')) {
         global $wpdb;
         $depolar_raw = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar ORDER BY priority DESC, name ASC");
-        $view        = array_map(fn($d) => ['id' => (int)$d->id, 'name' => $d->name], $depolar_raw);
-        $manage_ids  = array_column($view, 'id');
+        $view = array_map(fn($d) => ['id' => (int) $d->id, 'name' => $d->name], $depolar_raw);
+        $manage_ids = array_column($view, 'id');
     } else {
-        $view_ids    = hizli_kasa_get_user_view_depos($user_id);
-        $manage_ids  = hizli_kasa_get_user_manage_depos($user_id);
+        $view_ids = hizli_kasa_get_user_view_depos($user_id);
+        $manage_ids = hizli_kasa_get_user_manage_depos($user_id);
 
         if (empty($view_ids)) {
             return new WP_Error('no_depo', 'Profilinize depo atanmamış.', ['status' => 403]);
@@ -216,17 +217,17 @@ function hizli_kasa_api_user_depolar($request) {
 
         global $wpdb;
         if (!empty($view_ids)) {
-            $ids_ph  = implode(',', array_map('intval', $view_ids));
+            $ids_ph = implode(',', array_map('intval', $view_ids));
             $depolar_raw = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar WHERE id IN ($ids_ph) ORDER BY priority DESC, name ASC");
         } else {
             $depolar_raw = [];
         }
-        $view = array_map(fn($d) => ['id' => (int)$d->id, 'name' => $d->name], $depolar_raw);
+        $view = array_map(fn($d) => ['id' => (int) $d->id, 'name' => $d->name], $depolar_raw);
     }
 
     // Aktif depoyu al (sunucu meta)
     $active_depo_id = hizli_kasa_get_user_active_depo($user_id);
-    
+
     // Aktif depo yoksa ilk görüntüleme deposunu seç
     if (!$active_depo_id && !empty($view)) {
         $active_depo_id = $view[0]['id'];
@@ -234,17 +235,18 @@ function hizli_kasa_api_user_depolar($request) {
     }
 
     return [
-        'view'           => $view,
-        'manage_ids'     => array_values($manage_ids),
-        'active_depo_id' => $active_depo_id ? (int)$active_depo_id : null,
+        'view' => $view,
+        'manage_ids' => array_values($manage_ids),
+        'active_depo_id' => $active_depo_id ? (int) $active_depo_id : null,
     ];
 }
 
 /**
  * Kullanıcının aktif deposunu user_meta'ya kaydeder.
  */
-function hizli_kasa_api_set_active_depo($request) {
-    $data    = $request->get_json_params();
+function hizli_kasa_api_set_active_depo($request)
+{
+    $data = $request->get_json_params();
     $depo_id = intval($data['depo_id'] ?? 0);
     $user_id = get_current_user_id();
 
@@ -260,17 +262,18 @@ function hizli_kasa_api_set_active_depo($request) {
     update_user_meta($user_id, '_hizli_kasa_active_depo', $depo_id);
 
     return [
-        'success'        => true,
+        'success' => true,
         'active_depo_id' => $depo_id,
-        'message'        => 'Aktif depo güncellendi.',
+        'message' => 'Aktif depo güncellendi.',
     ];
 }
 
 /**
  * Kullanıcının tema tercihini kaydeder.
  */
-function hizli_kasa_api_set_user_theme($request) {
-    $data  = $request->get_json_params();
+function hizli_kasa_api_set_user_theme($request)
+{
+    $data = $request->get_json_params();
     $theme = sanitize_text_field($data['theme'] ?? 'light');
     $user_id = get_current_user_id();
 
@@ -278,7 +281,7 @@ function hizli_kasa_api_set_user_theme($request) {
 
     return [
         'success' => true,
-        'theme'   => $theme,
+        'theme' => $theme,
         'message' => 'Tema tercihi kaydedildi.',
     ];
 }
@@ -286,9 +289,10 @@ function hizli_kasa_api_set_user_theme($request) {
 /**
  * Gün Sonu Raporu API endpoint'i.
  */
-function hizli_kasa_gun_sonu_raporu($request) {
+function hizli_kasa_gun_sonu_raporu($request)
+{
     $kasa_no = sanitize_text_field($request->get_param('kasa_no'));
-    $tarih   = sanitize_text_field($request->get_param('tarih'));
+    $tarih = sanitize_text_field($request->get_param('tarih'));
 
     if (empty($kasa_no)) {
         return new WP_Error('missing_param', 'kasa_no parametresi gerekli.', array('status' => 400));
@@ -301,23 +305,23 @@ function hizli_kasa_gun_sonu_raporu($request) {
     }
 
     $tarih_baslangic = $tarih . ' 00:00:00';
-    $tarih_bitis     = $tarih . ' 23:59:59';
+    $tarih_bitis = $tarih . ' 23:59:59';
 
     $args = array(
-        'limit'        => -1,
-        'status'       => array('processing', 'completed', 'on-hold'),
+        'limit' => -1,
+        'status' => array('processing', 'completed', 'on-hold'),
         'date_created' => $tarih_baslangic . '...' . $tarih_bitis,
-        'orderby'      => 'date',
-        'order'        => 'ASC',
+        'orderby' => 'date',
+        'order' => 'ASC',
     );
 
     if (!$is_general) {
-        $args['meta_key']   = '_hizli_kasa_kasa_no';
+        $args['meta_key'] = '_hizli_kasa_kasa_no';
         $args['meta_value'] = $kasa_no;
     } else {
         $args['meta_query'] = array(
             array(
-                'key'     => '_hizli_kasa_kasa_no',
+                'key' => '_hizli_kasa_kasa_no',
                 'compare' => 'EXISTS',
             ),
         );
@@ -327,49 +331,49 @@ function hizli_kasa_gun_sonu_raporu($request) {
 
     if (empty($orders)) {
         return array(
-            'kasa_no'        => ($kasa_no === 'all') ? 'Genel' : $kasa_no,
-            'tarih'          => $tarih,
+            'kasa_no' => ($kasa_no === 'all') ? 'Genel' : $kasa_no,
+            'tarih' => $tarih,
             'siparis_sayisi' => 0,
-            'siparisler'     => array(),
-            'ozet'           => array(
-                'toplam_ciro'       => 0,
-                'toplam_iskonto'    => 0,
-                'nakit_toplam'      => 0,
-                'kart_toplam'       => 0,
-                'iban_toplam'       => 0,
-                'urun_adet_toplam'  => 0,
+            'siparisler' => array(),
+            'ozet' => array(
+                'toplam_ciro' => 0,
+                'toplam_iskonto' => 0,
+                'nakit_toplam' => 0,
+                'kart_toplam' => 0,
+                'iban_toplam' => 0,
+                'urun_adet_toplam' => 0,
             ),
-            'urun_dagilimi'  => array(),
-            'kasiyerler'     => array(),
+            'urun_dagilimi' => array(),
+            'kasiyerler' => array(),
         );
     }
 
-    $siparisler    = array();
-    $nakit_toplam  = 0;
-    $kart_toplam   = 0;
-    $iban_toplam   = 0;
-    $toplam_ciro   = 0;
+    $siparisler = array();
+    $nakit_toplam = 0;
+    $kart_toplam = 0;
+    $iban_toplam = 0;
+    $toplam_ciro = 0;
     $toplam_iskonto = 0;
-    $urun_adet     = 0;
-    $urun_map      = array();
-    $kasiyer_map   = array();
-    $saat_map      = array();
+    $urun_adet = 0;
+    $urun_map = array();
+    $kasiyer_map = array();
+    $saat_map = array();
 
     $iade_siparisler = array();
     $iade_toplam = 0;
-    $iade_adet   = 0;
-    $iade_nakit  = 0;
-    $iade_kart   = 0;
-    $iade_iban   = 0;
+    $iade_adet = 0;
+    $iade_nakit = 0;
+    $iade_kart = 0;
+    $iade_iban = 0;
 
     foreach ($orders as $order) {
-        $order_id    = $order->get_id();
+        $order_id = $order->get_id();
         $order_total = (float) $order->get_total();
 
         $o_nakit = (float) $order->get_meta('_odeme_nakit');
-        $o_kart  = (float) $order->get_meta('_odeme_kart');
-        $o_iban  = (float) $order->get_meta('_odeme_iban');
-        
+        $o_kart = (float) $order->get_meta('_odeme_kart');
+        $o_iban = (float) $order->get_meta('_odeme_iban');
+
         $kasiyer = $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmeyen';
         $odeme_tipi = $order->get_payment_method_title();
 
@@ -379,29 +383,31 @@ function hizli_kasa_gun_sonu_raporu($request) {
             $iade_toplam += abs($order_total);
             $iade_adet++;
             $iade_nakit += abs($o_nakit);
-            $iade_kart  += abs($o_kart);
-            $iade_iban  += abs($o_iban);
-            
+            $iade_kart += abs($o_kart);
+            $iade_iban += abs($o_iban);
+
             $iade_siparisler[] = array(
-                'id'         => $order_id,
-                'saat'       => $order->get_date_created()->date('H:i'),
-                'toplam'     => abs($order_total),
+                'id' => $order_id,
+                'saat' => $order->get_date_created()->date('H:i'),
+                'toplam' => abs($order_total),
                 'odeme_tipi' => $odeme_tipi,
-                'kasiyer'    => $kasiyer
+                'kasiyer' => $kasiyer
             );
             continue;
         }
 
         $toplam_ciro += $order_total;
         $nakit_toplam += $o_nakit;
-        $kart_toplam  += $o_kart;
-        $iban_toplam  += $o_iban;
+        $kart_toplam += $o_kart;
+        $iban_toplam += $o_iban;
 
-        if (!isset($kasiyer_map[$kasiyer])) $kasiyer_map[$kasiyer] = 0;
+        if (!isset($kasiyer_map[$kasiyer]))
+            $kasiyer_map[$kasiyer] = 0;
         $kasiyer_map[$kasiyer]++;
 
         $saat = $order->get_date_created()->date('H:00');
-        if (!isset($saat_map[$saat])) $saat_map[$saat] = 0;
+        if (!isset($saat_map[$saat]))
+            $saat_map[$saat] = 0;
         $saat_map[$saat]++;
 
         $iskonto = 0;
@@ -414,10 +420,10 @@ function hizli_kasa_gun_sonu_raporu($request) {
 
         $urunler = array();
         foreach ($order->get_items() as $item) {
-            $qty   = $item->get_quantity();
+            $qty = $item->get_quantity();
             $total = (float) $item->get_total();
-            $name  = $item->get_name();
-            $sku   = '';
+            $name = $item->get_name();
+            $sku = '';
 
             $product = $item->get_product();
             if ($product) {
@@ -430,104 +436,106 @@ function hizli_kasa_gun_sonu_raporu($request) {
             if (!isset($urun_map[$key])) {
                 $urun_map[$key] = array('name' => $name, 'sku' => $sku, 'qty' => 0, 'total' => 0);
             }
-            $urun_map[$key]['qty']   += $qty;
+            $urun_map[$key]['qty'] += $qty;
             $urun_map[$key]['total'] += $total;
 
             $urunler[] = array(
-                'name'  => $name,
-                'sku'   => $sku,
-                'qty'   => $qty,
+                'name' => $name,
+                'sku' => $sku,
+                'qty' => $qty,
                 'total' => $total,
             );
         }
-        
+
         $odeme_tipi = $order->get_payment_method_title();
 
         $siparisler[] = array(
-            'id'         => $order_id,
-            'saat'       => $order->get_date_created()->date('H:i'),
-            'toplam'     => $order_total,
+            'id' => $order_id,
+            'saat' => $order->get_date_created()->date('H:i'),
+            'toplam' => $order_total,
             'odeme_tipi' => $odeme_tipi,
-            'nakit'      => $o_nakit,
-            'kart'       => $o_kart,
-            'iban'       => $o_iban,
-            'iskonto'    => $iskonto,
-            'kasiyer'    => $kasiyer,
-            'urunler'    => $urunler,
+            'nakit' => $o_nakit,
+            'kart' => $o_kart,
+            'iban' => $o_iban,
+            'iskonto' => $iskonto,
+            'kasiyer' => $kasiyer,
+            'urunler' => $urunler,
         );
     }
 
     global $wpdb;
     $masraf_table = Hizli_Kasa_Database::get_tables()['masraflar'];
     $toplam_masraf = 0;
-    $nakit_masraf  = 0;
+    $nakit_masraf = 0;
     $masraf_listesi = array();
-    
+
     if ($is_general) {
         $m_query = $wpdb->prepare("SELECT category, amount, payment_method, description FROM $masraf_table WHERE DATE(created_at) = %s ORDER BY created_at ASC", $tarih);
         $masraflar_raw = $wpdb->get_results($m_query);
-        
+
         foreach ($masraflar_raw as $m) {
-            $amt = (float)$m->amount;
+            $amt = (float) $m->amount;
             $toplam_masraf += $amt;
             if ($m->payment_method === 'nakit') {
                 $nakit_masraf += $amt;
             }
             $masraf_listesi[] = array(
-                'kategori'   => $m->category,
-                'aciklama'   => $m->description,
-                'yontem'     => $m->payment_method,
-                'tutar'      => $amt
+                'kategori' => $m->category,
+                'aciklama' => $m->description,
+                'yontem' => $m->payment_method,
+                'tutar' => $amt
             );
         }
     }
 
-    uasort($urun_map, function($a, $b) {
+    uasort($urun_map, function ($a, $b) {
         return $b['qty'] - $a['qty'];
     });
 
     return array(
-        'kasa_no'        => ($kasa_no === 'all') ? 'Genel' : $kasa_no,
-        'tarih'          => $tarih,
+        'kasa_no' => ($kasa_no === 'all') ? 'Genel' : $kasa_no,
+        'tarih' => $tarih,
         'tarih_okunabilir' => date_i18n('d.m.Y l', strtotime($tarih)),
-        'rapor_zamani'   => current_time('d.m.Y H:i:s'),
+        'rapor_zamani' => current_time('d.m.Y H:i:s'),
         'siparis_sayisi' => count($siparisler),
-        'siparisler'     => $siparisler,
-        'ozet'           => array(
-            'toplam_ciro'       => round($toplam_ciro, 2),
-            'toplam_iskonto'    => round($toplam_iskonto, 2),
-            'nakit_toplam'      => round($nakit_toplam, 2),
-            'kart_toplam'       => round($kart_toplam, 2),
-            'iban_toplam'       => round($iban_toplam, 2),
-            'toplam_masraf'     => round($toplam_masraf, 2),
-            'nakit_masraf'      => round($nakit_masraf, 2),
-            'net_nakit'         => round($nakit_toplam - $nakit_masraf - $iade_nakit, 2),
-            'urun_adet_toplam'  => $urun_adet,
-            'toplam_iade'       => round($iade_toplam, 2),
-            'iade_adet'         => $iade_adet,
-            'iade_nakit'        => round($iade_nakit, 2),
-            'iade_kart'         => round($iade_kart, 2),
-            'iade_iban'         => round($iade_iban, 2),
+        'siparisler' => $siparisler,
+        'ozet' => array(
+            'toplam_ciro' => round($toplam_ciro, 2),
+            'toplam_iskonto' => round($toplam_iskonto, 2),
+            'nakit_toplam' => round($nakit_toplam, 2),
+            'kart_toplam' => round($kart_toplam, 2),
+            'iban_toplam' => round($iban_toplam, 2),
+            'toplam_masraf' => round($toplam_masraf, 2),
+            'nakit_masraf' => round($nakit_masraf, 2),
+            'net_nakit' => round($nakit_toplam - $nakit_masraf - $iade_nakit, 2),
+            'urun_adet_toplam' => $urun_adet,
+            'toplam_iade' => round($iade_toplam, 2),
+            'iade_adet' => $iade_adet,
+            'iade_nakit' => round($iade_nakit, 2),
+            'iade_kart' => round($iade_kart, 2),
+            'iade_iban' => round($iade_iban, 2),
         ),
-        'iade_siparisler'=> $iade_siparisler,
-        'masraf_detay'   => $masraf_listesi,
-        'urun_dagilimi'  => array_values($urun_map),
-        'kasiyerler'     => $kasiyer_map,
-        'saat_dagilimi'  => $saat_map,
+        'iade_siparisler' => $iade_siparisler,
+        'masraf_detay' => $masraf_listesi,
+        'urun_dagilimi' => array_values($urun_map),
+        'kasiyerler' => $kasiyer_map,
+        'saat_dagilimi' => $saat_map,
     );
 }
 
 /**
  * Özel ürün arama fonksiyonu (Performans Optimizasyonlu).
  */
-function hizli_kasa_ozel_arama($data) {
+function hizli_kasa_ozel_arama($data)
+{
     global $wpdb;
     $s = sanitize_text_field($data['s']);
-    if (empty($s)) return [];
+    if (empty($s))
+        return [];
 
     $depo_id = $data->get_param('depo_id');
-    $exact   = $data->get_param('exact');
-    
+    $exact = $data->get_param('exact');
+
     $found_ids = [];
 
     if ($exact) {
@@ -543,7 +551,7 @@ function hizli_kasa_ozel_arama($data) {
             $aws_results = $aws_search->search($s);
             if (!empty($aws_results['products'])) {
                 foreach ($aws_results['products'] as $p_item) {
-                    $found_ids[] = (int)$p_item['id'];
+                    $found_ids[] = (int) $p_item['id'];
                 }
             }
         } else {
@@ -551,7 +559,8 @@ function hizli_kasa_ozel_arama($data) {
             $words = explode(' ', $s);
             $where_parts = [];
             foreach ($words as $word) {
-                if (empty($word) || mb_strlen($word) < 2) continue;
+                if (empty($word) || mb_strlen($word) < 2)
+                    continue;
                 $like = '%' . $wpdb->esc_like($word) . '%';
                 $where_parts[] = $wpdb->prepare("(p.post_title LIKE %s OR pm.meta_value LIKE %s)", $like, $like);
             }
@@ -564,7 +573,8 @@ function hizli_kasa_ozel_arama($data) {
         }
     }
 
-    if (empty($found_ids)) return [];
+    if (empty($found_ids))
+        return [];
 
     // 3. Batch Hydration (Tek seferde verileri çek)
     $results_map = hizli_kasa_hydrate_products_batch($found_ids, $depo_id);
@@ -574,8 +584,9 @@ function hizli_kasa_ozel_arama($data) {
     $seen_parents = [];
 
     foreach ($found_ids as $fid) {
-        if (!isset($results_map[$fid])) continue;
-        
+        if (!isset($results_map[$fid]))
+            continue;
+
         $item = $results_map[$fid];
         $target_id = ($item['type'] === 'variation') ? $item['parent_id'] : $item['id'];
 
@@ -602,11 +613,12 @@ function hizli_kasa_ozel_arama($data) {
 /**
  * Veritabanı row'unu JSON formatına çevirir (Performans Optimizasyonlu).
  */
-function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent = []) {
+function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent = [])
+{
     try {
-        $parent_id = (int)$row->ID;
+        $parent_id = (int) $row->ID;
         $is_variable = (isset($row->product_type) && $row->product_type === 'variable');
-        
+
         $active_children_data = [];
         if ($is_variable && isset($variations_by_parent[$parent_id])) {
             foreach ($variations_by_parent[$parent_id] as $v) {
@@ -616,14 +628,14 @@ function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent
                 }
 
                 $active_children_data[] = [
-                    'id'               => (int)$v->ID,
-                    'parent_id'        => $parent_id,
-                    'type'             => 'variation',
-                    'name'             => $v->post_title,
-                    'sku'              => $v->sku ?: '',
-                    'warehouse_stock'  => (float)$v->warehouse_stock,
-                    'stock_quantity'   => (float)$v->stock_quantity,
-                    'images'           => $var_img ? [['src' => $var_img]] : []
+                    'id' => (int) $v->ID,
+                    'parent_id' => $parent_id,
+                    'type' => 'variation',
+                    'name' => $v->post_title,
+                    'sku' => $v->sku ?: '',
+                    'warehouse_stock' => (float) $v->warehouse_stock,
+                    'stock_quantity' => (float) $v->stock_quantity,
+                    'images' => $var_img ? [['src' => $var_img]] : []
                 ];
             }
         }
@@ -634,20 +646,20 @@ function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent
         }
 
         return [
-            'id'              => $parent_id,
-            'parent_id'       => (int)$row->post_parent,
-            'type'            => $row->post_type === 'product_variation' ? 'variation' : 'product',
-            'name'            => $row->post_title,
-            'sku'             => $row->sku,
-            'price'           => $row->price,
-            'regular_price'   => $row->regular_price,
-            'stock_status'    => $row->stock_status,
-            'manage_stock'    => $row->manage_stock === 'yes',
-            'stock_quantity'  => (float)$row->stock_quantity,
-            'warehouse_stock' => (float)$row->warehouse_stock,
-            'images'          => $image_url ? [['src' => $image_url]] : [],
-            'is_variable'     => $is_variable,
-            'variations'      => $active_children_data
+            'id' => $parent_id,
+            'parent_id' => (int) $row->post_parent,
+            'type' => $row->post_type === 'product_variation' ? 'variation' : 'product',
+            'name' => $row->post_title,
+            'sku' => $row->sku,
+            'price' => $row->price,
+            'regular_price' => $row->regular_price,
+            'stock_status' => $row->stock_status,
+            'manage_stock' => $row->manage_stock === 'yes',
+            'stock_quantity' => (float) $row->stock_quantity,
+            'warehouse_stock' => (float) $row->warehouse_stock,
+            'images' => $image_url ? [['src' => $image_url]] : [],
+            'is_variable' => $is_variable,
+            'variations' => $active_children_data
         ];
     } catch (Exception $e) {
         error_log('Hızlı Kasa Ürün Formatlama Hatası (ID: ' . $row->ID . '): ' . $e->getMessage());
@@ -658,13 +670,14 @@ function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent
 /**
  * Terminal üzerinden stok güncelleme.
  */
-function hizli_kasa_terminal_update_stock($request) {
-    $data         = $request->get_json_params();
-    $product_id   = intval($data['product_id']);
+function hizli_kasa_terminal_update_stock($request)
+{
+    $data = $request->get_json_params();
+    $product_id = intval($data['product_id']);
     $variation_id = intval($data['variation_id'] ?? 0);
-    $change       = floatval($data['change']);
-    $reason       = sanitize_text_field($data['reason'] ?: "Terminal Manuel Güncelleme");
-    $depo_id      = intval($data['active_depo_id'] ?? 0);
+    $change = floatval($data['change']);
+    $reason = sanitize_text_field($data['reason'] ?: "Terminal Manuel Güncelleme");
+    $depo_id = intval($data['active_depo_id'] ?? 0);
 
     $user_id = get_current_user_id();
 
@@ -689,7 +702,8 @@ function hizli_kasa_terminal_update_stock($request) {
 /**
  * Sekme içeriğini yükler ve döner.
  */
-function hizli_kasa_load_tab_content($request) {
+function hizli_kasa_load_tab_content($request)
+{
     $tab = sanitize_text_field($request->get_param('tab'));
     $allowed_tabs = ['kasa', 'urunler', 'raporlar', 'ayarlar', 'iade', 'masraf', 'sevk'];
     if (!in_array($tab, $allowed_tabs)) {
@@ -717,7 +731,8 @@ function hizli_kasa_load_tab_content($request) {
  * İade işlemi için sipariş detaylarını getirir.
  * Her ürün kalemine çıkış deposu bilgisini de ekler.
  */
-function hizli_kasa_get_order_details($request) {
+function hizli_kasa_get_order_details($request)
+{
     $order_id = sanitize_text_field($request->get_param('id'));
     $order = wc_get_order($order_id);
 
@@ -729,7 +744,7 @@ function hizli_kasa_get_order_details($request) {
     $depo_names_cache = [];
 
     $items = [];
-    $is_fully_refunded = ( $order->get_meta('_hk_is_fully_refunded') === 'yes' );
+    $is_fully_refunded = ($order->get_meta('_hk_is_fully_refunded') === 'yes');
 
     foreach ($order->get_items() as $item_id => $item) {
         $product = $item->get_product();
@@ -740,7 +755,8 @@ function hizli_kasa_get_order_details($request) {
         $refunded_qty = (int) wc_get_order_item_meta($item_id, '_hk_refunded_qty', true);
         $available_qty = $item->get_quantity() - $refunded_qty;
 
-        if ($available_qty <= 0) continue;
+        if ($available_qty <= 0)
+            continue;
 
         // Eğer depo adı meta'sı yoksa DB'den çek
         if ($cikis_depo_id && !$cikis_depo_adi) {
@@ -748,50 +764,52 @@ function hizli_kasa_get_order_details($request) {
                 global $wpdb;
                 $tables = Hizli_Kasa_Database::get_tables();
                 $depo_names_cache[$cikis_depo_id] = $wpdb->get_var($wpdb->prepare(
-                    "SELECT name FROM {$tables['depolar']} WHERE id = %d", $cikis_depo_id
+                    "SELECT name FROM {$tables['depolar']} WHERE id = %d",
+                    $cikis_depo_id
                 )) ?: 'Bilinmeyen';
             }
             $cikis_depo_adi = $depo_names_cache[$cikis_depo_id];
         }
 
         $items[] = [
-            'item_id'      => $item_id,
-            'id'           => $item->get_product_id(),
+            'item_id' => $item_id,
+            'id' => $item->get_product_id(),
             'variation_id' => $item->get_variation_id(),
-            'name'         => $item->get_name(),
-            'sku'          => $product ? $product->get_sku() : '',
-            'qty'          => $available_qty,
+            'name' => $item->get_name(),
+            'sku' => $product ? $product->get_sku() : '',
+            'qty' => $available_qty,
             'original_qty' => $item->get_quantity(),
             'refunded_qty' => $refunded_qty,
-            'price'        => $item->get_total() / max($item->get_quantity(), 1),
-            'total'        => $item->get_total(),
-            'depo_id'      => $cikis_depo_id,
-            'depo_adi'     => $cikis_depo_adi ?: '',
+            'price' => $item->get_total() / max($item->get_quantity(), 1),
+            'total' => $item->get_total(),
+            'depo_id' => $cikis_depo_id,
+            'depo_adi' => $cikis_depo_adi ?: '',
         ];
     }
 
-    if ( empty($items) && $is_fully_refunded ) {
+    if (empty($items) && $is_fully_refunded) {
         return new WP_Error('fully_refunded', 'Bu siparişteki tüm ürünler zaten iade edilmiş.', array('status' => 400));
     }
 
     return [
-        'id'                 => $order->get_id(),
-        'date'               => $order->get_date_created()->date('d.m.Y H:i'),
-        'total'              => $order->get_total(),
-        'items'              => $items,
-        'payment'            => $order->get_payment_method_title(),
-        'kasiyer'            => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
-        'kasa_no'            => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
-        'depo_id'            => (int) $order->get_meta('_hk_cikis_depo_id'),
-        'depo_adi'           => $order->get_meta('_hk_cikis_depo_adi') ?: '',
-        'telefon'            => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '',
-        'is_fully_refunded'  => $is_fully_refunded,
-        'total_discount'     => hizli_kasa_get_order_total_discount($order),
-        'refunded_discount'  => (float) $order->get_meta('_hk_refunded_discount')
+        'id' => $order->get_id(),
+        'date' => $order->get_date_created()->date('d.m.Y H:i'),
+        'total' => $order->get_total(),
+        'items' => $items,
+        'payment' => $order->get_payment_method_title(),
+        'kasiyer' => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
+        'kasa_no' => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
+        'depo_id' => (int) $order->get_meta('_hk_cikis_depo_id'),
+        'depo_adi' => $order->get_meta('_hk_cikis_depo_adi') ?: '',
+        'telefon' => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '',
+        'is_fully_refunded' => $is_fully_refunded,
+        'total_discount' => hizli_kasa_get_order_total_discount($order),
+        'refunded_discount' => (float) $order->get_meta('_hk_refunded_discount')
     ];
 }
 
-function hizli_kasa_get_order_total_discount($order) {
+function hizli_kasa_get_order_total_discount($order)
+{
     // 1. WooCommerce'in standart indirim toplamını al (Kuponlar vb.)
     $total_discount = (float) $order->get_discount_total();
 
@@ -799,7 +817,7 @@ function hizli_kasa_get_order_total_discount($order) {
     foreach ($order->get_fees() as $fee) {
         $name = $fee->get_name();
         $total = (float) $fee->get_total();
-        
+
         if (preg_match('/iskonto|indirim/ui', $name) || $total < 0) {
             $total_discount += abs($total);
         }
@@ -810,8 +828,9 @@ function hizli_kasa_get_order_total_discount($order) {
 /**
  * Gelişmiş sipariş arama (Telefon, Barkod, Tarih, Fiyat).
  */
-function hizli_kasa_search_orders($request) {
-    $phone   = sanitize_text_field($request->get_param('phone'));
+function hizli_kasa_search_orders($request)
+{
+    $phone = sanitize_text_field($request->get_param('phone'));
     $barcode = sanitize_text_field($request->get_param('barcode'));
     $date_bas = sanitize_text_field($request->get_param('date_start'));
     $date_bit = sanitize_text_field($request->get_param('date_end'));
@@ -819,18 +838,18 @@ function hizli_kasa_search_orders($request) {
     $price_max = floatval($request->get_param('price_max'));
 
     $args = array(
-        'limit'   => 50,
-        'status'  => array('processing', 'completed'),
+        'limit' => 50,
+        'status' => array('processing', 'completed'),
         'orderby' => 'date',
-        'order'   => 'DESC',
+        'order' => 'DESC',
     );
 
     $meta_query = array('relation' => 'AND');
 
     if (!empty($phone)) {
         $meta_query[] = array(
-            'key'     => '_hizli_kasa_musteri_telefon',
-            'value'   => $phone,
+            'key' => '_hizli_kasa_musteri_telefon',
+            'value' => $phone,
             'compare' => 'LIKE',
         );
     }
@@ -856,36 +875,39 @@ function hizli_kasa_search_orders($request) {
 
     foreach ($orders as $order) {
         // İade işlemi olarak oluşturulan negatif siparişleri listeleme
-        if ( $order->get_meta('_hizli_kasa_is_refund') === 'yes' ) {
+        if ($order->get_meta('_hizli_kasa_is_refund') === 'yes') {
             continue;
         }
 
         $total = (float) $order->get_total();
-        
+
         // Fiyat filtresi (Manuel kontrol çünkü wc_get_orders ile karmaşık olabilir)
-        if ($price_min > 0 && $total < $price_min) continue;
-        if ($price_max > 0 && $total > $price_max) continue;
+        if ($price_min > 0 && $total < $price_min)
+            continue;
+        if ($price_max > 0 && $total > $price_max)
+            continue;
 
         // Barkod/Ürün filtresi
         if (!empty($barcode)) {
             $found = false;
             foreach ($order->get_items() as $item) {
                 $product = $item->get_product();
-                if ($product && ($product->get_sku() === $barcode || (string)$product->get_id() === $barcode)) {
+                if ($product && ($product->get_sku() === $barcode || (string) $product->get_id() === $barcode)) {
                     $found = true;
                     break;
                 }
             }
-            if (!$found) continue;
+            if (!$found)
+                continue;
         }
 
         $results[] = [
-            'id'                 => $order->get_id(),
-            'date'               => $order->get_date_created()->date('d.m.Y H:i'),
-            'total'              => $total,
-            'kasiyer'            => $order->get_meta('_hizli_kasa_kasiyer') ?: '-',
-            'telefon'            => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '-',
-            'is_fully_refunded'  => ( $order->get_meta('_hk_is_fully_refunded') === 'yes' )
+            'id' => $order->get_id(),
+            'date' => $order->get_date_created()->date('d.m.Y H:i'),
+            'total' => $total,
+            'kasiyer' => $order->get_meta('_hizli_kasa_kasiyer') ?: '-',
+            'telefon' => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '-',
+            'is_fully_refunded' => ($order->get_meta('_hk_is_fully_refunded') === 'yes')
         ];
     }
 
@@ -896,7 +918,8 @@ function hizli_kasa_search_orders($request) {
  * İade (Negatif Sipariş) oluşturur.
  * Orijinal siparişin çıkış deposuna geri stok ekler.
  */
-function hizli_kasa_process_refund($request) {
+function hizli_kasa_process_refund($request)
+{
     $data = $request->get_json_params();
     $original_order_id = sanitize_text_field($data['original_order_id']);
     $refund_items = $data['items'];
@@ -909,7 +932,7 @@ function hizli_kasa_process_refund($request) {
     $original_order = wc_get_order($original_order_id);
 
     $refund_order = wc_create_order(array('status' => 'completed', 'customer_id' => 0));
-    
+
     // Kasiyer ve Kasa Bilgilerini Al
     $current_user = wp_get_current_user();
     $full_name = trim($current_user->first_name . ' ' . $current_user->last_name);
@@ -919,11 +942,11 @@ function hizli_kasa_process_refund($request) {
     // Fatura ve Teslimat Bilgilerini Set Et (Sipariş listesinde görünmesi için)
     $address = array(
         'first_name' => $display_name,
-        'last_name'  => 'Kasa ' . $kasa_no,
-        'company'    => 'POS İade',
-        'address_1'  => 'POS Terminali',
-        'city'       => 'Mağaza',
-        'country'    => 'TR'
+        'last_name' => 'Kasa ' . $kasa_no,
+        'company' => 'POS İade',
+        'address_1' => 'POS Terminali',
+        'city' => 'Mağaza',
+        'country' => 'TR'
     );
     $refund_order->set_address($address, 'billing');
     $refund_order->set_address($address, 'shipping');
@@ -948,7 +971,7 @@ function hizli_kasa_process_refund($request) {
             $total_refund += $line_total;
 
             // --- Orijinal Siparişte İade Edilen Adedi Güncelle ---
-            if ( !empty($item['item_id']) ) {
+            if (!empty($item['item_id'])) {
                 $orig_item_id = intval($item['item_id']);
                 $current_refunded = (int) wc_get_order_item_meta($orig_item_id, '_hk_refunded_qty', true);
                 wc_update_order_item_meta($orig_item_id, '_hk_refunded_qty', $current_refunded + $qty);
@@ -976,7 +999,7 @@ function hizli_kasa_process_refund($request) {
 
     $refund_order->set_payment_method('cod');
     $refund_order->set_payment_method_title('İade İşlemi');
-    
+
     // POS Standart Meta Verileri
     $iade_toplam = $total_refund; // Döngüde hesapladığımız toplam (negatif değer)
 
@@ -985,20 +1008,21 @@ function hizli_kasa_process_refund($request) {
     $refund_order->update_meta_data('_hizli_kasa_kaynak', 'pos_iade');
     $refund_order->update_meta_data('_hizli_kasa_kasiyer', $display_name); // Yukarıdaki değişkeni kullan
     $refund_order->update_meta_data('_hizli_kasa_kasa_no', $kasa_no); // Yukarıdaki değişkeni kullan
-    
+
     // Ödeme Detayları (Varsayılan Nakit)
     $final_refund_total = $total_refund + $refund_discount;
     $refund_order->update_meta_data('_odeme_nakit', $final_refund_total);
     $refund_order->update_meta_data('Ödeme (Nakit)', number_format(abs($final_refund_total), 2, '.', '') . ' TL'); // Eksi işareti kafa karıştırmasın diye abs() aldım veya istersen eksi bırakabiliriz
-    
+
     // Toplamlar (Raporlar için)
     $refund_order->update_meta_data('_ara_toplam', $final_refund_total);
     $refund_order->update_meta_data('_etiket_toplami', $final_refund_total);
-    
+
     $user_id = get_current_user_id();
     $fallback_depo_id = intval($data['active_depo_id'] ?? 0);
-    if (!$fallback_depo_id) $fallback_depo_id = hizli_kasa_get_user_active_depo($user_id);
-    
+    if (!$fallback_depo_id)
+        $fallback_depo_id = hizli_kasa_get_user_active_depo($user_id);
+
     // Depo stok iadesi — orijinal çıkış deposuna geri yaz
     require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
     $iade_depo_ozet = []; // Hangi depoya ne kadar iade edildi
@@ -1031,7 +1055,10 @@ function hizli_kasa_process_refund($request) {
         if ($target_depo_id && hizli_kasa_can_user_manage_depo($user_id, $target_depo_id)) {
             // 1. DEPO STOĞUNU ARTIR
             Hizli_Kasa_Stock_Manager::update_warehouse_stock(
-                $product_id, $variation_id, $target_depo_id, $qty, 
+                $product_id,
+                $variation_id,
+                $target_depo_id,
+                $qty,
                 "İade İşlemi (Geri Dönüş - #$original_order_id, Depo: $target_depo_id)"
             );
 
@@ -1043,7 +1070,8 @@ function hizli_kasa_process_refund($request) {
             }
 
             // Özete ekle
-            if (!isset($iade_depo_ozet[$target_depo_id])) $iade_depo_ozet[$target_depo_id] = 0;
+            if (!isset($iade_depo_ozet[$target_depo_id]))
+                $iade_depo_ozet[$target_depo_id] = 0;
             $iade_depo_ozet[$target_depo_id] += $qty;
         }
     }
@@ -1062,7 +1090,7 @@ function hizli_kasa_process_refund($request) {
         foreach ($original_order->get_items() as $orig_item_id => $orig_item) {
             $orig_qty = $orig_item->get_quantity();
             $total_refunded = (int) wc_get_order_item_meta($orig_item_id, '_hk_refunded_qty', true);
-            
+
             if ($total_refunded < $orig_qty) {
                 $all_refunded = false;
                 break;
@@ -1076,22 +1104,23 @@ function hizli_kasa_process_refund($request) {
     }
 
     return array(
-        'success'  => true,
+        'success' => true,
         'order_id' => $refund_order->get_id(),
-        'total'    => $refund_order->get_total(),
-        'message'  => 'İade başarıyla oluşturuldu.'
+        'total' => $refund_order->get_total(),
+        'message' => 'İade başarıyla oluşturuldu.'
     );
 }
 
 /**
  * Terminal/Stok Yönetimi sayfası için ürünleri listeler.
  */
-function hizli_kasa_terminal_products($request) {
+function hizli_kasa_terminal_products($request)
+{
     global $wpdb;
-    $limit   = intval($request->get_param('limit') ?: 24);
-    $offset  = intval($request->get_param('offset') ?: 0);
+    $limit = intval($request->get_param('limit') ?: 24);
+    $offset = intval($request->get_param('offset') ?: 0);
     $depo_id = intval($request->get_param('depo_id'));
-    $s       = sanitize_text_field($request->get_param('s'));
+    $s = sanitize_text_field($request->get_param('s'));
 
     $threshold = (int) get_option('hizli_kasa_kritik_stok_esigi', 5);
     $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
@@ -1111,26 +1140,29 @@ function hizli_kasa_terminal_products($request) {
         if (class_exists('AWS_Search')) {
             $aws_search = new AWS_Search();
             $aws_results = $aws_search->search($s);
-            
+
             if (!empty($aws_results['products'])) {
                 $raw_ids = [];
                 foreach ($aws_results['products'] as $p_item) {
-                    $raw_ids[] = (int)$p_item['id'];
+                    $raw_ids[] = (int) $p_item['id'];
                 }
 
                 // Varyasyonları Ana Ürünlere Çözümle (Sıralama Paritesi İçin)
                 if (!empty($raw_ids)) {
                     $ids_str = implode(',', $raw_ids);
                     $resolved_rows = $wpdb->get_results("SELECT ID, post_parent, post_type FROM {$wpdb->posts} WHERE ID IN ($ids_str)");
-                    
+
                     // AWS sırasına göre parent ID'leri topla
                     $resolved_map = [];
-                    foreach ($resolved_rows as $row) { $resolved_map[$row->ID] = $row; }
-                    
+                    foreach ($resolved_rows as $row) {
+                        $resolved_map[$row->ID] = $row;
+                    }
+
                     foreach ($raw_ids as $rid) {
-                        if (!isset($resolved_map[$rid])) continue;
+                        if (!isset($resolved_map[$rid]))
+                            continue;
                         $r = $resolved_map[$rid];
-                        $target_id = ($r->post_type === 'product_variation') ? (int)$r->post_parent : (int)$r->ID;
+                        $target_id = ($r->post_type === 'product_variation') ? (int) $r->post_parent : (int) $r->ID;
                         if ($target_id > 0 && !in_array($target_id, $aws_ids)) {
                             $aws_ids[] = $target_id;
                         }
@@ -1149,19 +1181,22 @@ function hizli_kasa_terminal_products($request) {
             // 2. Fallback Arama
             $like = '%' . $wpdb->esc_like($s) . '%';
             $where .= " AND (p.post_title LIKE %s OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s))";
-            $params[] = $like; $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
         }
     }
 
     $total_query = "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p $join_extra WHERE $where";
     $total = $wpdb->get_var(empty($params) ? $total_query : $wpdb->prepare($total_query, ...$params));
-    if (!$total) return ['products' => [], 'total' => 0, 'has_more' => false, 'simple_count' => 0, 'variable_count' => 0, 'grand_total_items' => 0, 'critical_count' => 0];
+    if (!$total)
+        return ['products' => [], 'total' => 0, 'has_more' => false, 'simple_count' => 0, 'variable_count' => 0, 'grand_total_items' => 0, 'critical_count' => 0];
 
     $id_query = $wpdb->prepare("
         SELECT DISTINCT p.ID FROM {$wpdb->posts} p $join_extra WHERE $where ORDER BY $order_by LIMIT %d OFFSET %d", array_merge($params, [$limit, $offset]));
     $target_ids = $wpdb->get_col($id_query);
 
-    if (empty($target_ids)) return ['products' => [], 'total' => (int)$total, 'has_more' => false, 'simple_count' => 0, 'variable_count' => 0, 'grand_total_items' => 0, 'critical_count' => 0];
+    if (empty($target_ids))
+        return ['products' => [], 'total' => (int) $total, 'has_more' => false, 'simple_count' => 0, 'variable_count' => 0, 'grand_total_items' => 0, 'critical_count' => 0];
 
     $placeholders = implode(',', array_fill(0, count($target_ids), '%d'));
     $sql = $wpdb->prepare("
@@ -1201,13 +1236,16 @@ function hizli_kasa_terminal_products($request) {
             WHERE p.post_type = 'product_variation' AND p.post_status = 'publish' AND p.post_parent IN ($ids_placeholders)
             GROUP BY p.ID
         ", array_merge([$depo_id], $parent_ids)));
-        foreach ($v_results as $v) { $variations_by_parent[$v->post_parent][] = $v; }
+        foreach ($v_results as $v) {
+            $variations_by_parent[$v->post_parent][] = $v;
+        }
     }
 
     $formatted = [];
     foreach ($results as $row) {
         $item = hizli_kasa_format_urun_row($row, $depo_id, $variations_by_parent);
-        if ($item) $formatted[] = $item;
+        if ($item)
+            $formatted[] = $item;
     }
 
     // --- İstatistikleri Hesapla (Performans için sadece ilk sayfa yüklemesinde) ---
@@ -1232,14 +1270,16 @@ function hizli_kasa_terminal_products($request) {
 
         if ($type_stats) {
             foreach ($type_stats as $ts) {
-                if ($ts->p_type === 'simple') $simple_count = (int)$ts->cnt;
-                if ($ts->p_type === 'variable') $variable_count = (int)$ts->cnt;
+                if ($ts->p_type === 'simple')
+                    $simple_count = (int) $ts->cnt;
+                if ($ts->p_type === 'variable')
+                    $variable_count = (int) $ts->cnt;
             }
         }
 
         // 2. Toplam Kalem Sayısı (Basit + Varyasyonların her biri)
         // Optimizasyon: p.ID = p2.ID OR p.ID = p2.post_parent yerine iki ayrı hızlı sorgu
-        
+
         // 2a. Basit Ürünler (Variable olmayanlar)
         $grand_query_simple = "
             SELECT COUNT(DISTINCT p.ID)
@@ -1252,7 +1292,7 @@ function hizli_kasa_terminal_products($request) {
             AND p.post_type = 'product'
             AND t.term_id IS NULL
         ";
-        $count_simple = (int)$wpdb->get_var(empty($params) ? $grand_query_simple : $wpdb->prepare($grand_query_simple, ...$params));
+        $count_simple = (int) $wpdb->get_var(empty($params) ? $grand_query_simple : $wpdb->prepare($grand_query_simple, ...$params));
 
         // 2b. Varyasyonlar
         $grand_query_vars = "
@@ -1264,13 +1304,13 @@ function hizli_kasa_terminal_products($request) {
             AND p2.post_status = 'publish' 
             AND p2.post_type = 'product_variation'
         ";
-        $count_vars = (int)$wpdb->get_var(empty($params) ? $grand_query_vars : $wpdb->prepare($grand_query_vars, ...$params));
-        
+        $count_vars = (int) $wpdb->get_var(empty($params) ? $grand_query_vars : $wpdb->prepare($grand_query_vars, ...$params));
+
         $grand_total_items = $count_simple + $count_vars;
 
         // 3. Kritik Stok Sayısı (Aktif depoda threshold altında olanlar)
         // Optimizasyon: Yine ikiye bölüyoruz (Ana Ürünler ve Varyasyonlar)
-        
+
         // 3a. Ana Ürünler (Basit)
         $crit_query_simple = "
             SELECT COUNT(DISTINCT p.ID)
@@ -1281,7 +1321,7 @@ function hizli_kasa_terminal_products($request) {
             AND sk_crit.location_id = %d 
             AND sk_crit.quantity > 0 AND sk_crit.quantity <= %d
         ";
-        $count_crit_simple = (int)$wpdb->get_var($wpdb->prepare($crit_query_simple, array_merge($params, [$depo_id, $threshold])));
+        $count_crit_simple = (int) $wpdb->get_var($wpdb->prepare($crit_query_simple, array_merge($params, [$depo_id, $threshold])));
 
         // 3b. Varyasyonlar
         $crit_query_vars = "
@@ -1296,33 +1336,36 @@ function hizli_kasa_terminal_products($request) {
             AND sk_crit.location_id = %d 
             AND sk_crit.quantity > 0 AND sk_crit.quantity <= %d
         ";
-        $count_crit_vars = (int)$wpdb->get_var($wpdb->prepare($crit_query_vars, array_merge($params, [$depo_id, $threshold])));
+        $count_crit_vars = (int) $wpdb->get_var($wpdb->prepare($crit_query_vars, array_merge($params, [$depo_id, $threshold])));
 
         $critical_count = $count_crit_simple + $count_crit_vars;
     }
 
     return [
-        'products'          => $formatted,
-        'total'             => (int)$total,
-        'has_more'          => ($offset + $limit) < $total,
-        'simple_count'      => $simple_count,
-        'variable_count'    => $variable_count,
-        'grand_total_items' => (int)$grand_total_items,
-        'critical_count'    => (int)$critical_count
+        'products' => $formatted,
+        'total' => (int) $total,
+        'has_more' => ($offset + $limit) < $total,
+        'simple_count' => $simple_count,
+        'variable_count' => $variable_count,
+        'grand_total_items' => (int) $grand_total_items,
+        'critical_count' => (int) $critical_count
     ];
 }
 
 /**
  * Masrafları listeler.
  */
-function hizli_kasa_get_masraflar($request) {
+function hizli_kasa_get_masraflar($request)
+{
     global $wpdb;
-    $tarih   = sanitize_text_field($request->get_param('tarih') ?: current_time('Y-m-d'));
+    $tarih = sanitize_text_field($request->get_param('tarih') ?: current_time('Y-m-d'));
     $depo_id = intval($request->get_param('depo_id'));
     $table = Hizli_Kasa_Database::get_tables()['masraflar'];
-    if ($wpdb->get_var("SHOW TABLES LIKE '$table'") !== $table) Hizli_Kasa_Database::init();
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table'") !== $table)
+        Hizli_Kasa_Database::init();
     $query = $wpdb->prepare("SELECT * FROM $table WHERE DATE(created_at) = %s", $tarih);
-    if ($depo_id) $query .= $wpdb->prepare(" AND location_id = %d", $depo_id);
+    if ($depo_id)
+        $query .= $wpdb->prepare(" AND location_id = %d", $depo_id);
     $query .= " ORDER BY created_at DESC";
     $results = $wpdb->get_results($query);
     foreach ($results as &$row) {
@@ -1335,7 +1378,8 @@ function hizli_kasa_get_masraflar($request) {
 /**
  * Yeni masraf ekler.
  */
-function hizli_kasa_add_masraf($request) {
+function hizli_kasa_add_masraf($request)
+{
     global $wpdb;
     $params = $request->get_json_params();
     $category = sanitize_text_field($params['category']);
@@ -1345,60 +1389,73 @@ function hizli_kasa_add_masraf($request) {
     $depo_id = intval($params['depo_id']);
     $kasa_no = sanitize_text_field($params['kasa_no']);
     $user_id = get_current_user_id();
-    if (empty($category) || $amount <= 0) return new WP_Error('invalid_data', 'Kategori ve geçerli bir tutar gerekli.', ['status' => 400]);
+    if (empty($category) || $amount <= 0)
+        return new WP_Error('invalid_data', 'Kategori ve geçerli bir tutar gerekli.', ['status' => 400]);
     $table = Hizli_Kasa_Database::get_tables()['masraflar'];
-    if ($wpdb->get_var("SHOW TABLES LIKE '$table'") !== $table) Hizli_Kasa_Database::init();
+    if ($wpdb->get_var("SHOW TABLES LIKE '$table'") !== $table)
+        Hizli_Kasa_Database::init();
     $result = $wpdb->insert($table, [
-        'category' => $category, 'amount' => $amount, 'payment_method' => $payment_method,
-        'description' => $description, 'user_id' => $user_id, 'location_id' => $depo_id,
-        'kasa_no' => $kasa_no, 'created_at' => current_time('mysql'),
+        'category' => $category,
+        'amount' => $amount,
+        'payment_method' => $payment_method,
+        'description' => $description,
+        'user_id' => $user_id,
+        'location_id' => $depo_id,
+        'kasa_no' => $kasa_no,
+        'created_at' => current_time('mysql'),
     ]);
-    if (!$result) return new WP_Error('db_error', 'Masraf kaydedilemedi.', ['status' => 500]);
+    if (!$result)
+        return new WP_Error('db_error', 'Masraf kaydedilemedi.', ['status' => 500]);
     return ['success' => true, 'id' => $wpdb->insert_id, 'message' => 'Masraf başarıyla kaydedildi.'];
 }
 
 /**
  * Masraf siler.
  */
-function hizli_kasa_delete_masraf($request) {
+function hizli_kasa_delete_masraf($request)
+{
     global $wpdb;
     $id = intval($request->get_param('id'));
-    if (!$id) return new WP_Error('invalid_id', 'Geçersiz ID.', ['status' => 400]);
+    if (!$id)
+        return new WP_Error('invalid_id', 'Geçersiz ID.', ['status' => 400]);
     $table = Hizli_Kasa_Database::get_tables()['masraflar'];
     $result = $wpdb->delete($table, ['id' => $id]);
-    if (!$result) return new WP_Error('db_error', 'Masraf silinemedi.', ['status' => 500]);
+    if (!$result)
+        return new WP_Error('db_error', 'Masraf silinemedi.', ['status' => 500]);
     return ['success' => true, 'message' => 'Masraf silindi.'];
 }
 
 /**
  * Ürünleri toplu halde ve çok hızlı şekilde doldurur (Hydration).
  */
-function hizli_kasa_hydrate_products_batch($ids, $depo_id) {
+function hizli_kasa_hydrate_products_batch($ids, $depo_id)
+{
     global $wpdb;
-    if (empty($ids)) return [];
+    if (empty($ids))
+        return [];
 
     $raw_ids_str = implode(',', array_map('intval', $ids));
-    
+
     // Adım 1: Gelen ID'lerin varyasyonlarını, parent'larını ve o parent'ların TÜM çocuklarını belirle
     // Bu sayede dropdown'ların her zaman dolu olduğundan emin oluruz.
     $all_ids = array_map('intval', $ids);
     if (!empty($all_ids)) {
         $raw_ids_str = implode(',', $all_ids);
         $relations = $wpdb->get_results("SELECT ID, post_parent, post_type FROM {$wpdb->posts} WHERE ID IN ($raw_ids_str)");
-        
+
         $parents_to_expand = [];
         foreach ($relations as $r) {
             if ($r->post_type === 'product_variation' && $r->post_parent > 0) {
-                $parents_to_expand[] = (int)$r->post_parent;
+                $parents_to_expand[] = (int) $r->post_parent;
             } else {
-                $parents_to_expand[] = (int)$r->ID;
+                $parents_to_expand[] = (int) $r->ID;
             }
         }
-        
+
         if (!empty($parents_to_expand)) {
             $parents_to_expand = array_unique($parents_to_expand);
             $parents_str = implode(',', $parents_to_expand);
-            
+
             // Bu parent'ların TÜM çocuklarını (varyasyonlarını) listeye ekle
             $sibling_ids = $wpdb->get_col("SELECT ID FROM {$wpdb->posts} WHERE post_parent IN ($parents_str) AND post_type = 'product_variation' AND post_status = 'publish'");
             if ($sibling_ids) {
@@ -1408,10 +1465,10 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id) {
             }
         }
     }
-    
+
     $all_ids = array_unique($all_ids);
     $ids_str = implode(',', $all_ids);
-    
+
     $stok_table = Hizli_Kasa_Database::get_tables()['stok_konumlari'];
 
     // Ana veri çekme işlemi
@@ -1419,7 +1476,9 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id) {
     $meta_raw = $wpdb->get_results("SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta} WHERE post_id IN ($ids_str)");
     $meta_map = [];
     if (!empty($meta_raw)) {
-        foreach ($meta_raw as $m) { $meta_map[$m->post_id][$m->meta_key] = $m->meta_value; }
+        foreach ($meta_raw as $m) {
+            $meta_map[$m->post_id][$m->meta_key] = $m->meta_value;
+        }
     }
 
     $stok_raw = $wpdb->get_results($wpdb->prepare("
@@ -1428,7 +1487,7 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id) {
     if (!empty($stok_raw)) {
         foreach ($stok_raw as $s) {
             $key = ($s->variation_id > 0) ? 'v_' . $s->variation_id : 'p_' . $s->product_id;
-            $stok_map[$key] = (float)$s->quantity;
+            $stok_map[$key] = (float) $s->quantity;
         }
     }
 
@@ -1439,12 +1498,14 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id) {
         WHERE tr.object_id IN ($ids_str) AND tt.taxonomy = 'product_type'");
     $type_map = [];
     if (!empty($types_raw)) {
-        foreach ($types_raw as $t) { $type_map[$t->object_id] = $t->slug; }
+        foreach ($types_raw as $t) {
+            $type_map[$t->object_id] = $t->slug;
+        }
     }
 
     $final = [];
     foreach ($posts as $p) {
-        $pid = (int)$p->ID;
+        $pid = (int) $p->ID;
         $m = $meta_map[$pid] ?? [];
         $p_type = $type_map[$pid] ?? '';
         $stok_key = ($p->post_type === 'product_variation') ? 'v_' . $pid : 'p_' . $pid;
@@ -1453,13 +1514,16 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id) {
         $img_url = $thumb_id ? wp_get_attachment_image_url($thumb_id, 'thumbnail') : '';
 
         $final[$pid] = [
-            'id' => $pid, 'parent_id' => (int)$p->post_parent,
+            'id' => $pid,
+            'parent_id' => (int) $p->post_parent,
             'type' => ($p->post_type === 'product_variation') ? 'variation' : 'product',
-            'name' => $p->post_title, 'sku' => $m['_sku'] ?? '',
-            'price' => $m['_price'] ?? 0, 'regular_price' => $m['_regular_price'] ?? 0,
+            'name' => $p->post_title,
+            'sku' => $m['_sku'] ?? '',
+            'price' => $m['_price'] ?? 0,
+            'regular_price' => $m['_regular_price'] ?? 0,
             'stock_status' => $m['_stock_status'] ?? 'instock',
             'manage_stock' => ($m['_manage_stock'] ?? 'no') === 'yes',
-            'stock_quantity' => (float)($m['_stock'] ?? 0),
+            'stock_quantity' => (float) ($m['_stock'] ?? 0),
             'warehouse_stock' => $w_stock,
             'images' => $img_url ? [['src' => $img_url]] : [],
             'is_variable' => $p_type === 'variable',
@@ -1478,7 +1542,8 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id) {
  * POST /hizli-kasa/v1/warehouse-stock-check
  * Body: { items: [{product_id, variation_id, qty}], depo_id: X }
  */
-function hizli_kasa_warehouse_stock_check($request) {
+function hizli_kasa_warehouse_stock_check($request)
+{
     $data = $request->get_json_params();
     $items = $data['items'] ?? [];
     $depo_id = intval($data['depo_id'] ?? 0);
@@ -1499,7 +1564,8 @@ function hizli_kasa_warehouse_stock_check($request) {
         $requested_qty = intval($item['qty'] ?? 0);
         $target_id = $variation_id ?: $product_id;
 
-        if (!$target_id) continue;
+        if (!$target_id)
+            continue;
 
         // Ürün adını al
         $product = wc_get_product($target_id);
@@ -1522,12 +1588,14 @@ function hizli_kasa_warehouse_stock_check($request) {
             if ($variation_id > 0) {
                 $depo_stock = (float) $wpdb->get_var($wpdb->prepare(
                     "SELECT quantity FROM $stok_table WHERE variation_id = %d AND location_id = %d",
-                    $variation_id, $depo_id
+                    $variation_id,
+                    $depo_id
                 ));
             } else {
                 $depo_stock = (float) $wpdb->get_var($wpdb->prepare(
                     "SELECT quantity FROM $stok_table WHERE product_id = %d AND variation_id = 0 AND location_id = %d",
-                    $product_id, $depo_id
+                    $product_id,
+                    $depo_id
                 ));
             }
         }
@@ -1538,12 +1606,14 @@ function hizli_kasa_warehouse_stock_check($request) {
             if ($variation_id > 0) {
                 $other_depo_stock = (float) $wpdb->get_var($wpdb->prepare(
                     "SELECT COALESCE(SUM(quantity), 0) FROM $stok_table WHERE variation_id = %d AND location_id != %d",
-                    $variation_id, $depo_id
+                    $variation_id,
+                    $depo_id
                 ));
             } else {
                 $other_depo_stock = (float) $wpdb->get_var($wpdb->prepare(
                     "SELECT COALESCE(SUM(quantity), 0) FROM $stok_table WHERE product_id = %d AND variation_id = 0 AND location_id != %d",
-                    $product_id, $depo_id
+                    $product_id,
+                    $depo_id
                 ));
             }
         }
@@ -1568,23 +1638,23 @@ function hizli_kasa_warehouse_stock_check($request) {
             if ($other_depo_stock >= $requested_qty) {
                 $warning = "Sitede var ama bu depoda yok — başka depoda gözüküyor!";
             } else {
-                $warning = "Depoda yetersiz stok! (Depo: " . (int)$depo_stock . ", İhtiyaç: $requested_qty)";
+                $warning = "Depoda yetersiz stok! (Depo: " . (int) $depo_stock . ", İhtiyaç: $requested_qty)";
             }
         } elseif (!$site_ok) {
-            $warning = "Site stoğu yetersiz! (Site: " . ($site_stock !== null ? (int)$site_stock : 'N/A') . ", İhtiyaç: $requested_qty)";
+            $warning = "Site stoğu yetersiz! (Site: " . ($site_stock !== null ? (int) $site_stock : 'N/A') . ", İhtiyaç: $requested_qty)";
         }
 
         $results[] = [
-            'product_id'       => $product_id,
-            'variation_id'     => $variation_id,
-            'name'             => $name,
-            'site_stock'       => $site_stock,
-            'depo_stock'       => (float) $depo_stock,
+            'product_id' => $product_id,
+            'variation_id' => $variation_id,
+            'name' => $name,
+            'site_stock' => $site_stock,
+            'depo_stock' => (float) $depo_stock,
             'other_depo_stock' => (float) $other_depo_stock,
-            'requested_qty'    => $requested_qty,
-            'site_ok'          => $site_ok,
-            'depo_ok'          => $depo_ok,
-            'warning'          => $warning,
+            'requested_qty' => $requested_qty,
+            'site_ok' => $site_ok,
+            'depo_ok' => $depo_ok,
+            'warning' => $warning,
         ];
     }
 
@@ -1594,16 +1664,18 @@ function hizli_kasa_warehouse_stock_check($request) {
  * Barkod etiket verilerini döner.
  * Query: ?product_id=123&variation_id=456 (veya toplu için variation_ids=[1,2,3])
  */
-function hizli_kasa_api_get_barcode_data($request) {
-    $product_id    = intval($request->get_param('product_id'));
-    $variation_id  = intval($request->get_param('variation_id'));
+function hizli_kasa_api_get_barcode_data($request)
+{
+    $product_id = intval($request->get_param('product_id'));
+    $variation_id = intval($request->get_param('variation_id'));
     $variation_ids = $request->get_param('variation_ids');
 
     if (!empty($variation_ids) && is_array($variation_ids)) {
         $results = [];
         foreach ($variation_ids as $vid) {
             $data = Hizli_Kasa_Barcode_Helper::prepare_label_data($product_id, intval($vid));
-            if ($data) $results[] = $data;
+            if ($data)
+                $results[] = $data;
         }
         return $results;
     }
@@ -1619,20 +1691,21 @@ function hizli_kasa_api_get_barcode_data($request) {
 /**
  * Kasiyerin düzenleyebileceği son siparişleri getirir.
  */
-function hizli_kasa_get_recent_orders($request) {
+function hizli_kasa_get_recent_orders($request)
+{
     $kasa_no = sanitize_text_field($request->get_param('kasa_no'));
     $limit = get_option('hizli_kasa_edit_order_limit', 5);
     $user_id = get_current_user_id();
     $depo_id = hizli_kasa_get_user_active_depo($user_id);
 
     $args = array(
-        'limit'        => $limit,
-        'status'       => array('processing', 'completed'),
+        'limit' => $limit,
+        'status' => array('processing', 'completed'),
         'date_created' => current_time('Y-m-d') . ' 00:00:00...' . current_time('Y-m-d') . ' 23:59:59',
-        'orderby'      => 'date',
-        'order'        => 'DESC',
-        'meta_key'     => '_hizli_kasa_kasa_no',
-        'meta_value'   => $kasa_no,
+        'orderby' => 'date',
+        'order' => 'DESC',
+        'meta_key' => '_hizli_kasa_kasa_no',
+        'meta_value' => $kasa_no,
     );
 
     $orders = wc_get_orders($args);
@@ -1643,7 +1716,8 @@ function hizli_kasa_get_recent_orders($request) {
     $stok_table = $tables['stok_konumlari'];
 
     foreach ($orders as $order) {
-        if ($order->get_meta('_hizli_kasa_is_refund') === 'yes') continue;
+        if ($order->get_meta('_hizli_kasa_is_refund') === 'yes')
+            continue;
 
         $items = [];
         foreach ($order->get_items() as $item_id => $item) {
@@ -1653,22 +1727,24 @@ function hizli_kasa_get_recent_orders($request) {
             $product = $item->get_product();
 
             // Site Stoku
-            $site_stock = $product && $product->managing_stock() ? (float)$product->get_stock_quantity() : 999;
-            
+            $site_stock = $product && $product->managing_stock() ? (float) $product->get_stock_quantity() : 999;
+
             // Depo Stoku
             $depo_stock = 0;
             if ($depo_id) {
                 $depo_stock = (float) $wpdb->get_var($wpdb->prepare(
                     "SELECT quantity FROM $stok_table WHERE product_id = %d AND variation_id = %d AND location_id = %d",
-                    $p_id, $v_id, $depo_id
+                    $p_id,
+                    $v_id,
+                    $depo_id
                 ));
             }
 
             $items[] = [
                 'item_id' => $item_id,
-                'name'    => $item->get_name(),
-                'qty'     => $item->get_quantity(),
-                'total'   => $item->get_total(),
+                'name' => $item->get_name(),
+                'qty' => $item->get_quantity(),
+                'total' => $item->get_total(),
                 'product_id' => $p_id,
                 'variation_id' => $v_id,
                 'site_stock' => $site_stock,
@@ -1682,15 +1758,15 @@ function hizli_kasa_get_recent_orders($request) {
         $has_refund = (!empty($order->get_refunds()) || $order->get_meta('_hk_has_refund') === 'yes' || $order->get_meta('_hk_is_fully_refunded') === 'yes');
 
         $results[] = [
-            'id'             => $order->get_id(),
-            'total'          => $order->get_total(),
+            'id' => $order->get_id(),
+            'total' => $order->get_total(),
             'payment_method' => $payment_method,
-            'payment_title'  => $order->get_payment_method_title(),
-            'date'           => $order->get_date_created()->date('H:i'),
-            'has_refund'     => $has_refund,
-            'is_split'       => $is_split,
-            'discount'       => hizli_kasa_get_order_total_discount($order),
-            'items'          => $items
+            'payment_title' => $order->get_payment_method_title(),
+            'date' => $order->get_date_created()->date('H:i'),
+            'has_refund' => $has_refund,
+            'is_split' => $is_split,
+            'discount' => hizli_kasa_get_order_total_discount($order),
+            'items' => $items
         ];
     }
 
@@ -1700,7 +1776,8 @@ function hizli_kasa_get_recent_orders($request) {
 /**
  * Sipariş düzenleme işlemini gerçekleştirir.
  */
-function hizli_kasa_update_order($request) {
+function hizli_kasa_update_order($request)
+{
     $data = $request->get_json_params();
     $order_id = intval($data['order_id']);
     $new_payment = sanitize_text_field($data['payment_method'] ?? '');
@@ -1708,7 +1785,8 @@ function hizli_kasa_update_order($request) {
     $item_changes = $data['items'] ?? [];
 
     $order = wc_get_order($order_id);
-    if (!$order) return new WP_Error('no_order', 'Sipariş bulunamadı.');
+    if (!$order)
+        return new WP_Error('no_order', 'Sipariş bulunamadı.');
 
     // Guard: Bölünmüş ödeme veya iade görmüş sipariş düzenlenemez
     $has_refund = (!empty($order->get_refunds()) || $order->get_meta('_hk_has_refund') === 'yes' || $order->get_meta('_hk_is_fully_refunded') === 'yes');
@@ -1723,14 +1801,14 @@ function hizli_kasa_update_order($request) {
         'items' => []
     ];
 
-    $depo_id = (int)$order->get_meta('_hk_cikis_depo_id');
+    $depo_id = (int) $order->get_meta('_hk_cikis_depo_id');
     $log_details = [];
 
     // 1. İskonto Güncelleme
     if ($new_discount !== null && round($new_discount, 2) != round($old_data['discount'], 2)) {
         // Mevcut fee'leri (iskonto olanları) sil
         foreach ($order->get_fees() as $fee_id => $fee) {
-            if (preg_match('/iskonto|indirim/ui', $fee->get_name()) || (float)$fee->get_total() < 0) {
+            if (preg_match('/iskonto|indirim/ui', $fee->get_name()) || (float) $fee->get_total() < 0) {
                 $order->remove_item($fee_id);
             }
         }
@@ -1747,8 +1825,8 @@ function hizli_kasa_update_order($request) {
     // 2. Ödeme Yöntemi Değişikliği
     if ($new_payment && $new_payment !== $order->get_payment_method()) {
         $payment_titles = [
-            'cod'   => 'Nakit',
-            'bacs'  => 'IBAN / Havale',
+            'cod' => 'Nakit',
+            'bacs' => 'IBAN / Havale',
             'other' => 'Kredi Kartı',
             'split' => 'Bölünmüş Ödeme'
         ];
@@ -1768,7 +1846,8 @@ function hizli_kasa_update_order($request) {
 
         if ($item) {
             $old_qty = $item->get_quantity();
-            if ($new_qty == $old_qty) continue;
+            if ($new_qty == $old_qty)
+                continue;
 
             $old_data['items'][$item_id] = $old_qty;
             $product_id = $item->get_product_id();
@@ -1778,11 +1857,14 @@ function hizli_kasa_update_order($request) {
             if ($new_qty < $old_qty) {
                 // Azaltma veya Kaldırma
                 $diff = $old_qty - $new_qty;
-                
+
                 // Depo Stoğu İadesi
                 if ($depo_id) {
                     Hizli_Kasa_Stock_Manager::update_warehouse_stock(
-                        $product_id, $variation_id, $depo_id, $diff,
+                        $product_id,
+                        $variation_id,
+                        $depo_id,
+                        $diff,
                         "Sipariş Düzenleme (#$order_id) - İade"
                     );
                 }
@@ -1805,11 +1887,14 @@ function hizli_kasa_update_order($request) {
             } else {
                 // Arttırma
                 $diff = $new_qty - $old_qty;
-                
+
                 // Depo Stoğu Düşümü
                 if ($depo_id) {
                     Hizli_Kasa_Stock_Manager::update_warehouse_stock(
-                        $product_id, $variation_id, $depo_id, -$diff,
+                        $product_id,
+                        $variation_id,
+                        $depo_id,
+                        -$diff,
                         "Sipariş Düzenleme (#$order_id) - Arttırma"
                     );
                 }
@@ -1831,9 +1916,9 @@ function hizli_kasa_update_order($request) {
     $order->calculate_totals();
 
     // 4. Ödeme Metalarını Güncelle
-    $final_total = (float)$order->get_total();
+    $final_total = (float) $order->get_total();
     $payment_method = $order->get_payment_method();
-    
+
     $order->update_meta_data('_odeme_nakit', 0);
     $order->update_meta_data('_odeme_kart', 0);
     $order->update_meta_data('_odeme_iban', 0);
@@ -1858,13 +1943,13 @@ function hizli_kasa_update_order($request) {
     global $wpdb;
     $table = Hizli_Kasa_Database::get_tables()['order_edits'];
     $wpdb->insert($table, [
-        'order_id'    => $order_id,
-        'kasa_no'     => $order->get_meta('_hizli_kasa_kasa_no'),
-        'user_id'     => get_current_user_id(),
+        'order_id' => $order_id,
+        'kasa_no' => $order->get_meta('_hizli_kasa_kasa_no'),
+        'user_id' => get_current_user_id(),
         'action_type' => 'manual_edit',
-        'old_data'    => json_encode($old_data),
-        'new_data'    => json_encode($log_details),
-        'created_at'  => current_time('mysql')
+        'old_data' => json_encode($old_data),
+        'new_data' => json_encode($log_details),
+        'created_at' => current_time('mysql')
     ]);
 
     return ['success' => true, 'new_total' => $order->get_total()];
@@ -1873,12 +1958,13 @@ function hizli_kasa_update_order($request) {
 /**
  * Düzenleme loglarını raporlar için getirir.
  */
-function hizli_kasa_get_edit_logs($request) {
+function hizli_kasa_get_edit_logs($request)
+{
     global $wpdb;
     $table = Hizli_Kasa_Database::get_tables()['order_edits'];
-    
+
     $date_start = $request->get_param('date_start') ?: current_time('Y-m-d');
-    $date_end   = $request->get_param('date_end') ?: current_time('Y-m-d');
+    $date_end = $request->get_param('date_end') ?: current_time('Y-m-d');
 
     $results = $wpdb->get_results($wpdb->prepare(
         "SELECT l.*, u.display_name as user_name 
@@ -1886,7 +1972,8 @@ function hizli_kasa_get_edit_logs($request) {
          LEFT JOIN {$wpdb->users} u ON l.user_id = u.ID 
          WHERE DATE(l.created_at) BETWEEN %s AND %s 
          ORDER BY l.created_at DESC",
-        $date_start, $date_end
+        $date_start,
+        $date_end
     ));
 
     return $results;
@@ -1895,36 +1982,40 @@ function hizli_kasa_get_edit_logs($request) {
 /**
  * Raporlar için tüm Kasa siparişlerini getirir.
  */
-function hizli_kasa_get_reports_orders($request) {
+function hizli_kasa_get_reports_orders($request)
+{
     return hizli_kasa_get_reports_data($request, false);
 }
 
 /**
  * Raporlar için tüm POS iadelerini getirir.
  */
-function hizli_kasa_get_reports_refunds($request) {
+function hizli_kasa_get_reports_refunds($request)
+{
     return hizli_kasa_get_reports_data($request, true);
 }
 
 /**
  * Rapor verilerini çeken ortak fonksiyon.
  */
-function hizli_kasa_get_reports_data($request, $is_refund = false) {
-    $paged    = $request->get_param('page') ? intval($request->get_param('page')) : 1;
+function hizli_kasa_get_reports_data($request, $is_refund = false)
+{
+    $paged = $request->get_param('page') ? intval($request->get_param('page')) : 1;
     $per_page = $request->get_param('per_page') ? intval($request->get_param('per_page')) : 20;
-    if ($per_page < 1) $per_page = 20;
+    if ($per_page < 1)
+        $per_page = 20;
 
     $date_start = $request->get_param('date_start');
-    $date_end   = $request->get_param('date_end');
-    $search     = $request->get_param('search');
+    $date_end = $request->get_param('date_end');
+    $search = $request->get_param('search');
 
     $args = array(
-        'limit'    => $per_page,
-        'page'     => $paged,
+        'limit' => $per_page,
+        'page' => $paged,
         'paginate' => true,
-        'status'   => array('processing', 'completed', 'on-hold'),
-        'orderby'  => 'date',
-        'order'    => 'DESC',
+        'status' => array('processing', 'completed', 'on-hold'),
+        'orderby' => 'date',
+        'order' => 'DESC',
     );
 
     // Tarih Filtresi
@@ -1933,23 +2024,23 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
     }
 
     $meta_query = array();
-    
+
     // Sadece POS Siparişlerini Getir
     $meta_query[] = array(
-        'key'     => '_hizli_kasa_kasa_no',
+        'key' => '_hizli_kasa_kasa_no',
         'compare' => 'EXISTS',
     );
 
     // İade / Satış Ayrımı
     if ($is_refund) {
         $meta_query[] = array(
-            'key'     => '_hizli_kasa_is_refund',
-            'value'   => 'yes',
+            'key' => '_hizli_kasa_is_refund',
+            'value' => 'yes',
             'compare' => '=',
         );
     } else {
         $meta_query[] = array(
-            'key'     => '_hizli_kasa_is_refund',
+            'key' => '_hizli_kasa_is_refund',
             'compare' => 'NOT EXISTS',
         );
     }
@@ -1965,30 +2056,31 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
 
     try {
         $results = wc_get_orders($args);
-        
+
         $orders = is_object($results) && isset($results->orders) ? $results->orders : (is_array($results) ? $results : array());
         $total_count = is_object($results) && isset($results->total) ? $results->total : count($orders);
         $max_pages = is_object($results) && isset($results->max_num_pages) ? $results->max_num_pages : 1;
     } catch (Throwable $e) {
         return array('orders' => array(), 'error' => $e->getMessage(), 'total' => 0);
     }
-    
+
     $data = array();
     foreach ($orders as $order) {
-        if (!$order instanceof WC_Order) continue;
+        if (!$order instanceof WC_Order)
+            continue;
 
         $date_created = $order->get_date_created();
         $date_str = $date_created ? $date_created->date('Y-m-d H:i:s') : 'Bilinmiyor';
 
         $order_data = array(
-            'id'         => $order->get_id(),
-            'date'       => $date_str,
-            'total'      => $order->get_total(),
-            'cashier'    => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
-            'kasa_no'    => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
-            'payment'    => $order->get_payment_method_title(),
-            'items'      => array(),
-            'meta'       => array(),
+            'id' => $order->get_id(),
+            'date' => $date_str,
+            'total' => $order->get_total(),
+            'cashier' => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
+            'kasa_no' => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
+            'payment' => $order->get_payment_method_title(),
+            'items' => array(),
+            'meta' => array(),
         );
 
         // Ürünleri topla
@@ -2006,11 +2098,11 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
             $unit_price = ($qty != 0) ? $total / $qty : 0;
 
             $order_data['items'][] = array(
-                'name'     => $item->get_name(),
-                'qty'      => $qty,
-                'price'    => round($unit_price, 2),
+                'name' => $item->get_name(),
+                'qty' => $qty,
+                'price' => round($unit_price, 2),
                 'subtotal' => round($total, 2),
-                'meta'     => $product_meta
+                'meta' => $product_meta
             );
         }
 
@@ -2026,9 +2118,9 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
     }
 
     return array(
-        'orders'     => $data,
-        'total'      => $total_count,
-        'max_pages'  => $max_pages,
-        'page'       => $paged
+        'orders' => $data,
+        'total' => $total_count,
+        'max_pages' => $max_pages,
+        'page' => $paged
     );
 }

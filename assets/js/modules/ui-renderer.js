@@ -84,22 +84,15 @@ window.HizliKasa = window.HizliKasa || {};
                     fiyatGosterim = '<span style="text-decoration: line-through; color: #999; font-size: 0.9em; margin-right: 5px;">' + item.regular_price.toFixed(2) + ' TL</span> ' + item.price.toFixed(2) + ' TL';
                 }
 
-                li.innerHTML =
-                    '<div class="urun-sol-kolon" style="display:flex; align-items:center; flex:1.5; overflow:hidden;">' +
-                        (item.image ? '<img src="' + item.image + '" class="urun-resim" style="width:40px; height:40px; object-fit:cover; border-radius:4px; margin-right:10px; flex-shrink:0;">' : '<div style="width:40px; height:40px; background:#eee; border-radius:4px; margin-right:10px; flex-shrink:0;"></div>') +
-                        '<span class="urun-bilgi">' +
-                            '<strong class="urun-ad">' + item.name + '</strong>' +
-                            '<span class="urun-sku" style="color:#666; font-size:13px; font-weight:bold; margin-bottom:2px;">' + item.sku + '</span>' +
-                        '</span>' +
-                    '</div>' +
-                    '<div class="urun-orta-detay" style="flex:1; text-align:left;">' +
-                        '<span class="urun-detay-metin" style="font-size:15px; font-weight:bold; color:var(--hk-text-main);">' + item.quantity + ' Adet x ' + fiyatGosterim + '</span>' +
-                    '</div>' +
-                    '<span class="urun-fiyat-grup">' +
-                        (etiketFiyat > kampanyaFiyat ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + etiketFiyat.toFixed(2) + ' TL</div>' : '') +
-                        (kampanyaFiyat > netFiyat ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + kampanyaFiyat.toFixed(2) + ' TL</div>' : '') +
-                        '<div class="ara-toplam" style="font-size: 19px; color: #27ae60; font-weight: 800; line-height: 1.1; margin-top: 2px;">' + netFiyat.toFixed(2) + ' TL</div>' +
-                    '</span>';
+                var sagKolon = document.createElement("div");
+                sagKolon.className = "urun-sag-kolon";
+
+                var fiyatGrup = document.createElement("span");
+                fiyatGrup.className = "urun-fiyat-grup";
+                fiyatGrup.innerHTML = 
+                    (etiketFiyat > kampanyaFiyat ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + etiketFiyat.toFixed(2) + ' TL</div>' : '') +
+                    (kampanyaFiyat > netFiyat ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + kampanyaFiyat.toFixed(2) + ' TL</div>' : '') +
+                    '<div class="ara-toplam" style="font-size: 19px; color: #27ae60; font-weight: 800; line-height: 1.1; margin-top: 2px;">' + netFiyat.toFixed(2) + ' TL</div>';
 
                 var azaltButon = document.createElement("button");
                 azaltButon.innerText = "-";
@@ -115,8 +108,25 @@ window.HizliKasa = window.HizliKasa || {};
                     };
                 })(index));
 
-                li.appendChild(azaltButon);
+                sagKolon.appendChild(azaltButon);
+                sagKolon.appendChild(fiyatGrup);
+
+                li.innerHTML =
+                    '<div class="urun-sol-kolon" style="display:flex; align-items:center; flex:1.5; overflow:hidden;">' +
+                        (item.image ? '<img src="' + item.image + '" class="urun-resim" style="width:40px; height:40px; object-fit:cover; border-radius:4px; margin-right:10px; flex-shrink:0;">' : '<div style="width:40px; height:40px; background:#eee; border-radius:4px; margin-right:10px; flex-shrink:0;"></div>') +
+                        '<span class="urun-bilgi">' +
+                            '<strong class="urun-ad">' + item.name + '</strong>' +
+                            '<span class="urun-sku" style="color:#666; font-size:13px; font-weight:bold; margin-bottom:2px;">' + item.sku + '</span>' +
+                        '</span>' +
+                    '</div>' +
+                    '<div class="urun-orta-detay" style="flex:1; text-align:left;">' +
+                        '<span class="urun-detay-metin" style="font-size:15px; font-weight:bold; color:var(--hk-text-main);">' + item.quantity + ' Adet x ' + fiyatGosterim + '</span>' +
+                    '</div>';
+
+                li.appendChild(sagKolon);
                 els.sepetListesi.appendChild(li);
+            });
+i);
             });
 
             // Toplam Hesaplamalar

@@ -20,22 +20,23 @@ if (!defined('ABSPATH'))
                 <?php
                 $toplam_kasa = get_option('hizli_kasa_toplam_kasa', 3);
                 for ($i = 1; $i <= $toplam_kasa; $i++):
-                ?>
+                    ?>
                     <div class="sidebar-btn <?php echo ($i === 1) ? 'aktif' : ''; ?>" data-id="<?php echo $i; ?>">
                         <span>📠</span> Kasa <?php echo $i; ?>
                     </div>
                 <?php endfor; ?>
             </div>
-            
+
             <div class="kasa-sabit-butonlar">
                 <?php if (get_option('hizli_kasa_siparis_duzenle_aktif', '1') === '1'): ?>
-                    <div id="siparis-duzenle-buton" class="sidebar-btn siparis-duzenle"><span>✏️</span> Sipariş Düzenle</div>
+                    <div id="siparis-duzenle-buton" class="sidebar-btn siparis-duzenle"><span>✏️</span> Sipariş Düzenle
+                    </div>
                 <?php endif; ?>
-                
+
                 <?php if (get_option('hizli_kasa_gun_sonu_aktif', '1') === '1'): ?>
                     <div id="gun-sonu-buton" class="sidebar-btn gun-sonu"><span>📋</span> Kasa Gün Sonu</div>
                 <?php endif; ?>
-                
+
                 <?php if (get_option('hizli_kasa_genel_rapor_aktif', '1') === '1'): ?>
                     <div id="genel-rapor-buton" class="sidebar-btn genel-rapor"><span>📊</span> Gün Sonu</div>
                 <?php endif; ?>
@@ -49,13 +50,13 @@ if (!defined('ABSPATH'))
                 <h2 id="durum">Kasa Hazır - Barkod Okutun</h2>
                 <button id="manuel-urun-buton" class="ust-buton-kucuk">El ile Ürün Ekle</button>
             </div>
-        
+
             <!-- Barkod İzleme Alanı -->
             <div id="barkod-izleme-konteyner">
                 <span id="barkod-izleme-etiket">Giriş:</span>
                 <div id="barkod-izleme">...</div>
             </div>
-            
+
             <!-- Sepet Listesi -->
             <ul id="sepet-listesi">
                 <!-- Ürünler buraya gelecek -->
@@ -65,11 +66,13 @@ if (!defined('ABSPATH'))
             <div class="toplam-alani">
                 <div class="toplam-satir" id="liste-toplami-satiri">
                     <span class="toplam-etiket">ETİKET TOPLAMI:</span>
-                    <span id="liste-toplami-deger" style="font-size: 18px; font-weight: bold; color: #95a5a6;">0.00 TL</span>
+                    <span id="liste-toplami-deger" style="font-size: 18px; font-weight: bold; color: #95a5a6;">0.00
+                        TL</span>
                 </div>
                 <div class="toplam-satir" id="ara-toplam-satiri">
                     <span class="toplam-etiket">ARA TOPLAM:</span>
-                    <span id="ara-toplam-deger" style="font-size: 20px; font-weight: bold; color: #7f8c8d;">0.00 TL</span>
+                    <span id="ara-toplam-deger" style="font-size: 20px; font-weight: bold; color: #7f8c8d;">0.00
+                        TL</span>
                 </div>
                 <div class="toplam-satir" id="nakit-indirim-satiri" style="display:none !important;">
                     <span class="toplam-etiket" id="nakit-indirim-etiket">İNDİRİM (%5):</span>
@@ -96,7 +99,8 @@ if (!defined('ABSPATH'))
             <div id="musteri-telefon-panel" class="musteri-bilgi-alani" style="display:none;">
                 <div class="musteri-input-grup">
                     <span class="musteri-ikon">👤</span>
-                    <input type="text" id="musteri-telefon" class="musteri-telefon-input" placeholder="0 (5xx) xxx xx xx" autocomplete="off">
+                    <input type="text" id="musteri-telefon" class="musteri-telefon-input"
+                        placeholder="0 (5xx) xxx xx xx" autocomplete="off">
                     <button id="musteri-telefon-kapat" class="input-temizle-btn">✕</button>
                 </div>
             </div>
@@ -118,35 +122,46 @@ if (!defined('ABSPATH'))
     <!-- ==================== MODALLER ==================== -->
 
     <!-- Stok Uyarı Modalı -->
-    <div id="stok-uyari-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); align-items:center; justify-content:center;">
+    <div id="stok-uyari-modal" class="modal-cerceve"
+        style="display:none; position:fixed; z-index:10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.7); align-items:center; justify-content:center;">
         <div class="modal-icerik" style="max-width: 500px; width: 90%;">
             <h3 style="color:var(--hk-warning);">⚠️ Kritik Stok Uyarısı!</h3>
             <p>Sepetteki şu ürünler siz işlem yaparken internetten satılmış veya tükenmiş görünüyor:</p>
             <ul id="stok-uyari-liste"></ul>
-            <p style="font-size: 13px; color: var(--hk-text-muted); background: var(--hk-bg-hover); padding: 10px; border-radius: 8px; border-left: 4px solid var(--hk-warning);">
-                <strong>Not:</strong> "Yine de Satış Yap" derseniz işlem tamamlanır ancak ilgili ürünlerin stoğu eksiye düşebilir.
+            <p
+                style="font-size: 13px; color: var(--hk-text-muted); background: var(--hk-bg-hover); padding: 10px; border-radius: 8px; border-left: 4px solid var(--hk-warning);">
+                <strong>Not:</strong> "Yine de Satış Yap" derseniz işlem tamamlanır ancak ilgili ürünlerin stoğu eksiye
+                düşebilir.
             </p>
             <div style="display:flex; gap:10px; margin-top:20px;">
-                <button id="stok-vazgec" style="flex:1; padding:12px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; background:var(--hk-border); color:var(--hk-text-main);">❌ Geri Dön</button>
-                <button id="stok-devam" style="flex:1; padding:12px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; background:var(--hk-warning); color:white;">✅ Yine de Satış Yap</button>
+                <button id="stok-vazgec"
+                    style="flex:1; padding:12px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; background:var(--hk-border); color:var(--hk-text-main);">❌
+                    Geri Dön</button>
+                <button id="stok-devam"
+                    style="flex:1; padding:12px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; background:var(--hk-warning); color:white;">✅
+                    Yine de Satış Yap</button>
             </div>
         </div>
     </div>
 
     <!-- İskonto Modalı -->
-    <div id="iskonto-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10001; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+    <div id="iskonto-modal" class="modal-cerceve"
+        style="display:none; position:fixed; z-index:10001; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
         <div class="modal-icerik">
             <h3>İskonto Tutarı (TL)</h3>
-            <input type="number" id="iskonto-input" class="hk-input" placeholder="0.00" step="0.01" min="0" style="font-size:24px; text-align:center; font-weight:800; color:var(--hk-danger);">
+            <input type="number" id="iskonto-input" class="hk-input" placeholder="0.00" step="0.01" min="0"
+                style="font-size:24px; text-align:center; font-weight:800; color:var(--hk-danger);">
             <div class="modal-butonlar" style="margin-top:20px;">
-                <button id="iskonto-iptal" style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">İptal</button>
+                <button id="iskonto-iptal"
+                    style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">İptal</button>
                 <button id="iskonto-onay" class="hk-btn-primary" style="padding:12px;">Uygula</button>
             </div>
         </div>
     </div>
 
     <!-- El ile Ürün Ekleme Modalı -->
-    <div id="manuel-urun-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10006; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+    <div id="manuel-urun-modal" class="modal-cerceve"
+        style="display:none; position:fixed; z-index:10006; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
         <div class="modal-icerik" style="width: 450px !important;">
             <h3>📦 El ile Ürün Ekle</h3>
             <div style="margin-bottom:15px;">
@@ -155,21 +170,25 @@ if (!defined('ABSPATH'))
             </div>
             <div style="margin-bottom:20px;">
                 <label>Fiyat (TL)</label>
-                <input type="number" id="manuel-urun-fiyat" class="hk-input" placeholder="0.00" step="0.01" style="font-size:20px; font-weight:800; color:var(--hk-success);">
+                <input type="number" id="manuel-urun-fiyat" class="hk-input" placeholder="0.00" step="0.01"
+                    style="font-size:20px; font-weight:800; color:var(--hk-success);">
             </div>
             <div class="modal-butonlar">
-                <button id="manuel-vazgec" style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">İptal</button>
+                <button id="manuel-vazgec"
+                    style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">İptal</button>
                 <button id="manuel-onayla" class="hk-btn-primary" style="padding:12px;">Sepete Ekle</button>
             </div>
         </div>
     </div>
 
     <!-- Ödemeyi Böl Modalı -->
-    <div id="odeme-bol-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10005; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+    <div id="odeme-bol-modal" class="modal-cerceve"
+        style="display:none; position:fixed; z-index:10005; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
         <div class="modal-icerik" style="width: 500px !important;">
             <h3>Ödemeyi Böl</h3>
-            <p class="modal-not">Ödeme bölünürse otomatik %5 indirimler iptal edilir. <br><strong>Ödenecek Net Tutar: <span id="bol-net-toplam">0.00</span> TL</strong></p>
-            
+            <p class="modal-not">Ödeme bölünürse otomatik %5 indirimler iptal edilir. <br><strong>Ödenecek Net Tutar:
+                    <span id="bol-net-toplam">0.00</span> TL</strong></p>
+
             <div class="bol-satir">
                 <span>💵 Nakit</span>
                 <div class="bol-input-grup">
@@ -193,40 +212,49 @@ if (!defined('ABSPATH'))
             </div>
 
             <div id="bol-kalan-uyari" class="kalan-eksik">Kalan: <span id="bol-kalan-tutar">0.00</span> TL</div>
-            
+
             <div class="modal-butonlar" style="margin-top:25px;">
-                <button id="bol-vazgec" style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">Vazgeç</button>
+                <button id="bol-vazgec"
+                    style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">Vazgeç</button>
                 <button id="bol-onayla" class="hk-btn-primary" style="padding:12px;">Siparişi Onayla</button>
             </div>
         </div>
     </div>
 
     <!-- Ürün Arama Modalı -->
-    <div id="urun-arama-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+    <div id="urun-arama-modal" class="modal-cerceve"
+        style="display:none; position:fixed; z-index:10000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
         <div class="modal-icerik" style="width: 90% !important; max-width: 800px !important;">
             <h3>🔍 Ürün Ara</h3>
             <div style="position:relative; margin-bottom:15px;">
-                <input type="text" id="urun-arama-input" class="hk-input" placeholder="Ürün adı veya SKU yazın..." autocomplete="off" style="padding-left:45px;">
+                <input type="text" id="urun-arama-input" class="hk-input" placeholder="Ürün adı veya SKU yazın..."
+                    autocomplete="off" style="padding-left:45px;">
                 <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%); opacity:0.5;">🔍</span>
             </div>
             <ul id="arama-sonuclari">
                 <!-- Aramalar buraya gelecek -->
             </ul>
             <div class="modal-butonlar" style="margin-top:20px;">
-                <button id="urun-arama-kapat" style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">Kapat</button>
+                <button id="urun-arama-kapat"
+                    style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">Kapat</button>
             </div>
         </div>
     </div>
 
     <!-- Başarı ve Fiş Modalı -->
-    <div id="fis-onay-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10001; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.9); align-items:center; justify-content:center;">
+    <div id="fis-onay-modal" class="modal-cerceve"
+        style="display:none; position:fixed; z-index:10001; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.9); align-items:center; justify-content:center;">
         <div class="modal-icerik" style="text-align:center; padding:50px;">
             <div class="basari-ikon" style="font-size:80px; color:var(--hk-success); margin-bottom:30px;">✓</div>
             <h2 style="color:var(--hk-text-main); margin-bottom:15px; font-weight:800;">Sipariş Oluşturuldu!</h2>
-            <p style="font-size:20px; color:var(--hk-text-muted);">Sipariş No: <strong id="fis-order-no" style="color:var(--hk-accent);">#----</strong></p>
+            <p style="font-size:20px; color:var(--hk-text-muted);">Sipariş No: <strong id="fis-order-no"
+                    style="color:var(--hk-accent);">#----</strong></p>
             <div class="fis-butonlar" style="margin-top:40px;">
-                <button class="hk-btn-primary" id="fis-yazdir-tetik" style="margin-bottom:10px; padding:18px;">🖨️ Fiş Yazdır (Enter)</button>
-                <button id="fis-yazdir-kapat" style="width:100%; padding:15px; background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border); border-radius:10px; cursor:pointer; font-weight:700;">Yeni Satışa Geç (Esc)</button>
+                <button class="hk-btn-primary" id="fis-yazdir-tetik" style="margin-bottom:10px; padding:18px;">🖨️ Fiş
+                    Yazdır (Enter)</button>
+                <button id="fis-yazdir-kapat"
+                    style="width:100%; padding:15px; background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border); border-radius:10px; cursor:pointer; font-weight:700;">Yeni
+                    Satışa Geç (Esc)</button>
             </div>
         </div>
     </div>
@@ -242,7 +270,7 @@ if (!defined('ABSPATH'))
                 <svg id="fis-barkod" style="max-width:100%; height:auto;"></svg>
             </div>
         </div>
-        
+
         <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:10px;">
             <thead>
                 <tr style="border-bottom:1px solid #000;">
@@ -260,7 +288,8 @@ if (!defined('ABSPATH'))
                 <span>Etiket Toplamı:</span>
                 <span id="fis-liste-toplami-tutar"></span>
             </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:3px; display:none;" id="fis-nakit-indirim-satiri">
+            <div style="display:flex; justify-content:space-between; margin-bottom:3px; display:none;"
+                id="fis-nakit-indirim-satiri">
                 <span id="fis-nakit-indirim-etiket">İndirim (%5):</span>
                 <span id="fis-nakit-indirim-tutar"></span>
             </div>
@@ -282,7 +311,8 @@ if (!defined('ABSPATH'))
     <!-- ==================== GÜN SONU RAPORU ==================== -->
 
     <!-- Gün Sonu Raporu Modalı -->
-    <div id="gun-sonu-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10002; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+    <div id="gun-sonu-modal" class="modal-cerceve"
+        style="display:none; position:fixed; z-index:10002; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
         <div class="modal-icerik" style="width:900px !important; max-height:85vh; display:flex; flex-direction:column;">
             <!-- Yükleniyor Durumu -->
             <div id="gun-sonu-yukleniyor" style="text-align:center; padding:40px;">
@@ -295,9 +325,13 @@ if (!defined('ABSPATH'))
 
             <!-- Butonlar -->
             <div class="modal-butonlar" style="margin-top:20px; flex-shrink:0;">
-                <button id="gun-sonu-kapat" style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">Kapat</button>
-                <button id="gun-sonu-yazdir-ozet" class="hk-btn-primary" style="display:none; padding:12px; width:auto; min-width:150px;">🖨️ Yazdır</button>
-                <button id="gun-sonu-yazdir" style="background:var(--hk-border); color:var(--hk-text-main); display:none; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;">🖨️ Detaylı Yazdır</button>
+                <button id="gun-sonu-kapat"
+                    style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">Kapat</button>
+                <button id="gun-sonu-yazdir-ozet" class="hk-btn-primary"
+                    style="display:none; padding:12px; width:auto; min-width:150px;">🖨️ Yazdır</button>
+                <button id="gun-sonu-yazdir"
+                    style="background:var(--hk-border); color:var(--hk-text-main); display:none; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;">🖨️
+                    Detaylı Yazdır</button>
             </div>
         </div>
     </div>
@@ -308,13 +342,16 @@ if (!defined('ABSPATH'))
     </div>
 
     <!-- Sipariş Düzenleme Modalı -->
-    <div id="order-edit-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10008; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+    <div id="order-edit-modal" class="modal-cerceve"
+        style="display:none; position:fixed; z-index:10008; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
         <div class="modal-icerik" style="width: 800px !important; max-height: 90vh; overflow-y: auto;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--hk-border); padding-bottom:10px;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--hk-border); padding-bottom:10px;">
                 <h3 style="margin:0;">✏️ Son Siparişleri Düzenle</h3>
-                <button class="modal-kapat" id="order-edit-kapat" style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--hk-text-muted);">×</button>
+                <button class="modal-kapat" id="order-edit-kapat"
+                    style="background:none; border:none; font-size:24px; cursor:pointer; color:var(--hk-text-muted);">×</button>
             </div>
-            
+
             <div id="order-edit-list-view">
                 <div id="recent-orders-loading" style="text-align:center; padding:20px;">Siparişler yükleniyor...</div>
                 <div id="recent-orders-container" class="recent-orders-list"></div>
@@ -323,7 +360,7 @@ if (!defined('ABSPATH'))
             <div id="order-edit-detail-view" style="display:none;">
                 <button id="order-edit-back" class="hk-btn-secondary" style="margin-bottom:15px;">← Geri Dön</button>
                 <div id="order-edit-items-container"></div>
-                
+
                 <div style="margin-top:20px; padding-top:15px; border-top:1px solid var(--hk-border);">
                     <label><strong>Ödeme Yöntemi:</strong></label>
                     <select id="edit-order-payment" class="hk-input" style="margin-top:5px;">
@@ -336,12 +373,14 @@ if (!defined('ABSPATH'))
 
                 <div style="margin-top:15px;">
                     <label><strong>İskonto (TL):</strong></label>
-                    <input type="number" id="edit-order-discount" class="hk-input" placeholder="0.00" step="0.01" min="0" style="margin-top:5px;">
+                    <input type="number" id="edit-order-discount" class="hk-input" placeholder="0.00" step="0.01"
+                        min="0" style="margin-top:5px;">
                     <small style="color:var(--hk-text-muted);">Mevcut iskonto otomatik yüklenir.</small>
                 </div>
 
                 <div class="modal-butonlar" style="margin-top:30px;">
-                    <button id="order-edit-save" class="hk-btn-primary" style="width:100%; padding:15px;">Değişiklikleri Kaydet</button>
+                    <button id="order-edit-save" class="hk-btn-primary" style="width:100%; padding:15px;">Değişiklikleri
+                        Kaydet</button>
                 </div>
             </div>
         </div>

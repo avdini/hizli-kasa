@@ -26,7 +26,7 @@ const AppNavigation = (function () {
                 tab.addEventListener('click', () => {
                     const targetTab = tab.getAttribute('data-tab');
                     handleTabSwitch(targetTab);
-                    
+
                     // Mobilde menü açıksa kapat
                     if (menuList && menuList.classList.contains('open')) {
                         toggleMobileMenu();
@@ -114,7 +114,7 @@ const AppNavigation = (function () {
             if (!response.ok) throw new Error('Sekme yüklenemedi');
 
             const data = await response.json();
-            
+
             const contentDiv = document.getElementById(`tab-content-${tabName}`);
             if (contentDiv) {
                 contentDiv.innerHTML = data.html;

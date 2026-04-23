@@ -48,20 +48,16 @@
         flex: 1 !important;
     }
 
+    .urun-sag-kolon {
+        order: 2;
+    }
+
     .urun-orta-detay {
         order: 3;
         flex: 1 1 100% !important;
         text-align: left !important;
         padding: 0 0 0 50px !important;
         margin-top: -5px;
-    }
-
-    .urun-detay-metin {
-        font-size: 13px !important;
-    }
-
-    .urun-fiyat-grup {
-        order: 2;
     }
 
     .toplam-deger {

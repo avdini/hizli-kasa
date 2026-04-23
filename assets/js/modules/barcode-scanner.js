@@ -8,7 +8,7 @@
  */
 
 window.HizliKasa = window.HizliKasa || {};
-(function(HK) {
+(function (HK) {
     'use strict';
 
     HK.BarcodeScanner = {
@@ -20,12 +20,12 @@ window.HizliKasa = window.HizliKasa || {};
         /**
          * Barkod okuyucu dinleyicisini başlat
          */
-        init: function() {
+        init: function () {
             var self = this;
             var barkodIzleme = document.getElementById("barkod-izleme");
             var durumMetni = document.getElementById("durum");
 
-            document.addEventListener("keydown", async function(e) {
+            document.addEventListener("keydown", async function (e) {
                 // Sadece Kasa sekmesi aktifken dinle
                 const activeTab = document.querySelector('.ust-sekme.aktif');
                 if (!activeTab || activeTab.getAttribute('data-tab') !== 'kasa') {
@@ -77,11 +77,11 @@ window.HizliKasa = window.HizliKasa || {};
          * SKU ile ürün ara ve sepete ekle
          * @param {string} sku Barkod/SKU değeri
          */
-        _urunuBulVeEkle: async function(sku) {
+        _urunuBulVeEkle: async function (sku) {
             var durumMetni = document.getElementById("durum");
             try {
                 // kasaAyar.rootApiUrl kullanıyoruz (daha güvenli)
-                var apiUrl = (typeof kasaAyar !== 'undefined' && kasaAyar.rootApiUrl) 
+                var apiUrl = (typeof kasaAyar !== 'undefined' && kasaAyar.rootApiUrl)
                     ? kasaAyar.rootApiUrl + 'hizli-kasa/v1/search'
                     : window.location.origin + '/wp-json/hizli-kasa/v1/search';
 
@@ -98,15 +98,15 @@ window.HizliKasa = window.HizliKasa || {};
                 }
 
                 var data = await response.json();
-                
+
                 // Response bir array değilse (WP Error dönerse) hata ver
                 if (!Array.isArray(data)) {
                     throw new Error(data.message || "Bilinmeyen API Hatası");
                 }
 
-                var urun = data.find(function(item) { 
+                var urun = data.find(function (item) {
                     var trimmedSku = (item.sku ? item.sku.trim() : "");
-                    return trimmedSku === sku.trim(); 
+                    return trimmedSku === sku.trim();
                 }) || data[0];
 
                 if (urun) {
@@ -115,11 +115,11 @@ window.HizliKasa = window.HizliKasa || {};
                     HK.UIRenderer.showToast("Ürün Bulunamadı", 'error', true);
                     durumMetni.innerText = "HATA: [" + sku + "] bulunamadı!";
                     durumMetni.style.color = "#e74c3c";
-                    
+
                     // 3 saniye sonra mesajı temizle
-                    setTimeout(function() {
+                    setTimeout(function () {
                         if (durumMetni.innerText.includes("bulunamadı")) {
-                            durumMetni.innerText = "Hazır (Barkod Bekleniyor)";
+                            durumMetni.innerText = "Hazır";
                             durumMetni.style.color = "";
                         }
                     }, 3000);
@@ -135,7 +135,7 @@ window.HizliKasa = window.HizliKasa || {};
         /**
          * Kuyruktaki barkodları sırayla işle
          */
-        _kuyruguIsle: async function() {
+        _kuyruguIsle: async function () {
             if (this.islemDevamEdiyor) return;
             this.islemDevamEdiyor = true;
 
@@ -143,7 +143,7 @@ window.HizliKasa = window.HizliKasa || {};
 
             while (this.barkodKuyrugu.length > 0) {
                 var islenecekBarkod = this.barkodKuyrugu.shift();
-                
+
                 if (durumMetni) {
                     durumMetni.innerText = "Ürün işleniyor: " + islenecekBarkod;
                     durumMetni.style.color = "#3498db";
@@ -153,7 +153,7 @@ window.HizliKasa = window.HizliKasa || {};
             }
 
             if (durumMetni && !durumMetni.innerText.includes("HATA")) {
-                durumMetni.innerText = "Hazır (Barkod Bekleniyor)";
+                durumMetni.innerText = "Hazır";
                 durumMetni.style.color = "";
             }
 
