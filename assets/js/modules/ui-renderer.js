@@ -118,7 +118,7 @@ window.HizliKasa = window.HizliKasa || {};
                     };
                 })(index));
 
-                sagAksiyonlar.appendChild(azaltButon);
+                sagAksiyonlar.prepend(azaltButon);
                 els.sepetListesi.appendChild(li);
             });
 
