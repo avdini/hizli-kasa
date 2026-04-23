@@ -98,3 +98,38 @@
     background: white;
     color: black;
 }
+
+/* Detaylı Raporlar Sipariş Kalemleri */
+.order-item-list {
+    list-style: none;
+    padding: 0;
+    margin: 5px 0;
+}
+
+.order-item-list li {
+    font-size: 13px;
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+
+.item-price-calc {
+    color: #7f8c8d;
+    font-size: 11px;
+    background: #f8f9fa;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 5px;
+    border: 1px solid #eee;
+    display: inline-block;
+}
+
+.meta-tag {
+    display: inline-block;
+    background: var(--hk-accent);
+    color: white;
+    font-size: 10px;
+    padding: 0 5px;
+    border-radius: 3px;
+    margin-left: 5px;
+    vertical-align: middle;
+}

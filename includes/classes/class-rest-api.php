@@ -1958,10 +1958,16 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
                 }
             }
 
+            $qty = $item->get_quantity();
+            $total = (float) $item->get_total();
+            $unit_price = ($qty != 0) ? $total / $qty : 0;
+
             $order_data['items'][] = array(
-                'name' => $item->get_name(),
-                'qty'  => $item->get_quantity(),
-                'meta' => $product_meta
+                'name'     => $item->get_name(),
+                'qty'      => $qty,
+                'price'    => round($unit_price, 2),
+                'subtotal' => round($total, 2),
+                'meta'     => $product_meta
             );
         }
 

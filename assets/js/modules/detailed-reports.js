@@ -168,7 +168,9 @@
                             metaStr += `<span class="meta-tag" title="${k}">${item.meta[k]}</span>`;
                         });
                     }
-                    itemsHtml += `<li><strong>${item.name}</strong> x ${item.qty} ${metaStr}</li>`;
+                    var priceFormatted = parseFloat(item.price || 0).toLocaleString('tr-TR', {minimumFractionDigits:2});
+                    var subtotalFormatted = parseFloat(item.subtotal || 0).toLocaleString('tr-TR', {minimumFractionDigits:2});
+                    itemsHtml += `<li><strong>${item.name}</strong> x ${item.qty} <span class="item-price-calc">(${priceFormatted} TL x ${item.qty} = ${subtotalFormatted} TL)</span> ${metaStr}</li>`;
                 });
                 itemsHtml += '</ul>';
 
