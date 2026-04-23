@@ -87,12 +87,12 @@
         visibility: visible;
     }
     body.print-mode-barcode #hk-barcode-print-area {
-        display: flex !important;
-        position: fixed !important;
+        display: block !important;
+        position: absolute !important;
         left: 0 !important;
         top: 0 !important;
         width: 50mm !important;
-        height: 35mm !important;
+        height: auto !important;
         z-index: 99999 !important;
     }
 
