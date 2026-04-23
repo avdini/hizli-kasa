@@ -1885,18 +1885,28 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
 
     try {
         $results = wc_get_orders($args);
-        $orders  = $results->orders;
+        
+        // Eğer paginate true ise $results bir nesne döner, değilse direkt dizi döner
+        $orders = is_object($results) && isset($results->orders) ? $results->orders : (is_array($results) ? $results : array());
+        $total_count = is_object($results) && isset($results->total) ? $results->total : count($orders);
+        $max_pages = is_object($results) && isset($results->max_num_pages) ? $results->max_num_pages : 1;
+
         error_log('HK_DEBUG: wc_get_orders success, found: ' . count($orders));
-    } catch (Exception $e) {
-        error_log('HK_DEBUG: wc_get_orders error: ' . $e->getMessage());
+    } catch (Throwable $e) {
+        error_log('HK_DEBUG: wc_get_orders fatal error: ' . $e->getMessage());
         return array('orders' => array(), 'error' => $e->getMessage());
     }
     
     $data = array();
     foreach ($orders as $order) {
+        if (!$order instanceof WC_Order) continue;
+
+        $date_created = $order->get_date_created();
+        $date_str = $date_created ? $date_created->date('Y-m-d H:i:s') : 'Bilinmiyor';
+
         $order_data = array(
             'id'         => $order->get_id(),
-            'date'       => $order->get_date_created()->date('Y-m-d H:i:s'),
+            'date'       => $date_str,
             'total'      => $order->get_total(),
             'cashier'    => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
             'kasa_no'    => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
@@ -1908,7 +1918,6 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
         // Ürünleri topla
         foreach ($order->get_items() as $item) {
             $product_meta = array();
-            // Ürün meta'larını al (HK ile ilgili olanlar)
             $all_item_meta = $item->get_all_meta_data();
             foreach ($all_item_meta as $m) {
                 if (strpos($m->key, '_hk_') === 0 || strpos($m->key, '_hizli_kasa') === 0) {
@@ -1923,11 +1932,9 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
             );
         }
 
-        // Sipariş meta'larını al
         $all_meta = $order->get_meta_data();
         foreach ($all_meta as $m) {
             $key = $m->key;
-            // Göstermek istediğimiz özel metaları filtrele
             if (strpos($key, '_hizli_kasa') === 0 || strpos($key, '_hk_') === 0 || strpos($key, '_odeme_') === 0 || strpos($key, 'Ödeme (') === 0) {
                 $order_data['meta'][$key] = $m->value;
             }
@@ -1938,8 +1945,8 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
 
     return array(
         'orders'     => $data,
-        'total'      => $results->total,
-        'max_pages'  => $results->max_num_pages,
+        'total'      => $total_count,
+        'max_pages'  => $max_pages,
         'page'       => $paged
     );
 }
