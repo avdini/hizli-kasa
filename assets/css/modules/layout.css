@@ -302,7 +302,7 @@
     flex-direction: column; 
     background: var(--hk-bg-card); 
     border-radius: 15px; 
-    padding: 20px; 
+    padding: 10px; 
     box-shadow: var(--hk-shadow-md); 
     overflow: hidden;
     border: 1px solid var(--hk-border);
@@ -312,8 +312,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
+    margin-bottom: 5px;
+    padding-bottom: 10px;
     border-bottom: 2px solid var(--hk-border);
 }
 
