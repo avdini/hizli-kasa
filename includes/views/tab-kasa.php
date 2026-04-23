@@ -28,7 +28,7 @@ if (!defined('ABSPATH'))
             </div>
             
             <div class="kasa-sabit-butonlar">
-                <div id="siparis-duzenle-buton" class="sidebar-btn siparis-duzenle" style="background: var(--hk-accent); color: white; margin-bottom: 5px;"><span>✏️</span> Sipariş Düzenle</div>
+                <div id="siparis-duzenle-buton" class="sidebar-btn siparis-duzenle"><span>✏️</span> Sipariş Düzenle</div>
                 <div id="gun-sonu-buton" class="sidebar-btn gun-sonu"><span>📋</span> Kasa Gün Sonu</div>
                 <div id="genel-rapor-buton" class="sidebar-btn genel-rapor"><span>📊</span> Genel Rapor</div>
             </div>

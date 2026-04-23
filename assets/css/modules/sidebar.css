@@ -45,10 +45,12 @@
     color: #555;
     font-weight: bold;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    text-align: center;
+    word-wrap: break-word;
 }
 
 .sidebar-btn span {
-    font-size: 24px;
+    font-size: 20px;
     margin-bottom: 2px;
 }
 
@@ -72,13 +74,39 @@
     background: #f9fffb;
 }
 
-/* Gün Sonu Butonu (Sidebar Alt) */
+/* Sabit Butonlar (Alt Kısım) */
+.kasa-sabit-butonlar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--hk-border);
+}
+
+.kasa-sabit-butonlar .sidebar-btn {
+    min-height: 65px;
+    padding: 8px 4px;
+    font-size: 10px;
+    line-height: 1.2;
+}
+
+.sidebar-btn.siparis-duzenle {
+    background: var(--hk-accent);
+    color: white;
+    border-color: var(--hk-accent);
+}
+
+.sidebar-btn.siparis-duzenle:hover {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    transform: scale(1.05);
+}
+
 .sidebar-btn.gun-sonu {
-    margin-top: auto;
     background: linear-gradient(135deg, #f39c12, #e67e22);
     color: white;
     border-color: #e67e22;
-    font-size: 11px;
 }
 
 .sidebar-btn.gun-sonu:hover {
@@ -89,11 +117,9 @@
 }
 
 .sidebar-btn.genel-rapor {
-    margin-top: 5px;
     background: linear-gradient(135deg, #9b59b6, #8e44ad);
     color: white;
     border-color: #8e44ad;
-    font-size: 11px;
 }
 
 .sidebar-btn.genel-rapor:hover {
