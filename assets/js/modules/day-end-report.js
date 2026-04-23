@@ -340,7 +340,10 @@
 
             sablon.style.display = "block";
             if (HK.PrintHelper) {
-                HK.PrintHelper.setPageStyle('size: auto; margin: 0;');
+                HK.PrintHelper.setPageStyle(
+                    'size: auto; margin: 0;',
+                    '#gun-sonu-sablon { display: block !important; visibility: visible !important; position: relative !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }'
+                );
             }
             window.print();
             sablon.style.display = "none";

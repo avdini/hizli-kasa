@@ -24,19 +24,13 @@
         background: #fff !important;
     }
 
-    /* Şablonları en üste taşı ve doğal akışta bırak */
-    #fis-sablon, #gun-sonu-sablon {
-        display: block !important;
-        visibility: visible !important;
-        position: relative !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        color: #000 !important;
+    /* Şablonları varsayılan olarak gizli tut, JS ile açılacak */
+    #fis-sablon, #gun-sonu-sablon, #hk-barcode-print-area {
+        display: none !important;
+        visibility: hidden !important;
     }
 
-    #fis-sablon *, #gun-sonu-sablon * {
-        visibility: visible !important;
+    #fis-sablon *, #gun-sonu-sablon *, #hk-barcode-print-area * {
         color: #000 !important;
         border-color: #000 !important;
         background: transparent !important;

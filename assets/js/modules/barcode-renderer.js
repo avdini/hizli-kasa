@@ -208,7 +208,10 @@
             // Yazdırma işlemini başlat
             setTimeout(() => {
                 if (HK.PrintHelper) {
-                    HK.PrintHelper.setPageStyle('size: 50mm 35mm; margin: 0;');
+                    HK.PrintHelper.setPageStyle(
+                        'size: 50mm 35mm; margin: 0;',
+                        '#hk-barcode-print-area { display: block !important; visibility: visible !important; position: fixed !important; top: 0; left: 0; }'
+                    );
                 }
                 window.print();
             }, 500);

@@ -167,7 +167,10 @@
                 if (gsSablon) gsSablon.style.display = "none";
 
                 if (HK.PrintHelper) {
-                    HK.PrintHelper.setPageStyle('size: auto; margin: 0;');
+                    HK.PrintHelper.setPageStyle(
+                        'size: auto; margin: 0;',
+                        '#fis-sablon { display: block !important; visibility: visible !important; position: relative !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }'
+                    );
                 }
                 window.print();
             });
@@ -180,7 +183,10 @@
                 if (els.fisOnayModal.style.display === "flex") {
                     if (e.key === "Enter") {
                         if (HK.PrintHelper) {
-                            HK.PrintHelper.setPageStyle('size: auto; margin: 0;');
+                            HK.PrintHelper.setPageStyle(
+                                'size: auto; margin: 0;',
+                                '#fis-sablon { display: block !important; visibility: visible !important; position: relative !important; width: 100% !important; margin: 0 !important; padding: 0 !important; }'
+                            );
                         }
                         window.print();
                     } else if (e.key === "Escape") {
