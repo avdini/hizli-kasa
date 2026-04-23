@@ -37,7 +37,7 @@ if (!defined('ABSPATH'))
                 <?php endif; ?>
                 
                 <?php if (get_option('hizli_kasa_genel_rapor_aktif', '1') === '1'): ?>
-                    <div id="genel-rapor-buton" class="sidebar-btn genel-rapor"><span>📊</span> Genel Rapor</div>
+                    <div id="genel-rapor-buton" class="sidebar-btn genel-rapor"><span>📊</span> Gün Sonu</div>
                 <?php endif; ?>
             </div>
         </div>
