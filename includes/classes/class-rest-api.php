@@ -298,6 +298,13 @@ function hizli_kasa_gun_sonu_raporu($request) {
     if (!$is_general) {
         $args['meta_key']   = '_hizli_kasa_kasa_no';
         $args['meta_value'] = $kasa_no;
+    } else {
+        $args['meta_query'] = array(
+            array(
+                'key'     => '_hizli_kasa_kasa_no',
+                'compare' => 'EXISTS',
+            ),
+        );
     }
 
     $orders = wc_get_orders($args);
@@ -332,19 +339,48 @@ function hizli_kasa_gun_sonu_raporu($request) {
     $kasiyer_map   = array();
     $saat_map      = array();
 
+    $iade_siparisler = array();
+    $iade_toplam = 0;
+    $iade_adet   = 0;
+    $iade_nakit  = 0;
+    $iade_kart   = 0;
+    $iade_iban   = 0;
+
     foreach ($orders as $order) {
         $order_id    = $order->get_id();
         $order_total = (float) $order->get_total();
-        $toplam_ciro += $order_total;
 
         $o_nakit = (float) $order->get_meta('_odeme_nakit');
         $o_kart  = (float) $order->get_meta('_odeme_kart');
         $o_iban  = (float) $order->get_meta('_odeme_iban');
+        
+        $kasiyer = $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmeyen';
+        $odeme_tipi = $order->get_payment_method_title();
+
+        $is_refund = ($order->get_meta('_hizli_kasa_is_refund') === 'yes');
+
+        if ($is_refund) {
+            $iade_toplam += abs($order_total);
+            $iade_adet++;
+            $iade_nakit += abs($o_nakit);
+            $iade_kart  += abs($o_kart);
+            $iade_iban  += abs($o_iban);
+            
+            $iade_siparisler[] = array(
+                'id'         => $order_id,
+                'saat'       => $order->get_date_created()->date('H:i'),
+                'toplam'     => abs($order_total),
+                'odeme_tipi' => $odeme_tipi,
+                'kasiyer'    => $kasiyer
+            );
+            continue;
+        }
+
+        $toplam_ciro += $order_total;
         $nakit_toplam += $o_nakit;
         $kart_toplam  += $o_kart;
         $iban_toplam  += $o_iban;
 
-        $kasiyer = $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmeyen';
         if (!isset($kasiyer_map[$kasiyer])) $kasiyer_map[$kasiyer] = 0;
         $kasiyer_map[$kasiyer]++;
 
@@ -407,21 +443,26 @@ function hizli_kasa_gun_sonu_raporu($request) {
 
     global $wpdb;
     $masraf_table = Hizli_Kasa_Database::get_tables()['masraflar'];
-    $m_query = $wpdb->prepare("SELECT amount, payment_method FROM $masraf_table WHERE DATE(created_at) = %s", $tarih);
-    
-    if (!$is_general) {
-        $m_query .= $wpdb->prepare(" AND kasa_no = %s", $kasa_no);
-    }
-    
-    $masraflar_raw = $wpdb->get_results($m_query);
     $toplam_masraf = 0;
     $nakit_masraf  = 0;
+    $masraf_listesi = array();
     
-    foreach ($masraflar_raw as $m) {
-        $amt = (float)$m->amount;
-        $toplam_masraf += $amt;
-        if ($m->payment_method === 'nakit') {
-            $nakit_masraf += $amt;
+    if ($is_general) {
+        $m_query = $wpdb->prepare("SELECT category, amount, payment_method, description FROM $masraf_table WHERE DATE(created_at) = %s ORDER BY created_at ASC", $tarih);
+        $masraflar_raw = $wpdb->get_results($m_query);
+        
+        foreach ($masraflar_raw as $m) {
+            $amt = (float)$m->amount;
+            $toplam_masraf += $amt;
+            if ($m->payment_method === 'nakit') {
+                $nakit_masraf += $amt;
+            }
+            $masraf_listesi[] = array(
+                'kategori'   => $m->category,
+                'aciklama'   => $m->description,
+                'yontem'     => $m->payment_method,
+                'tutar'      => $amt
+            );
         }
     }
 
@@ -434,7 +475,7 @@ function hizli_kasa_gun_sonu_raporu($request) {
         'tarih'          => $tarih,
         'tarih_okunabilir' => date_i18n('d.m.Y l', strtotime($tarih)),
         'rapor_zamani'   => current_time('d.m.Y H:i:s'),
-        'siparis_sayisi' => count($orders),
+        'siparis_sayisi' => count($siparisler),
         'siparisler'     => $siparisler,
         'ozet'           => array(
             'toplam_ciro'       => round($toplam_ciro, 2),
@@ -444,9 +485,16 @@ function hizli_kasa_gun_sonu_raporu($request) {
             'iban_toplam'       => round($iban_toplam, 2),
             'toplam_masraf'     => round($toplam_masraf, 2),
             'nakit_masraf'      => round($nakit_masraf, 2),
-            'net_nakit'         => round($nakit_toplam - $nakit_masraf, 2),
+            'net_nakit'         => round($nakit_toplam - $nakit_masraf - $iade_nakit, 2),
             'urun_adet_toplam'  => $urun_adet,
+            'toplam_iade'       => round($iade_toplam, 2),
+            'iade_adet'         => $iade_adet,
+            'iade_nakit'        => round($iade_nakit, 2),
+            'iade_kart'         => round($iade_kart, 2),
+            'iade_iban'         => round($iade_iban, 2),
         ),
+        'iade_siparisler'=> $iade_siparisler,
+        'masraf_detay'   => $masraf_listesi,
         'urun_dagilimi'  => array_values($urun_map),
         'kasiyerler'     => $kasiyer_map,
         'saat_dagilimi'  => $saat_map,

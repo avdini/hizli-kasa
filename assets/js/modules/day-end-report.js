@@ -114,12 +114,17 @@
             var icerik = this.els.gunSonuIcerik;
             var ozet = rapor.ozet;
 
-            if (rapor.siparis_sayisi === 0) {
+            var hasSales = (rapor.siparis_sayisi > 0);
+            var hasRefunds = (ozet.toplam_iade > 0);
+            var hasExpenses = (ozet.toplam_masraf > 0);
+            var isGenel = (rapor.kasa_no === 'Genel');
+
+            if (!hasSales && !hasRefunds && !hasExpenses) {
                 icerik.innerHTML =
                     '<div style="text-align:center; padding:30px; color:#95a5a6;">' +
                         '<div style="font-size:48px; margin-bottom:15px;">📋</div>' +
                         '<h3 style="margin:0 0 5px;">Bugün İşlem Yok</h3>' +
-                        '<p style="margin:0;">Kasa ' + rapor.kasa_no + ' için bugün henüz sipariş oluşturulmamış.</p>' +
+                        '<p style="margin:0;">Kasa ' + rapor.kasa_no + ' için bugün herhangi bir işlem bulunmuyor.</p>' +
                     '</div>';
                 this.els.gunSonuYazdir.style.display = "none";
                 if (this.els.gunSonuYazdirOzet) this.els.gunSonuYazdirOzet.style.display = "none";
@@ -139,20 +144,41 @@
 
             // ▧ Özet Kartlar
             html += '<div class="gs-kart-grid">' +
-                this._kartHTML('💰', 'Toplam Ciro', ozet.toplam_ciro.toFixed(2) + ' TL', '#27ae60') +
+                this._kartHTML('💰', 'Satış Cirosu', ozet.toplam_ciro.toFixed(2) + ' TL', '#27ae60') +
                 this._kartHTML('🧾', 'Sipariş Sayısı', rapor.siparis_sayisi, '#2c3e50') +
                 this._kartHTML('📦', 'Satılan Ürün', ozet.urun_adet_toplam + ' Adet', '#3498db') +
-                this._kartHTML('🏷️', 'Toplam İskonto', ozet.toplam_iskonto.toFixed(2) + ' TL', '#e74c3c') +
+                this._kartHTML('🔄', 'İade Tutarı', ozet.toplam_iade.toFixed(2) + ' TL', '#e67e22') +
             '</div>';
 
             // ▧ Ödeme Dağılımı
+            var netCiro = ozet.toplam_ciro - ozet.toplam_iade;
+            
             html += '<div class="gs-bolum">' +
                 '<h4>Ödeme Dağılımı</h4>' +
                 '<table class="gs-tablo">' +
-                '<tr><td>💵 Nakit</td><td class="gs-sag">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>' +
-                '<tr><td>💳 Kredi Kartı</td><td class="gs-sag">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>' +
-                '<tr><td>🏦 IBAN / Havale</td><td class="gs-sag">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>' +
-                '<tr class="gs-toplam-satir"><td><strong>TOPLAM</strong></td><td class="gs-sag"><strong>' + ozet.toplam_ciro.toFixed(2) + ' TL</strong></td></tr>' +
+                '<tr><td>💵 Nakit Satış</td><td class="gs-sag">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>' +
+                '<tr><td>💳 Kart Satış</td><td class="gs-sag">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>' +
+                '<tr><td>🏦 IBAN Satış</td><td class="gs-sag">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>' +
+                '<tr class="gs-toplam-satir" style="color:#27ae60;"><td><strong>SATIŞ TOPLAMI</strong></td><td class="gs-sag"><strong>' + ozet.toplam_ciro.toFixed(2) + ' TL</strong></td></tr>';
+                
+            if (ozet.toplam_iade > 0) {
+                html += '<tr><td colspan="2" style="height:10px;"></td></tr>' +
+                '<tr><td style="color:#e67e22;">🔄 Nakit İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_nakit.toFixed(2) + ' TL</td></tr>' +
+                '<tr><td style="color:#e67e22;">🔄 Kart İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_kart.toFixed(2) + ' TL</td></tr>' +
+                '<tr><td style="color:#e67e22;">🔄 IBAN İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_iban.toFixed(2) + ' TL</td></tr>';
+            }
+
+            if (isGenel && ozet.toplam_masraf > 0) {
+                var diger_masraf = ozet.toplam_masraf - ozet.nakit_masraf;
+                html += '<tr><td colspan="2" style="height:10px;"></td></tr>' +
+                '<tr><td style="color:#c0392b;">💸 Nakit Masraf</td><td class="gs-sag" style="color:#c0392b;">-' + ozet.nakit_masraf.toFixed(2) + ' TL</td></tr>' +
+                '<tr><td style="color:#c0392b;">💸 Diğer Masraf</td><td class="gs-sag" style="color:#c0392b;">-' + diger_masraf.toFixed(2) + ' TL</td></tr>';
+                netCiro -= ozet.toplam_masraf;
+            }
+
+            html += '<tr><td colspan="2" style="height:10px;"></td></tr>' +
+                '<tr><td><strong>NET NAKİT (Kasadaki)</strong></td><td class="gs-sag"><strong>' + ozet.net_nakit.toFixed(2) + ' TL</strong></td></tr>' +
+                '<tr class="gs-toplam-satir" style="background:#f8f9fa;"><td><strong>NET CİRO</strong></td><td class="gs-sag"><strong>' + netCiro.toFixed(2) + ' TL</strong></td></tr>' +
                 '</table>' +
             '</div>';
 
@@ -172,20 +198,58 @@
             }
 
             // ▧ Sipariş Listesi
-            html += '<div class="gs-bolum">' +
-                '<h4>Siparişler (' + rapor.siparis_sayisi + ')</h4>' +
-                '<table class="gs-tablo">' +
-                '<tr style="font-weight:bold; border-bottom:2px solid #ddd;"><td>Saat</td><td>Sipariş No</td><td>Ödeme</td><td class="gs-sag">Tutar</td></tr>';
-            
-            rapor.siparisler.forEach(function(s) {
-                html += '<tr>' +
-                    '<td>' + s.saat + '</td>' +
-                    '<td>#' + s.id + '</td>' +
-                    '<td>' + s.odeme_tipi + '</td>' +
-                    '<td class="gs-sag">' + s.toplam.toFixed(2) + ' TL</td>' +
-                '</tr>';
-            });
-            html += '</table></div>';
+            if (rapor.siparis_sayisi > 0) {
+                html += '<div class="gs-bolum">' +
+                    '<h4>Siparişler (' + rapor.siparis_sayisi + ')</h4>' +
+                    '<table class="gs-tablo">' +
+                    '<tr style="font-weight:bold; border-bottom:2px solid #ddd;"><td>Saat</td><td>Sipariş No</td><td>Ödeme</td><td class="gs-sag">Tutar</td></tr>';
+                
+                rapor.siparisler.forEach(function(s) {
+                    html += '<tr>' +
+                        '<td>' + s.saat + '</td>' +
+                        '<td>#' + s.id + '</td>' +
+                        '<td>' + s.odeme_tipi + '</td>' +
+                        '<td class="gs-sag">' + s.toplam.toFixed(2) + ' TL</td>' +
+                    '</tr>';
+                });
+                html += '</table></div>';
+            }
+
+            // ▧ İade Listesi
+            if (rapor.iade_siparisler && rapor.iade_siparisler.length > 0) {
+                html += '<div class="gs-bolum">' +
+                    '<h4>İade İşlemleri (' + rapor.ozet.iade_adet + ')</h4>' +
+                    '<table class="gs-tablo">' +
+                    '<tr style="font-weight:bold; border-bottom:2px solid #ddd;"><td>Saat</td><td>Sipariş No</td><td>Ödeme</td><td class="gs-sag">Tutar</td></tr>';
+                
+                rapor.iade_siparisler.forEach(function(s) {
+                    html += '<tr>' +
+                        '<td>' + s.saat + '</td>' +
+                        '<td>#' + s.id + '</td>' +
+                        '<td>' + s.odeme_tipi + '</td>' +
+                        '<td class="gs-sag" style="color:#e67e22;">-' + s.toplam.toFixed(2) + ' TL</td>' +
+                    '</tr>';
+                });
+                html += '</table></div>';
+            }
+
+            // ▧ Masraf Listesi
+            if (isGenel && rapor.masraf_detay && rapor.masraf_detay.length > 0) {
+                html += '<div class="gs-bolum">' +
+                    '<h4>Masraf Giderleri (' + rapor.masraf_detay.length + ')</h4>' +
+                    '<table class="gs-tablo">' +
+                    '<tr style="font-weight:bold; border-bottom:2px solid #ddd;"><td>Kategori</td><td>Açıklama</td><td>Yöntem</td><td class="gs-sag">Tutar</td></tr>';
+                
+                rapor.masraf_detay.forEach(function(m) {
+                    html += '<tr>' +
+                        '<td>' + m.kategori + '</td>' +
+                        '<td>' + (m.aciklama || '-') + '</td>' +
+                        '<td>' + m.yontem.toUpperCase() + '</td>' +
+                        '<td class="gs-sag" style="color:#c0392b;">-' + m.tutar.toFixed(2) + ' TL</td>' +
+                    '</tr>';
+                });
+                html += '</table></div>';
+            }
 
             // ▧ Kasiyer Dağılımı
             if (rapor.kasiyerler && Object.keys(rapor.kasiyerler).length > 0) {
@@ -236,7 +300,12 @@
             html += '<p style="margin:2px 0; font-size:10px;">Rapor: ' + rapor.rapor_zamani + '</p>';
             html += '</div>';
 
-            if (rapor.siparis_sayisi === 0) {
+            var hasSales = (rapor.siparis_sayisi > 0);
+            var hasRefunds = (ozet.toplam_iade > 0);
+            var hasExpenses = (ozet.toplam_masraf > 0);
+            var isGenel = (rapor.kasa_no === 'Genel');
+
+            if (!hasSales && !hasRefunds && !hasExpenses) {
                 html += '<p style="text-align:center; font-size:14px; margin:20px 0;">Bugün işlem yapılmamıştır.</p>';
                 sablon.innerHTML = html;
                 return;
@@ -247,19 +316,40 @@
             html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">GENEL ÖZET</p>';
             html += '<table style="width:100%; font-size:12px; border-collapse:collapse;">';
             html += '<tr><td>Sipariş Sayısı</td><td style="text-align:right; font-weight:bold;">' + rapor.siparis_sayisi + '</td></tr>';
-            html += '<tr><td>Satılan Ürün Adedi</td><td style="text-align:right; font-weight:bold;">' + ozet.urun_adet_toplam + '</td></tr>';
-            html += '<tr><td>Toplam İskonto</td><td style="text-align:right; font-weight:bold;">-' + ozet.toplam_iskonto.toFixed(2) + ' TL</td></tr>';
+            html += '<tr><td>Satılan Ürün</td><td style="text-align:right; font-weight:bold;">' + ozet.urun_adet_toplam + '</td></tr>';
+            html += '<tr><td>İade Tutarı</td><td style="text-align:right; font-weight:bold;">' + ozet.toplam_iade.toFixed(2) + ' TL</td></tr>';
+            html += '<tr><td>İskonto</td><td style="text-align:right; font-weight:bold;">-' + ozet.toplam_iskonto.toFixed(2) + ' TL</td></tr>';
             html += '</table>';
             html += '</div>';
 
             // ─── ÖDEME DAĞILIMI ───
+            var netCiro = ozet.toplam_ciro - ozet.toplam_iade;
             html += '<div style="margin-bottom:8px;">';
             html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">ÖDEME DAĞILIMI</p>';
             html += '<table style="width:100%; font-size:12px; border-collapse:collapse;">';
-            html += '<tr><td>Nakit</td><td style="text-align:right;">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>';
+            html += '<tr><td>Nakit Satış</td><td style="text-align:right;">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>Kredi Kartı</td><td style="text-align:right;">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>IBAN / Havale</td><td style="text-align:right;">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>';
-            html += '<tr style="border-top:1px solid #000;"><td style="font-weight:bold; font-size:14px;">TOPLAM CİRO</td><td style="text-align:right; font-weight:bold; font-size:14px;">' + ozet.toplam_ciro.toFixed(2) + ' TL</td></tr>';
+            html += '<tr style="border-top:1px dashed #000;"><td style="font-weight:bold;">SATIŞ TOPLAMI</td><td style="text-align:right; font-weight:bold;">' + ozet.toplam_ciro.toFixed(2) + ' TL</td></tr>';
+            
+            if (ozet.toplam_iade > 0) {
+                html += '<tr><td colspan="2" style="height:3px;"></td></tr>';
+                html += '<tr><td>Nakit İade</td><td style="text-align:right;">-' + ozet.iade_nakit.toFixed(2) + ' TL</td></tr>';
+                html += '<tr><td>Kart İade</td><td style="text-align:right;">-' + ozet.iade_kart.toFixed(2) + ' TL</td></tr>';
+                html += '<tr><td>IBAN İade</td><td style="text-align:right;">-' + ozet.iade_iban.toFixed(2) + ' TL</td></tr>';
+            }
+
+            if (isGenel && ozet.toplam_masraf > 0) {
+                var diger_masraf = ozet.toplam_masraf - ozet.nakit_masraf;
+                html += '<tr><td colspan="2" style="height:3px;"></td></tr>';
+                html += '<tr><td>Nakit Masraf</td><td style="text-align:right;">-' + ozet.nakit_masraf.toFixed(2) + ' TL</td></tr>';
+                html += '<tr><td>Diğer Masraf</td><td style="text-align:right;">-' + diger_masraf.toFixed(2) + ' TL</td></tr>';
+                netCiro -= ozet.toplam_masraf;
+            }
+
+            html += '<tr><td colspan="2" style="height:5px;"></td></tr>';
+            html += '<tr style="border-top:1px solid #000;"><td style="font-weight:bold; font-size:14px;">NET CİRO</td><td style="text-align:right; font-weight:bold; font-size:14px;">' + netCiro.toFixed(2) + ' TL</td></tr>';
+            html += '<tr><td>Kasadaki Net Nakit</td><td style="text-align:right; font-weight:bold;">' + ozet.net_nakit.toFixed(2) + ' TL</td></tr>';
             html += '</table>';
             html += '</div>';
 
@@ -282,7 +372,7 @@
             }
 
             // ─── SİPARİŞ LİSTESİ ───
-            if (includeDetails) {
+            if (includeDetails && rapor.siparis_sayisi > 0) {
                 html += '<div style="margin-bottom:8px;">';
                 html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">SİPARİŞLER (' + rapor.siparis_sayisi + ')</p>';
                 html += '<table style="width:100%; font-size:11px; border-collapse:collapse;">';
@@ -294,6 +384,42 @@
                         '<td style="padding:1px 0;">#' + s.id + '</td>' +
                         '<td style="padding:1px 0; max-width:50px; overflow:hidden;">' + s.odeme_tipi.substring(0, 6) + '</td>' +
                         '<td style="text-align:right; padding:1px 0;">' + s.toplam.toFixed(2) + '</td>' +
+                    '</tr>';
+                });
+                html += '</table>';
+                html += '</div>';
+            }
+
+            // ─── İADE İŞLEMLERİ ───
+            if (includeDetails && rapor.iade_siparisler && rapor.iade_siparisler.length > 0) {
+                html += '<div style="margin-bottom:8px;">';
+                html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">İADE İŞLEMLERİ (' + rapor.ozet.iade_adet + ')</p>';
+                html += '<table style="width:100%; font-size:11px; border-collapse:collapse;">';
+                html += '<tr style="border-bottom:1px solid #000;"><th style="text-align:left;">Saat</th><th style="text-align:left;">No</th><th style="text-align:left;">Ödm.</th><th style="text-align:right;">Tutar</th></tr>';
+
+                rapor.iade_siparisler.forEach(function(s) {
+                    html += '<tr>' +
+                        '<td style="padding:1px 0;">' + s.saat + '</td>' +
+                        '<td style="padding:1px 0;">#' + s.id + '</td>' +
+                        '<td style="padding:1px 0; max-width:50px; overflow:hidden;">' + s.odeme_tipi.substring(0, 6) + '</td>' +
+                        '<td style="text-align:right; padding:1px 0;">-' + s.toplam.toFixed(2) + '</td>' +
+                    '</tr>';
+                });
+                html += '</table>';
+                html += '</div>';
+            }
+
+            // ─── MASRAF GİDERLERİ ───
+            if (includeDetails && isGenel && rapor.masraf_detay && rapor.masraf_detay.length > 0) {
+                html += '<div style="margin-bottom:8px;">';
+                html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">MASRAFLAR (' + rapor.masraf_detay.length + ')</p>';
+                html += '<table style="width:100%; font-size:11px; border-collapse:collapse;">';
+                html += '<tr style="border-bottom:1px solid #000;"><th style="text-align:left;">Kategori</th><th style="text-align:right;">Tutar</th></tr>';
+
+                rapor.masraf_detay.forEach(function(m) {
+                    html += '<tr>' +
+                        '<td style="padding:1px 0; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + m.kategori + '</td>' +
+                        '<td style="text-align:right; padding:1px 0;">-' + m.tutar.toFixed(2) + '</td>' +
                     '</tr>';
                 });
                 html += '</table>';
