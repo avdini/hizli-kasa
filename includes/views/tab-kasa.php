@@ -226,21 +226,21 @@ if (!defined('ABSPATH'))
 
     <!-- Gizli Fiş Şablonu (Sadece Yazdırma İçin) -->
     <div id="fis-sablon">
-        <div style="text-align:center; margin-bottom:10px; border-bottom:1px dashed #000; padding-bottom:10px;">
-            <h2 style="margin:0; font-size:18px;"><?php echo get_bloginfo('name'); ?></h2>
-            <p style="margin:5px 0; font-size:12px;">HIZLI KASA SATIŞ FİŞİ</p>
-            <p id="fis-tarih" style="margin:0; font-size:11px;"></p>
-            <p id="fis-no-text" style="font-weight:bold; margin:5px 0; font-size:14px;"></p>
-            <div style="text-align:center; margin-bottom:10px;">
+        <div style="text-align:center; margin-bottom:5px; padding-bottom:5px;">
+            <h2 style="margin:0; font-size:16px; color:#000; font-weight:bold;"><?php echo get_bloginfo('name'); ?></h2>
+            <p style="margin:2px 0; font-size:11px; color:#000;">HIZLI KASA SATIŞ FİŞİ</p>
+            <p id="fis-tarih" style="margin:0; font-size:10px; color:#000;"></p>
+            <p id="fis-no-text" style="font-weight:bold; margin:2px 0; font-size:12px; color:#000;"></p>
+            <div style="text-align:center; margin-bottom:5px;">
                 <svg id="fis-barkod" style="max-width:100%; height:auto;"></svg>
             </div>
         </div>
         
-        <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:10px;">
+        <table style="width:100%; border-collapse:collapse; font-size:11px; margin-bottom:5px; color:#000;">
             <thead>
                 <tr style="border-bottom:1px solid #000;">
-                    <th style="text-align:left; padding:5px 0;">Ürün</th>
-                    <th style="text-align:right; padding:5px 0;">Toplam</th>
+                    <th style="text-align:left; padding:2px 0;">Ürün</th>
+                    <th style="text-align:right; padding:2px 0;">Toplam</th>
                 </tr>
             </thead>
             <tbody id="fis-urunler-body">
@@ -248,7 +248,7 @@ if (!defined('ABSPATH'))
             </tbody>
         </table>
 
-        <div style="border-top:1px dashed #000; padding-top:10px; font-size:13px;">
+        <div style="padding-top:5px; font-size:12px; color:#000;">
             <div style="display:flex; justify-content:space-between; margin-bottom:3px;" id="fis-liste-toplami-satiri">
                 <span>Etiket Toplamı:</span>
                 <span id="fis-liste-toplami-tutar"></span>
@@ -267,7 +267,7 @@ if (!defined('ABSPATH'))
             </div>
         </div>
 
-        <div style="text-align:center; margin-top:20px; font-size:11px; border-top:1px solid #000; padding-top:10px;">
+        <div style="text-align:center; margin-top:10px; font-size:10px; color:#000;">
             Bizi tercih ettiğiniz için teşekkür ederiz.
         </div>
     </div>

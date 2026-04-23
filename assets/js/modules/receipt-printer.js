@@ -80,11 +80,11 @@
                 }
                 fiyatHTML += '<div style="font-weight: bold; font-size: 14px; color: #000;">' + satirNetToplam.toFixed(2) + ' TL</div>';
 
-                tr.innerHTML = '<td style="padding:5px 0; line-height: 1.2; color: #000;">' + 
-                        '<span style="font-weight: 600;">' + item.name + '</span><br>' +
-                        '<span style="font-size: 11px; color: #000;">' + (item.sku ? item.sku : '') + ' | ' + item.quantity + ' Adet</span>' +
+                tr.innerHTML = '<td style="padding:1px 0; line-height: 1.1; color: #000;">' + 
+                        '<span style="font-weight: 600; font-size: 11px;">' + item.name + '</span><br>' +
+                        '<span style="font-size: 10px; color: #000;">' + (item.sku ? item.sku : '') + ' | ' + item.quantity + ' Adet</span>' +
                     '</td>' +
-                    '<td style="text-align:right; padding:5px 0; vertical-align: middle;">' + fiyatHTML + '</td>';
+                    '<td style="text-align:right; padding:1px 0; vertical-align: middle;">' + fiyatHTML + '</td>';
                 els.fisUrunlerBody.appendChild(tr);
             });
 
@@ -143,7 +143,7 @@
                     JsBarcode("#fis-barkod", (order.id || order.number).toString(), {
                         format: "CODE128",
                         width: 2,
-                        height: 50,
+                        height: 40,
                         displayValue: false,
                         margin: 0,
                         background: "#ffffff",

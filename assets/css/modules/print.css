@@ -42,16 +42,13 @@
         visibility: visible;
     }
     #fis-sablon, #gun-sonu-sablon {
-        display: flex !important;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
-        position: fixed !important;
+        display: block !important;
+        position: absolute !important;
         left: 0 !important;
         top: 0 !important;
         width: 100% !important;
         margin: 0 !important;
-        padding: 0mm 2mm !important;
+        padding: 0 !important;
         background: white !important;
         color: #000 !important;
         z-index: 999999 !important;
@@ -61,8 +58,14 @@
         visibility: visible !important;
         color: #000 !important;
         border-color: #000 !important;
+        background: transparent !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+    }
+
+    /* Tablo çizgilerini tamamen kaldır */
+    #fis-sablon table, #fis-sablon td, #fis-sablon th, #fis-sablon tr {
+        border: none !important;
     }
 
     /* Sayfa Ayarları JS (PrintHelper) tarafından dinamik yönetilir */
