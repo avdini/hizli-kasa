@@ -11,8 +11,27 @@
         init: function() {
             var self = this;
             
+            // Sekme yüklendiğinde (lazy-load) tetiklenmesi için dinle
+            document.addEventListener('hkTabLoaded', function(e) {
+                if (e.detail.tab === 'raporlar') {
+                    self.bindSubTabEvents();
+                    self.loadLogs();
+                }
+            });
+
+            // Eğer sayfa yüklendiğinde elementler zaten varsa (sayfa yenileme)
+            this.bindSubTabEvents();
+            this.loadLogs();
+        },
+
+        bindSubTabEvents: function() {
+            var self = this;
+            
             // Alt Sekme Geçişleri
             document.querySelectorAll(".rapor-alt-btn").forEach(function(btn) {
+                if (btn.dataset.bound) return;
+                btn.dataset.bound = "true";
+
                 btn.addEventListener("click", function() {
                     var target = this.dataset.target;
                     
@@ -22,7 +41,8 @@
                     
                     // Panelleri güncelle
                     document.querySelectorAll(".rapor-icerik-paneli").forEach(p => p.style.display = "none");
-                    document.getElementById(target).style.display = "block";
+                    var panel = document.getElementById(target);
+                    if (panel) panel.style.display = "block";
                     
                     if (target === 'rapor-siparis-duzenleme') {
                         self.loadLogs();
@@ -32,14 +52,12 @@
 
             // Yenile Butonu
             var refreshBtn = document.getElementById("rapor-yenile");
-            if (refreshBtn) {
+            if (refreshBtn && !refreshBtn.dataset.bound) {
+                refreshBtn.dataset.bound = "true";
                 refreshBtn.addEventListener("click", function() {
                     self.loadLogs();
                 });
             }
-
-            // İlk yükleme
-            this.loadLogs();
         },
 
         loadLogs: async function() {

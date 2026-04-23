@@ -1634,15 +1634,9 @@ function hizli_kasa_update_order($request) {
     $order->calculate_totals();
     $order->save();
 
-    // 3. Log Kaydı ve Sipariş Notu
+    // 3. Log Kaydı
     global $wpdb;
     $table = Hizli_Kasa_Database::get_tables()['order_edits'];
-    
-    // Tablo kontrolü ve otomatik oluşturma (Fallback)
-    if ($wpdb->get_var("SHOW TABLES LIKE '$table'") !== $table) {
-        Hizli_Kasa_Database::init();
-    }
-
     $wpdb->insert($table, [
         'order_id'    => $order_id,
         'kasa_no'     => $order->get_meta('_hizli_kasa_kasa_no'),
@@ -1653,11 +1647,6 @@ function hizli_kasa_update_order($request) {
         'created_at'  => current_time('mysql')
     ]);
 
-    // Sipariş Notu Ekle
-    if (!empty($log_details)) {
-        $order->add_order_note('Sipariş POS üzerinden düzenlendi. Detaylar: ' . implode(', ', $log_details));
-    }
-
     return ['success' => true, 'new_total' => $order->get_total()];
 }
 
@@ -1667,11 +1656,6 @@ function hizli_kasa_update_order($request) {
 function hizli_kasa_get_edit_logs($request) {
     global $wpdb;
     $table = Hizli_Kasa_Database::get_tables()['order_edits'];
-
-    // Tablo kontrolü ve otomatik oluşturma (Fallback)
-    if ($wpdb->get_var("SHOW TABLES LIKE '$table'") !== $table) {
-        Hizli_Kasa_Database::init();
-    }
     
     $date_start = $request->get_param('date_start') ?: current_time('Y-m-d');
     $date_end   = $request->get_param('date_end') ?: current_time('Y-m-d');
