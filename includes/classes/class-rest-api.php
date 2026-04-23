@@ -1867,62 +1867,30 @@ function hizli_kasa_get_reports_refunds($request) {
  * Rapor verilerini çeken ortak fonksiyon.
  */
 function hizli_kasa_get_reports_data($request, $is_refund = false) {
-    hizli_kasa_log("REPORTS_DATA_HIT: is_refund=" . ($is_refund ? 'yes' : 'no'));
+    error_log("HK_DEBUG: API Hit for reports");
 
     $paged    = $request->get_param('page') ? intval($request->get_param('page')) : 1;
     $per_page = $request->get_param('per_page') ? intval($request->get_param('per_page')) : 20;
     if ($per_page < 1) $per_page = 20;
-    $date_start = $request->get_param('date_start');
-    $date_end   = $request->get_param('date_end');
-    $search     = $request->get_param('search');
 
     $args = array(
         'limit'    => $per_page,
         'offset'   => ($paged - 1) * $per_page,
         'paginate' => true,
-        'orderby'  => 'date',
-        'order'    => 'DESC',
-        'status'   => array('processing', 'completed', 'on-hold', 'pending'),
+        'status'   => 'any',
     );
 
-    if (!empty($date_start) && !empty($date_end)) {
-        // Tarih aralığını gün sonuna kadar genişletelim
-        $args['date_created'] = $date_start . ' 00:00:00...' . $date_end . ' 23:59:59';
+    // Tüm filtreleri kaldırıyoruz, bakalım WooCommerce herhangi bir şey dönecek mi?
+    error_log('HK_DEBUG: wc_get_orders args: ' . print_r($args, true));
+
+    try {
+        $results = wc_get_orders($args);
+        $orders  = $results->orders;
+        error_log('HK_DEBUG: wc_get_orders success, found: ' . count($orders));
+    } catch (Exception $e) {
+        error_log('HK_DEBUG: wc_get_orders error: ' . $e->getMessage());
+        return array('orders' => array(), 'error' => $e->getMessage());
     }
-
-    if (!empty($search)) {
-        $args['s'] = $search;
-    }
-
-    $meta_query = array();
-    
-    // Sadece POS siparişleri (Kasa numarası olanlar)
-    $meta_query[] = array(
-        'key'     => '_hizli_kasa_kasa_no',
-        'compare' => 'EXISTS',
-    );
-
-    if ($is_refund) {
-        $meta_query[] = array(
-            'key'     => '_hizli_kasa_is_refund',
-            'value'   => 'yes',
-            'compare' => '=',
-        );
-    } else {
-        // İade olmayanlar: ya meta hiç yok ya da 'yes' değil
-        $meta_query[] = array(
-            'key'     => '_hizli_kasa_is_refund',
-            'value'   => 'yes',
-            'compare' => '!=',
-        );
-    }
-
-    $args['meta_query'] = $meta_query;
-
-    hizli_kasa_log('Hizli Kasa Report Final Args: ' . print_r($args, true));
-
-    $results = wc_get_orders($args);
-    $orders  = $results->orders;
     
     $data = array();
     foreach ($orders as $order) {
