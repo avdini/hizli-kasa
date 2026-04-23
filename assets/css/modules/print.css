@@ -13,6 +13,15 @@
 }
 
 @media print {
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #wpadminbar {
+        display: none !important;
+    }
+
     body * {
         visibility: hidden;
     }
@@ -28,7 +37,7 @@
         top: 0;
         width: 100%;
         margin: 0;
-        padding: 2mm;
+        padding: 1mm 2mm;
     }
 
     /* Gün Sonu Rapor Fişi */
@@ -41,7 +50,7 @@
         top: 0;
         width: 100%;
         margin: 0;
-        padding: 2mm;
+        padding: 1mm 2mm;
     }
 
     /* Sayfa Ayarları JS (PrintHelper) tarafından dinamik yönetilir */
