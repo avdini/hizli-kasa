@@ -143,19 +143,21 @@
             try {
                 var printData = [];
                 
-                // Her bir kalem için detaylı etiket verisini çek
-                for (var req of requests) {
+                // Tüm kalemler için verileri paralel olarak çek
+                var fetchPromises = requests.map(req => {
                     var url = kasaAyar.rootApiUrl + 'hizli-kasa/v1/barcode/label-data?product_id=' + req.product_id + '&variation_id=' + req.variation_id;
-                    var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
-                    var data = await response.json();
-                    
-                    if (data && !data.code) {
-                        printData.push({
-                            label: data,
-                            qty: req.qty
+                    return fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data && !data.code) {
+                                return { label: data, qty: req.qty };
+                            }
+                            return null;
                         });
-                    }
-                }
+                });
+
+                var results = await Promise.all(fetchPromises);
+                printData = results.filter(r => r !== null);
 
                 this.renderPrintOutput(printData);
 
@@ -213,7 +215,7 @@
                 if (HK.PrintHelper) {
                     HK.PrintHelper.setPageStyle(
                         'size: 50mm 35mm; margin: 0;',
-                        '#hk-barcode-print-area { display: block !important; visibility: visible !important; position: fixed !important; top: 0; left: 0; }'
+                        '#hk-barcode-print-area { display: block !important; visibility: visible !important; width: 50mm !important; margin: 0 !important; padding: 0 !important; }'
                     );
                 }
                 window.print();

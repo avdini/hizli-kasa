@@ -13,8 +13,8 @@
 }
 
 @media print {
-    /* WP Admin bar, üst menü ve ana çerçeveyi tamamen gizle */
-    #wpadminbar, #hizli-kasa-ust-menu, #kasa-dis-cerceve, #hk-toast-container, .mobile-toggle {
+    /* WP Admin bar ve ana uygulama kabuğunu tamamen gizle */
+    #wpadminbar, #hizli-kasa-app {
         display: none !important;
     }
 
