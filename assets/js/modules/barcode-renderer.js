@@ -16,13 +16,14 @@
 
         init: function() {
             var self = this;
-            if (this.initialized) return;
+            console.log("BarcodeRenderer init called");
 
             // Modal Kapatma
             var iptalBtn = document.getElementById('barkod-iptal');
             if (iptalBtn) {
                 iptalBtn.onclick = function() {
-                    document.getElementById('barkod-yazdir-modal').style.display = 'none';
+                    var modal = document.getElementById('barkod-yazdir-modal');
+                    if (modal) modal.style.display = 'none';
                 };
             }
 
@@ -41,6 +42,7 @@
          * Tek bir ürün/varyant için modalı açar.
          */
         openSingleModal: function(product) {
+            this.init(); // Listener'ları tazele
             console.log("Opening Single Modal", product);
             this.state.currentProduct = product;
             var container = document.getElementById('barkod-urun-listesi-konteynir');
@@ -73,6 +75,7 @@
          * Parent ürün ve tüm (stoktaki) varyasyonları için modalı açar.
          */
         openBulkModal: function(parentProduct) {
+            this.init(); // Listener'ları tazele
             console.log("Opening Bulk Modal", parentProduct);
             this.state.currentProduct = parentProduct;
             var container = document.getElementById('barkod-urun-listesi-konteynir');
