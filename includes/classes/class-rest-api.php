@@ -1210,61 +1210,96 @@ function hizli_kasa_terminal_products($request) {
         if ($item) $formatted[] = $item;
     }
 
-    // --- İstatistikleri Hesapla ---
-    
-    // 1. Basit ve Değişken Ürün Sayıları (Parent Seviyesinde)
-    $type_stats_query = "
-        SELECT tt_type.slug as p_type, COUNT(DISTINCT p.ID) as cnt
-        FROM {$wpdb->posts} p
-        $join_extra
-        LEFT JOIN {$wpdb->term_relationships} tr_type ON p.ID = tr_type.object_id
-        LEFT JOIN {$wpdb->term_taxonomy} tt_tax ON tr_type.term_taxonomy_id = tt_tax.term_taxonomy_id AND tt_tax.taxonomy = 'product_type'
-        LEFT JOIN {$wpdb->terms} tt_type ON tt_tax.term_id = tt_type.term_id
-        WHERE $where
-        GROUP BY tt_type.slug
-    ";
-    $type_stats = $wpdb->get_results(empty($params) ? $type_stats_query : $wpdb->prepare($type_stats_query, ...$params));
-
+    // --- İstatistikleri Hesapla (Performans için sadece ilk sayfa yüklemesinde) ---
     $simple_count = 0;
     $variable_count = 0;
-    if ($type_stats) {
-        foreach ($type_stats as $ts) {
-            if ($ts->p_type === 'simple') $simple_count = (int)$ts->cnt;
-            if ($ts->p_type === 'variable') $variable_count = (int)$ts->cnt;
+    $grand_total_items = 0;
+    $critical_count = 0;
+
+    if ($offset === 0) {
+        // 1. Basit ve Değişken Ürün Sayıları (Parent Seviyesinde)
+        $type_stats_query = "
+            SELECT tt_type.slug as p_type, COUNT(DISTINCT p.ID) as cnt
+            FROM {$wpdb->posts} p
+            $join_extra
+            LEFT JOIN {$wpdb->term_relationships} tr_type ON p.ID = tr_type.object_id
+            LEFT JOIN {$wpdb->term_taxonomy} tt_tax ON tr_type.term_taxonomy_id = tt_tax.term_taxonomy_id AND tt_tax.taxonomy = 'product_type'
+            LEFT JOIN {$wpdb->terms} tt_type ON tt_tax.term_id = tt_type.term_id
+            WHERE $where
+            GROUP BY tt_type.slug
+        ";
+        $type_stats = $wpdb->get_results(empty($params) ? $type_stats_query : $wpdb->prepare($type_stats_query, ...$params));
+
+        if ($type_stats) {
+            foreach ($type_stats as $ts) {
+                if ($ts->p_type === 'simple') $simple_count = (int)$ts->cnt;
+                if ($ts->p_type === 'variable') $variable_count = (int)$ts->cnt;
+            }
         }
+
+        // 2. Toplam Kalem Sayısı (Basit + Varyasyonların her biri)
+        // Optimizasyon: p.ID = p2.ID OR p.ID = p2.post_parent yerine iki ayrı hızlı sorgu
+        
+        // 2a. Basit Ürünler (Variable olmayanlar)
+        $grand_query_simple = "
+            SELECT COUNT(DISTINCT p.ID)
+            FROM {$wpdb->posts} p
+            $join_extra
+            LEFT JOIN {$wpdb->term_relationships} tr ON (p.ID = tr.object_id)
+            LEFT JOIN {$wpdb->term_taxonomy} tt ON (tr.term_taxonomy_id = tt.term_taxonomy_id AND tt.taxonomy = 'product_type')
+            LEFT JOIN {$wpdb->terms} t ON (tt.term_id = t.term_id AND t.slug = 'variable')
+            WHERE $where 
+            AND p.post_type = 'product'
+            AND t.term_id IS NULL
+        ";
+        $count_simple = (int)$wpdb->get_var(empty($params) ? $grand_query_simple : $wpdb->prepare($grand_query_simple, ...$params));
+
+        // 2b. Varyasyonlar
+        $grand_query_vars = "
+            SELECT COUNT(DISTINCT p2.ID)
+            FROM {$wpdb->posts} p
+            $join_extra
+            INNER JOIN {$wpdb->posts} p2 ON p.ID = p2.post_parent
+            WHERE $where 
+            AND p2.post_status = 'publish' 
+            AND p2.post_type = 'product_variation'
+        ";
+        $count_vars = (int)$wpdb->get_var(empty($params) ? $grand_query_vars : $wpdb->prepare($grand_query_vars, ...$params));
+        
+        $grand_total_items = $count_simple + $count_vars;
+
+        // 3. Kritik Stok Sayısı (Aktif depoda threshold altında olanlar)
+        // Optimizasyon: Yine ikiye bölüyoruz (Ana Ürünler ve Varyasyonlar)
+        
+        // 3a. Ana Ürünler (Basit)
+        $crit_query_simple = "
+            SELECT COUNT(DISTINCT p.ID)
+            FROM {$wpdb->posts} p
+            $join_extra
+            INNER JOIN $stok_table sk_crit ON (sk_crit.product_id = p.ID AND sk_crit.variation_id = 0)
+            WHERE $where 
+            AND sk_crit.location_id = %d 
+            AND sk_crit.quantity > 0 AND sk_crit.quantity <= %d
+        ";
+        $count_crit_simple = (int)$wpdb->get_var($wpdb->prepare($crit_query_simple, array_merge($params, [$depo_id, $threshold])));
+
+        // 3b. Varyasyonlar
+        $crit_query_vars = "
+            SELECT COUNT(DISTINCT p2.ID)
+            FROM {$wpdb->posts} p
+            $join_extra
+            INNER JOIN {$wpdb->posts} p2 ON p.ID = p2.post_parent
+            INNER JOIN $stok_table sk_crit ON (sk_crit.variation_id = p2.ID)
+            WHERE $where 
+            AND p2.post_status = 'publish' 
+            AND p2.post_type = 'product_variation'
+            AND sk_crit.location_id = %d 
+            AND sk_crit.quantity > 0 AND sk_crit.quantity <= %d
+        ";
+        $count_crit_vars = (int)$wpdb->get_var($wpdb->prepare($crit_query_vars, array_merge($params, [$depo_id, $threshold])));
+
+        $critical_count = $count_crit_simple + $count_crit_vars;
     }
-
-    // 2. Toplam Kalem Sayısı (Basit + Varyasyonların her biri)
-    $grand_query = "
-        SELECT COUNT(DISTINCT p2.ID)
-        FROM {$wpdb->posts} p
-        $join_extra
-        INNER JOIN {$wpdb->posts} p2 ON (p.ID = p2.ID OR p.ID = p2.post_parent)
-        LEFT JOIN {$wpdb->term_relationships} tr2 ON (p2.ID = tr2.object_id)
-        LEFT JOIN {$wpdb->term_taxonomy} tt2 ON (tr2.term_taxonomy_id = tt2.term_taxonomy_id AND tt2.taxonomy = 'product_type')
-        LEFT JOIN {$wpdb->terms} t2 ON (tt2.term_id = t2.term_id AND t2.slug = 'variable')
-        WHERE $where 
-        AND p2.post_status = 'publish' 
-        AND p2.post_type IN ('product', 'product_variation')
-        AND t2.term_id IS NULL
-    ";
-    $grand_total_items = $wpdb->get_var(empty($params) ? $grand_query : $wpdb->prepare($grand_query, ...$params));
-
-    // 3. Kritik Stok Sayısı (Aktif depoda threshold altında olanlar)
-    $critical_count = $wpdb->get_var($wpdb->prepare("
-        SELECT COUNT(DISTINCT p2.ID)
-        FROM {$wpdb->posts} p
-        $join_extra
-        INNER JOIN {$wpdb->posts} p2 ON (p.ID = p2.ID OR p.ID = p2.post_parent)
-        INNER JOIN $stok_table sk_crit ON (
-            (p2.post_type = 'product' AND sk_crit.product_id = p2.ID AND sk_crit.variation_id = 0) OR
-            (p2.post_type = 'product_variation' AND sk_crit.variation_id = p2.ID)
-        )
-        WHERE $where 
-        AND p2.post_status = 'publish' 
-        AND sk_crit.location_id = %d 
-        AND sk_crit.quantity > 0 AND sk_crit.quantity <= %d
-    ", array_merge($params, [$depo_id, $threshold])));
 
     return [
         'products'          => $formatted,
