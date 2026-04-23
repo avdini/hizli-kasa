@@ -44,10 +44,12 @@
 
         loadLogs: async function() {
             var tbody = document.getElementById("edit-logs-body");
-            var dateStart = document.getElementById("rapor-tarih-bas").value;
-            var dateEnd = document.getElementById("rapor-tarih-bit").value;
-
             if (!tbody) return;
+
+            var elStart = document.getElementById("rapor-tarih-bas");
+            var elEnd = document.getElementById("rapor-tarih-bit");
+            var dateStart = elStart ? elStart.value : "";
+            var dateEnd = elEnd ? elEnd.value : "";
 
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px;">Veriler yükleniyor...</td></tr>';
 
