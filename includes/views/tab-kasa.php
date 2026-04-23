@@ -28,9 +28,17 @@ if (!defined('ABSPATH'))
             </div>
             
             <div class="kasa-sabit-butonlar">
-                <div id="siparis-duzenle-buton" class="sidebar-btn siparis-duzenle"><span>✏️</span> Sipariş Düzenle</div>
-                <div id="gun-sonu-buton" class="sidebar-btn gun-sonu"><span>📋</span> Kasa Gün Sonu</div>
-                <div id="genel-rapor-buton" class="sidebar-btn genel-rapor"><span>📊</span> Genel Rapor</div>
+                <?php if (get_option('hizli_kasa_siparis_duzenle_aktif', '1') === '1'): ?>
+                    <div id="siparis-duzenle-buton" class="sidebar-btn siparis-duzenle"><span>✏️</span> Sipariş Düzenle</div>
+                <?php endif; ?>
+                
+                <?php if (get_option('hizli_kasa_gun_sonu_aktif', '1') === '1'): ?>
+                    <div id="gun-sonu-buton" class="sidebar-btn gun-sonu"><span>📋</span> Kasa Gün Sonu</div>
+                <?php endif; ?>
+                
+                <?php if (get_option('hizli_kasa_genel_rapor_aktif', '1') === '1'): ?>
+                    <div id="genel-rapor-buton" class="sidebar-btn genel-rapor"><span>📊</span> Genel Rapor</div>
+                <?php endif; ?>
             </div>
         </div>
 

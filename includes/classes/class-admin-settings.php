@@ -92,6 +92,15 @@ function hizli_kasa_ayarlari_kaydet()
         'default' => 5,
         'sanitize_callback' => 'intval'
     ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_siparis_duzenle_aktif', array(
+        'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
+    ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_gun_sonu_aktif', array(
+        'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
+    ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_genel_rapor_aktif', array(
+        'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
+    ));
 }
 
 /**
@@ -956,6 +965,37 @@ function hizli_kasa_ayarlar_sayfasi()
                                 <?php $edit_limit = get_option('hizli_kasa_edit_order_limit', 5); ?>
                                 <input type="number" name="hizli_kasa_edit_order_limit" value="<?php echo esc_attr($edit_limit); ?>" min="1" max="50" step="1" class="small-text"> Adet
                                 <p class="description">Kasiyerin kasa sayfasından düzenleyebileceği (aynı gün içindeki) son sipariş sayısı.</p>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">Sipariş Düzenleme</th>
+                            <td>
+                                <?php $edit_aktif = get_option('hizli_kasa_siparis_duzenle_aktif', '1'); ?>
+                                <label>
+                                    <input type="checkbox" name="hizli_kasa_siparis_duzenle_aktif" value="1" <?php checked($edit_aktif, '1'); ?>>
+                                    Terminalde "Sipariş Düzenle" butonunu göster
+                                </label>
+                                <p class="description">Kasiyerlerin geçmiş siparişleri (aynı gün içindeki) düzenlemesine izin verin.</p>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">Gün Sonu Raporu</th>
+                            <td>
+                                <?php $gs_aktif = get_option('hizli_kasa_gun_sonu_aktif', '1'); ?>
+                                <label>
+                                    <input type="checkbox" name="hizli_kasa_gun_sonu_aktif" value="1" <?php checked($gs_aktif, '1'); ?>>
+                                    Terminalde "Kasa Gün Sonu" butonunu göster
+                                </label>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">Genel Rapor</th>
+                            <td>
+                                <?php $gr_aktif = get_option('hizli_kasa_genel_rapor_aktif', '1'); ?>
+                                <label>
+                                    <input type="checkbox" name="hizli_kasa_genel_rapor_aktif" value="1" <?php checked($gr_aktif, '1'); ?>>
+                                    Terminalde "Genel Rapor" butonunu göster
+                                </label>
                             </td>
                         </tr>
                         <tr valign="top">
