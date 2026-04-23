@@ -1867,34 +1867,67 @@ function hizli_kasa_get_reports_refunds($request) {
  * Rapor verilerini çeken ortak fonksiyon.
  */
 function hizli_kasa_get_reports_data($request, $is_refund = false) {
-    error_log("HK_DEBUG: API Hit for reports");
-
     $paged    = $request->get_param('page') ? intval($request->get_param('page')) : 1;
     $per_page = $request->get_param('per_page') ? intval($request->get_param('per_page')) : 20;
     if ($per_page < 1) $per_page = 20;
+
+    $date_start = $request->get_param('date_start');
+    $date_end   = $request->get_param('date_end');
+    $search     = $request->get_param('search');
 
     $args = array(
         'limit'    => $per_page,
         'offset'   => ($paged - 1) * $per_page,
         'paginate' => true,
-        'status'   => 'any',
+        'status'   => array('processing', 'completed', 'on-hold'),
+        'orderby'  => 'date',
+        'order'    => 'DESC',
     );
 
-    // Tüm filtreleri kaldırıyoruz, bakalım WooCommerce herhangi bir şey dönecek mi?
-    error_log('HK_DEBUG: wc_get_orders args: ' . print_r($args, true));
+    // Tarih Filtresi
+    if ($date_start && $date_end) {
+        $args['date_created'] = $date_start . '...' . $date_end;
+    }
+
+    $meta_query = array();
+    
+    // Sadece POS Siparişlerini Getir
+    $meta_query[] = array(
+        'key'     => '_hizli_kasa_kasa_no',
+        'compare' => 'EXISTS',
+    );
+
+    // İade / Satış Ayrımı
+    if ($is_refund) {
+        $meta_query[] = array(
+            'key'     => '_hizli_kasa_is_refund',
+            'value'   => 'yes',
+            'compare' => '=',
+        );
+    } else {
+        $meta_query[] = array(
+            'key'     => '_hizli_kasa_is_refund',
+            'compare' => 'NOT EXISTS',
+        );
+    }
+
+    if (!empty($meta_query)) {
+        $args['meta_query'] = $meta_query;
+    }
+
+    // Arama
+    if ($search) {
+        $args['s'] = $search;
+    }
 
     try {
         $results = wc_get_orders($args);
         
-        // Eğer paginate true ise $results bir nesne döner, değilse direkt dizi döner
         $orders = is_object($results) && isset($results->orders) ? $results->orders : (is_array($results) ? $results : array());
         $total_count = is_object($results) && isset($results->total) ? $results->total : count($orders);
         $max_pages = is_object($results) && isset($results->max_num_pages) ? $results->max_num_pages : 1;
-
-        error_log('HK_DEBUG: wc_get_orders success, found: ' . count($orders));
     } catch (Throwable $e) {
-        error_log('HK_DEBUG: wc_get_orders fatal error: ' . $e->getMessage());
-        return array('orders' => array(), 'error' => $e->getMessage());
+        return array('orders' => array(), 'error' => $e->getMessage(), 'total' => 0);
     }
     
     $data = array();
@@ -1918,7 +1951,7 @@ function hizli_kasa_get_reports_data($request, $is_refund = false) {
         // Ürünleri topla
         foreach ($order->get_items() as $item) {
             $product_meta = array();
-            $all_item_meta = $item->get_all_meta_data();
+            $all_item_meta = $item->get_meta_data(); // FIX: get_all_meta_data -> get_meta_data
             foreach ($all_item_meta as $m) {
                 if (strpos($m->key, '_hk_') === 0 || strpos($m->key, '_hizli_kasa') === 0) {
                     $product_meta[$m->key] = $m->value;
