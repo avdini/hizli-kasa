@@ -11,36 +11,14 @@
 
     <!-- Alt Sekme Navigasyonu -->
     <div class="rapor-alt-sekmeler" style="display:flex; gap:10px; margin-bottom:20px;">
-        <button class="rapor-alt-btn aktif" data-target="rapor-siparis-duzenleme">✏️ Sipariş Düzenlemeleri</button>
-        <button class="rapor-alt-btn" data-target="rapor-tum-siparisler">🛍️ Tüm Siparişler</button>
+        <button class="rapor-alt-btn aktif" data-target="rapor-tum-siparisler">🛍️ Tüm Siparişler</button>
         <button class="rapor-alt-btn" data-target="rapor-iade-listesi">🔙 İadeler</button>
-        <button class="rapor-alt-btn" data-target="rapor-ozet-istatistik">📈 Özet İstatistikler (Yakında)</button>
+        <button class="rapor-alt-btn" data-target="rapor-siparis-duzenleme">✏️ Sipariş Düzenlemeleri</button>
+        <button class="rapor-alt-btn" data-target="rapor-ozet-istatistik">📈 Özel İstatistikler (Yakında)</button>
     </div>
 
     <!-- Rapor İçerik Alanları -->
-    <div id="rapor-siparis-duzenleme" class="rapor-icerik-paneli aktif">
-        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            <h3 style="margin-top:0; color:var(--hk-accent);">Sipariş Müdahaleleri ve Denetim Kayıtları</h3>
-            <p style="color:var(--hk-text-muted); font-size:14px; margin-bottom:20px;">Kasiyerler tarafından yapılan miktar azaltma, ürün silme ve ödeme yöntemi değişiklikleri burada listelenir.</p>
-            
-            <table class="gs-tablo" id="edit-logs-table">
-                <thead>
-                    <tr>
-                        <th>Tarih/Saat</th>
-                        <th>Kasiyer</th>
-                        <th>Sipariş</th>
-                        <th>Kasa</th>
-                        <th>Yapılan Değişiklikler</th>
-                    </tr>
-                </thead>
-                <tbody id="edit-logs-body">
-                    <tr><td colspan="5" style="text-align:center; padding:40px;">Veriler yükleniyor...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div id="rapor-tum-siparisler" class="rapor-icerik-paneli">
+    <div id="rapor-tum-siparisler" class="rapor-icerik-paneli aktif">
         <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
                 <h3 style="margin:0; color:var(--hk-accent);">Tüm Kasa Siparişleri</h3>
@@ -89,6 +67,28 @@
                 </tbody>
             </table>
             <div id="refund-list-pagination" class="hk-pagination"></div>
+        </div>
+    </div>
+
+    <div id="rapor-siparis-duzenleme" class="rapor-icerik-paneli">
+        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <h3 style="margin-top:0; color:var(--hk-accent);">Sipariş Müdahaleleri ve Denetim Kayıtları</h3>
+            <p style="color:var(--hk-text-muted); font-size:14px; margin-bottom:20px;">Kasiyerler tarafından yapılan miktar azaltma, ürün silme ve ödeme yöntemi değişiklikleri burada listelenir.</p>
+            
+            <table class="gs-tablo" id="edit-logs-table">
+                <thead>
+                    <tr>
+                        <th>Tarih/Saat</th>
+                        <th>Kasiyer</th>
+                        <th>Sipariş</th>
+                        <th>Kasa</th>
+                        <th>Yapılan Değişiklikler</th>
+                    </tr>
+                </thead>
+                <tbody id="edit-logs-body">
+                    <tr><td colspan="5" style="text-align:center; padding:40px;">Veriler yükleniyor...</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
 

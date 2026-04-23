@@ -20,6 +20,7 @@
                 console.log("HK.DetailedReports: hkTabLoaded event received", e.detail.tab);
                 if (e.detail.tab === 'raporlar') {
                     self.bindEvents();
+                    self.loadOrders(1); // Varsayılan olarak siparişleri yükle
                 }
             });
 
@@ -27,6 +28,7 @@
             if (document.querySelector('.rapor-alt-sekmeler')) {
                 console.log("HK.DetailedReports: Tab buttons found in DOM, binding events immediately");
                 self.bindEvents();
+                self.loadOrders(1);
             }
         },
 
