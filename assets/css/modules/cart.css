@@ -7,6 +7,7 @@
     list-style-type: none; 
     background: var(--hk-bg-card); 
     overflow-y: auto; 
+    overflow-x: hidden;
     padding: 0;
     margin: 0;
 }
@@ -17,10 +18,12 @@
     padding: 10px 12px !important;
     display: flex !important;
     flex-direction: row !important;
-    justify-content: flex-start !important;
+    justify-content: space-between !important;
     align-items: center !important;
     flex-wrap: nowrap !important;
-    gap: 10px !important;
+    gap: 15px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
 }
 
 #sepet-listesi li:hover {
@@ -28,7 +31,7 @@
 }
 
 #sepet-listesi .urun-sol-kolon {
-    flex: 0 0 30% !important;
+    flex: 0 0 25% !important;
     display: flex !important;
     align-items: center !important;
     overflow: hidden !important;
@@ -60,7 +63,7 @@
 }
 
 #sepet-listesi .urun-orta-detay {
-    flex: 0 0 40% !important;
+    flex: 1 !important; /* Kalan boşluğu kullan */
     text-align: left !important;
     padding: 0 10px !important;
     overflow: hidden !important;
@@ -75,20 +78,19 @@
 }
 
 #sepet-listesi .urun-sag-aksiyonlar {
-    flex: 0 0 30% !important;
+    flex: 0 0 180px !important; /* Buton ve fiyat için sabit alan */
     display: flex !important;
     align-items: center !important;
-    justify-content: flex-end !important;
-    gap: 10px !important;
-    margin-left: auto !important;
+    justify-content: flex-start !important;
+    gap: 15px !important;
     flex-shrink: 0 !important;
 }
 
 #sepet-listesi .urun-fiyat-grup {
+    flex: 1 !important;
     text-align: right !important;
     white-space: nowrap !important;
-    padding: 0 10px !important;
-    flex-shrink: 0 !important;
+    overflow: hidden !important;
 }
 
 #sepet-listesi .ara-toplam {
