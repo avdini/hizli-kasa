@@ -668,6 +668,274 @@ function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent
 }
 
 /**
+ * Arama metnini kelimelere ayırır.
+ */
+function hizli_kasa_prepare_search_terms($search)
+{
+    $search = trim((string) $search);
+    if ($search === '') {
+        return [];
+    }
+
+    $parts = preg_split('/\s+/u', $search);
+    $terms = [];
+
+    foreach ($parts as $part) {
+        $part = trim($part);
+        if ($part === '') {
+            continue;
+        }
+
+        if (function_exists('mb_strlen')) {
+            if (mb_strlen($part) < 2) {
+                continue;
+            }
+        } elseif (strlen($part) < 2) {
+            continue;
+        }
+
+        $terms[] = $part;
+    }
+
+    return array_values(array_unique($terms));
+}
+
+/**
+ * AWS sonuçlarını parent ürün ID listesine çözümler.
+ */
+function hizli_kasa_get_aws_ranked_product_ids($search, $depo_id = 0)
+{
+    global $wpdb;
+
+    if (!class_exists('AWS_Search')) {
+        return [];
+    }
+
+    try {
+        $aws_search = new AWS_Search();
+        $aws_results = $aws_search->search($search);
+    } catch (Throwable $e) {
+        return [];
+    }
+
+    if (empty($aws_results['products']) || !is_array($aws_results['products'])) {
+        return [];
+    }
+
+    $raw_ids = [];
+    foreach ($aws_results['products'] as $item) {
+        $candidate_id = isset($item['id']) ? (int) $item['id'] : 0;
+        if ($candidate_id > 0) {
+            $raw_ids[] = $candidate_id;
+        }
+    }
+
+    if (empty($raw_ids)) {
+        return [];
+    }
+
+    $resolved_rows = $wpdb->get_results(
+        "SELECT ID, post_parent, post_type FROM {$wpdb->posts} WHERE ID IN (" . implode(',', array_map('intval', $raw_ids)) . ")"
+    );
+
+    if (empty($resolved_rows)) {
+        return [];
+    }
+
+    $resolved_map = [];
+    foreach ($resolved_rows as $row) {
+        $resolved_map[(int) $row->ID] = $row;
+    }
+
+    $ranked_ids = [];
+    foreach ($raw_ids as $raw_id) {
+        if (empty($resolved_map[$raw_id])) {
+            continue;
+        }
+
+        $row = $resolved_map[$raw_id];
+        $parent_id = ($row->post_type === 'product_variation') ? (int) $row->post_parent : (int) $row->ID;
+
+        if ($parent_id > 0 && !in_array($parent_id, $ranked_ids, true)) {
+            $ranked_ids[] = $parent_id;
+        }
+    }
+
+    if (empty($ranked_ids) || !$depo_id) {
+        return $ranked_ids;
+    }
+
+    $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+    $allowed_ids = $wpdb->get_col(
+        $wpdb->prepare(
+            "SELECT DISTINCT product_id FROM $stok_table WHERE location_id = %d AND product_id IN (" . implode(',', array_map('intval', $ranked_ids)) . ")",
+            $depo_id
+        )
+    );
+
+    if (empty($allowed_ids)) {
+        return [];
+    }
+
+    $allowed_map = array_fill_keys(array_map('intval', $allowed_ids), true);
+    return array_values(array_filter($ranked_ids, function ($id) use ($allowed_map) {
+        return isset($allowed_map[(int) $id]);
+    }));
+}
+
+/**
+ * Shadow stock tarafında depo uyumlu yerel ürün araması yapar.
+ */
+function hizli_kasa_get_local_ranked_product_ids($search, $depo_id = 0, $limit = 250)
+{
+    global $wpdb;
+
+    $search = trim((string) $search);
+    if ($search === '') {
+        return [];
+    }
+
+    $terms = hizli_kasa_prepare_search_terms($search);
+    $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+
+    $join_stock = '';
+    $stock_params = [];
+    if ($depo_id > 0) {
+        $join_stock = " INNER JOIN $stok_table sk_search ON (sk_search.product_id = p.ID AND sk_search.location_id = %d)";
+        $stock_params[] = $depo_id;
+    }
+
+    $or_parts = [];
+    $score_parts = [];
+    $params = $stock_params;
+    $exact_search = $search;
+    $prefix_like = $wpdb->esc_like($search) . '%';
+    $contains_like = '%' . $wpdb->esc_like($search) . '%';
+
+    $or_parts[] = "parent_sku.meta_value = %s";
+    $params[] = $exact_search;
+    $score_parts[] = "MAX(CASE WHEN parent_sku.meta_value = %s THEN 1000 ELSE 0 END)";
+    $params[] = $exact_search;
+
+    $or_parts[] = "var_sku.meta_value = %s";
+    $params[] = $exact_search;
+    $score_parts[] = "MAX(CASE WHEN var_sku.meta_value = %s THEN 950 ELSE 0 END)";
+    $params[] = $exact_search;
+
+    $or_parts[] = "p.post_title LIKE %s";
+    $params[] = $prefix_like;
+    $score_parts[] = "MAX(CASE WHEN p.post_title LIKE %s THEN 700 ELSE 0 END)";
+    $params[] = $prefix_like;
+
+    $or_parts[] = "v.post_title LIKE %s";
+    $params[] = $prefix_like;
+    $score_parts[] = "MAX(CASE WHEN v.post_title LIKE %s THEN 650 ELSE 0 END)";
+    $params[] = $prefix_like;
+
+    $or_parts[] = "p.post_title LIKE %s";
+    $params[] = $contains_like;
+    $score_parts[] = "MAX(CASE WHEN p.post_title LIKE %s THEN 400 ELSE 0 END)";
+    $params[] = $contains_like;
+
+    $or_parts[] = "var_sku.meta_value LIKE %s";
+    $params[] = $contains_like;
+    $score_parts[] = "MAX(CASE WHEN var_sku.meta_value LIKE %s THEN 375 ELSE 0 END)";
+    $params[] = $contains_like;
+
+    $or_parts[] = "parent_sku.meta_value LIKE %s";
+    $params[] = $contains_like;
+    $score_parts[] = "MAX(CASE WHEN parent_sku.meta_value LIKE %s THEN 350 ELSE 0 END)";
+    $params[] = $contains_like;
+
+    $or_parts[] = "v.post_title LIKE %s";
+    $params[] = $contains_like;
+    $score_parts[] = "MAX(CASE WHEN v.post_title LIKE %s THEN 325 ELSE 0 END)";
+    $params[] = $contains_like;
+
+    foreach ($terms as $term) {
+        $like = '%' . $wpdb->esc_like($term) . '%';
+        $or_parts[] = "p.post_title LIKE %s";
+        $params[] = $like;
+        $score_parts[] = "MAX(CASE WHEN p.post_title LIKE %s THEN 80 ELSE 0 END)";
+        $params[] = $like;
+
+        $or_parts[] = "parent_sku.meta_value LIKE %s";
+        $params[] = $like;
+        $score_parts[] = "MAX(CASE WHEN parent_sku.meta_value LIKE %s THEN 75 ELSE 0 END)";
+        $params[] = $like;
+
+        $or_parts[] = "v.post_title LIKE %s";
+        $params[] = $like;
+        $score_parts[] = "MAX(CASE WHEN v.post_title LIKE %s THEN 70 ELSE 0 END)";
+        $params[] = $like;
+
+        $or_parts[] = "var_sku.meta_value LIKE %s";
+        $params[] = $like;
+        $score_parts[] = "MAX(CASE WHEN var_sku.meta_value LIKE %s THEN 65 ELSE 0 END)";
+        $params[] = $like;
+    }
+
+    if (empty($or_parts)) {
+        return [];
+    }
+
+    $where_or = implode(' OR ', $or_parts);
+    $score_sql = implode(' + ', $score_parts);
+
+    $sql = "
+        SELECT p.ID, ($score_sql) AS relevance_score
+        FROM {$wpdb->posts} p
+        $join_stock
+        LEFT JOIN {$wpdb->postmeta} parent_sku ON (parent_sku.post_id = p.ID AND parent_sku.meta_key = '_sku')
+        LEFT JOIN {$wpdb->posts} v ON (v.post_parent = p.ID AND v.post_type = 'product_variation' AND v.post_status = 'publish')
+        LEFT JOIN {$wpdb->postmeta} var_sku ON (var_sku.post_id = v.ID AND var_sku.meta_key = '_sku')
+        WHERE p.post_status = 'publish'
+          AND p.post_type = 'product'
+          AND ($where_or)
+        GROUP BY p.ID
+        ORDER BY relevance_score DESC, p.post_title ASC
+        LIMIT %d
+    ";
+
+    $params[] = (int) $limit;
+    $rows = $wpdb->get_results($wpdb->prepare($sql, ...$params));
+
+    if (empty($rows)) {
+        return [];
+    }
+
+    return array_map(function ($row) {
+        return (int) $row->ID;
+    }, $rows);
+}
+
+/**
+ * Terminal ürün araması için AWS ve yerel shadow-stock sonuçlarını birleştirir.
+ */
+function hizli_kasa_get_terminal_search_product_ids($search, $depo_id = 0)
+{
+    $search = trim((string) $search);
+    if ($search === '') {
+        return [];
+    }
+
+    $aws_ids = hizli_kasa_get_aws_ranked_product_ids($search, $depo_id);
+    $local_ids = hizli_kasa_get_local_ranked_product_ids($search, $depo_id);
+
+    $merged = [];
+    foreach ([$aws_ids, $local_ids] as $id_list) {
+        foreach ($id_list as $id) {
+            $id = (int) $id;
+            if ($id > 0 && !in_array($id, $merged, true)) {
+                $merged[] = $id;
+            }
+        }
+    }
+
+    return $merged;
+}
+
+/**
  * Terminal üzerinden stok güncelleme.
  */
 function hizli_kasa_terminal_update_stock($request)
@@ -1132,57 +1400,18 @@ function hizli_kasa_terminal_products($request)
     }
 
     $params = [];
-    $aws_ids = [];
+    $search_ids = [];
     $order_by = "p.post_title ASC";
 
     if (!empty($s)) {
-        // 1. Advanced Woo Search Entegrasyonu
-        if (class_exists('AWS_Search')) {
-            $aws_search = new AWS_Search();
-            $aws_results = $aws_search->search($s);
+        $search_ids = hizli_kasa_get_terminal_search_product_ids($s, $depo_id);
 
-            if (!empty($aws_results['products'])) {
-                $raw_ids = [];
-                foreach ($aws_results['products'] as $p_item) {
-                    $raw_ids[] = (int) $p_item['id'];
-                }
-
-                // Varyasyonları Ana Ürünlere Çözümle (Sıralama Paritesi İçin)
-                if (!empty($raw_ids)) {
-                    $ids_str = implode(',', $raw_ids);
-                    $resolved_rows = $wpdb->get_results("SELECT ID, post_parent, post_type FROM {$wpdb->posts} WHERE ID IN ($ids_str)");
-
-                    // AWS sırasına göre parent ID'leri topla
-                    $resolved_map = [];
-                    foreach ($resolved_rows as $row) {
-                        $resolved_map[$row->ID] = $row;
-                    }
-
-                    foreach ($raw_ids as $rid) {
-                        if (!isset($resolved_map[$rid]))
-                            continue;
-                        $r = $resolved_map[$rid];
-                        $target_id = ($r->post_type === 'product_variation') ? (int) $r->post_parent : (int) $r->ID;
-                        if ($target_id > 0 && !in_array($target_id, $aws_ids)) {
-                            $aws_ids[] = $target_id;
-                        }
-                    }
-                }
-            }
-
-            if (!empty($aws_ids)) {
-                $ids_ph = implode(',', array_map('intval', $aws_ids));
-                $where .= " AND p.ID IN ($ids_ph)";
-                $order_by = "FIELD(p.ID, $ids_ph)";
-            } else {
-                $where .= " AND p.ID = 0";
-            }
+        if (!empty($search_ids)) {
+            $ids_ph = implode(',', array_map('intval', $search_ids));
+            $where .= " AND p.ID IN ($ids_ph)";
+            $order_by = "FIELD(p.ID, $ids_ph)";
         } else {
-            // 2. Fallback Arama
-            $like = '%' . $wpdb->esc_like($s) . '%';
-            $where .= " AND (p.post_title LIKE %s OR p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s))";
-            $params[] = $like;
-            $params[] = $like;
+            $where .= " AND p.ID = 0";
         }
     }
 
@@ -1217,7 +1446,7 @@ function hizli_kasa_terminal_products($request)
         LEFT JOIN {$wpdb->terms} tt_type ON tt_tax.term_id = tt_type.term_id
         WHERE p.ID IN ($placeholders)
         GROUP BY p.ID
-        ORDER BY p.post_title ASC
+        ORDER BY FIELD(p.ID, " . implode(',', array_map('intval', $target_ids)) . ")
     ", array_merge([$depo_id], $target_ids));
 
     $results = $wpdb->get_results($sql);
@@ -1238,6 +1467,28 @@ function hizli_kasa_terminal_products($request)
         ", array_merge([$depo_id], $parent_ids)));
         foreach ($v_results as $v) {
             $variations_by_parent[$v->post_parent][] = $v;
+        }
+
+        if (!empty($search_ids)) {
+            $needle = function_exists('mb_strtolower') ? mb_strtolower($s) : strtolower($s);
+            foreach ($variations_by_parent as $parent_id => &$variation_rows) {
+                usort($variation_rows, function ($a, $b) use ($needle) {
+                    $a_name = function_exists('mb_strtolower') ? mb_strtolower((string) $a->post_title) : strtolower((string) $a->post_title);
+                    $b_name = function_exists('mb_strtolower') ? mb_strtolower((string) $b->post_title) : strtolower((string) $b->post_title);
+                    $a_sku = function_exists('mb_strtolower') ? mb_strtolower((string) $a->sku) : strtolower((string) $a->sku);
+                    $b_sku = function_exists('mb_strtolower') ? mb_strtolower((string) $b->sku) : strtolower((string) $b->sku);
+
+                    $a_score = ((strpos($a_sku, $needle) !== false) ? 20 : 0) + ((strpos($a_name, $needle) !== false) ? 10 : 0);
+                    $b_score = ((strpos($b_sku, $needle) !== false) ? 20 : 0) + ((strpos($b_name, $needle) !== false) ? 10 : 0);
+
+                    if ($a_score === $b_score) {
+                        return strnatcasecmp((string) $a->post_title, (string) $b->post_title);
+                    }
+
+                    return $b_score <=> $a_score;
+                });
+            }
+            unset($variation_rows);
         }
     }
 

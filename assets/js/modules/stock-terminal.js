@@ -15,6 +15,8 @@
             products: [],
             selectedProduct: null,
             searchTimer: null,
+            requestController: null,
+            lastRequestToken: 0,
             currentPage: 1,
             perPage: 24,
             isLoading: false,
@@ -84,7 +86,7 @@
             // Arama dinleyicisi
             input.addEventListener('input', function() {
                 clearTimeout(self.state.searchTimer);
-                self.state.searchTimer = setTimeout(() => {
+                self.state.searchTimer = setTimeout(function() {
                     self.state.currentPage = 1;
                     self.loadProducts();
                 }, 300);
@@ -93,6 +95,7 @@
             // Barkod okuyucu desteği (Enter tuşu)
             input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
+                    clearTimeout(self.state.searchTimer);
                     self.state.currentPage = 1;
                     self.loadProducts();
                 }
@@ -196,8 +199,6 @@
          * Ürünleri API'den yükler.
          */
         loadProducts: async function() {
-            if (this.state.isLoading) return;
-
             var container = document.getElementById('terminal-urun-listesi');
             if (!container) return;
 
@@ -211,7 +212,16 @@
             }
 
             var input = document.getElementById('terminal-arama-input');
-            var s = input ? input.value : '';
+            var rawSearch = input ? input.value : '';
+            var s = rawSearch ? rawSearch.trim() : '';
+
+            if (this.state.requestController) {
+                this.state.requestController.abort();
+            }
+
+            var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+            var requestToken = ++this.state.lastRequestToken;
+            this.state.requestController = controller;
 
             // Liste başa sarılıyor (her sayfa değişiminde liste temizlenir)
             this.state.products = [];
@@ -223,11 +233,19 @@
                 var offset = (this.state.currentPage - 1) * this.state.perPage;
                 var url = kasaAyar.rootApiUrl + 'hizli-kasa/v1/terminal/products?limit=' + this.state.perPage + '&offset=' + offset + '&depo_id=' + depoId;
                 if (s) url += '&s=' + encodeURIComponent(s);
+                var fetchOptions = { headers: { 'X-WP-Nonce': kasaAyar.nonce } };
+                if (controller) {
+                    fetchOptions.signal = controller.signal;
+                }
 
-                var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
+                var response = await fetch(url, fetchOptions);
                 if (!response.ok) throw new Error("Sunucu hatası: " + response.status);
                 
                 var data = await response.json();
+                if (requestToken !== this.state.lastRequestToken) {
+                    return;
+                }
+
                 this.state.products = data.products || [];
                 this.state.total = data.total || 0;
 
@@ -251,10 +269,16 @@
 
                 this.renderProducts();
             } catch (e) {
+                if (e && e.name === 'AbortError') {
+                    return;
+                }
                 console.error("Hızlı Kasa: Yükleme hatası", e);
                 container.innerHTML = '<div class="terminal-uyari"><p>Ürünler yüklenirken bir hata oluştu.</p></div>';
             } finally {
-                this.state.isLoading = false;
+                if (requestToken === this.state.lastRequestToken) {
+                    this.state.isLoading = false;
+                    this.state.requestController = null;
+                }
             }
         },
 
