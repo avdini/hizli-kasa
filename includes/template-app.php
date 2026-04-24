@@ -91,6 +91,15 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
         <span>Sayfa Yükleniyor...</span>
     </div>
 
+    <!-- Sipariş Oluşturuluyor Overlay -->
+    <div id="order-loading-overlay">
+        <div class="order-loading-content">
+            <div class="order-loader"></div>
+            <div class="order-loading-text">Sipariş Oluşturuluyor</div>
+            <div class="order-loading-subtext">Lütfen bekleyin, WooCommerce ile senkronize ediliyor...</div>
+        </div>
+    </div>
+
     <!-- Toast Bildirim Konteyneri (Global overlay) -->
     <div id="hk-toast-container"></div>
 </div>

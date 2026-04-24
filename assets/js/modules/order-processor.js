@@ -10,6 +10,14 @@
     'use strict';
 
     HK.OrderProcessor = {
+        
+        /**
+         * Yükleme ekranını göster/gizle
+         */
+        toggleLoading: function(show) {
+            var overlay = document.getElementById("order-loading-overlay");
+            if (overlay) overlay.style.display = show ? "flex" : "none";
+        },
 
         /**
          * Sipariş onay butonunu bağla
@@ -21,9 +29,12 @@
                 var state = HK.State;
                 if (state.sepet.length === 0) return;
 
+                self.toggleLoading(true);
+
                 var sorunlar = await self.sonStokKontrolu();
 
                 if (sorunlar.length > 0) {
+                    self.toggleLoading(false);
                     self._stokUyarisiGoster(sorunlar);
                 } else {
                     self.siparisIsleminiGerceklestir();
@@ -133,7 +144,12 @@
             // Sipariş öncesi sekmeler arası çakışmayı önle
             HK.CartManager.sepetiYukle(state.aktifKasaId);
 
-            if (state.sepet.length === 0) return;
+            if (state.sepet.length === 0) {
+                this.toggleLoading(false);
+                return;
+            }
+            
+            this.toggleLoading(true);
             durumMetni.innerText = "İşlem onaylanıyor...";
 
             // Eğer ödeme bölünmüşse OTOMATİK %5 indirimleri IPTAL et
@@ -238,6 +254,8 @@
                     body: JSON.stringify(siparisVerisi)
                 });
                 var orderResult = await response.json();
+                
+                this.toggleLoading(false);
 
                 if (response.ok) {
                     if (HK.ReceiptPrinter) {
@@ -252,6 +270,7 @@
                     durumMetni.style.color = "red";
                 }
             } catch (error) {
+                this.toggleLoading(false);
                 console.error("Sipariş hatası", error);
             }
         },

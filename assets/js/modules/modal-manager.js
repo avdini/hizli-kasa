@@ -338,9 +338,13 @@
                 }
 
                 var splitData = { nakit: nakit, kart: kart, iban: iban };
+                
+                HK.OrderProcessor.toggleLoading(true);
+
                 var sorunlar = await HK.OrderProcessor.sonStokKontrolu();
 
                 if (sorunlar.length > 0) {
+                    HK.OrderProcessor.toggleLoading(false);
                     HK.OrderProcessor._stokUyarisiGoster(sorunlar);
                     els.bolModal.style.display = "none";
                 } else {
