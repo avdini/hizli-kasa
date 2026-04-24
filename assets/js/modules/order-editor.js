@@ -116,7 +116,7 @@
             document.getElementById("order-edit-detail-view").style.display = "block";
             
             document.getElementById("edit-order-payment").value = order.payment_method;
-            document.getElementById("edit-order-discount").value = parseFloat(order.discount || 0).toFixed(2);
+            document.getElementById("edit-order-discount").value = HK.CurrencyMask.format(parseFloat(order.discount || 0));
             this.renderItems();
         },
 
@@ -179,7 +179,7 @@
         saveChanges: async function() {
             var self = this;
             var paymentMethod = document.getElementById("edit-order-payment").value;
-            var discount = parseFloat(document.getElementById("edit-order-discount").value || 0);
+            var discount = HK.CurrencyMask.parse(document.getElementById("edit-order-discount").value || "0");
             var changes = [];
 
             for (var itemId in this.editedItems) {

@@ -135,7 +135,7 @@
                 category = ozelKatInput.value || 'Diğer';
             }
 
-            const amount = parseFloat(tutarInput.value);
+            const amount = HK.CurrencyMask.parse(tutarInput.value);
             if (!category || isNaN(amount) || amount <= 0) {
                 alert('Lütfen kategori ve geçerli bir tutar girin.');
                 return;

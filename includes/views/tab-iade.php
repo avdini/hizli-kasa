@@ -91,7 +91,7 @@ if (!defined('ABSPATH')) exit;
             <div id="iade-iskonto-konteyner" style="display:none;">
                 <div class="iskonto-girdi-satiri">
                     <span>Düşülecek İskonto (TL):</span>
-                    <input type="number" id="iade-iskonto-input" min="0" step="0.01" value="0">
+                    <input type="text" id="iade-iskonto-input" class="hk-currency-mask" placeholder="0,00" inputmode="decimal" value="0">
                 </div>
                 <div class="iskonto-limit-satiri">
                     <span>Kalan İskonto Limiti:</span>

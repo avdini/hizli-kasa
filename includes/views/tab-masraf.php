@@ -35,7 +35,7 @@ if (!defined('ABSPATH')) exit;
 
                 <div style="margin-bottom: 20px;">
                     <label>Tutar (TL)</label>
-                    <input type="number" id="masraf-tutar" class="hk-input" step="0.01" min="0.01" placeholder="0.00" style="font-size: 20px; font-weight: 800; color: var(--hk-success);">
+                    <input type="text" id="masraf-tutar" class="hk-input hk-currency-mask" placeholder="0,00" inputmode="decimal" style="font-size: 20px; font-weight: 800; color: var(--hk-success);">
                 </div>
 
                 <div style="margin-bottom: 20px;">

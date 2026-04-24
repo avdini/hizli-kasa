@@ -71,8 +71,8 @@ const RefundManager = (function () {
                 const sepetToplami = refundCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
                 const maxDusebilir = Math.min(kalan, sepetToplami);
                 
-                if (parseFloat(iskontoInput.value) > maxDusebilir) {
-                    iskontoInput.value = maxDusebilir.toFixed(2);
+                if (HK.CurrencyMask.parse(iskontoInput.value) > maxDusebilir) {
+                    iskontoInput.value = HK.CurrencyMask.format(maxDusebilir);
                 }
                 renderRefundCart();
             };
@@ -351,7 +351,7 @@ const RefundManager = (function () {
             if (iskontoInput) iskontoInput.value = 0;
         }
 
-        const currentDiscount = parseFloat(iskontoInput ? iskontoInput.value : 0) || 0;
+        const currentDiscount = HK.CurrencyMask.parse(iskontoInput ? iskontoInput.value : "0") || 0;
         const finalTotal = total - currentDiscount;
 
         totalSpan.innerText = `-${Math.abs(finalTotal).toFixed(2)} TL`;
@@ -375,7 +375,7 @@ const RefundManager = (function () {
                 body: JSON.stringify({
                     original_order_id: originalOrder.id,
                     kasa_no: selectedKasa,
-                    refund_discount: parseFloat(document.getElementById('iade-iskonto-input')?.value || 0),
+                    refund_discount: HK.CurrencyMask.parse(document.getElementById('iade-iskonto-input')?.value || "0"),
                     items: refundCart.map(item => ({
                         id: item.id,
                         item_id: item.item_id,

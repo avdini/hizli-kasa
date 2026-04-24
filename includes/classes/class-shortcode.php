@@ -71,8 +71,9 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('jsbarcode', 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js', array(), '3.11.0', true);
 
     wp_enqueue_script('kasa-print-manager', $js_base . 'modules/print-manager.js', array(), $pos_version, true);
+    wp_enqueue_script('kasa-currency-mask', $js_base . 'modules/currency-mask.js', array(), $pos_version, true);
     wp_enqueue_script('kasa-cart-manager', $js_base . 'modules/cart-manager.js', array(), $pos_version, true);
-    wp_enqueue_script('kasa-ui-renderer', $js_base . 'modules/ui-renderer.js', array('kasa-cart-manager'), $pos_version, true);
+    wp_enqueue_script('kasa-ui-renderer', $js_base . 'modules/ui-renderer.js', array('kasa-cart-manager', 'kasa-currency-mask'), $pos_version, true);
     wp_enqueue_script('kasa-barcode-scanner', $js_base . 'modules/barcode-scanner.js', array('kasa-cart-manager', 'kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-modal-manager', $js_base . 'modules/modal-manager.js', array('kasa-cart-manager', 'kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-order-processor', $js_base . 'modules/order-processor.js', array('kasa-cart-manager', 'kasa-ui-renderer'), $pos_version, true);
@@ -102,7 +103,8 @@ function hizli_kasa_uygulamasi()
         'kasa-barcode-renderer',
         'kasa-order-editor',
         'kasa-order-edit-reports',
-        'kasa-detailed-reports'
+        'kasa-detailed-reports',
+        'kasa-currency-mask'
     ), $pos_version, true);
 
     // JavaScript'e veri aktarımı

@@ -59,7 +59,7 @@
 
             els.iskontoButon.addEventListener("click", function() {
                 els.iskontoModal.style.display = "flex";
-                els.iskontoInput.value = HK.State.iskontoTutar || "";
+                els.iskontoInput.value = HK.CurrencyMask.format(HK.State.iskontoTutar || 0);
                 els.iskontoInput.focus();
             });
 
@@ -75,7 +75,7 @@
             });
 
             els.iskontoOnay.addEventListener("click", function() {
-                HK.State.iskontoTutar = parseFloat(els.iskontoInput.value) || 0;
+                HK.State.iskontoTutar = HK.CurrencyMask.parse(els.iskontoInput.value) || 0;
                 els.iskontoModal.style.display = "none";
                 HK.UIRenderer.arayuzuGuncelle();
             });
@@ -325,9 +325,9 @@
                 state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity); });
                 var netHedef = toplamPara - state.iskontoTutar;
 
-                var nakit = parseFloat(els.bolNakitInput.value) || 0;
-                var kart = parseFloat(els.bolKartInput.value) || 0;
-                var iban = parseFloat(els.bolIbanInput.value) || 0;
+                var nakit = HK.CurrencyMask.parse(els.bolNakitInput.value) || 0;
+                var kart = HK.CurrencyMask.parse(els.bolKartInput.value) || 0;
+                var iban = HK.CurrencyMask.parse(els.bolIbanInput.value) || 0;
 
                 var girenToplam = nakit + kart + iban;
                 var fark = netHedef - girenToplam;
@@ -361,9 +361,9 @@
             state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity); });
             var netHedef = toplamPara - state.iskontoTutar;
 
-            var nakit = parseFloat(els.bolNakitInput.value) || 0;
-            var kart = parseFloat(els.bolKartInput.value) || 0;
-            var iban = parseFloat(els.bolIbanInput.value) || 0;
+            var nakit = HK.CurrencyMask.parse(els.bolNakitInput.value) || 0;
+            var kart = HK.CurrencyMask.parse(els.bolKartInput.value) || 0;
+            var iban = HK.CurrencyMask.parse(els.bolIbanInput.value) || 0;
 
             var girenToplam = nakit + kart + iban;
             var kalan = netHedef - girenToplam;
