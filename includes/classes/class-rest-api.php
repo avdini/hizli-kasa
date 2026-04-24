@@ -410,12 +410,9 @@ function hizli_kasa_gun_sonu_raporu($request)
             $saat_map[$saat] = 0;
         $saat_map[$saat]++;
 
-        $iskonto = 0;
-        foreach ($order->get_fees() as $fee) {
-            if (strpos(strtolower($fee->get_name()), 'iskonto') !== false) {
-                $iskonto += abs((float) $fee->get_total());
-            }
-        }
+        // Gün sonu raporunda, sipariş düzenleme ve iade akışlarıyla aynı
+        // indirim hesabını kullanarak Türkçe karakter / negatif fee farklarını önle.
+        $iskonto = hizli_kasa_get_order_total_discount($order);
         $toplam_iskonto += $iskonto;
 
         $urunler = array();
