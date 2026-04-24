@@ -3,6 +3,7 @@
  */
 
 const RefundManager = (function () {
+    const HK = window.HizliKasa;
     let originalOrder = null;
     let refundCart = [];
 
