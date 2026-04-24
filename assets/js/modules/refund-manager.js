@@ -67,6 +67,7 @@ const RefundManager = (function () {
         const iskontoInput = document.getElementById('iade-iskonto-input');
         if (iskontoInput) {
             iskontoInput.oninput = () => {
+                if (!originalOrder) return;
                 const kalan = (originalOrder.total_discount || 0) - (originalOrder.refunded_discount || 0);
                 const sepetToplami = refundCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
                 const maxDusebilir = Math.min(kalan, sepetToplami);
@@ -275,6 +276,7 @@ const RefundManager = (function () {
     }
 
     function addToRefundCart(itemId) {
+        if (!originalOrder) return;
         const item = originalOrder.items.find(i => i.item_id == itemId);
         if (!item) return;
 
@@ -331,10 +333,15 @@ const RefundManager = (function () {
         list.innerHTML = html || '<p class="iade-bos-sepet">İade edilecek ürün seçilmedi.</p>';
         
         // İskonto Yönetimi
-        const iskontoKonteyner = document.getElementById('iade-iskonto-konteyner');
+        const iskontoKonteyner = document.getElementById('iade-iskonto-container') || document.getElementById('iade-iskonto-konteyner');
         const iskontoInput = document.getElementById('iade-iskonto-input');
         const kalanIskontoSpan = document.getElementById('iade-kalan-iskonto');
         
+        if (!originalOrder) {
+            if (iskontoKonteyner) iskontoKonteyner.style.display = 'none';
+            return;
+        }
+
         const kalanIskonto = (originalOrder.total_discount || 0) - (originalOrder.refunded_discount || 0);
         console.log('İskonto Bilgisi:', { 
             total: originalOrder.total_discount, 
