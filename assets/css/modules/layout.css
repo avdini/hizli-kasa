@@ -350,3 +350,85 @@
 }
 
 
+
+/* --- Ürün Arama Modalı Sonuçları --- */
+#arama-sonuclari {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+#arama-sonuclari li {
+    display: flex !important;
+    align-items: center !important;
+    padding: 12px 15px !important;
+    border-bottom: 1px solid var(--hk-border) !important;
+    cursor: pointer !important;
+    transition: background 0.2s !important;
+    background: white !important;
+}
+
+#arama-sonuclari li:hover {
+    background: #f8f9fa !important;
+}
+
+.sonuc-img-cell {
+    width: 40px !important;
+    flex-shrink: 0 !important;
+    margin-right: 15px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.sonuc-info-cell {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important; /* İsmi ve SKU'yu alt alta koyar */
+    min-width: 0 !important;
+    justify-content: center !important;
+}
+
+.sonuc-sku {
+    font-size: 12px !important;
+    color: #888 !important;
+    margin-top: 3px !important;
+    font-weight: 500 !important;
+}
+
+.sonuc-stock-cell {
+    padding: 0 15px !important;
+    font-size: 13px !important;
+    color: #666 !important;
+    text-align: center !important;
+    min-width: 90px !important;
+}
+
+.sonuc-price-cell {
+    text-align: right !important;
+    min-width: 100px !important;
+    font-weight: 700 !important;
+    color: #2c3e50 !important;
+    font-size: 15px !important;
+}
+
+.sonuc-fiyat {
+    color: #27ae60 !important;
+}
+
+/* Varyasyon Çekmecesi */
+.variation-container {
+    background: #f9f9f9 !important;
+    border-left: 10px solid #eee !important;
+    display: none;
+}
+
+.variation-container.is-open {
+    display: block !important;
+}
+
+.variation-row {
+    padding-left: 30px !important;
+    border-bottom: 1px solid #eee !important;
+}
