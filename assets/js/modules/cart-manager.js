@@ -18,6 +18,7 @@ window.HizliKasa = window.HizliKasa || {};
         sepet: [],
         iskontoTutar: 0,
         odemeTipi: "card",
+        lastUpdatedId: null,
         CURRENT_VERSION: typeof kasaAyar !== 'undefined' && kasaAyar.version ? kasaAyar.version : "2.8.8",
         MAX_KASA: 4
     };
@@ -66,6 +67,8 @@ window.HizliKasa = window.HizliKasa || {};
                 state.iskontoTutar = 0;
                 state.odemeTipi = "card";
             }
+
+            state.lastUpdatedId = null;
 
             if (HK.UIRenderer) {
                 HK.UIRenderer.sidebarGuncelle();
@@ -214,6 +217,7 @@ window.HizliKasa = window.HizliKasa || {};
             }
 
             if (HK.UIRenderer) {
+                state.lastUpdatedId = eklenecekUrun.product_id + '-' + (eklenecekUrun.variation_id || 0);
                 HK.UIRenderer.arayuzuGuncelle();
             }
             durumMetni.innerText = urun.name + " eklendi.";

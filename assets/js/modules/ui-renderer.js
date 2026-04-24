@@ -77,6 +77,10 @@ window.HizliKasa = window.HizliKasa || {};
                 var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
                 var netFiyat = kampanyaFiyat * (hasAutoDiscount ? 0.95 : 1);
 
+                var itemId = item.product_id + '-' + (item.variation_id || 0);
+                var isUpdated = (state.lastUpdatedId === itemId);
+                var glowClass = (isUpdated && item.quantity > 1) ? 'hk-qty-glow' : '';
+
                 var li = document.createElement("li");
 
                 var fiyatGosterim = item.price.toFixed(2) + " TL";
@@ -94,7 +98,7 @@ window.HizliKasa = window.HizliKasa || {};
                     '</div>' +
                     '<div class="urun-orta-detay">' +
                         '<span class="urun-detay-metin" style="font-size:15px; font-weight:bold; color:var(--hk-text-main);">' + 
-                            '<span class="' + (item.quantity > 1 ? 'hk-qty-glow' : '') + '">' + item.quantity + '</span>' + 
+                            '<span class="' + glowClass + '">' + item.quantity + '</span>' + 
                             ' Adet x ' + fiyatGosterim + '</span>' +
                     '</div>' +
                     '<div class="urun-sag-aksiyonlar">' +
@@ -164,6 +168,7 @@ window.HizliKasa = window.HizliKasa || {};
             });
 
             HK.CartManager.sepetiKaydet();
+            state.lastUpdatedId = null;
         },
 
         /**
