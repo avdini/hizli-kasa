@@ -203,9 +203,14 @@ window.HizliKasa = window.HizliKasa || {};
             }
 
             if (mevcutUrunIndex !== -1) {
-                state.sepet[mevcutUrunIndex].quantity += 1;
+                // Ürün zaten varsa: Adedi artır ve en üste taşı
+                var mevcutUrun = state.sepet[mevcutUrunIndex];
+                state.sepet.splice(mevcutUrunIndex, 1); // Mevcut konumundan çıkar
+                mevcutUrun.quantity += 1;
+                state.sepet.unshift(mevcutUrun); // En üste ekle
             } else {
-                state.sepet.push(eklenecekUrun);
+                // Yeni ürün: Doğrudan en üste ekle
+                state.sepet.unshift(eklenecekUrun);
             }
 
             if (HK.UIRenderer) {

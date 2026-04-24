@@ -47,7 +47,7 @@ if (!defined('ABSPATH'))
         <div id="kasa-konteyner">
             <!-- Başlık Alanı -->
             <div class="kasa-baslik">
-                <h2 id="durum">Kasa Hazır - Barkod Okutun</h2>
+                <h2 id="durum">Kasa Hazır</h2>
                 <button id="manuel-urun-buton" class="ust-buton-kucuk">El ile Ürün Ekle</button>
             </div>
 
@@ -149,8 +149,8 @@ if (!defined('ABSPATH'))
         style="display:none; position:fixed; z-index:10001; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
         <div class="modal-icerik">
             <h3>İskonto Tutarı (TL)</h3>
-            <input type="text" id="iskonto-input" class="hk-input hk-currency-mask" placeholder="0,00" inputmode="decimal"
-                style="font-size:24px; text-align:center; font-weight:800; color:var(--hk-danger);">
+            <input type="text" id="iskonto-input" class="hk-input hk-currency-mask" placeholder="0,00"
+                inputmode="decimal" style="font-size:24px; text-align:center; font-weight:800; color:var(--hk-danger);">
             <div class="modal-butonlar" style="margin-top:20px;">
                 <button id="iskonto-iptal"
                     style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">İptal</button>
@@ -193,21 +193,24 @@ if (!defined('ABSPATH'))
                 <span>💵 Nakit</span>
                 <div class="bol-input-grup">
                     <label>Tutar (TL)</label>
-                    <input type="text" id="bol-nakit" class="hk-input hk-currency-mask" placeholder="0,00" inputmode="decimal">
+                    <input type="text" id="bol-nakit" class="hk-input hk-currency-mask" placeholder="0,00"
+                        inputmode="decimal">
                 </div>
             </div>
             <div class="bol-satir">
                 <span>💳 Kredi Kartı</span>
                 <div class="bol-input-grup">
                     <label>Tutar (TL)</label>
-                    <input type="text" id="bol-kart" class="hk-input hk-currency-mask" placeholder="0,00" inputmode="decimal">
+                    <input type="text" id="bol-kart" class="hk-input hk-currency-mask" placeholder="0,00"
+                        inputmode="decimal">
                 </div>
             </div>
             <div class="bol-satir">
                 <span>🏦 IBAN</span>
                 <div class="bol-input-grup">
                     <label>Tutar (TL)</label>
-                    <input type="text" id="bol-iban" class="hk-input hk-currency-mask" placeholder="0,00" inputmode="decimal">
+                    <input type="text" id="bol-iban" class="hk-input hk-currency-mask" placeholder="0,00"
+                        inputmode="decimal">
                 </div>
             </div>
 
@@ -373,8 +376,8 @@ if (!defined('ABSPATH'))
 
                 <div style="margin-top:15px;">
                     <label><strong>İskonto (TL):</strong></label>
-                    <input type="text" id="edit-order-discount" class="hk-input hk-currency-mask" placeholder="0,00" inputmode="decimal"
-                        style="margin-top:5px;">
+                    <input type="text" id="edit-order-discount" class="hk-input hk-currency-mask" placeholder="0,00"
+                        inputmode="decimal" style="margin-top:5px;">
                     <small style="color:var(--hk-text-muted);">Mevcut iskonto otomatik yüklenir.</small>
                 </div>
 
