@@ -93,7 +93,9 @@ window.HizliKasa = window.HizliKasa || {};
                         '</span>' +
                     '</div>' +
                     '<div class="urun-orta-detay">' +
-                        '<span class="urun-detay-metin" style="font-size:15px; font-weight:bold; color:var(--hk-text-main);">' + item.quantity + ' Adet x ' + fiyatGosterim + '</span>' +
+                        '<span class="urun-detay-metin" style="font-size:15px; font-weight:bold; color:var(--hk-text-main);">' + 
+                            '<span class="' + (item.quantity > 1 ? 'hk-qty-glow' : '') + '">' + item.quantity + '</span>' + 
+                            ' Adet x ' + fiyatGosterim + '</span>' +
                     '</div>' +
                     '<div class="urun-sag-aksiyonlar">' +
                         '<span class="urun-fiyat-grup" style="text-align:right; flex-shrink:0;">' +
