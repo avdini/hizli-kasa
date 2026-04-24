@@ -2,6 +2,7 @@
  * Hızlı Kasa - Para Birimi Maskeleme (Currency Mask)
  * 
  * xxx.xxx.xxx,xx formatında giriş yapılmasını sağlar.
+ * Kullanıcı virgül koyana kadar tam sayı olarak kalır.
  * 
  * @package HizliKasa
  */
@@ -18,11 +19,11 @@
             var self = this;
             var inputs = document.querySelectorAll('.hk-currency-mask');
             inputs.forEach(function(input) {
-                self.apply(input);
+                if (!input.dataset.masked) {
+                    self.apply(input);
+                    input.dataset.masked = "true";
+                }
             });
-
-            // Dinamik olarak eklenen elementler için gözlemci (isteğe bağlı)
-            // Şimdilik sadece mevcutlara uygula.
         },
 
         /**
@@ -33,25 +34,59 @@
             var self = this;
 
             el.addEventListener('input', function(e) {
-                var val = el.value;
+                var cursorPosition = el.selectionStart;
+                var originalValue = el.value;
                 
-                // Sadece rakamları al
-                var cleanValue = val.replace(/\D/g, '');
+                // Virgül veya nokta (ondalık ayraç olarak kabul et)
+                var hasComma = originalValue.includes(',') || originalValue.includes('.');
                 
-                if (cleanValue === '') {
-                    el.value = '';
-                    return;
+                // Tüm karakterleri temizle, sadece rakam ve tek bir virgül kalsın
+                var cleanValue = originalValue.replace(/\./g, '').replace(',', '.');
+                
+                // Sadece rakamlar ve nokta kalsın
+                cleanValue = cleanValue.replace(/[^0-9.]/g, '');
+                
+                // Birden fazla nokta varsa sadece ilkini tut
+                var parts = cleanValue.split('.');
+                var integerPart = parts[0];
+                var decimalPart = parts.length > 1 ? parts[1].substring(0, 2) : null;
+
+                // Tam sayı kısmını formatla (binlik ayraçlar)
+                var formattedInteger = "";
+                if (integerPart !== "") {
+                    formattedInteger = parseInt(integerPart).toLocaleString('tr-TR');
+                } else if (decimalPart !== null) {
+                    // Eğer .50 gibi girildiyse 0,50 yap
+                    formattedInteger = "0";
                 }
 
-                // Sayıya çevir (son iki hane kuruş)
-                var numberValue = parseFloat(cleanValue) / 100;
-                
-                // TR formatında yazdır
-                el.value = self.format(numberValue);
+                // Nihai değeri oluştur
+                var newValue = formattedInteger;
+                if (decimalPart !== null || (hasComma && parts.length > 1)) {
+                    newValue += "," + (decimalPart || "");
+                }
+
+                // Değeri güncelle
+                el.value = newValue;
+
+                // İmleç konumunu ayarla (basit bir mantıkla)
+                // Eğer binlik ayraç eklendiyse imleç kayabilir.
+                // Şimdilik sona atalım veya farkı hesaplayalım.
+                var diff = newValue.length - originalValue.length;
+                el.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
             });
 
-            // Odaklandığında boşsa 0,00 yapma (kullanıcıyı yormasın)
-            // Ama değer varsa formatlı kalsın.
+            // Virgül tuşuna basıldığında (nokta tuşuna basılsa bile virgül yap)
+            el.addEventListener('keydown', function(e) {
+                if (e.key === '.') {
+                    e.preventDefault();
+                    var val = el.value;
+                    if (!val.includes(',')) {
+                        el.value = val + ',';
+                        el.dispatchEvent(new Event('input'));
+                    }
+                }
+            });
         },
 
         /**
@@ -60,7 +95,7 @@
          * @returns {string}
          */
         format: function(num) {
-            if (isNaN(num)) return "0,00";
+            if (isNaN(num) || num === null) return "0,00";
             return num.toLocaleString('tr-TR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
