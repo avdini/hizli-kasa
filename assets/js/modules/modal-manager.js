@@ -59,7 +59,7 @@
 
             els.iskontoButon.addEventListener("click", function() {
                 els.iskontoModal.style.display = "flex";
-                els.iskontoInput.value = HK.CurrencyMask.format(HK.State.iskontoTutar || 0);
+                els.iskontoInput.value = HK.State.iskontoTutar > 0 ? HK.CurrencyMask.format(HK.State.iskontoTutar) : "";
                 els.iskontoInput.focus();
             });
 

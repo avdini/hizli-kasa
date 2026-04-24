@@ -76,6 +76,13 @@
                 el.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
             });
 
+            // Odaklandığında içeriği seç (kolay silme/değiştirme için)
+            el.addEventListener('focus', function() {
+                setTimeout(function() {
+                    el.select();
+                }, 10);
+            });
+
             // Virgül tuşuna basıldığında (nokta tuşuna basılsa bile virgül yap)
             el.addEventListener('keydown', function(e) {
                 if (e.key === '.') {

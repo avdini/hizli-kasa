@@ -116,7 +116,8 @@
             document.getElementById("order-edit-detail-view").style.display = "block";
             
             document.getElementById("edit-order-payment").value = order.payment_method;
-            document.getElementById("edit-order-discount").value = HK.CurrencyMask.format(parseFloat(order.discount || 0));
+            var discountVal = parseFloat(order.discount || 0);
+            document.getElementById("edit-order-discount").value = discountVal > 0 ? HK.CurrencyMask.format(discountVal) : "";
             this.renderItems();
         },
 

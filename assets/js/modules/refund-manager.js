@@ -269,7 +269,7 @@ const RefundManager = (function () {
         // Sepeti sıfırla
         refundCart = [];
         const iskontoInput = document.getElementById('iade-iskonto-input');
-        if (iskontoInput) iskontoInput.value = 0;
+        if (iskontoInput) iskontoInput.value = "";
         
         renderRefundCart();
     }
