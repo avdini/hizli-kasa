@@ -31,7 +31,7 @@
 }
 
 #sepet-listesi .urun-sol-kolon {
-    flex: 0 0 40% !important;
+    flex: 0 0 50% !important;
     display: flex !important;
     align-items: center !important;
     overflow: hidden !important;
@@ -80,11 +80,11 @@
 }
 
 #sepet-listesi .urun-sag-aksiyonlar {
-    flex: 0 0 180px !important; /* Buton ve fiyat için sabit alan */
+    flex: 0 0 140px !important; /* Genişlik 180px'den 140px'e düşürüldü */
     display: flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    gap: 15px !important;
+    gap: 10px !important; /* Gap biraz daraltıldı */
     flex-shrink: 0 !important;
 }
 
