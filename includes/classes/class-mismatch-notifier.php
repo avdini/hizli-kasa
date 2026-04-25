@@ -70,17 +70,41 @@ class Hizli_Kasa_Mismatch_Notifier {
         
         $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
         
-        // Optimize edilmiş sorgu: Sadece uyuşmazlık var mı yok mu?
-        $mismatch_exists = $wpdb->get_var("
-            SELECT 1 
-            FROM {$wpdb->posts} p
-            LEFT JOIN {$wpdb->postmeta} pm_stock ON (p.ID = pm_stock.post_id AND pm_stock.meta_key = '_stock')
-            LEFT JOIN $stok_table sk ON (p.ID = sk.variation_id OR (p.post_type = 'product' AND p.ID = sk.product_id AND sk.variation_id = 0))
-            WHERE p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish'
-            GROUP BY p.ID
-            HAVING SUM(sk.quantity) != CAST(pm_stock.meta_value AS DECIMAL(15,4))
-            LIMIT 1
-        ");
+        // Daha güvenilir ve test edilmiş alt sorgu mantığı
+        $query = "
+            SELECT item_id, total_wh, wc_stock, post_title, post_type
+            FROM (
+                SELECT 
+                    p.ID as item_id,
+                    p.post_title,
+                    p.post_type,
+                    (SELECT COALESCE(SUM(sk.quantity), 0) 
+                     FROM $stok_table sk 
+                     WHERE (p.post_type = 'product_variation' AND sk.variation_id = p.ID) 
+                        OR (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0)
+                    ) as total_wh,
+                    (SELECT COALESCE(meta_value, 0) 
+                     FROM {$wpdb->postmeta} 
+                     WHERE post_id = p.ID AND meta_key = '_stock' 
+                     LIMIT 1
+                    ) as wc_stock
+                FROM {$wpdb->posts} p
+                WHERE p.post_type IN ('product', 'product_variation') 
+                  AND p.post_status IN ('publish', 'private')
+            ) as stock_summary
+            WHERE CAST(total_wh AS DECIMAL(15,4)) != CAST(wc_stock AS DECIMAL(15,4))
+            LIMIT 5";
+            
+        $mismatches = $wpdb->get_results($query);
+        $mismatch_exists = !empty($mismatches);
+
+        if ($mismatch_exists) {
+            foreach ($mismatches as $m) {
+                hizli_kasa_admin_log("Uyuşmazlık Bulundu: [ID: {$m->item_id}] {$m->post_title} ({$m->post_type}) - Depo: {$m->total_wh}, Site: {$m->wc_stock}");
+            }
+        } else {
+            hizli_kasa_admin_log("Uyuşmazlık Kontrolü: Mismatch bulunamadı.");
+        }
 
         update_option('hizli_kasa_mismatch_found', $mismatch_exists ? '1' : '0');
         update_option('hizli_kasa_mismatch_last_check', current_time('mysql'));
