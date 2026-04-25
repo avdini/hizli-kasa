@@ -5,12 +5,14 @@
 .toplam-alani {
     padding: 10px !important;
     margin-top: auto !important;
-    border: none !important; /* Çizgi çerçeve kaldırıldı */
+    border: none !important;
+    /* Çizgi çerçeve kaldırıldı */
     border-radius: 12px;
     display: flex !important;
     flex-direction: row !important;
     align-items: stretch !important;
-    gap: 0 !important; /* Boşluğu padding ile yöneteceğiz */
+    gap: 0 !important;
+    /* Boşluğu padding ile yöneteceğiz */
     flex-shrink: 0;
     background: var(--hk-bg-sidebar) !important;
     min-height: 120px;
@@ -22,18 +24,22 @@
     flex-direction: column !important;
     justify-content: center;
     gap: 8px !important;
-    padding-left: 10px; /* Dışa bakan padding */
+    padding-left: 10px;
+    /* Dışa bakan padding */
 }
 
 .toplam-degerler {
     flex: 0 0 50% !important;
     display: flex !important;
     flex-direction: column !important;
-    align-items: flex-end !important; /* Değerler sağa yaslı */
+    align-items: flex-end !important;
+    /* Değerler sağa yaslı */
     justify-content: center;
     gap: 4px !important;
-    border-left: none !important; /* Dikey çizgi kaldırıldı */
-    padding-right: 10px; /* Dışa bakan padding */
+    border-left: none !important;
+    /* Dikey çizgi kaldırıldı */
+    padding-right: 10px;
+    /* Dışa bakan padding */
 }
 
 /* Ödeme Özeti Kartları */
@@ -45,7 +51,7 @@
     padding: 8px 12px;
     border-radius: 8px;
     border: 1px solid var(--hk-border);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .ozet-kanal {
@@ -80,32 +86,33 @@
     line-height: 1;
 }
 
+#iskonto-temizle-btn {
+    background: #ff4757;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 16px;
+    height: 16px;
+    font-size: 8px;
+    cursor: pointer;
+    line-height: 16px;
+    text-align: center;
+    padding: 0;
+    margin-right: 6px;
+    display: none;
+    vertical-align: middle;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 0 0 rgba(255, 71, 87, 0);
+    font-weight: bold;
 }
- 
- #iskonto-temizle-btn {
-     background: #e74c3c;
-     color: white;
-     border: none;
-     border-radius: 50%;
-     width: 20px;
-     height: 20px;
-     font-size: 10px;
-     cursor: pointer;
-     line-height: 20px;
-     text-align: center;
-     padding: 0;
-     margin-right: 5px;
-     display: none; /* JS tarafında HK.State.iskontoTutar > 0 ise gösterilecek */
-     vertical-align: middle;
-     transition: all 0.2s;
- }
- 
- #iskonto-temizle-btn:hover {
-     background: #c0392b;
-     transform: scale(1.1);
- }
- 
- .indirim-deger {
+
+#iskonto-temizle-btn:hover {
+    background: #ff6b81;
+    transform: scale(1.1);
+    box-shadow: 0 0 8px rgba(255, 71, 87, 0.6);
+}
+
+.indirim-deger {
     font-size: 18px !important;
     color: #e74c3c !important;
     font-weight: bold !important;
@@ -118,7 +125,8 @@
 .islem-grubu {
     display: flex !important;
     align-items: center !important;
-    gap: 5px !important; /* odeme-secici ile hizalandı */
+    gap: 5px !important;
+    /* odeme-secici ile hizalandı */
     flex-shrink: 0;
     margin-bottom: 0px;
 }
@@ -228,9 +236,11 @@
 
 /* 570px üzeri ekranlarda buton hizalamasını sabitle */
 @media (min-width: 571px) {
-    .islem-sol-grup, 
+
+    .islem-sol-grup,
     #onayla-buton {
-        flex: 0 0 calc(50% - 2.5px) !important; /* Tam %50 genişlik (gap düşüldü) */
+        flex: 0 0 calc(50% - 2.5px) !important;
+        /* Tam %50 genişlik (gap düşüldü) */
         min-width: calc(50% - 2.5px) !important;
         max-width: calc(50% - 2.5px) !important;
     }
