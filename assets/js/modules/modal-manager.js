@@ -138,13 +138,13 @@
                 hedefTutar = parseFloat(hedefTutar.toFixed(2));
                 iskonto = this._normalizeIskonto(sepetToplami - hedefTutar, sepetToplami);
 
-                els.iskontoHedefInput.value = HK.CurrencyMask.format(hedefTutar);
+                // Kendi değerimizi güncellemiyoruz (imleç kaçmasın diye), sadece diğerini güncelliyoruz
                 els.iskontoInput.value = iskonto > 0 ? HK.CurrencyMask.format(iskonto) : "";
                 return;
             }
 
             iskonto = this._normalizeIskonto(HK.CurrencyMask.parse(els.iskontoInput.value), sepetToplami);
-            els.iskontoInput.value = iskonto > 0 ? HK.CurrencyMask.format(iskonto) : "";
+            // Kendi değerimizi güncellemiyoruz (imleç kaçmasın diye), sadece diğerini güncelliyoruz
             els.iskontoHedefInput.value = HK.CurrencyMask.format(sepetToplami - iskonto);
         },
 

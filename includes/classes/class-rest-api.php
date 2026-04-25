@@ -17,7 +17,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_ozel_arama',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -25,7 +25,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_gun_sonu_raporu',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -33,7 +33,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_load_tab_content',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -41,7 +41,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_get_order_details',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -49,7 +49,7 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'hizli_kasa_process_refund',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -57,7 +57,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_terminal_products',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -65,7 +65,7 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'hizli_kasa_terminal_update_stock',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -79,7 +79,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_api_user_depolar',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -91,7 +91,7 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'hizli_kasa_api_set_active_depo',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -100,7 +100,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_get_masraflar',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -108,7 +108,7 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'hizli_kasa_add_masraf',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -116,7 +116,7 @@ add_action('rest_api_init', function () {
         'methods' => 'DELETE',
         'callback' => 'hizli_kasa_delete_masraf',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -124,7 +124,7 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'hizli_kasa_api_set_user_theme',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -133,7 +133,7 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'hizli_kasa_warehouse_stock_check',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -141,7 +141,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_api_get_barcode_data',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -149,7 +149,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_search_orders',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -157,7 +157,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_get_recent_orders',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -165,7 +165,7 @@ add_action('rest_api_init', function () {
         'methods' => 'POST',
         'callback' => 'hizli_kasa_update_order',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -173,7 +173,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_get_edit_logs',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -181,7 +181,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_get_reports_orders',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 
@@ -189,7 +189,7 @@ add_action('rest_api_init', function () {
         'methods' => 'GET',
         'callback' => 'hizli_kasa_get_reports_refunds',
         'permission_callback' => function () {
-            return current_user_can('edit_posts');
+            return hizli_kasa_can_access_app();
         }
     ));
 });
@@ -2409,3 +2409,4 @@ function hizli_kasa_get_reports_data($request, $is_refund = false)
         'page' => $paged
     );
 }
+

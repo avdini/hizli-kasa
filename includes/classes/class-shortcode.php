@@ -14,6 +14,30 @@ if (!defined('ABSPATH'))
 // Shortcode Kaydı
 add_shortcode('hizli_kasa', 'hizli_kasa_uygulamasi');
 
+function hizli_kasa_can_access_app($user_id = null)
+{
+    $user = $user_id ? get_userdata($user_id) : wp_get_current_user();
+
+    if (!$user || empty($user->ID)) {
+        return false;
+    }
+
+    if (user_can($user, 'manage_options')) {
+        return true;
+    }
+
+    $user_roles = (array) $user->roles;
+    $yetkili_roller = get_option('hizli_kasa_yetkili_roller', array('administrator', 'shop_manager'));
+
+    foreach ($user_roles as $role) {
+        if (in_array($role, (array) $yetkili_roller, true)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 /**
  * Hızlı Kasa shortcode callback fonksiyonu.
  *
@@ -29,7 +53,7 @@ function hizli_kasa_uygulamasi()
     $user_roles = (array) $user->roles;
     $yetkili_roller = get_option('hizli_kasa_yetkili_roller', array('administrator', 'shop_manager'));
 
-    $yetkili_mi = false;
+    $yetkili_mi = hizli_kasa_can_access_app();
     foreach ($user_roles as $role) {
         if (in_array($role, (array) $yetkili_roller)) {
             $yetkili_mi = true;
@@ -132,3 +156,5 @@ function hizli_kasa_uygulamasi()
     include HIZLI_KASA_PATH . 'includes/template-app.php';
     return ob_get_clean();
 }
+
+

@@ -66,14 +66,14 @@
                     newValue += "," + (decimalPart || "");
                 }
 
-                // Değeri güncelle
-                el.value = newValue;
+                // Değeri güncelle (Sadece değiştiyse, imlecin sona kaçmasını engellemek için)
+                if (el.value !== newValue) {
+                    el.value = newValue;
 
-                // İmleç konumunu ayarla (basit bir mantıkla)
-                // Eğer binlik ayraç eklendiyse imleç kayabilir.
-                // Şimdilik sona atalım veya farkı hesaplayalım.
-                var diff = newValue.length - originalValue.length;
-                el.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
+                    // İmleç konumunu ayarla
+                    var diff = newValue.length - originalValue.length;
+                    el.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
+                }
             });
 
             // Odaklandığında içeriği seç (kolay silme/değiştirme için)
