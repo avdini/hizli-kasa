@@ -64,6 +64,7 @@ if (!defined('ABSPATH'))
 
             <!-- Toplam Alanı -->
             <div class="toplam-alani">
+                <div class="toplam-sol">
                 <div class="toplam-satir" id="liste-toplami-satiri">
                     <span class="toplam-etiket">ETİKET TOPLAMI:</span>
                     <span id="liste-toplami-deger" style="font-size: 18px; font-weight: bold; color: #95a5a6;">0.00
@@ -85,6 +86,10 @@ if (!defined('ABSPATH'))
                 <div class="toplam-satir">
                     <span class="toplam-etiket">GENEL TOPLAM:</span>
                     <span id="genel-toplam" class="toplam-deger">0.00 TL</span>
+                </div>
+                </div>
+                <div class="toplam-sag" id="odeme-ozeti-alani">
+                    <!-- Ödeme kanalları JS ile buraya gelecek -->
                 </div>
             </div>
 
@@ -228,7 +233,7 @@ if (!defined('ABSPATH'))
             <div class="modal-butonlar" style="margin-top:25px;">
                 <button id="bol-vazgec"
                     style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">Vazgeç</button>
-                <button id="bol-onayla" class="hk-btn-primary" style="padding:12px;">Siparişi Onayla</button>
+                <button id="bol-onayla" class="hk-btn-primary" style="padding:12px;">Ödemeyi Böl</button>
             </div>
         </div>
     </div>

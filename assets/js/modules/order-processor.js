@@ -37,7 +37,7 @@
                     self.toggleLoading(false);
                     self._stokUyarisiGoster(sorunlar);
                 } else {
-                    self.siparisIsleminiGerceklestir();
+                    self.siparisIsleminiGerceklestir(state.splitData);
                 }
             });
 

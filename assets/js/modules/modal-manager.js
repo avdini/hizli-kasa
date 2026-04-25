@@ -404,19 +404,13 @@
                     return;
                 }
 
-                var splitData = { nakit: nakit, kart: kart, iban: iban };
+                // Siparişi oluşturmak yerine state'e kaydet ve kapat
+                state.splitData = { nakit: nakit, kart: kart, iban: iban };
+                els.bolModal.style.display = "none";
                 
-                HK.OrderProcessor.toggleLoading(true);
-
-                var sorunlar = await HK.OrderProcessor.sonStokKontrolu();
-
-                if (sorunlar.length > 0) {
-                    HK.OrderProcessor.toggleLoading(false);
-                    HK.OrderProcessor._stokUyarisiGoster(sorunlar);
-                    els.bolModal.style.display = "none";
-                } else {
-                    els.bolModal.style.display = "none";
-                    HK.OrderProcessor.siparisIsleminiGerceklestir(splitData);
+                if (HK.UIRenderer) {
+                    HK.UIRenderer.arayuzuGuncelle();
+                    HK.UIRenderer.showToast("Ödeme planı hazırlandı. 'Sipariş Oluştur' butonu ile onaylayabilirsiniz.", "success");
                 }
             });
         },

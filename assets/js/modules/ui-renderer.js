@@ -32,6 +32,8 @@ window.HizliKasa = window.HizliKasa || {};
                 araToplamArea: document.getElementById("ara-toplam-deger"),
                 listeToplamiSatiri: document.getElementById("liste-toplami-satiri"),
                 listeToplamiArea: document.getElementById("liste-toplami-deger"),
+                odemeOzetiAlani: document.getElementById("odeme-ozeti-alani"),
+                bolButon: document.getElementById("bol-buton"),
                 sidebarButtons: document.querySelectorAll(".sidebar-btn")
             };
 
@@ -168,7 +170,42 @@ window.HizliKasa = window.HizliKasa || {};
             });
 
             HK.CartManager.sepetiKaydet();
+            this._odemeOzetiniGuncelle();
             state.lastUpdatedId = null;
+        },
+
+        /**
+         * Bölünmüş ödeme varsa sağ taraftaki özeti güncelle
+         */
+        _odemeOzetiniGuncelle: function() {
+            var state = HK.State;
+            var els = this.els;
+            if (!els.odemeOzetiAlani) return;
+
+            els.odemeOzetiAlani.innerHTML = "";
+
+            if (!state.splitData) {
+                if (els.bolButon) els.bolButon.classList.remove("bol-aktif-glow");
+                els.odemeOzetiAlani.innerHTML = '<div style="text-align:center; color:#ccc; font-size:12px; font-style:italic;">Ödeme kanalı bekleniyor...</div>';
+                return;
+            }
+
+            // Glow efektini aç
+            if (els.bolButon) els.bolButon.classList.add("bol-aktif-glow");
+
+            var html = '<div style="font-weight:bold; font-size:11px; color:#95a5a6; margin-bottom:5px; text-transform:uppercase;">Ödeme Dağılımı</div>';
+            
+            if (state.splitData.nakit > 0) {
+                html += '<div class="odeme-ozet-kart"> <span class="ozet-kanal">💵 Nakit</span> <span class="ozet-tutar">' + state.splitData.nakit.toFixed(2) + ' TL</span> </div>';
+            }
+            if (state.splitData.kart > 0) {
+                html += '<div class="odeme-ozet-kart"> <span class="ozet-kanal">💳 Kredi Kartı</span> <span class="ozet-tutar">' + state.splitData.kart.toFixed(2) + ' TL</span> </div>';
+            }
+            if (state.splitData.iban > 0) {
+                html += '<div class="odeme-ozet-kart"> <span class="ozet-kanal">🏦 IBAN</span> <span class="ozet-tutar">' + state.splitData.iban.toFixed(2) + ' TL</span> </div>';
+            }
+
+            els.odemeOzetiAlani.innerHTML = html;
         },
 
         /**

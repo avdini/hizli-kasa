@@ -18,6 +18,7 @@ window.HizliKasa = window.HizliKasa || {};
         sepet: [],
         iskontoTutar: 0,
         odemeTipi: "card",
+        splitData: null,
         lastUpdatedId: null,
         CURRENT_VERSION: typeof kasaAyar !== 'undefined' && kasaAyar.version ? kasaAyar.version : "2.8.8",
         MAX_KASA: 4
@@ -35,7 +36,8 @@ window.HizliKasa = window.HizliKasa || {};
             var veri = {
                 sepet: state.sepet,
                 iskontoTutar: state.iskontoTutar,
-                odemeTipi: state.odemeTipi
+                odemeTipi: state.odemeTipi,
+                splitData: state.splitData
             };
             localStorage.setItem('hizli_kasa_hafiza_slot_' + state.aktifKasaId, JSON.stringify(veri));
 
@@ -59,6 +61,7 @@ window.HizliKasa = window.HizliKasa || {};
                     state.sepet = veri.sepet || [];
                     state.iskontoTutar = veri.iskontoTutar || 0;
                     state.odemeTipi = veri.odemeTipi || "card";
+                    state.splitData = veri.splitData || null;
                 } catch (e) {
                     console.error("Hafıza yükleme hatası", e);
                 }
@@ -66,6 +69,7 @@ window.HizliKasa = window.HizliKasa || {};
                 state.sepet = [];
                 state.iskontoTutar = 0;
                 state.odemeTipi = "card";
+                state.splitData = null;
             }
 
             state.lastUpdatedId = null;
@@ -85,6 +89,7 @@ window.HizliKasa = window.HizliKasa || {};
             state.sepet = [];
             state.iskontoTutar = 0;
             state.odemeTipi = "card";
+            state.splitData = null;
 
             if (HK.UIRenderer) {
                 HK.UIRenderer.arayuzuGuncelle();

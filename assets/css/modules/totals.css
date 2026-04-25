@@ -3,14 +3,73 @@
    ============================================= */
 
 .toplam-alani {
-    padding: 5px 0 !important;
+    padding: 10px !important;
     margin-top: auto !important;
-    border: none !important;
+    border: 2px dashed var(--hk-border) !important;
+    border-radius: 12px;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    gap: 20px !important;
+    flex-shrink: 0;
+    background: var(--hk-bg-sidebar) !important;
+    min-height: 120px;
+}
+
+.toplam-sol {
+    flex: 0 0 40% !important;
     display: flex !important;
     flex-direction: column !important;
-    align-items: flex-end !important;
-    gap: 2px !important;
-    flex-shrink: 0;
+    align-items: flex-start !important;
+    justify-content: center;
+    gap: 4px !important;
+    border-right: 1px solid var(--hk-border);
+    padding-right: 15px;
+}
+
+.toplam-sag {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center;
+    gap: 8px !important;
+}
+
+/* Ödeme Özeti Kartları */
+.odeme-ozet-kart {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--hk-border);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.ozet-kanal {
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--hk-text-muted);
+}
+
+.ozet-tutar {
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--hk-accent);
+}
+
+/* Glow Efekti */
+@keyframes bol-glow {
+    0% { box-shadow: 0 0 5px rgba(39, 174, 96, 0.4); transform: scale(1); }
+    50% { box-shadow: 0 0 20px rgba(39, 174, 96, 0.8); transform: scale(1.02); }
+    100% { box-shadow: 0 0 5px rgba(39, 174, 96, 0.4); transform: scale(1); }
+}
+
+.bol-aktif-glow {
+    animation: bol-glow 2s infinite ease-in-out !important;
+    background: #27ae60 !important; /* Aktifken yeşil olsun */
+    color: white !important;
 }
 
 .toplam-satir {
