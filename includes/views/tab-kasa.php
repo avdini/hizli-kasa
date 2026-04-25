@@ -64,10 +64,10 @@ if (!defined('ABSPATH'))
 
             <!-- Toplam Alanı -->
             <div class="toplam-alani">
-                <div class="toplam-sag" id="odeme-ozeti-alani">
+                <div class="toplam-ozet" id="odeme-ozeti-alani">
                     <!-- Ödeme kanalları JS ile buraya gelecek -->
                 </div>
-                <div class="toplam-sol">
+                <div class="toplam-degerler">
                 <div class="toplam-satir" id="liste-toplami-satiri">
                     <span class="toplam-etiket">ETİKET TOPLAMI:</span>
                     <span id="liste-toplami-deger" style="font-size: 18px; font-weight: bold; color: #95a5a6;">0.00

@@ -5,35 +5,35 @@
 .toplam-alani {
     padding: 10px !important;
     margin-top: auto !important;
-    border: none !important;
+    border: none !important; /* Çizgi çerçeve kaldırıldı */
     border-radius: 12px;
     display: flex !important;
     flex-direction: row !important;
     align-items: stretch !important;
-    gap: 20px !important;
+    gap: 0 !important; /* Boşluğu padding ile yöneteceğiz */
     flex-shrink: 0;
     background: var(--hk-bg-sidebar) !important;
     min-height: 120px;
 }
 
-.toplam-sol {
-    flex: 0 0 50% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-end !important; /* Tutarları sağa yasla */
-    justify-content: center;
-    gap: 4px !important;
-    padding-left: 15px;
-}
-
-.toplam-sag {
+.toplam-ozet {
     flex: 0 0 50% !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center;
     gap: 8px !important;
-    border-right: 1px solid var(--hk-border);
-    padding-right: 15px;
+    padding-left: 10px; /* Dışa bakan padding */
+}
+
+.toplam-degerler {
+    flex: 0 0 50% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-end !important; /* Değerler sağa yaslı */
+    justify-content: center;
+    gap: 4px !important;
+    border-left: 1px solid var(--hk-border); /* Ayrım çizgisi solda */
+    padding-right: 10px; /* Dışa bakan padding */
 }
 
 /* Ödeme Özeti Kartları */
