@@ -95,6 +95,7 @@ function hizli_kasa_ayarlari_kaydet()
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_siparis_duzenle_aktif', array(
         'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
     ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_siparis_duzenle_kapsam');
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_gun_sonu_aktif', array(
         'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
     ));
@@ -965,6 +966,17 @@ function hizli_kasa_ayarlar_sayfasi()
                                 <?php $edit_limit = get_option('hizli_kasa_edit_order_limit', 5); ?>
                                 <input type="number" name="hizli_kasa_edit_order_limit" value="<?php echo esc_attr($edit_limit); ?>" min="1" max="50" step="1" class="small-text"> Adet
                                 <p class="description">Kasiyerin kasa sayfasından düzenleyebileceği (aynı gün içindeki) son sipariş sayısı.</p>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">Sipariş Düzenleme Kapsamı</th>
+                            <td>
+                                <?php $edit_kapsam = get_option('hizli_kasa_siparis_duzenle_kapsam', 'secili'); ?>
+                                <select name="hizli_kasa_siparis_duzenle_kapsam">
+                                    <option value="secili" <?php selected($edit_kapsam, 'secili'); ?>>Sadece Seçili Kasa</option>
+                                    <option value="tum" <?php selected($edit_kapsam, 'tum'); ?>>Tüm Kasalar</option>
+                                </select>
+                                <p class="description">"Sipariş Düzenle" butonuna tıklandığında hangi siparişlerin gösterileceğini belirleyin.</p>
                             </td>
                         </tr>
                         <tr valign="top">

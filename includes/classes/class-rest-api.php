@@ -1981,15 +1981,27 @@ function hizli_kasa_get_recent_orders($request)
     $user_id = get_current_user_id();
     $depo_id = hizli_kasa_get_user_active_depo($user_id);
 
+    $kapsam = get_option('hizli_kasa_siparis_duzenle_kapsam', 'secili');
+
     $args = array(
         'limit' => $limit,
         'status' => array('processing', 'completed'),
         'date_created' => current_time('Y-m-d') . ' 00:00:00...' . current_time('Y-m-d') . ' 23:59:59',
         'orderby' => 'date',
         'order' => 'DESC',
-        'meta_key' => '_hizli_kasa_kasa_no',
-        'meta_value' => $kasa_no,
     );
+
+    if ($kapsam === 'tum') {
+        $args['meta_query'] = array(
+            array(
+                'key' => '_hizli_kasa_kasa_no',
+                'compare' => 'EXISTS',
+            ),
+        );
+    } else {
+        $args['meta_key'] = '_hizli_kasa_kasa_no';
+        $args['meta_value'] = $kasa_no;
+    }
 
     $orders = wc_get_orders($args);
     $results = [];
