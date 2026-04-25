@@ -34,11 +34,13 @@ window.HizliKasa = window.HizliKasa || {};
                 listeToplamiArea: document.getElementById("liste-toplami-deger"),
                 odemeOzetiAlani: document.getElementById("odeme-ozeti-alani"),
                 bolButon: document.getElementById("bol-buton"),
-                sidebarButtons: document.querySelectorAll(".sidebar-btn")
+                sidebarButtons: document.querySelectorAll(".sidebar-btn"),
+                iskontoTemizleBtn: document.getElementById("iskonto-temizle-btn")
             };
 
             this._bindOdemeTipiSecici();
             this._bindSidebarButonlari();
+            this._bindIskontoTemizle();
         },
 
         /**
@@ -152,8 +154,10 @@ window.HizliKasa = window.HizliKasa || {};
             if (state.iskontoTutar > 0) {
                 els.indirimSatiri.style.setProperty("display", "flex", "important");
                 els.indirimDegerArea.innerText = "-" + state.iskontoTutar.toFixed(2) + " TL";
+                if (els.iskontoTemizleBtn) els.iskontoTemizleBtn.style.display = "inline-block";
             } else {
                 els.indirimSatiri.style.setProperty("display", "none", "important");
+                if (els.iskontoTemizleBtn) els.iskontoTemizleBtn.style.display = "none";
             }
 
             var sonToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
@@ -254,6 +258,22 @@ window.HizliKasa = window.HizliKasa || {};
                     HK.State.odemeTipi = tip;
                     self.arayuzuGuncelle();
                 });
+            });
+        },
+
+        /**
+         * İskonto temizleme butonunu bağla
+         */
+        _bindIskontoTemizle: function() {
+            var self = this;
+            if (!this.els.iskontoTemizleBtn) return;
+
+            this.els.iskontoTemizleBtn.addEventListener("click", function() {
+                if (confirm("İskontoyu sıfırlamak istediğinize emin misiniz?")) {
+                    HK.State.iskontoTutar = 0;
+                    self.arayuzuGuncelle();
+                    self.showToast("İskonto sıfırlandı.", "info");
+                }
             });
         },
 

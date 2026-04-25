@@ -75,23 +75,22 @@ if (!defined('ABSPATH'))
                 </div>
                 <div class="toplam-satir" id="ara-toplam-satiri">
                     <span class="toplam-etiket">ARA TOPLAM:</span>
-                    <span id="ara-toplam-deger" style="font-size: 20px; font-weight: bold; color: #7f8c8d;">0.00
-                        TL</span>
+                    <span id="ara-toplam-deger" style="font-size: 20px; font-weight: bold; color: #7f8c8d;">0.00 TL</span>
                 </div>
                 <div class="toplam-satir" id="nakit-indirim-satiri" style="display:none !important;">
                     <span class="toplam-etiket" id="nakit-indirim-etiket">İNDİRİM (%5):</span>
                     <span id="nakit-indirim-deger" class="indirim-deger">-0.00 TL</span>
                 </div>
                 <div class="toplam-satir" id="indirim-satiri" style="display:none !important;">
-                    <span class="toplam-etiket">İSKONTO:</span>
+                    <span class="toplam-etiket"><button id="iskonto-temizle-btn" title="İskontoyu Sıfırla">✕</button> İSKONTO:</span>
                     <span id="indirim-deger" class="indirim-deger">-0.00 TL</span>
                 </div>
                 <div class="toplam-satir">
                     <span class="toplam-etiket">GENEL TOPLAM:</span>
                     <span id="genel-toplam" class="toplam-deger">0.00 TL</span>
                 </div>
-                </div>
             </div>
+        </div>
 
             <!-- Ödeme Tipi Seçici -->
             <div class="odeme-secici">

@@ -80,7 +80,32 @@
     line-height: 1;
 }
 
-.indirim-deger {
+}
+ 
+ #iskonto-temizle-btn {
+     background: #e74c3c;
+     color: white;
+     border: none;
+     border-radius: 50%;
+     width: 20px;
+     height: 20px;
+     font-size: 10px;
+     cursor: pointer;
+     line-height: 20px;
+     text-align: center;
+     padding: 0;
+     margin-right: 5px;
+     display: none; /* JS tarafında HK.State.iskontoTutar > 0 ise gösterilecek */
+     vertical-align: middle;
+     transition: all 0.2s;
+ }
+ 
+ #iskonto-temizle-btn:hover {
+     background: #c0392b;
+     transform: scale(1.1);
+ }
+ 
+ .indirim-deger {
     font-size: 18px !important;
     color: #e74c3c !important;
     font-weight: bold !important;
