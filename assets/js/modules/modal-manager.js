@@ -61,14 +61,15 @@
             var els = this.els;
 
             els.iskontoButon.addEventListener("click", function() {
-                var sepetToplami = self._getSepetAraToplam();
-                var mevcutIskonto = self._normalizeIskonto(HK.State.iskontoTutar, sepetToplami);
-                var limitMetni = "En fazla " + HK.CurrencyMask.format(sepetToplami);
+                var araToplam = self._getSepetAraToplam();
+                var bazToplam = self._getBazToplam();
+                var mevcutIskonto = self._normalizeIskonto(HK.State.iskontoTutar, araToplam);
+                var limitMetni = "En fazla " + HK.CurrencyMask.format(bazToplam);
 
                 els.iskontoModal.style.display = "flex";
                 els.iskontoInput.value = mevcutIskonto > 0 ? HK.CurrencyMask.format(mevcutIskonto) : "";
-                els.iskontoInput.placeholder = limitMetni;
-                els.iskontoHedefInput.value = HK.CurrencyMask.format(sepetToplami - mevcutIskonto);
+                els.iskontoInput.placeholder = "0,00";
+                els.iskontoHedefInput.value = HK.CurrencyMask.format(bazToplam - mevcutIskonto);
                 els.iskontoHedefInput.placeholder = limitMetni;
                 els.iskontoLimitBilgi.innerText = limitMetni + " girebilirsiniz.";
                 els.iskontoHedefInput.focus();
@@ -96,12 +97,13 @@
             });
 
             els.iskontoOnay.addEventListener("click", function() {
-                var sepetToplami = self._getSepetAraToplam();
-                var iskonto = self._normalizeIskonto(HK.CurrencyMask.parse(els.iskontoInput.value), sepetToplami);
+                var araToplam = self._getSepetAraToplam();
+                var bazToplam = self._getBazToplam();
+                var iskonto = self._normalizeIskonto(HK.CurrencyMask.parse(els.iskontoInput.value), araToplam);
 
                 HK.State.iskontoTutar = iskonto;
                 els.iskontoInput.value = iskonto > 0 ? HK.CurrencyMask.format(iskonto) : "";
-                els.iskontoHedefInput.value = HK.CurrencyMask.format(sepetToplami - iskonto);
+                els.iskontoHedefInput.value = HK.CurrencyMask.format(bazToplam - iskonto);
                 els.iskontoModal.style.display = "none";
                 HK.UIRenderer.arayuzuGuncelle();
             });
@@ -113,6 +115,22 @@
                 toplam += (item.price * item.quantity);
             });
             return parseFloat(toplam.toFixed(2));
+        },
+
+        /**
+         * Otomatik indirimler sonrası (manuel iskonto öncesi) toplamı döner.
+         */
+        _getBazToplam: function() {
+            var state = HK.State;
+            var araToplam = this._getSepetAraToplam();
+            var nakitIndirim = 0;
+            
+            // Eğer bölünmüş ödeme YOKSA ve Nakit/IBAN seçiliyse %5 düş
+            if (!state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
+                nakitIndirim = araToplam * 0.05;
+            }
+            
+            return parseFloat((araToplam - nakitIndirim).toFixed(2));
         },
 
         _normalizeIskonto: function(tutar, sepetToplami) {
@@ -127,25 +145,26 @@
 
         _syncIskontoInputs: function(kaynak) {
             var els = this.els;
-            var sepetToplami = this._getSepetAraToplam();
+            var araToplam = this._getSepetAraToplam();
+            var bazToplam = this._getBazToplam();
             var iskonto = 0;
 
             if (kaynak === "hedef") {
                 var hedefTutar = HK.CurrencyMask.parse(els.iskontoHedefInput.value);
                 if (hedefTutar < 0) hedefTutar = 0;
-                if (hedefTutar > sepetToplami) hedefTutar = sepetToplami;
+                if (hedefTutar > bazToplam) hedefTutar = bazToplam;
 
                 hedefTutar = parseFloat(hedefTutar.toFixed(2));
-                iskonto = this._normalizeIskonto(sepetToplami - hedefTutar, sepetToplami);
+                iskonto = this._normalizeIskonto(bazToplam - hedefTutar, araToplam);
 
                 // Kendi değerimizi güncellemiyoruz (imleç kaçmasın diye), sadece diğerini güncelliyoruz
                 els.iskontoInput.value = iskonto > 0 ? HK.CurrencyMask.format(iskonto) : "";
                 return;
             }
 
-            iskonto = this._normalizeIskonto(HK.CurrencyMask.parse(els.iskontoInput.value), sepetToplami);
+            iskonto = this._normalizeIskonto(HK.CurrencyMask.parse(els.iskontoInput.value), araToplam);
             // Kendi değerimizi güncellemiyoruz (imleç kaçmasın diye), sadece diğerini güncelliyoruz
-            els.iskontoHedefInput.value = HK.CurrencyMask.format(sepetToplami - iskonto);
+            els.iskontoHedefInput.value = HK.CurrencyMask.format(bazToplam - iskonto);
         },
 
         // =========================================

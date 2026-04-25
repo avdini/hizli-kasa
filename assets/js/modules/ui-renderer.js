@@ -139,7 +139,8 @@ window.HizliKasa = window.HizliKasa || {};
             });
 
             var nakitIndirimTutar = 0;
-            if (state.odemeTipi === "cash" || state.odemeTipi === "iban") {
+            // Bölünmüş ödeme varsa otomatik indirimleri devre dışı bırak
+            if (!state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
                 nakitIndirimTutar = sepetAraToplam * 0.05;
                 els.nakitIndirimSatiri.style.setProperty("display", "flex", "important");
                 els.nakitIndirimDegerArea.innerText = "-" + nakitIndirimTutar.toFixed(2) + " TL";
