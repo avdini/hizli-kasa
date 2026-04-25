@@ -200,3 +200,13 @@
 .odeme-btn:not(.aktif):hover {
     background: #eee;
 }
+
+/* 570px üzeri ekranlarda buton hizalamasını sabitle */
+@media (min-width: 571px) {
+    .islem-sol-grup, 
+    #onayla-buton {
+        flex: 0 0 calc(50% - 2.5px) !important; /* Tam %50 genişlik (gap düşüldü) */
+        min-width: calc(50% - 2.5px) !important;
+        max-width: calc(50% - 2.5px) !important;
+    }
+}
