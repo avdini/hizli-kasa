@@ -60,19 +60,6 @@
     color: var(--hk-accent);
 }
 
-/* Glow Efekti */
-@keyframes bol-glow {
-    0% { box-shadow: 0 0 5px rgba(39, 174, 96, 0.4); transform: scale(1); }
-    50% { box-shadow: 0 0 20px rgba(39, 174, 96, 0.8); transform: scale(1.02); }
-    100% { box-shadow: 0 0 5px rgba(39, 174, 96, 0.4); transform: scale(1); }
-}
-
-.bol-aktif-glow {
-    animation: bol-glow 2s infinite ease-in-out !important;
-    background: #27ae60 !important; /* Aktifken yeşil olsun */
-    color: white !important;
-}
-
 .toplam-satir {
     display: flex !important;
     align-items: baseline !important;
@@ -130,7 +117,6 @@
     transition: all 0.2s;
 }
 
-#bol-buton,
 #iskonto-buton,
 #yuvarla-buton {
     flex: 1 !important;
@@ -173,7 +159,6 @@
     transform: scale(1.02);
 }
 
-#bol-buton:hover,
 #iskonto-buton:hover,
 #yuvarla-buton:hover {
     background: #7f8c8d;

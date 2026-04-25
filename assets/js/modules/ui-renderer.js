@@ -166,7 +166,13 @@ window.HizliKasa = window.HizliKasa || {};
 
             // Ödeme Tipi Butonlarını Senkronize Et
             document.querySelectorAll(".odeme-btn").forEach(function(btn) {
-                btn.classList.toggle("aktif", btn.dataset.tip === state.odemeTipi);
+                var tip = btn.dataset.tip;
+                if (tip === "split") {
+                    btn.classList.toggle("aktif", state.splitData !== null);
+                } else {
+                    // Eğer bölünmüş ödeme varsa diğerleri aktif görünmesin
+                    btn.classList.toggle("aktif", tip === state.odemeTipi && state.splitData === null);
+                }
             });
 
             HK.CartManager.sepetiKaydet();
@@ -232,7 +238,12 @@ window.HizliKasa = window.HizliKasa || {};
             var self = this;
             document.querySelectorAll(".odeme-btn").forEach(function(btn) {
                 btn.addEventListener("click", function() {
-                    HK.State.odemeTipi = this.dataset.tip;
+                    var tip = this.dataset.tip;
+                    if (tip === "split") return; // ModalManager zaten bol-buton ID'sini dinliyor
+
+                    // Diğer butonlara basıldığında bölünmüş ödemeyi sıfırla
+                    HK.State.splitData = null;
+                    HK.State.odemeTipi = tip;
                     self.arayuzuGuncelle();
                 });
             });
