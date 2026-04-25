@@ -184,9 +184,26 @@ window.HizliKasa = window.HizliKasa || {};
 
             els.odemeOzetiAlani.innerHTML = "";
 
+            // Toplamı tekrar hesapla (Özet için)
+            var sepetAraToplam = 0;
+            state.sepet.forEach(function(item) {
+                sepetAraToplam += (item.price * item.quantity);
+            });
+            var nakitIndirimTutar = (state.odemeTipi === "cash" || state.odemeTipi === "iban") ? (sepetAraToplam * 0.05) : 0;
+            var sonToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
+            if (sonToplam < 0) sonToplam = 0;
+
             if (!state.splitData) {
                 if (els.bolButon) els.bolButon.classList.remove("bol-aktif-glow");
-                els.odemeOzetiAlani.innerHTML = '<div style="text-align:center; color:#ccc; font-size:12px; font-style:italic;">Ödeme kanalı bekleniyor...</div>';
+                
+                // Bölünmüş ödeme yoksa aktif kanalı göster
+                var html = '<div style="font-weight:bold; font-size:11px; color:#95a5a6; margin-bottom:5px; text-transform:uppercase;">Ödeme Kanalı</div>';
+                var kanalAd = "💳 Kredi Kartı";
+                if (state.odemeTipi === "cash") kanalAd = "💵 Nakit";
+                if (state.odemeTipi === "iban") kanalAd = "🏦 IBAN";
+
+                html += '<div class="odeme-ozet-kart"> <span class="ozet-kanal">' + kanalAd + '</span> <span class="ozet-tutar">' + sonToplam.toFixed(2) + ' TL</span> </div>';
+                els.odemeOzetiAlani.innerHTML = html;
                 return;
             }
 

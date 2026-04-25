@@ -32,7 +32,7 @@
     align-items: flex-end !important; /* Değerler sağa yaslı */
     justify-content: center;
     gap: 4px !important;
-    border-left: 1px solid var(--hk-border); /* Ayrım çizgisi solda */
+    border-left: none !important; /* Dikey çizgi kaldırıldı */
     padding-right: 10px; /* Dışa bakan padding */
 }
 
