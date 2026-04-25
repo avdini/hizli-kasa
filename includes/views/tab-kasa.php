@@ -64,6 +64,9 @@ if (!defined('ABSPATH'))
 
             <!-- Toplam Alanı -->
             <div class="toplam-alani">
+                <div class="toplam-sag" id="odeme-ozeti-alani">
+                    <!-- Ödeme kanalları JS ile buraya gelecek -->
+                </div>
                 <div class="toplam-sol">
                 <div class="toplam-satir" id="liste-toplami-satiri">
                     <span class="toplam-etiket">ETİKET TOPLAMI:</span>
@@ -87,9 +90,6 @@ if (!defined('ABSPATH'))
                     <span class="toplam-etiket">GENEL TOPLAM:</span>
                     <span id="genel-toplam" class="toplam-deger">0.00 TL</span>
                 </div>
-                </div>
-                <div class="toplam-sag" id="odeme-ozeti-alani">
-                    <!-- Ödeme kanalları JS ile buraya gelecek -->
                 </div>
             </div>
 
