@@ -43,7 +43,10 @@ $status_text = ($status === '1') ? 'Uyuşmazlık Tespit Edildi' : 'Her Şey Yolu
                             <th scope="row">Kontrol Sıklığı (Arka Plan)</th>
                             <td>
                                 <select name="hizli_kasa_mismatch_interval" style="min-width:200px;">
-                                    <option value="hk_hourly" <?php selected($interval, 'hk_hourly'); ?>>Saatte Bir (Önerilen)</option>
+                                    <option value="hk_5mins" <?php selected($interval, 'hk_5mins'); ?>>5 Dakikada Bir</option>
+                                    <option value="hk_15mins" <?php selected($interval, 'hk_15mins'); ?>>15 Dakikada Bir</option>
+                                    <option value="hk_30mins" <?php selected($interval, 'hk_30mins'); ?>>30 Dakikada Bir</option>
+                                    <option value="hk_hourly" <?php selected($interval, 'hk_hourly'); ?>>Saatte Bir</option>
                                     <option value="hk_6hours" <?php selected($interval, 'hk_6hours'); ?>>6 Saatte Bir</option>
                                     <option value="hk_twice_daily" <?php selected($interval, 'hk_twice_daily'); ?>>Günde 2 Kez</option>
                                     <option value="daily" <?php selected($interval, 'daily'); ?>>Günde Bir</option>

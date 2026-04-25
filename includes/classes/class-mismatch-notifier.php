@@ -24,6 +24,18 @@ class Hizli_Kasa_Mismatch_Notifier {
      * Özel Cron Aralıkları Ekle
      */
     public static function add_cron_schedules($schedules) {
+        $schedules['hk_5mins'] = [
+            'interval' => 300,
+            'display'  => 'Hızlı Kasa: 5 Dakikada Bir'
+        ];
+        $schedules['hk_15mins'] = [
+            'interval' => 900,
+            'display'  => 'Hızlı Kasa: 15 Dakikada Bir'
+        ];
+        $schedules['hk_30mins'] = [
+            'interval' => 1800,
+            'display'  => 'Hızlı Kasa: 30 Dakikada Bir'
+        ];
         $schedules['hk_hourly'] = [
             'interval' => 3600,
             'display'  => 'Hızlı Kasa: Saatte Bir'

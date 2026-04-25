@@ -585,8 +585,8 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         $base_sql = "
             SELECT 
                 (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id,
-                CAST(pm_stock.meta_value AS DECIMAL(15,4)) as wc_stock,
-                SUM(sk.quantity) as total_wh_stock
+                COALESCE(CAST(pm_stock.meta_value AS DECIMAL(15,4)), 0) as wc_stock,
+                COALESCE(SUM(sk.quantity), 0) as total_wh_stock
             FROM {$wpdb->posts} p
             LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
             LEFT JOIN {$wpdb->postmeta} pm_stock ON (p.ID = pm_stock.post_id AND pm_stock.meta_key = '_stock')
