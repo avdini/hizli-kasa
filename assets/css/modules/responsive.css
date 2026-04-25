@@ -19,16 +19,38 @@
         width: 100%;
         overflow-x: auto;
         padding-bottom: 5px;
+        gap: 5px; /* Butonlar arası boşluk */
+    }
+
+    .kasa-sekmeleri-listesi, 
+    .kasa-sabit-butonlar {
+        flex-direction: row !important;
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        border-top: none !important;
+        gap: 5px !important;
+        flex: 0 0 auto !important;
     }
 
     .sidebar-btn {
-        flex: 1;
-        min-width: 60px;
-        padding: 8px 0;
+        flex: 0 0 auto !important; /* Genişliği içeriğe bırak */
+        min-width: 50px !important;
+        padding: 5px 8px !important;
+        font-size: 11px !important;
+    }
+
+    .sidebar-btn span {
+        font-size: 16px !important;
+        margin-bottom: 0 !important;
+    }
+
+    .kasa-sabit-butonlar .sidebar-btn {
+        min-height: 45px !important;
+        min-width: 80px !important;
     }
 
     #kasa-konteyner {
-        padding: 10px;
+        padding: 5px !important; /* Boşluğu azalttık */
         border-radius: 0;
         border: none;
         height: auto !important;
