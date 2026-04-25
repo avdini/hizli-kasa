@@ -38,29 +38,32 @@ function hizli_kasa_log($message, $filename = 'hizli-kasa-debug.log')
 /**
  * Admin işlemleri için ayrı log
  */
-function hizli_kasa_admin_log($message)
-{
+function hizli_kasa_admin_log($message) {
     hizli_kasa_log($message, 'hizli-kasa-admin.log');
 }
+
+// Sınıfları Yükle
+require_once HIZLI_KASA_PATH . 'includes/classes/class-database.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-admin-settings.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-mismatch-notifier.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-rest-api.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-shortcode.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-barcode-helper.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-menu-filter.php';
+
+// Başlatıcılar
+Hizli_Kasa_Database::init();
+Hizli_Kasa_Stock_Manager::listen();
+Hizli_Kasa_Mismatch_Notifier::init();
 
 // Canary Log: Sadece WP hazır olduğunda çalıştır
 add_action('init', function () {
     hizli_kasa_log("--- Eklenti Başarıyla Başlatıldı (init) ---");
 });
 
-require_once HIZLI_KASA_PATH . 'includes/classes/class-database.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-admin-settings.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-rest-api.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-shortcode.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-barcode-helper.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-menu-filter.php';
-
 // Veritabanı Aktivasyonu
 register_activation_hook(__FILE__, ['Hizli_Kasa_Database', 'init']);
-
-// Başlatıcılar
-Hizli_Kasa_Stock_Manager::listen();
 
 // Otomatik Güncelleme Sistemi (Plugin Update Checker)
 require_once HIZLI_KASA_PATH . 'includes/plugin-update-checker/plugin-update-checker.php';

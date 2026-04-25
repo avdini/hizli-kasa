@@ -487,6 +487,10 @@ jQuery(document).ready(function($) {
     };
 
     // İlk Yükleme (Artık güvenli)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('filter_mismatch') === 'true') {
+        $('#filter-mismatch').prop('checked', true);
+    }
     loadStockList();
 
     // Sayfa değiştirince veya arama yapınca delegasyonlu event listener'ı bir kez kur

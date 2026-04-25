@@ -186,6 +186,11 @@ class Hizli_Kasa_Stock_Manager {
 
         self::log_movement($product_id, $variation_id, $location_id, $old_qty, $new_qty, $reason);
 
+        // Uyuşmazlık önbelleğini sıfırla
+        if (class_exists('Hizli_Kasa_Mismatch_Notifier')) {
+            Hizli_Kasa_Mismatch_Notifier::reset_status();
+        }
+
         return $new_qty;
     }
 
@@ -442,6 +447,12 @@ class Hizli_Kasa_Stock_Manager {
         }
 
         self::log_movement($product_id, $variation_id, $location_id, $old_qty, $new_qty, $reason);
+
+        // Uyuşmazlık önbelleğini sıfırla
+        if (class_exists('Hizli_Kasa_Mismatch_Notifier')) {
+            Hizli_Kasa_Mismatch_Notifier::reset_status();
+        }
+
         return $new_qty;
     }
 
