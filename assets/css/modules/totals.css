@@ -93,7 +93,7 @@
 .islem-grubu {
     display: flex !important;
     align-items: center !important;
-    gap: 15px !important;
+    gap: 5px !important; /* odeme-secici ile hizalandı */
     flex-shrink: 0;
     margin-bottom: 0px;
 }
