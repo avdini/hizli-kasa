@@ -25,6 +25,24 @@
         init: function() {
             var self = this;
 
+            // Stok Uyarı Modal Butonları
+            var stokVazgec = document.getElementById("stok-vazgec");
+            var stokDevam = document.getElementById("stok-devam");
+            var stokModal = document.getElementById("stok-uyari-modal");
+
+            if (stokVazgec) {
+                stokVazgec.addEventListener("click", function() {
+                    stokModal.style.display = "none";
+                });
+            }
+
+            if (stokDevam) {
+                stokDevam.addEventListener("click", function() {
+                    stokModal.style.display = "none";
+                    self.siparisIsleminiGerceklestir(HK.State.splitData);
+                });
+            }
+
             document.getElementById("onayla-buton").addEventListener("click", async function() {
                 var state = HK.State;
                 if (state.sepet.length === 0) return;
