@@ -1,7 +1,8 @@
 <?php
 /**
  * Plugin Name: Hızlı Kasa
- * Description: avdini için hızlı POS sistemi.1
+ * Description: avdini için hızlı POS sistemi.
+ * Version: 4.2.41.21
  * Author: Seyfullah Kurt
  */
 
