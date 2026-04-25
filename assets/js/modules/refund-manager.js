@@ -69,7 +69,7 @@ const RefundManager = (function () {
         if (iskontoInput) {
             iskontoInput.oninput = () => {
                 if (!originalOrder) return;
-                const kalan = (originalOrder.total_discount || 0) - (originalOrder.refunded_discount || 0);
+                const kalan = (originalOrder.manual_discount || 0) - (originalOrder.refunded_manual_discount || 0);
                 const sepetToplami = refundCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
                 const maxDusebilir = Math.min(kalan, sepetToplami);
                 
@@ -343,10 +343,10 @@ const RefundManager = (function () {
             return;
         }
 
-        const kalanIskonto = (originalOrder.total_discount || 0) - (originalOrder.refunded_discount || 0);
+        const kalanIskonto = (originalOrder.manual_discount || 0) - (originalOrder.refunded_manual_discount || 0);
         console.log('İskonto Bilgisi:', { 
-            total: originalOrder.total_discount, 
-            refunded: originalOrder.refunded_discount, 
+            total: originalOrder.manual_discount, 
+            refunded: originalOrder.refunded_manual_discount, 
             kalan: kalanIskonto 
         });
         

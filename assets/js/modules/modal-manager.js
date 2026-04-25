@@ -22,6 +22,8 @@
             this.els = {
                 iskontoModal: document.getElementById("iskonto-modal"),
                 iskontoInput: document.getElementById("iskonto-input"),
+                iskontoHedefInput: document.getElementById("iskonto-hedef-input"),
+                iskontoLimitBilgi: document.getElementById("iskonto-limit-bilgi"),
                 iskontoButon: document.getElementById("iskonto-buton"),
                 iskontoOnay: document.getElementById("iskonto-onay"),
                 iskontoIptal: document.getElementById("iskonto-iptal"),
@@ -55,19 +57,38 @@
         // =========================================
 
         _bindIskontoModal: function() {
+            var self = this;
             var els = this.els;
 
             els.iskontoButon.addEventListener("click", function() {
+                var sepetToplami = self._getSepetAraToplam();
+                var mevcutIskonto = self._normalizeIskonto(HK.State.iskontoTutar, sepetToplami);
+                var limitMetni = "En fazla " + HK.CurrencyMask.format(sepetToplami);
+
                 els.iskontoModal.style.display = "flex";
-                els.iskontoInput.value = HK.State.iskontoTutar > 0 ? HK.CurrencyMask.format(HK.State.iskontoTutar) : "";
-                els.iskontoInput.focus();
+                els.iskontoInput.value = mevcutIskonto > 0 ? HK.CurrencyMask.format(mevcutIskonto) : "";
+                els.iskontoInput.placeholder = limitMetni;
+                els.iskontoHedefInput.value = HK.CurrencyMask.format(sepetToplami - mevcutIskonto);
+                els.iskontoHedefInput.placeholder = limitMetni;
+                els.iskontoLimitBilgi.innerText = limitMetni + " girebilirsiniz.";
+                els.iskontoHedefInput.focus();
             });
 
-            els.iskontoInput.addEventListener("keydown", function(e) {
-                if (e.key === "Enter") {
-                    e.preventDefault();
-                    els.iskontoOnay.click();
-                }
+            [els.iskontoInput, els.iskontoHedefInput].forEach(function(input) {
+                input.addEventListener("keydown", function(e) {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        els.iskontoOnay.click();
+                    }
+                });
+            });
+
+            els.iskontoInput.addEventListener("input", function() {
+                self._syncIskontoInputs("iskonto");
+            });
+
+            els.iskontoHedefInput.addEventListener("input", function() {
+                self._syncIskontoInputs("hedef");
             });
 
             els.iskontoIptal.addEventListener("click", function() {
@@ -75,10 +96,56 @@
             });
 
             els.iskontoOnay.addEventListener("click", function() {
-                HK.State.iskontoTutar = HK.CurrencyMask.parse(els.iskontoInput.value) || 0;
+                var sepetToplami = self._getSepetAraToplam();
+                var iskonto = self._normalizeIskonto(HK.CurrencyMask.parse(els.iskontoInput.value), sepetToplami);
+
+                HK.State.iskontoTutar = iskonto;
+                els.iskontoInput.value = iskonto > 0 ? HK.CurrencyMask.format(iskonto) : "";
+                els.iskontoHedefInput.value = HK.CurrencyMask.format(sepetToplami - iskonto);
                 els.iskontoModal.style.display = "none";
                 HK.UIRenderer.arayuzuGuncelle();
             });
+        },
+
+        _getSepetAraToplam: function() {
+            var toplam = 0;
+            HK.State.sepet.forEach(function(item) {
+                toplam += (item.price * item.quantity);
+            });
+            return parseFloat(toplam.toFixed(2));
+        },
+
+        _normalizeIskonto: function(tutar, sepetToplami) {
+            var deger = parseFloat(tutar) || 0;
+            var maksimum = Math.max(parseFloat(sepetToplami) || 0, 0);
+
+            if (deger < 0) deger = 0;
+            if (deger > maksimum) deger = maksimum;
+
+            return parseFloat(deger.toFixed(2));
+        },
+
+        _syncIskontoInputs: function(kaynak) {
+            var els = this.els;
+            var sepetToplami = this._getSepetAraToplam();
+            var iskonto = 0;
+
+            if (kaynak === "hedef") {
+                var hedefTutar = HK.CurrencyMask.parse(els.iskontoHedefInput.value);
+                if (hedefTutar < 0) hedefTutar = 0;
+                if (hedefTutar > sepetToplami) hedefTutar = sepetToplami;
+
+                hedefTutar = parseFloat(hedefTutar.toFixed(2));
+                iskonto = this._normalizeIskonto(sepetToplami - hedefTutar, sepetToplami);
+
+                els.iskontoHedefInput.value = HK.CurrencyMask.format(hedefTutar);
+                els.iskontoInput.value = iskonto > 0 ? HK.CurrencyMask.format(iskonto) : "";
+                return;
+            }
+
+            iskonto = this._normalizeIskonto(HK.CurrencyMask.parse(els.iskontoInput.value), sepetToplami);
+            els.iskontoInput.value = iskonto > 0 ? HK.CurrencyMask.format(iskonto) : "";
+            els.iskontoHedefInput.value = HK.CurrencyMask.format(sepetToplami - iskonto);
         },
 
         // =========================================

@@ -149,8 +149,17 @@ if (!defined('ABSPATH'))
         style="display:none; position:fixed; z-index:10001; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
         <div class="modal-icerik">
             <h3>İskonto Tutarı (TL)</h3>
-            <input type="text" id="iskonto-input" class="hk-input hk-currency-mask" placeholder="0,00"
-                inputmode="decimal" style="font-size:24px; text-align:center; font-weight:800; color:var(--hk-danger);">
+            <div class="iskonto-modal-alan">
+                <label for="iskonto-hedef-input">Ödenecek Tutar (TL)</label>
+                <input type="text" id="iskonto-hedef-input" class="hk-input hk-currency-mask" placeholder="0,00"
+                    inputmode="decimal" style="font-size:24px; text-align:center; font-weight:800; color:var(--hk-text-main);">
+            </div>
+            <div class="iskonto-modal-alan" style="margin-top:14px;">
+                <label for="iskonto-input">İskonto Tutarı (TL)</label>
+                <input type="text" id="iskonto-input" class="hk-input hk-currency-mask" placeholder="0,00"
+                    inputmode="decimal" style="font-size:24px; text-align:center; font-weight:800; color:var(--hk-danger);">
+            </div>
+            <small id="iskonto-limit-bilgi" class="iskonto-modal-yardimci-metin"></small>
             <div class="modal-butonlar" style="margin-top:20px;">
                 <button id="iskonto-iptal"
                     style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">İptal</button>

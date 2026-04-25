@@ -116,7 +116,7 @@
             document.getElementById("order-edit-detail-view").style.display = "block";
             
             document.getElementById("edit-order-payment").value = order.payment_method;
-            var discountVal = parseFloat(order.discount || 0);
+            var discountVal = parseFloat(order.manual_discount || order.discount || 0);
             document.getElementById("edit-order-discount").value = discountVal > 0 ? HK.CurrencyMask.format(discountVal) : "";
             this.renderItems();
         },
@@ -190,7 +190,7 @@
                 });
             }
 
-            if (changes.length === 0 && paymentMethod === this.activeOrder.payment_method && discount === parseFloat(this.activeOrder.discount || 0)) {
+            if (changes.length === 0 && paymentMethod === this.activeOrder.payment_method && discount === parseFloat(this.activeOrder.manual_discount || this.activeOrder.discount || 0)) {
                 HK.UIRenderer.showToast("Herhangi bir değişiklik yapılmadı.", 'info');
                 return;
             }

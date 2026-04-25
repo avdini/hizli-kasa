@@ -1068,9 +1068,44 @@ function hizli_kasa_get_order_details($request)
         'depo_adi' => $order->get_meta('_hk_cikis_depo_adi') ?: '',
         'telefon' => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '',
         'is_fully_refunded' => $is_fully_refunded,
+        'manual_discount' => hizli_kasa_get_order_manual_discount($order),
+        'refunded_manual_discount' => (float) $order->get_meta('_hk_refunded_discount'),
         'total_discount' => hizli_kasa_get_order_total_discount($order),
         'refunded_discount' => (float) $order->get_meta('_hk_refunded_discount')
     ];
+}
+
+function hizli_kasa_is_manual_discount_fee($fee)
+{
+    if (!$fee) {
+        return false;
+    }
+
+    $manual_flag = $fee->get_meta('_hk_manual_discount', true);
+    if ($manual_flag === 'yes') {
+        return true;
+    }
+
+    $name = trim((string) $fee->get_name());
+    return in_array($name, ['İskonto', 'Düzenlenmiş İskonto'], true);
+}
+
+function hizli_kasa_get_order_manual_discount($order)
+{
+    $manual_discount = 0;
+
+    foreach ($order->get_fees() as $fee) {
+        if (!hizli_kasa_is_manual_discount_fee($fee)) {
+            continue;
+        }
+
+        $total = (float) $fee->get_total();
+        if ($total < 0) {
+            $manual_discount += abs($total);
+        }
+    }
+
+    return round($manual_discount, 2);
 }
 
 function hizli_kasa_get_order_total_discount($order)
@@ -2013,7 +2048,8 @@ function hizli_kasa_get_recent_orders($request)
             'date' => $order->get_date_created()->date('H:i'),
             'has_refund' => $has_refund,
             'is_split' => $is_split,
-            'discount' => hizli_kasa_get_order_total_discount($order),
+            'discount' => hizli_kasa_get_order_manual_discount($order),
+            'manual_discount' => hizli_kasa_get_order_manual_discount($order),
             'items' => $items
         ];
     }
@@ -2045,7 +2081,7 @@ function hizli_kasa_update_order($request)
     $old_data = [
         'total' => $order->get_total(),
         'payment' => $order->get_payment_method(),
-        'discount' => hizli_kasa_get_order_total_discount($order),
+        'discount' => hizli_kasa_get_order_manual_discount($order),
         'items' => []
     ];
 
@@ -2056,7 +2092,7 @@ function hizli_kasa_update_order($request)
     if ($new_discount !== null && round($new_discount, 2) != round($old_data['discount'], 2)) {
         // Mevcut fee'leri (iskonto olanları) sil
         foreach ($order->get_fees() as $fee_id => $fee) {
-            if (preg_match('/iskonto|indirim/ui', $fee->get_name()) || (float) $fee->get_total() < 0) {
+            if (hizli_kasa_is_manual_discount_fee($fee)) {
                 $order->remove_item($fee_id);
             }
         }
@@ -2065,6 +2101,7 @@ function hizli_kasa_update_order($request)
             $item_fee->set_name('Düzenlenmiş İskonto');
             $item_fee->set_amount(-$new_discount);
             $item_fee->set_total(-$new_discount);
+            $item_fee->add_meta_data('_hk_manual_discount', 'yes', true);
             $order->add_item($item_fee);
         }
         $log_details[] = "İskonto: " . $old_data['discount'] . " -> " . $new_discount;
