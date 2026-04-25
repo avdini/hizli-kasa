@@ -196,7 +196,7 @@ window.HizliKasa = window.HizliKasa || {};
             state.sepet.forEach(function(item) {
                 sepetAraToplam += (item.price * item.quantity);
             });
-            var nakitIndirimTutar = (state.odemeTipi === "cash" || state.odemeTipi === "iban") ? (sepetAraToplam * 0.05) : 0;
+            var nakitIndirimTutar = (!state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban")) ? (sepetAraToplam * 0.05) : 0;
             var sonToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
             if (sonToplam < 0) sonToplam = 0;
 
@@ -227,6 +227,13 @@ window.HizliKasa = window.HizliKasa || {};
             }
             if (state.splitData.iban > 0) {
                 html += '<div class="odeme-ozet-kart"> <span class="ozet-kanal">🏦 IBAN</span> <span class="ozet-tutar">' + state.splitData.iban.toFixed(2) + ' TL</span> </div>';
+            }
+
+            // Tutar Uyuşmazlığı Kontrolü
+            var girenToplam = (state.splitData.nakit || 0) + (state.splitData.kart || 0) + (state.splitData.iban || 0);
+            var fark = sonToplam - girenToplam;
+            if (Math.abs(fark) >= 0.01) {
+                html += '<div style="color:#e74c3c; font-weight:bold; font-size:11px; margin-top:5px; border:1px solid #e74c3c; padding:5px; border-radius:4px; background:#fff5f5; text-align:center;">⚠️ Tutar Uyuşmazlığı! <br>Lütfen ödemeyi tekrar ayarla.</div>';
             }
 
             els.odemeOzetiAlani.innerHTML = html;

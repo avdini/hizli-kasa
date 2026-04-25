@@ -6,15 +6,15 @@
  * @package HizliKasa
  */
 
-(function(HK) {
+(function (HK) {
     'use strict';
 
     HK.OrderProcessor = {
-        
+
         /**
          * Yükleme ekranını göster/gizle
          */
-        toggleLoading: function(show) {
+        toggleLoading: function (show) {
             var overlay = document.getElementById("order-loading-overlay");
             if (overlay) overlay.style.display = show ? "flex" : "none";
         },
@@ -22,7 +22,7 @@
         /**
          * Sipariş onay butonunu bağla
          */
-        init: function() {
+        init: function () {
             var self = this;
 
             // Stok Uyarı Modal Butonları
@@ -31,19 +31,19 @@
             var stokModal = document.getElementById("stok-uyari-modal");
 
             if (stokVazgec) {
-                stokVazgec.addEventListener("click", function() {
+                stokVazgec.addEventListener("click", function () {
                     stokModal.style.display = "none";
                 });
             }
 
             if (stokDevam) {
-                stokDevam.addEventListener("click", function() {
+                stokDevam.addEventListener("click", function () {
                     stokModal.style.display = "none";
                     self.siparisIsleminiGerceklestir(HK.State.splitData);
                 });
             }
 
-            document.getElementById("onayla-buton").addEventListener("click", async function() {
+            document.getElementById("onayla-buton").addEventListener("click", async function () {
                 var state = HK.State;
                 if (state.sepet.length === 0) return;
 
@@ -66,7 +66,7 @@
             var phoneInput = document.getElementById("musteri-telefon");
 
             if (musterEkleBtn && musteriPanel) {
-                musterEkleBtn.addEventListener("click", function() {
+                musterEkleBtn.addEventListener("click", function () {
                     musteriPanel.style.display = musteriPanel.style.display === "none" ? "block" : "none";
                     if (musteriPanel.style.display === "block" && phoneInput) {
                         phoneInput.focus();
@@ -75,14 +75,14 @@
             }
 
             if (musteriKapat && musteriPanel) {
-                musteriKapat.addEventListener("click", function() {
+                musteriKapat.addEventListener("click", function () {
                     musteriPanel.style.display = "none";
                     if (phoneInput) phoneInput.value = ""; // Kapatınca temizle (opsiyonel)
                 });
             }
 
             if (phoneInput) {
-                phoneInput.addEventListener("input", function(e) {
+                phoneInput.addEventListener("input", function (e) {
                     var x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
                     if (!x[1]) {
                         e.target.value = '';
@@ -97,7 +97,7 @@
          * Son stok kontrolü — sipariş öncesi hem site hem depo stoklarını toplu doğrula
          * @returns {Promise<Array>} Sorunlu ürünler listesi
          */
-        sonStokKontrolu: async function() {
+        sonStokKontrolu: async function () {
             var state = HK.State;
             var durumMetni = document.getElementById("durum");
             var stokUyariListe = document.getElementById("stok-uyari-liste");
@@ -110,7 +110,7 @@
 
             try {
                 // Toplu kontrol — tek API çağrısı
-                var checkItems = state.sepet.map(function(item) {
+                var checkItems = state.sepet.map(function (item) {
                     return {
                         product_id: item.product_id,
                         variation_id: item.variation_id || 0,
@@ -131,7 +131,7 @@
                 var results = await response.json();
 
                 if (Array.isArray(results)) {
-                    results.forEach(function(r) {
+                    results.forEach(function (r) {
                         if (!r.site_ok || !r.depo_ok) {
                             sorunluUrunler.push({
                                 name: r.name,
@@ -154,7 +154,7 @@
          * Sipariş oluşturma ana fonksiyonu
          * @param {Object|null} splitData Bölünmüş ödeme verisi (opsiyonel)
          */
-        siparisIsleminiGerceklestir: async function(splitData) {
+        siparisIsleminiGerceklestir: async function (splitData) {
             splitData = splitData || null;
             var state = HK.State;
             var durumMetni = document.getElementById("durum");
@@ -166,7 +166,7 @@
                 this.toggleLoading(false);
                 return;
             }
-            
+
             this.toggleLoading(true);
             durumMetni.innerText = "İşlem onaylanıyor...";
 
@@ -176,12 +176,12 @@
             // Toplamlar için ön çalışma
             var sepetAraToplam = 0;
             var sepetListeToplami = 0;
-            state.sepet.forEach(function(item) {
+            state.sepet.forEach(function (item) {
                 sepetAraToplam += (item.price * item.quantity);
                 sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
             });
 
-            var temizSepet = state.sepet.map(function(item) {
+            var temizSepet = state.sepet.map(function (item) {
                 var lineEtiketFiyati = (item.regular_price || item.price);
                 var lineSubtotal = item.price * item.quantity;
                 var lineTotal = isAutoDiscount ? (lineSubtotal * 0.95) : lineSubtotal;
@@ -215,6 +215,19 @@
             }
 
             var netToplam = sepetAraToplam - state.iskontoTutar - (isAutoDiscount ? (sepetAraToplam * 0.05) : 0);
+
+            // Ödeme Bölünmüşse Tutar Kontrolü Yap (Son Kontrol)
+            if (splitData) {
+                var girenToplam = splitData.nakit + splitData.kart + splitData.iban;
+                var fark = netToplam - girenToplam;
+                if (Math.abs(fark) >= 0.01) {
+                    this.toggleLoading(false);
+                    HK.UIRenderer.showToast("Ödenecek tutarla ödeme dağılımı uyuşmuyor! Hesaplarda bir yanlışlık var, ödemeyi tekrar ayarla.", "error", true);
+                    durumMetni.innerText = "HATA: Ödeme tutarı uyuşmazlığı!";
+                    durumMetni.style.color = "#e74c3c";
+                    return;
+                }
+            }
 
             // Ödeme Yöntemleri (Raporlama İçin)
             var oNakit = 0, oKart = 0, oIban = 0;
@@ -279,7 +292,7 @@
                     body: JSON.stringify(siparisVerisi)
                 });
                 var orderResult = await response.json();
-                
+
                 this.toggleLoading(false);
 
                 if (response.ok) {
@@ -304,13 +317,13 @@
          * Stok uyarı modalını göster
          * @param {Array} sorunlar Sorunlu ürün listesi
          */
-        _stokUyarisiGoster: function(sorunlar) {
+        _stokUyarisiGoster: function (sorunlar) {
             var stokUyariListe = document.getElementById("stok-uyari-liste");
             var stokUyariModal = document.getElementById("stok-uyari-modal");
             var durumMetni = document.getElementById("durum");
 
             stokUyariListe.innerHTML = "";
-            sorunlar.forEach(function(u) {
+            sorunlar.forEach(function (u) {
                 var li = document.createElement("li");
                 var detay = 'İhtiyaç: ' + u.cartQty + ' / Site: ' + u.serverQty;
                 if (u.depoQty !== undefined) {
