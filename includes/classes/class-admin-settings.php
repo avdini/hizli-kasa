@@ -170,10 +170,10 @@ function hizli_kasa_ayarlari_kaydet()
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_genel_rapor_aktif', array(
         'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
     ));
-    // Bildirim Ayarları
-    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_mismatch_check_enabled');
-    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_mismatch_interval');
-    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_dismiss_hours');
+    // Bildirim Ayarları (Ayrı grup - Resetlenmeyi önlemek için)
+    register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_mismatch_check_enabled');
+    register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_mismatch_interval');
+    register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_dismiss_hours');
 }
 
 /**

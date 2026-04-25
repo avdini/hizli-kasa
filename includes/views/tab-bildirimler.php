@@ -18,7 +18,7 @@ $status_text = ($status === '1') ? 'Uyuşmazlık Tespit Edildi' : 'Her Şey Yolu
         <!-- Sol Kolon: Ayarlar -->
         <div>
             <form method="post" action="options.php">
-                <?php settings_fields('hizli_kasa_ayar_grubu'); ?>
+                <?php settings_fields('hizli_kasa_bildirim_grubu'); ?>
                 
                 <div class="card" style="margin:0; max-width:100%; padding:25px; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
                     <h2 style="margin-top:0; font-size:18px; display:flex; align-items:center; gap:10px;">
