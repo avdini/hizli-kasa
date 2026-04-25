@@ -191,7 +191,10 @@ window.HizliKasa = window.HizliKasa || {};
             var state = HK.State;
             this.els.sidebarButtons.forEach(function(btn) {
                 btn.addEventListener("click", function() {
-                    var yeniId = parseInt(this.dataset.id);
+                    var id = this.dataset.id;
+                    if (!id) return; // Kasa ID yoksa işlem yapma (Rapor butonları vb.)
+
+                    var yeniId = parseInt(id);
                     if (yeniId === state.aktifKasaId) return;
 
                     // Mevcut kasayı kaydet, yenisini yükle
