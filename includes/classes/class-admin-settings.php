@@ -505,7 +505,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
             LEFT JOIN $stok_table sk ON (p.ID = sk.variation_id OR (p.post_type = 'product' AND p.ID = sk.product_id AND sk.variation_id = 0))
             WHERE $where_sql
             GROUP BY p.ID
-            HAVING total_wh_stock > wc_stock";
+            HAVING total_wh_stock != wc_stock";
     } else {
         $base_sql = "
             SELECT DISTINCT (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id
@@ -600,7 +600,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
             // Mismatch kontrolü
             $v_total_wh = array_sum(array_column($v_item['warehouse_stocks'], 'qty'));
             $v_item['total_warehouse_stock'] = $v_total_wh;
-            $v_item['has_mismatch'] = ($v_total_wh > $v_item['wc_stock']);
+            $v_item['has_mismatch'] = ($v_total_wh != $v_item['wc_stock']);
 
             $children[] = $v_item;
         }
@@ -627,7 +627,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         $item['total_warehouse_stock'] = $total_wh;
         
         if ($item['type'] === 'simple') {
-            $item['has_mismatch'] = ($total_wh > $item['wc_stock']);
+            $item['has_mismatch'] = ($total_wh != $item['wc_stock']);
         } else {
             // Değişken üründe herhangi bir varyasyonda uyuşmazlık varsa true dön
             $item['has_mismatch'] = false;

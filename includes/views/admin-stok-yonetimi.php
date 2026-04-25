@@ -513,7 +513,7 @@ jQuery(document).ready(function($) {
             const badgeClass = isVariable ? 'badge-variable' : 'badge-simple';
             const badgeText = isVariable ? 'Varyantlı' : 'Basit';
             const stripeClass = (mainRowCounter % 2 === 0) ? 'stripe-even' : 'stripe-odd';
-            const mismatchIcon = p.has_mismatch ? '<span class="dashicons dashicons-warning" style="color:#d63638; font-size:18px; margin-left:8px;" title="Depo stok toplamı site stoğundan fazla!"></span>' : '';
+            const mismatchIcon = p.has_mismatch ? '<span class="dashicons dashicons-warning" style="color:#d63638; font-size:18px; margin-left:8px;" title="Depo stok toplamı site stoğu ile uyuşmuyor!"></span>' : '';
 
             let row = `<tr class="${isVariable ? 'row-variable' : ''} ${stripeClass}" data-id="${p.id}">
                 <td><img src="${p.thumbnail}" style="width:40px; height:40px; border-radius:4px; object-fit:cover;"></td>
@@ -554,7 +554,7 @@ jQuery(document).ready(function($) {
                             <div style="display:flex; align-items:center;">
                                 <span style="font-size:13px; color:#334155;">${v.name}</span>
                                 <span class="hk-badge badge-variation">Varyasyon</span>
-                                ${v.has_mismatch ? '<span class="dashicons dashicons-warning" style="color:#d63638; font-size:16px; margin-left:5px;" title="Depo stok toplamı site stoğundan fazla!"></span>' : ''}
+                                ${v.has_mismatch ? '<span class="dashicons dashicons-warning" style="color:#d63638; font-size:16px; margin-left:5px;" title="Depo stok toplamı site stoğu ile uyuşmuyor!"></span>' : ''}
                             </div>
                             <code style="font-size:10px; color:#94a3b8;">SKU: ${v.sku || 'N/A'}</code>
                         </td>
