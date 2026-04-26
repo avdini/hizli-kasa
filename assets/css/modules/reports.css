@@ -371,6 +371,29 @@
     font-size: 12px;
 }
 
+.report-item-list-wrapper {
+    display: block;
+}
+
+.report-items-toggle-btn {
+    margin-top: 6px;
+    border: 1px solid var(--hk-border);
+    background: var(--hk-bg-body);
+    color: var(--hk-text-main);
+    border-radius: 6px;
+    padding: 5px 8px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.report-items-toggle-btn:hover {
+    background: var(--hk-bg-hover);
+}
+
+.report-items-extra {
+    margin-top: 6px;
+}
+
 .log-change-item {
     display: inline-block;
     padding: 2px 8px;
