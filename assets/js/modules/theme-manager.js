@@ -50,10 +50,13 @@
                     btn.style.color = 'var(--hk-text-main)';
                 }
 
-                btn.addEventListener('click', function() {
-                    var theme = this.dataset.tema;
-                    self.setTheme(theme);
-                });
+                if (!btn.dataset.bound) {
+                    btn.addEventListener('click', function() {
+                        var theme = this.dataset.tema;
+                        self.setTheme(theme);
+                    });
+                    btn.dataset.bound = 'true';
+                }
             });
         },
 
