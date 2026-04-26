@@ -213,9 +213,13 @@
             return '' +
                 '<div class="report-item-list-wrapper">' +
                     '<ul class="order-item-list">' + firstItemHtml + '</ul>' +
-                    '<button type="button" class="report-items-toggle-icon-btn" aria-expanded="false" aria-label="Diğer ürünleri göster" title="Diğer ürünleri göster">' +
-                        '<span class="report-toggle-icon" aria-hidden="true">⌄</span>' +
-                    '</button>' +
+                    '<div class="report-items-toggle-row">' +
+                        '<button type="button" class="report-items-toggle-icon-btn is-closed" aria-expanded="false" aria-label="Diğer ürünleri göster" title="Diğer ürünleri göster">' +
+                            '<span class="report-toggle-icon" aria-hidden="true">⌄</span>' +
+                        '</button>' +
+                        '<span class="report-items-toggle-label" data-more-count="' + (items.length - 1) + '">' + (items.length - 1) + ' ürün daha göster</span>' +
+                        '<span class="report-items-caption">Sepetteki ürünler</span>' +
+                    '</div>' +
                     '<div class="report-items-extra" style="display:none;">' +
                         '<ul class="order-item-list order-item-list-extra">' + remainingItemsHtml + '</ul>' +
                     '</div>' +
@@ -355,6 +359,8 @@
 
                     var extra = wrapper.querySelector(".report-items-extra");
                     if (!extra) return;
+                    var label = wrapper.querySelector(".report-items-toggle-label");
+                    var moreCount = label ? Number(label.dataset.moreCount || 0) : 0;
 
                     var isOpen = extra.style.display === "block";
                     extra.style.display = isOpen ? "none" : "block";
@@ -362,6 +368,10 @@
                     this.setAttribute("aria-label", isOpen ? "Diğer ürünleri göster" : "Diğer ürünleri gizle");
                     this.setAttribute("title", isOpen ? "Diğer ürünleri göster" : "Diğer ürünleri gizle");
                     this.classList.toggle("is-open", !isOpen);
+                    this.classList.toggle("is-closed", isOpen);
+                    if (label) {
+                        label.textContent = isOpen ? (moreCount + " ürün daha göster") : "Ürünleri gizle";
+                    }
                 });
             });
         },

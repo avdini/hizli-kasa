@@ -397,13 +397,10 @@
 .report-item-list-wrapper {
     display: block;
     position: relative;
-    padding-right: 34px;
+    padding-right: 0;
 }
 
 .report-items-toggle-icon-btn {
-    position: absolute;
-    right: 0;
-    top: 6px;
     width: 26px;
     height: 26px;
     border: 1px solid var(--hk-border);
@@ -421,14 +418,44 @@
     background: var(--hk-bg-hover);
 }
 
+.report-items-toggle-icon-btn.is-closed {
+    background: var(--hk-danger);
+    border-color: var(--hk-danger);
+    color: #fff;
+}
+
+.report-items-toggle-icon-btn.is-closed:hover {
+    filter: brightness(1.05);
+}
+
 .report-toggle-icon {
     font-size: 16px;
-    line-height: 1;
+    line-height: 26px;
     transition: transform 0.2s ease;
+    display: inline-block;
+    width: 100%;
+    text-align: center;
 }
 
 .report-items-toggle-icon-btn.is-open .report-toggle-icon {
     transform: rotate(180deg);
+}
+
+.report-items-toggle-row {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.report-items-toggle-label {
+    font-size: 12px;
+    color: var(--hk-text-main);
+}
+
+.report-items-caption {
+    font-size: 11px;
+    color: var(--hk-text-muted);
 }
 
 .report-items-extra {
