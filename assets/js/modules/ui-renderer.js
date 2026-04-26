@@ -269,11 +269,9 @@ window.HizliKasa = window.HizliKasa || {};
             if (!this.els.iskontoTemizleBtn) return;
 
             this.els.iskontoTemizleBtn.addEventListener("click", function() {
-                if (confirm("İskontoyu sıfırlamak istediğinize emin misiniz?")) {
-                    HK.State.iskontoTutar = 0;
-                    self.arayuzuGuncelle();
-                    self.showToast("İskonto sıfırlandı.", "info");
-                }
+                HK.State.iskontoTutar = 0;
+                self.arayuzuGuncelle();
+                self.showToast("İskonto sıfırlandı.", "info");
             });
         },
 
