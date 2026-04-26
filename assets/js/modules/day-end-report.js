@@ -79,9 +79,20 @@
          * @param {String|null} tarih Belirli bir tarih (YYYY-MM-DD)
          */
         raporuGetir: async function (kasaId, tarih) {
+            console.log("HK.DayEndReport: raporuGetir called", {kasaId, tarih});
             var self = this;
             var state = HK.State;
             var finalKasaNo = kasaId || state.aktifKasaId;
+
+            if (!this.els || !this.els.gunSonuModal) {
+                console.warn("HK.DayEndReport: Elements not found! Re-initializing...");
+                this.init();
+            }
+
+            if (!this.els.gunSonuModal) {
+                console.error("HK.DayEndReport: gunSonuModal still not found!");
+                return;
+            }
 
             // Modalı aç, yükleniyor göster
             this.els.gunSonuModal.style.display = "flex";
@@ -89,7 +100,7 @@
             this.els.gunSonuIcerik.style.display = "none";
 
             try {
-                var url = window.location.origin + '/wp-json/hizli-kasa/v1/gun-sonu-raporu?kasa_no=' + finalKasaNo;
+                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/gun-sonu-raporu?kasa_no=${finalKasaNo}`;
                 if (tarih) {
                     url += '&tarih=' + tarih;
                 }

@@ -466,8 +466,11 @@
             tbody.querySelectorAll(".btn-view-report").forEach(btn => {
                 btn.addEventListener("click", function() {
                     var date = this.dataset.date;
+                    console.log("HK.DetailedReports: View report button clicked for date:", date);
                     if (window.HizliKasa && window.HizliKasa.DayEndReport) {
                         window.HizliKasa.DayEndReport.raporuGetir('all', date);
+                    } else {
+                        console.error("HK.DetailedReports: DayEndReport module not found!");
                     }
                 });
             });
