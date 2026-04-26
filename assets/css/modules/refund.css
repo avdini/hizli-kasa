@@ -232,6 +232,33 @@
     padding: 20px;
 }
 
+#iade-siparis-detay {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+}
+
+.iade-kaydirilabilir-liste {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-right: -10px; /* Offset for padding if needed */
+}
+
+.iade-kaydirilabilir-liste::-webkit-scrollbar {
+    width: 6px;
+}
+
+.iade-kaydirilabilir-liste::-webkit-scrollbar-thumb {
+    background: var(--hk-border);
+    border-radius: 10px;
+}
+
+.iade-kaydirilabilir-liste::-webkit-scrollbar-thumb:hover {
+    background: var(--hk-text-muted);
+}
+
+
 .iade-bos-durum {
     display: flex;
     flex-direction: column;
