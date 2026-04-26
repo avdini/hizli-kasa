@@ -244,7 +244,7 @@
         renderOrderMetaDetails: function(meta) {
             var self = this;
             if (!meta || typeof meta !== 'object' || !Object.keys(meta).length) {
-                return 'Meta bilgisi yok.';
+                return 'Detay bilgisi yok.';
             }
 
             return Object.keys(meta).map(function(key) {
@@ -337,7 +337,7 @@
                 var kasaNoLabel = order.kasa_no ? ('Kasa: ' + this.escapeHtml(order.kasa_no)) : '-';
 
                 var tr = document.createElement("tr");
-                var actionButtons = '<button class="btn-detail" data-id="' + this.escapeHtml(order.id || '') + '">🔍 Meta</button>';
+                var actionButtons = '<button class="btn-detail" data-id="' + this.escapeHtml(order.id || '') + '">🔍 Detay</button>';
                 if (type === 'orders') {
                     actionButtons += '<button class="btn-reprint" data-id="' + this.escapeHtml(order.id || '') + '">🧾 Fiş Yazdır</button>';
                 }
@@ -354,7 +354,7 @@
                 var detailTr = document.createElement("tr");
                 detailTr.className = "meta-details-row";
                 detailTr.id = `meta-row-${order.id}`;
-                detailTr.innerHTML = `<td colspan="6"><div class="meta-details-container">${metaDetails || 'Meta bilgisi yok.'}</div></td>`;
+                detailTr.innerHTML = `<td colspan="6"><div class="meta-details-container">${metaDetails || 'Detay bilgisi yok.'}</div></td>`;
                 tbody.appendChild(detailTr);
             });
 
