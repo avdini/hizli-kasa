@@ -224,24 +224,6 @@ const RefundManager = (function () {
                 <span class="original-kasa-bilgi">📢 Bu sipariş <strong>Kasa ${originalOrder.kasa_no || 'Bilinmiyor'}</strong> üzerinden satılmış. (Kasiyer: ${originalOrder.kasiyer || '-'})</span>
             </div>
             
-            <div class="iade-islem-ayarlari" style="margin: 10px 0; padding: 10px; background: rgba(0,0,0,0.05); border-radius: 8px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: bold; font-size: 13px;">İadenin İşleneceği Kasa:</label>
-                <select id="iade-hedef-kasa" class="terminal-input" style="width: 100%;" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">
-                    ${(() => {
-                        let options = '';
-                        const total = kasaAyar.toplamKasa || 3;
-                        const originalKasaNo = parseInt(originalOrder.kasa_no) || 1;
-                        // Eğer orijinal kasa artık mevcut değilse (toplam sayı düşürüldüyse) 1'e çek
-                        const defaultKasa = (originalKasaNo > 0 && originalKasaNo <= total) ? originalKasaNo : 1;
-                        
-                        for (let i = 1; i <= total; i++) {
-                            options += `<option value="${i}" ${defaultKasa == i ? 'selected' : ''}>Kasa ${i}</option>`;
-                        }
-                        return options;
-                    })()}
-                </select>
-            </div>
-
             <div class="urun-listesi-baslik">İade Edilecek Ürünleri Seçin</div>
             <div class="iade-kaydirilabilir-liste">
         `;
@@ -274,6 +256,55 @@ const RefundManager = (function () {
         if (iskontoInput) iskontoInput.value = "";
         
         renderRefundCart();
+        renderRefundSettings();
+    }
+
+    function renderRefundSettings() {
+        const container = document.getElementById('iade-odeme-yontemi-alani');
+        if (!container || !originalOrder) {
+            if (container) container.style.display = 'none';
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="iade-ayarlar-panel">
+                <div class="iade-ayar-satir">
+                    <label>İade Ödeme Yöntemi:</label>
+                    <div class="iade-odeme-secenekleri">
+                        <label class="iade-odeme-btn-label">
+                            <input type="radio" name="iade_payment_method" value="nakit" checked>
+                            <span>💵 Nakit</span>
+                        </label>
+                        <label class="iade-odeme-btn-label">
+                            <input type="radio" name="iade_payment_method" value="kart">
+                            <span>💳 Kart</span>
+                        </label>
+                        <label class="iade-odeme-btn-label">
+                            <input type="radio" name="iade_payment_method" value="iban">
+                            <span>🏦 IBAN</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="iade-ayar-satir" style="margin-top: 15px;">
+                    <label>İadenin İşleneceği Kasa:</label>
+                    <select id="iade-hedef-kasa" class="hk-input">
+                        ${(() => {
+                            let options = '';
+                            const total = kasaAyar.toplamKasa || 3;
+                            const originalKasaNo = parseInt(originalOrder.kasa_no) || 1;
+                            const defaultKasa = (originalKasaNo > 0 && originalKasaNo <= total) ? originalKasaNo : 1;
+                            
+                            for (let i = 1; i <= total; i++) {
+                                options += `<option value="${i}" ${defaultKasa == i ? 'selected' : ''}>Kasa ${i}</option>`;
+                            }
+                            return options;
+                        })()}
+                    </select>
+                </div>
+            </div>
+        `;
+        container.style.display = 'block';
     }
 
     function addToRefundCart(itemId) {
@@ -373,6 +404,7 @@ const RefundManager = (function () {
         try {
             const apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
             const selectedKasa = document.getElementById('iade-hedef-kasa') ? document.getElementById('iade-hedef-kasa').value : (kasaAyar.kasaNo || "1");
+            const paymentMethod = document.querySelector('input[name="iade_payment_method"]:checked')?.value || "nakit";
 
             const response = await fetch(`${apiBase}hizli-kasa/v1/process-refund`, {
                 method: 'POST',
@@ -383,6 +415,7 @@ const RefundManager = (function () {
                 body: JSON.stringify({
                     original_order_id: originalOrder.id,
                     kasa_no: selectedKasa,
+                    payment_method: paymentMethod,
                     refund_discount: HK.CurrencyMask.parse(document.getElementById('iade-iskonto-input')?.value || "0"),
                     items: refundCart.map(item => ({
                         id: item.id,
@@ -409,6 +442,7 @@ const RefundManager = (function () {
                 `;
                 refundCart = [];
                 renderRefundCart();
+                renderRefundSettings();
             } else {
                 throw new Error(data.message || 'İşlem başarısız');
             }

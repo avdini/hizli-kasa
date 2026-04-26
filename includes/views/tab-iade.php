@@ -86,6 +86,7 @@ if (!defined('ABSPATH')) exit;
                 <!-- İade ürünleri buraya gelecek -->
             </ul>
         </div>
+        <div id="iade-odeme-yontemi-alani"></div>
 
         <div class="iade-ozet-alani">
             <div id="iade-iskonto-konteyner" style="display:none;">

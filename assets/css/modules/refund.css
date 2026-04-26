@@ -440,3 +440,136 @@
     color: #f39c12 !important;
     font-weight: bold;
 }
+
+/* İade Ödeme Yöntemi ve Ayarlar Paneli */
+#iade-odeme-yontemi-alani {
+    margin-bottom: 20px;
+    padding: 0 20px;
+}
+
+.iade-ayarlar-panel {
+    background: var(--hk-bg-sidebar);
+    border: 1px solid var(--hk-border);
+    border-radius: 12px;
+    padding: 15px;
+}
+
+.iade-ayar-satir label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--hk-text-muted);
+    text-transform: uppercase;
+}
+
+.iade-odeme-secenekleri {
+    display: flex;
+    gap: 8px;
+}
+
+.iade-odeme-btn-label {
+    flex: 1;
+    cursor: pointer;
+    position: relative;
+}
+
+.iade-odeme-btn-label input {
+    display: none;
+}
+
+.iade-odeme-btn-label span {
+    display: block;
+    padding: 10px 5px;
+    background: var(--hk-bg-body);
+    border: 2px solid var(--hk-border);
+    border-radius: 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.iade-odeme-btn-label input:checked + span {
+    background: var(--hk-accent);
+    color: white;
+    border-color: var(--hk-accent);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.iade-ayarlar-panel .hk-input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--hk-border);
+    background: var(--hk-bg-body);
+    color: var(--hk-text-main);
+    font-size: 14px;
+}
+
+
+/* İade Ödeme Yöntemi ve Ayarlar Paneli */
+#iade-odeme-yontemi-alani {
+    margin-bottom: 20px;
+    padding: 0 20px;
+}
+
+.iade-ayarlar-panel {
+    background: var(--hk-bg-sidebar);
+    border: 1px solid var(--hk-border);
+    border-radius: 12px;
+    padding: 15px;
+}
+
+.iade-ayar-satir label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 13px;
+    color: var(--hk-text-muted);
+    text-transform: uppercase;
+}
+
+.iade-odeme-secenekleri {
+    display: flex;
+    gap: 8px;
+}
+
+.iade-odeme-btn-label {
+    flex: 1;
+    cursor: pointer;
+    position: relative;
+}
+
+.iade-odeme-btn-label input {
+    display: none;
+}
+
+.iade-odeme-btn-label span {
+    display: block;
+    padding: 10px 5px;
+    background: var(--hk-bg-body);
+    border: 2px solid var(--hk-border);
+    border-radius: 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.iade-odeme-btn-label input:checked + span {
+    background: var(--hk-accent);
+    color: white;
+    border-color: var(--hk-accent);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.iade-ayarlar-panel .hk-input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid var(--hk-border);
+    background: var(--hk-bg-body);
+    color: var(--hk-text-main);
+    font-size: 14px;
+}

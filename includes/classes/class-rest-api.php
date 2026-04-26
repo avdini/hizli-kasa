@@ -1309,10 +1309,20 @@ function hizli_kasa_process_refund($request)
     $refund_order->update_meta_data('_hizli_kasa_kasiyer', $display_name); // Yukarıdaki değişkeni kullan
     $refund_order->update_meta_data('_hizli_kasa_kasa_no', $kasa_no); // Yukarıdaki değişkeni kullan
 
-    // Ödeme Detayları (Varsayılan Nakit)
+    // Ödeme Detayları
     $final_refund_total = $total_refund + $refund_discount;
-    $refund_order->update_meta_data('_odeme_nakit', $final_refund_total);
-    $refund_order->update_meta_data('Ödeme (Nakit)', number_format(abs($final_refund_total), 2, '.', '') . ' TL'); // Eksi işareti kafa karıştırmasın diye abs() aldım veya istersen eksi bırakabiliriz
+    $payment_method = sanitize_text_field($data['payment_method'] ?? 'nakit');
+    
+    if ($payment_method === 'nakit') {
+        $refund_order->update_meta_data('_odeme_nakit', $final_refund_total);
+        $refund_order->update_meta_data('Ödeme (Nakit)', number_format(abs($final_refund_total), 2, '.', '') . ' TL');
+    } elseif ($payment_method === 'kart') {
+        $refund_order->update_meta_data('_odeme_kart', $final_refund_total);
+        $refund_order->update_meta_data('Ödeme (Kart)', number_format(abs($final_refund_total), 2, '.', '') . ' TL');
+    } elseif ($payment_method === 'iban') {
+        $refund_order->update_meta_data('_odeme_iban', $final_refund_total);
+        $refund_order->update_meta_data('Ödeme (IBAN)', number_format(abs($final_refund_total), 2, '.', '') . ' TL');
+    }
 
     // Toplamlar (Raporlar için)
     $refund_order->update_meta_data('_ara_toplam', $final_refund_total);
