@@ -4,7 +4,7 @@
 
 /* Rapor Özet Başlık */
 .gs-ozet-baslik {
-    border-bottom: 2px solid #2c3e50;
+    border-bottom: 2px solid var(--hk-border-dark);
     padding-bottom: 10px;
     margin-bottom: 15px;
 }
@@ -31,7 +31,7 @@
 }
 
 .gs-kart:hover {
-    background: #f0f2f5;
+    background: var(--hk-bg-hover);
 }
 
 .gs-kart-ikon {
@@ -40,7 +40,7 @@
 
 .gs-kart-etiket {
     font-size: 11px;
-    color: #999;
+    color: var(--hk-text-muted);
     text-transform: uppercase;
     font-weight: bold;
 }
@@ -58,8 +58,8 @@
 .gs-bolum h4 {
     margin: 0 0 8px;
     font-size: 14px;
-    color: #2c3e50;
-    border-bottom: 1px solid #eee;
+    color: var(--hk-text-main);
+    border-bottom: 1px solid var(--hk-border);
     padding-bottom: 5px;
 }
 
@@ -72,7 +72,8 @@
 
 .gs-tablo td, .gs-tablo th {
     padding: 6px 4px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--hk-border);
+    color: var(--hk-text-main);
 }
 
 .gs-tablo tr:last-child td {
@@ -84,7 +85,7 @@
 }
 
 .gs-toplam-satir td {
-    border-top: 2px solid #2c3e50 !important;
+    border-top: 2px solid var(--hk-border-dark) !important;
     padding-top: 8px !important;
     font-size: 15px !important;
 }
@@ -113,13 +114,13 @@
 }
 
 .item-price-calc {
-    color: #7f8c8d;
+    color: var(--hk-text-muted);
     font-size: 11px;
-    background: #f8f9fa;
+    background: var(--hk-bg-body);
     padding: 1px 6px;
     border-radius: 4px;
     margin-left: 5px;
-    border: 1px solid #eee;
+    border: 1px solid var(--hk-border);
     display: inline-block;
 }
 
@@ -356,12 +357,12 @@
 }
 
 .item-price-calc {
-    color: #7f8c8d;
+    color: var(--hk-text-muted);
     font-size: 11px;
-    background: #f8f9fa;
+    background: var(--hk-bg-body);
     padding: 1px 6px;
     border-radius: 4px;
-    border: 1px solid #eee;
+    border: 1px solid var(--hk-border);
     display: inline-block;
     margin-left: 4px;
 }
@@ -415,10 +416,34 @@
 .log-change-item {
     display: inline-block;
     padding: 2px 8px;
-    background: #fff3cd;
-    color: #856404;
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--hk-warning);
     border-radius: 4px;
     font-size: 12px;
     margin-right: 5px;
     margin-bottom: 5px;
+}
+
+/* Tüm Siparişler + İadeler sekmeleri için tema uyumu */
+#rapor-tum-siparisler .gs-tablo tbody tr:hover,
+#rapor-iade-listesi .gs-tablo tbody tr:hover {
+    background: var(--hk-bg-hover);
+}
+
+#rapor-tum-siparisler .gs-tablo td,
+#rapor-iade-listesi .gs-tablo td {
+    background: transparent;
+}
+
+#hizli-kasa-app.theme-dark #rapor-tum-siparisler > div,
+#hizli-kasa-app.theme-dark #rapor-iade-listesi > div {
+    box-shadow: var(--hk-shadow-md);
+}
+
+#hizli-kasa-app.theme-dark .report-items-toggle-icon-btn {
+    border-color: var(--hk-border-dark);
+}
+
+#hizli-kasa-app.theme-dark .meta-details-row {
+    background: rgba(15, 23, 42, 0.6);
 }
