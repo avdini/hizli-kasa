@@ -101,7 +101,8 @@
             _hk_kaynak: 'Kaynak',
             _hk_has_refund: 'İade Durumu',
             _hk_refunded_qty: 'İade Edilen Adet',
-            _hk_is_fully_refunded: 'Tam İade'
+            _hk_is_fully_refunded: 'Tam İade',
+            _hk_iade_depo_ozet: 'İade Edilen Depolar'
         },
 
         currencyFieldKeys: ['_odeme_nakit', '_odeme_kart', '_odeme_iban', '_ara_toplam', '_etiket_toplami', '_hk_refunded_discount'],
@@ -146,8 +147,21 @@
                     return null; // Depo ID gitsin
                 } else if (normalizedKey === '_hizli_kasa_is_refund' || normalizedKey === '_hk_has_refund' || normalizedKey === '_hk_is_fully_refunded') {
                     display = (String(raw) === 'yes') ? 'Evet' : 'Hayır';
-                } else if (normalizedKey === '_hk_kaynak') {
-                    display = (raw === 'pos_satis') ? 'Kasa Satışı' : this.escapeHtml(raw);
+                } else if (normalizedKey === '_hk_kaynak' || normalizedKey === '_hizli_kasa_kaynak') {
+                    if (raw === 'pos_satis') display = 'Kasa Satışı';
+                    else if (raw === 'pos_iade') display = 'Kasa İadesi';
+                    else display = this.escapeHtml(raw);
+                } else if (normalizedKey === '_hk_iade_depo_ozet') {
+                    try {
+                        var obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
+                        var parts = [];
+                        for (var id in obj) {
+                            parts.push('Depo #' + id + ': ' + obj[id] + ' adet');
+                        }
+                        display = parts.join(', ');
+                    } catch (e) {
+                        display = this.escapeHtml(raw);
+                    }
                 } else {
                     display = this.escapeHtml(raw);
                 }
