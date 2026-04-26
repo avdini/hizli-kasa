@@ -76,8 +76,9 @@
         /**
          * API'den gün sonu rapor verisini çek
          * @param {String|Number|null} kasaId Belirli bir kasa ID veya 'all'
+         * @param {String|null} tarih Belirli bir tarih (YYYY-MM-DD)
          */
-        raporuGetir: async function (kasaId) {
+        raporuGetir: async function (kasaId, tarih) {
             var self = this;
             var state = HK.State;
             var finalKasaNo = kasaId || state.aktifKasaId;
@@ -89,6 +90,10 @@
 
             try {
                 var url = window.location.origin + '/wp-json/hizli-kasa/v1/gun-sonu-raporu?kasa_no=' + finalKasaNo;
+                if (tarih) {
+                    url += '&tarih=' + tarih;
+                }
+                
                 var response = await fetch(url, {
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });

@@ -14,6 +14,7 @@
         <button class="rapor-alt-btn aktif" data-target="rapor-tum-siparisler">🛍️ Tüm Siparişler</button>
         <button class="rapor-alt-btn" data-target="rapor-iade-listesi">🔙 İadeler</button>
         <button class="rapor-alt-btn" data-target="rapor-siparis-duzenleme">✏️ Sipariş Düzenlemeleri</button>
+        <button class="rapor-alt-btn" data-target="rapor-gun-sonu-arsivi">📂 Gün Sonu Arşivi</button>
         <button class="rapor-alt-btn" data-target="rapor-ozet-istatistik">📈 Özel İstatistikler (Yakında)</button>
     </div>
 
@@ -87,6 +88,33 @@
                 </thead>
                 <tbody id="edit-logs-body">
                     <tr><td colspan="5" style="text-align:center; padding:40px;">Veriler yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="rapor-gun-sonu-arsivi" class="rapor-icerik-paneli">
+        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div>
+                    <h3 style="margin:0; color:var(--hk-accent);">Gün Sonu Arşivi</h3>
+                    <p style="color:var(--hk-text-muted); font-size:13px; margin:5px 0 0;">Geçmiş tarihlere ait gün sonu raporlarını buradan görüntüleyebilir ve yazdırabilirsiniz.</p>
+                </div>
+            </div>
+            
+            <table class="gs-tablo" id="day-end-history-table">
+                <thead>
+                    <tr>
+                        <th>Tarih</th>
+                        <th>Sipariş Adeti</th>
+                        <th>Toplam Satış</th>
+                        <th>Toplam İade</th>
+                        <th>Net Ciro</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="day-end-history-body">
+                    <tr><td colspan="6" style="text-align:center; padding:40px;">Veriler yükleniyor...</td></tr>
                 </tbody>
             </table>
         </div>

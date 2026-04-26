@@ -47,6 +47,8 @@
                         self.loadOrders(1);
                     } else if (target === 'rapor-iade-listesi') {
                         self.loadRefunds(1);
+                    } else if (target === 'rapor-gun-sonu-arsivi') {
+                        self.loadDayEndHistory();
                     }
                 });
             });
@@ -81,6 +83,7 @@
                     console.log("HK.DetailedReports: Refresh clicked, active target:", activeTarget);
                     if (activeTarget === 'rapor-tum-siparisler') self.loadOrders(1);
                     if (activeTarget === 'rapor-iade-listesi') self.loadRefunds(1);
+                    if (activeTarget === 'rapor-gun-sonu-arsivi') self.loadDayEndHistory();
                 });
             }
         },
@@ -414,6 +417,60 @@
                 });
                 container.appendChild(btn);
             }
+        },
+
+        loadDayEndHistory: async function() {
+            var tbody = document.getElementById("day-end-history-body");
+            if (!tbody) return;
+
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px;">Yükleniyor...</td></tr>';
+            
+            var dateStart = document.getElementById("rapor-tarih-bas").value;
+            var dateEnd = document.getElementById("rapor-tarih-bit").value;
+
+            try {
+                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/day-end-history?date_start=${dateStart}&date_end=${dateEnd}`;
+                var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
+                var res = await response.json();
+
+                this.renderDayEndHistory(tbody, res);
+
+            } catch (e) {
+                console.error("HK.DetailedReports: Load day end history error", e);
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:red;">Hata: Veriler çekilemedi.</td></tr>';
+            }
+        },
+
+        renderDayEndHistory: function(tbody, history) {
+            tbody.innerHTML = "";
+            if (!history || history.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px;">Bu tarih aralığında gün sonu kaydı bulunamadı.</td></tr>';
+                return;
+            }
+
+            history.forEach(row => {
+                var tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td style="font-weight:bold;">${this.escapeHtml(row.date_formatted)}</td>
+                    <td>${this.escapeHtml(row.sale_count)} Sipariş</td>
+                    <td style="color:#27ae60;">${this.formatCurrency(row.total_sales)}</td>
+                    <td style="color:#e67e22;">${this.formatCurrency(row.total_refunds)}</td>
+                    <td style="font-weight:bold; background: rgba(0,0,0,0.02);">${this.formatCurrency(row.net_total)}</td>
+                    <td>
+                        <button class="hk-btn-outline btn-view-report" data-date="${row.date}">📊 Raporu Aç</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            tbody.querySelectorAll(".btn-view-report").forEach(btn => {
+                btn.addEventListener("click", function() {
+                    var date = this.dataset.date;
+                    if (window.HizliKasa && window.HizliKasa.DayEndReport) {
+                        window.HizliKasa.DayEndReport.raporuGetir('all', date);
+                    }
+                });
+            });
         }
     };
 

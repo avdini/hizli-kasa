@@ -200,6 +200,14 @@ add_action('rest_api_init', function () {
             return hizli_kasa_can_access_app();
         }
     ));
+
+    register_rest_route('hizli-kasa/v1', '/reports/day-end-history', array(
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_get_day_end_history',
+        'permission_callback' => function () {
+            return hizli_kasa_can_access_app();
+        }
+    ));
 });
 
 /**
@@ -2664,5 +2672,59 @@ function hizli_kasa_get_reports_data($request, $is_refund = false)
         'max_pages' => $max_pages,
         'page' => $paged
     );
+}
+
+/**
+ * Gün sonu arşivi için günlük özetleri döner.
+ */
+function hizli_kasa_get_day_end_history($request)
+{
+    global $wpdb;
+    
+    $date_start = $request->get_param('date_start');
+    $date_end = $request->get_param('date_end');
+
+    if (!$date_start || !$date_end) {
+        $date_start = date('Y-m-d', strtotime('-30 days'));
+        $date_end = current_time('Y-m-d');
+    }
+
+    // POS siparişlerini belirleyen ortak kriter: _hizli_kasa_kasa_no meta kaydı olması
+    // Satışlar ve İadeler ayrı ayrı hesaplanmalı
+    
+    $sql = $wpdb->prepare("
+        SELECT 
+            DATE(p.post_date) as order_date,
+            COUNT(CASE WHEN pm_refund.meta_value IS NULL OR pm_refund.meta_value != 'yes' THEN p.ID END) as sale_count,
+            SUM(CASE WHEN pm_refund.meta_value IS NULL OR pm_refund.meta_value != 'yes' THEN pm_total.meta_value ELSE 0 END) as total_sales,
+            SUM(CASE WHEN pm_refund.meta_value = 'yes' THEN ABS(pm_total.meta_value) ELSE 0 END) as total_refunds
+        FROM {$wpdb->posts} p
+        INNER JOIN {$wpdb->postmeta} pm_pos ON p.ID = pm_pos.post_id AND pm_pos.meta_key = '_hizli_kasa_kasa_no'
+        LEFT JOIN {$wpdb->postmeta} pm_refund ON p.ID = pm_refund.post_id AND pm_refund.meta_key = '_hizli_kasa_is_refund'
+        LEFT JOIN {$wpdb->postmeta} pm_total ON p.ID = pm_total.post_id AND pm_total.meta_key = '_order_total'
+        WHERE p.post_type = 'shop_order' 
+          AND p.post_status IN ('wc-processing', 'wc-completed', 'wc-on-hold')
+          AND DATE(p.post_date) BETWEEN %s AND %s
+        GROUP BY DATE(p.post_date)
+        ORDER BY order_date DESC
+    ", $date_start, $date_end);
+
+    $results = $wpdb->get_results($sql);
+
+    $formatted = [];
+    foreach ($results as $row) {
+        $sales = (float)$row->total_sales;
+        $refunds = (float)$row->total_refunds;
+        $formatted[] = [
+            'date' => $row->order_date,
+            'date_formatted' => date_i18n('d.m.Y l', strtotime($row->order_date)),
+            'sale_count' => (int)$row->sale_count,
+            'total_sales' => round($sales, 2),
+            'total_refunds' => round($refunds, 2),
+            'net_total' => round($sales - $refunds, 2)
+        ];
+    }
+
+    return $formatted;
 }
 
