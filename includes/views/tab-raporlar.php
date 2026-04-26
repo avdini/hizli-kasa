@@ -124,19 +124,19 @@
 
         <div style="border-top:1px solid #000; padding-top:10px; font-size:13px;">
             <div style="display:flex; justify-content:space-between; margin-bottom:3px;" id="report-fis-liste-toplami-satiri">
-                <span>Etiket Toplamı:</span>
+                <span>ETİKET TOPLAMI:</span>
                 <span id="report-fis-liste-toplami-tutar"></span>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:3px;" id="report-fis-ara-toplam-satiri">
-                <span>Ara Toplam:</span>
+                <span>ARA TOPLAM:</span>
                 <span id="report-fis-ara-toplam-tutar"></span>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:3px;" id="report-fis-otomatik-indirim-satiri">
-                <span id="report-fis-otomatik-indirim-etiket">İndirim:</span>
+                <span id="report-fis-otomatik-indirim-etiket">İNDİRİM:</span>
                 <span id="report-fis-otomatik-indirim-tutar"></span>
             </div>
             <div style="display:flex; justify-content:space-between; margin-bottom:3px;" id="report-fis-iskonto-satiri">
-                <span>İskonto:</span>
+                <span>İSKONTO:</span>
                 <span id="report-fis-iskonto-tutar"></span>
             </div>
             <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:16px; margin-top:5px;">

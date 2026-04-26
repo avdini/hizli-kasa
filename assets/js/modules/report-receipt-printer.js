@@ -56,6 +56,10 @@
                 var n = Number(value || 0);
                 return n.toFixed(2) + ' TL';
             };
+            var formatRawAmount = function(value) {
+                var n = Number(value || 0);
+                return n.toFixed(2);
+            };
 
             var noText = byId('report-fis-no-text');
             var subtitle = byId('report-fis-subtitle');
@@ -77,7 +81,7 @@
                 throw new Error('Rapor fiş şablonu bulunamadı.');
             }
 
-            noText.innerText = 'SİPARİŞ NO: #' + (data.order_id || '-');
+            noText.innerText = 'SİPARİŞ NO: ' + (data.order_id || '-');
             tarihText.innerText = data.printed_at || new Date().toLocaleString('tr-TR');
             var hasAdjustment = !!data.has_adjustment;
             if (subtitle) {
@@ -93,7 +97,7 @@
                         '<div style="font-size:10px;">' + ((item.sku ? item.sku + ' | ' : '') + (item.quantity || 0) + ' Adet') + '</div>' +
                     '</td>' +
                     '<td style="text-align:right; padding:1px 0; vertical-align:middle; white-space:nowrap; padding-left:10px;">' +
-                        '<div style="font-weight:bold; font-size:13px;">' + formatMoney(item.line_total) + '</div>' +
+                        '<div style="font-weight:bold; font-size:13px;">' + formatRawAmount(item.line_total) + '</div>' +
                     '</td>';
                 body.appendChild(tr);
             });
@@ -106,7 +110,7 @@
             var autoDiscount = Number(totals.auto_discount || 0);
             if (autoDiscount > 0.01) {
                 autoDiscountRow.style.display = 'flex';
-                autoDiscountLabel.innerText = 'Otomatik İndirim:';
+                autoDiscountLabel.innerText = 'İNDİRİM:';
                 autoDiscountVal.innerText = '-' + formatMoney(autoDiscount);
             } else {
                 autoDiscountRow.style.display = 'none';
