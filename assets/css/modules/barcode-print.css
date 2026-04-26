@@ -4,17 +4,21 @@
 
 /* Modal Stilleri */
 .barkod-modal-genis {
-    max-width: 800px !important;
-    width: 95% !important;
+    max-width: 1000px !important;
+    width: 90vw !important;
+    height: 85vh !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 .barkod-secim-listesi {
-    max-height: 400px;
+    flex: 1; /* Kalan tüm alanı doldurur */
     overflow-y: auto;
-    margin: 20px 0;
+    margin: 15px 0;
     padding: 10px;
     background: rgba(0, 0, 0, 0.05);
     border-radius: 10px;
+    border: 1px solid var(--hk-border);
 }
 
 .barkod-item-row {
