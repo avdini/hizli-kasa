@@ -45,11 +45,16 @@
             this.state.currentProduct = product;
             var container = document.getElementById('barkod-urun-listesi-konteynir');
             var modal = document.getElementById('barkod-yazdir-modal');
+            var filterContainer = document.getElementById('barkod-modal-filtreler');
             
             if (!container || !modal) {
                 console.error("Barkod modalı bulunamadı!");
                 return;
             }
+
+            // Tekli barkodda filtreleri gizle ve modalı küçült
+            if (filterContainer) filterContainer.style.display = 'none';
+            modal.querySelector('.modal-icerik').classList.remove('barkod-modal-genis');
 
             document.getElementById('barkod-modal-baslik').innerText = 'Barkod Yazdır';
             
@@ -82,6 +87,9 @@
             var container = document.getElementById('barkod-urun-listesi-konteynir');
             var modal = document.getElementById('barkod-yazdir-modal');
             if (!container || !modal) return;
+
+            // Toplu barkodda modalı genişlet
+            modal.querySelector('.modal-icerik').classList.add('barkod-modal-genis');
 
             document.getElementById('barkod-modal-baslik').innerText = 'Toplu Barkod Çıkart';
             
