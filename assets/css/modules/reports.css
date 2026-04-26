@@ -373,21 +373,39 @@
 
 .report-item-list-wrapper {
     display: block;
+    position: relative;
+    padding-right: 34px;
 }
 
-.report-items-toggle-btn {
-    margin-top: 6px;
+.report-items-toggle-icon-btn {
+    position: absolute;
+    right: 0;
+    top: 6px;
+    width: 26px;
+    height: 26px;
     border: 1px solid var(--hk-border);
     background: var(--hk-bg-body);
     color: var(--hk-text-main);
     border-radius: 6px;
-    padding: 5px 8px;
     cursor: pointer;
-    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
 }
 
-.report-items-toggle-btn:hover {
+.report-items-toggle-icon-btn:hover {
     background: var(--hk-bg-hover);
+}
+
+.report-toggle-icon {
+    font-size: 16px;
+    line-height: 1;
+    transition: transform 0.2s ease;
+}
+
+.report-items-toggle-icon-btn.is-open .report-toggle-icon {
+    transform: rotate(180deg);
 }
 
 .report-items-extra {
