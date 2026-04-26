@@ -1643,12 +1643,35 @@ function hizli_kasa_terminal_products($request)
                         return strnatcasecmp($color_a, $color_b);
                     }
 
-                    // Sonra Beden/Numara
+                    // Sonra Beden/Numara (Özel Sıralama: XS, S, M, L, XL...)
                     if ($size_a !== $size_b) {
-                        if (is_numeric($size_a) && is_numeric($size_b)) {
-                            return (float) $size_a <=> (float) $size_b;
+                        $size_map = [
+                            'xs'  => 1,
+                            's'   => 2,
+                            'm'   => 3,
+                            'l'   => 4,
+                            'xl'  => 5,
+                            'xxl' => 6, '2xl' => 6,
+                            '3xl' => 7,
+                            '4xl' => 8,
+                            '5xl' => 9,
+                            '6xl' => 10
+                        ];
+
+                        $get_weight = function($val) use ($size_map) {
+                            $v = strtolower(trim((string)$val));
+                            if (is_numeric($v)) return (float)$v;
+                            return isset($size_map[$v]) ? (float)$size_map[$v] : 999;
+                        };
+
+                        $weight_a = $get_weight($size_a);
+                        $weight_b = $get_weight($size_b);
+
+                        if ($weight_a !== $weight_b) {
+                            return $weight_a <=> $weight_b;
                         }
-                        return strnatcasecmp($size_a, $size_b);
+
+                        return strnatcasecmp((string)$size_a, (string)$size_b);
                     }
 
                     // Fallback: Başlık
