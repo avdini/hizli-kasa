@@ -63,7 +63,17 @@ const RefundManager = (function () {
         }
 
         if (onaylaBtn) {
-            onaylaBtn.onclick = processRefund;
+            onaylaBtn.onclick = openRefundModal;
+        }
+
+        const modalVazgec = document.getElementById('iade-modal-vazgec');
+        if (modalVazgec) {
+            modalVazgec.onclick = closeRefundModal;
+        }
+
+        const modalTamamla = document.getElementById('iade-modal-tamamla');
+        if (modalTamamla) {
+            modalTamamla.onclick = processRefund;
         }
 
         const iskontoInput = document.getElementById('iade-iskonto-input');
@@ -90,6 +100,14 @@ const RefundManager = (function () {
                 }
             };
         }
+
+        // Modal dışına tıklandığında kapat
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('iade-onay-modal');
+            if (e.target === modal) {
+                closeRefundModal();
+            }
+        });
     }
 
     async function advancedSearchOrders() {
@@ -303,7 +321,30 @@ const RefundManager = (function () {
         if (iskontoInput) iskontoInput.value = "";
         
         renderRefundCart();
+    }
+
+    function openRefundModal() {
+        const modal = document.getElementById('iade-onay-modal');
+        if (!modal) return;
+
+        modal.style.display = 'flex';
+        
+        // Modal içindeki toplamı güncelle
+        const cartTotal = refundCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        document.getElementById('iade-modal-toplam').innerText = cartTotal.toFixed(2) + ' TL';
+
+        // Ayarları render et (Ödeme yöntemleri vs)
         renderRefundSettings();
+
+        // İskonto maskesini uygula (Eğer yeni elementler geldiyse)
+        if (HK.CurrencyMask) {
+            HK.CurrencyMask.init(modal);
+        }
+    }
+
+    function closeRefundModal() {
+        const modal = document.getElementById('iade-onay-modal');
+        if (modal) modal.style.display = 'none';
     }
 
     function renderRefundSettings() {
@@ -528,22 +569,26 @@ const RefundManager = (function () {
 
         list.innerHTML = html || '<p class="iade-bos-sepet">İade edilecek ürün seçilmedi.</p>';
         
-        // İskonto Yönetimi
-        const iskontoKonteyner = document.getElementById('iade-iskonto-container') || document.getElementById('iade-iskonto-konteyner');
+        // Yan paneldeki toplamı güncelle (iskonto düşülmeden önceki sepet toplamı)
+        totalSpan.innerText = `-${total.toFixed(2)} TL`;
+        onaylaBtn.disabled = refundCart.length === 0;
+
+        // İskonto Yönetimi (Sadece modal açıkken veya ayarlar render edildiğinde anlamlı ama burada da kalabilir)
+        updateDiscountVisibility();
+
+        if (document.querySelector('input[name="iade_payment_method"]:checked')?.value === 'split') {
+            calculateRefundSplit();
+        }
+    }
+
+    function updateDiscountVisibility() {
+        const iskontoKonteyner = document.getElementById('iade-iskonto-konteyner');
         const iskontoInput = document.getElementById('iade-iskonto-input');
         const kalanIskontoSpan = document.getElementById('iade-kalan-iskonto');
         
-        if (!originalOrder) {
-            if (iskontoKonteyner) iskontoKonteyner.style.display = 'none';
-            return;
-        }
+        if (!originalOrder || !iskontoKonteyner) return;
 
         const kalanIskonto = (originalOrder.manual_discount || 0) - (originalOrder.refunded_manual_discount || 0);
-        console.log('İskonto Bilgisi:', { 
-            total: originalOrder.manual_discount, 
-            refunded: originalOrder.refunded_manual_discount, 
-            kalan: kalanIskonto 
-        });
         
         if (kalanIskonto > 0) {
             iskontoKonteyner.style.display = 'block';
@@ -553,15 +598,12 @@ const RefundManager = (function () {
             iskontoKonteyner.style.display = 'none';
             if (iskontoInput) iskontoInput.value = 0;
         }
-
-        const currentDiscount = HK.CurrencyMask.parse(iskontoInput ? iskontoInput.value : "0") || 0;
-        const finalTotal = total - currentDiscount;
-
-        totalSpan.innerText = `-${Math.abs(finalTotal).toFixed(2)} TL`;
-        onaylaBtn.disabled = refundCart.length === 0;
-
-        if (document.querySelector('input[name="iade_payment_method"]:checked')?.value === 'split') {
-            calculateRefundSplit();
+        
+        // Modal toplamını güncelle (Eğer modal açıksa)
+        const modalToplam = document.getElementById('iade-modal-toplam');
+        if (modalToplam) {
+            const finalTotal = getRefundFinalTotal();
+            modalToplam.innerText = `${finalTotal.toFixed(2)} TL`;
         }
     }
 
@@ -605,6 +647,9 @@ const RefundManager = (function () {
             const data = await response.json();
             if (data.success) {
                 alert('İade başarıyla tamamlandı. Sipariş No: #' + data.order_id);
+                
+                closeRefundModal();
+
                 // Ekranı temizle
                 document.getElementById('iade-siparis-no').value = '';
                 document.getElementById('iade-siparis-detay').innerHTML = `

@@ -86,8 +86,31 @@ if (!defined('ABSPATH')) exit;
                 <!-- İade ürünleri buraya gelecek -->
             </ul>
         </div>
-        <div id="iade-iskonto-konteyner-alani">
-            <div id="iade-iskonto-konteyner" style="display:none;">
+
+        <div class="iade-ozet-alani">
+            <div class="iade-toplam-satir">
+                <span>İADE EDİLECEK TOPLAM:</span>
+                <span id="iade-toplam-tutar">0.00 TL</span>
+            </div>
+            <button id="iade-onayla-btn" class="iade-islem-btn" disabled>İade Sepetini Onayla</button>
+        </div>
+    </div>
+</div>
+
+<!-- İade Onay Modalı -->
+<div id="iade-onay-modal" class="hk-modal-overlay">
+    <div class="modal-icerik" style="width: 450px;">
+        <h3>İadeyi Onayla</h3>
+        
+        <div id="iade-modal-ozet" style="margin-bottom: 20px; padding: 15px; background: var(--hk-bg-body); border-radius: 10px; border: 1px solid var(--hk-border);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: bold; color: var(--hk-text-muted);">İade Edilecek Toplam:</span>
+                <span id="iade-modal-toplam" style="font-size: 24px; font-weight: 900; color: var(--hk-danger);">0.00 TL</span>
+            </div>
+        </div>
+
+        <div id="iade-iskonto-konteyner-alani" style="padding: 0; margin-bottom: 20px;">
+            <div id="iade-iskonto-konteyner" style="display:none; margin-bottom: 0;">
                 <div class="iskonto-girdi-satiri">
                     <span>Düşülecek İskonto (TL):</span>
                     <input type="text" id="iade-iskonto-input" class="hk-currency-mask" placeholder="0,00" inputmode="decimal" value="0">
@@ -99,14 +122,11 @@ if (!defined('ABSPATH')) exit;
             </div>
         </div>
 
-        <div id="iade-odeme-yontemi-alani"></div>
+        <div id="iade-odeme-yontemi-alani" style="padding: 0; margin-bottom: 20px;"></div>
 
-        <div class="iade-ozet-alani">
-            <div class="iade-toplam-satir">
-                <span>İADE EDİLECEK TOPLAM:</span>
-                <span id="iade-toplam-tutar">0.00 TL</span>
-            </div>
-            <button id="iade-onayla-btn" class="iade-islem-btn" disabled>İadeyi Onayla ve Faturayı Kes</button>
+        <div class="modal-butonlar">
+            <button id="iade-modal-vazgec" style="background: var(--hk-bg-body); color: var(--hk-text-main); border: 1px solid var(--hk-border);">Vazgeç</button>
+            <button id="iade-modal-tamamla" style="background: var(--hk-accent); color: white;">İadeyi Onayla ve Bitir</button>
         </div>
     </div>
 </div>
