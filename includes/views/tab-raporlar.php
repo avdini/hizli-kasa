@@ -104,7 +104,7 @@
     <div id="report-fis-sablon" style="display:none; color:#000;">
         <div style="text-align:center; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:10px;">
             <h2 style="margin:0; font-size:18px;"><?php echo get_bloginfo('name'); ?></h2>
-            <p style="margin:5px 0; font-size:12px;">RAPORLAR - GÜNCEL DURUM FİŞİ</p>
+            <p id="report-fis-subtitle" style="margin:5px 0; font-size:12px;">HIZLI KASA SATIŞ FİŞİ</p>
             <p id="report-fis-tarih" style="margin:0; font-size:11px;"></p>
             <p id="report-fis-no-text" style="font-weight:bold; margin:5px 0; font-size:14px;"></p>
             <div style="text-align:center; margin-bottom:10px;">
@@ -147,6 +147,12 @@
 
         <div id="report-fis-refund-note" style="text-align:center; margin-top:12px; font-size:11px; display:none;">
             Bu fiş güncel durumu gösterir (iade/düzenlemeler dahil).
+        </div>
+        <div id="report-fis-adjustments" style="display:none; margin-top:8px; font-size:11px; border-top:1px solid #000; padding-top:8px;">
+            <div style="display:flex; justify-content:space-between;">
+                <span>İade/Düzenleme Etkisi:</span>
+                <span id="report-fis-adjustments-total"></span>
+            </div>
         </div>
     </div>
 </div>

@@ -58,6 +58,7 @@
             };
 
             var noText = byId('report-fis-no-text');
+            var subtitle = byId('report-fis-subtitle');
             var tarihText = byId('report-fis-tarih');
             var body = byId('report-fis-urunler-body');
             var etiketToplam = byId('report-fis-liste-toplami-tutar');
@@ -69,6 +70,8 @@
             var manualDiscountVal = byId('report-fis-iskonto-tutar');
             var grandTotal = byId('report-fis-genel-toplam');
             var refundNote = byId('report-fis-refund-note');
+            var adjustmentsBox = byId('report-fis-adjustments');
+            var adjustmentsTotal = byId('report-fis-adjustments-total');
 
             if (!noText || !tarihText || !body || !grandTotal) {
                 throw new Error('Rapor fiş şablonu bulunamadı.');
@@ -76,6 +79,10 @@
 
             noText.innerText = 'SİPARİŞ NO: #' + (data.order_id || '-');
             tarihText.innerText = data.printed_at || new Date().toLocaleString('tr-TR');
+            var hasAdjustment = !!data.has_adjustment;
+            if (subtitle) {
+                subtitle.innerText = hasAdjustment ? 'RAPORLAR - GÜNCEL DURUM FİŞİ' : 'HIZLI KASA SATIŞ FİŞİ';
+            }
 
             body.innerHTML = '';
             (data.items || []).forEach(function(item) {
@@ -114,6 +121,15 @@
             }
 
             refundNote.style.display = data.has_refund_adjustment ? 'block' : 'none';
+            if (adjustmentsBox && adjustmentsTotal) {
+                if (hasAdjustment) {
+                    var impact = Number((data.adjustments && data.adjustments.impact_total) || 0);
+                    adjustmentsTotal.innerText = '-' + formatMoney(impact);
+                    adjustmentsBox.style.display = 'block';
+                } else {
+                    adjustmentsBox.style.display = 'none';
+                }
+            }
 
             if (typeof JsBarcode === 'function') {
                 try {

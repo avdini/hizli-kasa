@@ -2408,6 +2408,17 @@ function hizli_kasa_get_reports_order_receipt($request)
         }
     }
 
+    global $wpdb;
+    $tables = Hizli_Kasa_Database::get_tables();
+    $order_edits_table = $tables['order_edits'];
+    $edit_count = 0;
+    if (!empty($order_edits_table)) {
+        $edit_count = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$order_edits_table} WHERE order_id = %d",
+            $order_id
+        ));
+    }
+
     $items = array();
     $current_etiket_toplami = 0.0;
     $current_ara_toplam = 0.0;
@@ -2455,6 +2466,7 @@ function hizli_kasa_get_reports_order_receipt($request)
     $current_total = max(0.0, $original_total - $refund_total_abs);
     $manual_discount = max(0.0, hizli_kasa_get_order_manual_discount($order) - $refunded_manual_discount);
     $auto_discount = max(0.0, $current_ara_toplam - $current_total - $manual_discount);
+    $has_adjustment = ($refund_total_abs > 0.00001) || ($edit_count > 0);
 
     $payment = array(
         'nakit' => (float) $order->get_meta('_odeme_nakit') + $payment_adjustments['nakit'],
@@ -2469,9 +2481,16 @@ function hizli_kasa_get_reports_order_receipt($request)
         'created_at' => $order->get_date_created() ? $order->get_date_created()->date('d.m.Y H:i') : '',
         'printed_at' => current_time('d.m.Y H:i:s'),
         'has_refund_adjustment' => $refund_total_abs > 0.00001,
+        'has_edit_adjustment' => $edit_count > 0,
+        'has_adjustment' => $has_adjustment,
         'cashier' => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
         'kasa_no' => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
         'items' => $items,
+        'adjustments' => array(
+            'refund_total' => round($refund_total_abs, 2),
+            'edit_count' => $edit_count,
+            'impact_total' => round($original_total - $current_total, 2),
+        ),
         'totals' => array(
             'etiket_toplami' => round($current_etiket_toplami, 2),
             'ara_toplam' => round($current_ara_toplam, 2),
