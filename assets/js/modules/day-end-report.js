@@ -33,43 +33,49 @@
                 genelRaporButon: document.getElementById("genel-rapor-buton")
             };
 
-            if (this.els.gunSonuButon) {
+            if (this.els.gunSonuButon && !this.els.gunSonuButon.dataset.bound) {
                 this.els.gunSonuButon.addEventListener("click", function () {
-                    self.raporuGetir(); // Varsayılan: Aktif kasa
+                    self.raporuGetir();
                 });
+                this.els.gunSonuButon.dataset.bound = "true";
             }
 
-            if (this.els.genelRaporButon) {
+            if (this.els.genelRaporButon && !this.els.genelRaporButon.dataset.bound) {
                 this.els.genelRaporButon.addEventListener("click", function () {
-                    self.raporuGetir('all'); // Tüm kasalar
+                    self.raporuGetir('all');
                 });
+                this.els.genelRaporButon.dataset.bound = "true";
             }
 
-            if (this.els.gunSonuKapat) {
+            if (this.els.gunSonuKapat && !this.els.gunSonuKapat.dataset.bound) {
                 this.els.gunSonuKapat.addEventListener("click", function () {
                     self.els.gunSonuModal.style.display = "none";
                 });
+                this.els.gunSonuKapat.dataset.bound = "true";
             }
 
-            if (this.els.gunSonuYazdir) {
+            if (this.els.gunSonuYazdir && !this.els.gunSonuYazdir.dataset.bound) {
                 this.els.gunSonuYazdir.addEventListener("click", function () {
                     self._yazdir(true);
                 });
+                this.els.gunSonuYazdir.dataset.bound = "true";
             }
 
-            if (this.els.gunSonuYazdirOzet) {
+            if (this.els.gunSonuYazdirOzet && !this.els.gunSonuYazdirOzet.dataset.bound) {
                 this.els.gunSonuYazdirOzet.addEventListener("click", function () {
                     self._yazdir(false);
                 });
+                this.els.gunSonuYazdirOzet.dataset.bound = "true";
             }
 
             // Modal dış tıklama ile kapama
-            if (this.els.gunSonuModal) {
+            if (this.els.gunSonuModal && !this.els.gunSonuModal.dataset.bound) {
                 this.els.gunSonuModal.addEventListener("click", function (e) {
                     if (e.target === self.els.gunSonuModal) {
                         self.els.gunSonuModal.style.display = "none";
                     }
                 });
+                this.els.gunSonuModal.dataset.bound = "true";
             }
         },
 
