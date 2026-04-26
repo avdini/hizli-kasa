@@ -84,6 +84,9 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
         <div id="tab-content-raporlar" class="tab-content"></div>
         <div id="tab-content-ayarlar" class="tab-content"></div>
     </div>
+    
+    <!-- Global Modallar -->
+    <?php include HIZLI_KASA_PATH . 'includes/views/modals.php'; ?>
 
     <!-- Global Yükleniyor Göstergesi -->
     <div id="app-loading" style="display: none;">
