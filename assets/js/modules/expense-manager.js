@@ -8,13 +8,19 @@
     'use strict';
 
     HK.ExpenseManager = {
+        initialized: false,
+        isProcessing: false,
+
 
         /**
          * Modülü başlat
          */
         init: function() {
+            if (this.initialized) return;
+            
             this.bindEvents();
             this.loadExpenses();
+            this.initialized = true;
         },
 
         /**
@@ -122,7 +128,8 @@
         /**
          * Yeni masraf kaydet
          */
-        saveExpense: async function() {
+            if (this.isProcessing) return;
+
             const btn = document.getElementById('masraf-kaydet-btn');
             const katSelect = document.getElementById('masraf-kategori');
             const ozelKatInput = document.getElementById('masraf-kategori-ozel');
@@ -141,6 +148,7 @@
                 return;
             }
 
+            this.isProcessing = true;
             btn.disabled = true;
             btn.innerText = 'Kaydediliyor...';
 
@@ -181,6 +189,7 @@
             } catch (error) {
                 alert('Hata: ' + error.message);
             } finally {
+                this.isProcessing = false;
                 btn.disabled = false;
                 btn.innerText = 'Kaydet ve Listeye Ekle';
             }
