@@ -403,6 +403,12 @@ const RefundManager = (function () {
 
         if (!uyariArea) return;
 
+        if (total <= 0) {
+            uyariArea.innerHTML = '<span style="color:var(--hk-text-muted);">İade edilecek ürün seçin</span>';
+            refundSplitData = null;
+            return;
+        }
+
         if (Math.abs(kalan) < 0.01) {
             uyariArea.innerHTML = '<span style="color:var(--hk-success);">✅ Tutar Tamamlandı</span>';
             refundSplitData = { nakit, kart, iban };
