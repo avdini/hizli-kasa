@@ -429,3 +429,57 @@
     text-align: center;
     margin-top: -10px;
 }
+/* --- Barkod Filtreleri --- */
+.modal-filtreler {
+    background: var(--hk-bg-body);
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid var(--hk-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    flex-shrink: 0;
+}
+
+.filtre-grup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 150px;
+}
+
+.filtre-grup label {
+    margin-bottom: 0 !important;
+    font-size: 11px !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--hk-text-muted);
+}
+
+.filtre-grup select {
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    color: var(--hk-text-main);
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+}
+
+.stok-filtre-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.stok-filtre-toggle input {
+    width: auto !important;
+    margin-bottom: 0 !important;
+    cursor: pointer;
+}

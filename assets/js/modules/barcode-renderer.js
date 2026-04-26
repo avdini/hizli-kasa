@@ -70,46 +70,164 @@
         },
 
         /**
-         * Parent ürün ve tüm (stoktaki) varyasyonları için modalı açar.
+         * Parent ürün ve tüm varyasyonları için modalı açar.
          */
         openBulkModal: function(parentProduct) {
             console.log("Opening Bulk Modal", parentProduct);
             this.state.currentProduct = parentProduct;
+            this.state.filters = {
+                hideEmptyStock: true
+            };
+
             var container = document.getElementById('barkod-urun-listesi-konteynir');
             var modal = document.getElementById('barkod-yazdir-modal');
-
-            if (!container || !modal) {
-                console.error("Barkod modalı bulunamadı!");
-                return;
-            }
+            if (!container || !modal) return;
 
             document.getElementById('barkod-modal-baslik').innerText = 'Toplu Barkod Çıkart';
             
-            var html = '';
-            // Sadece stoğu 0'dan büyük olanları ekle
-            parentProduct.variations.forEach(v => {
-                if (parseFloat(v.warehouse_stock) > 0) {
+            // Filtreleri hazırla ve göster
+            this.renderBulkFilters();
+            
+            // Listeyi ilk kez bas
+            this.applyFilters();
+
+            document.getElementById('barkod-yazdir-modal').style.display = 'flex';
+        },
+
+        /**
+         * Dinamik filtreleri oluşturur.
+         */
+        renderBulkFilters: function() {
+            var self = this;
+            var variations = this.state.currentProduct.variations || [];
+            var filterContainer = document.getElementById('barkod-modal-filtreler');
+            
+            if (!filterContainer) return;
+            filterContainer.style.display = 'flex';
+            
+            // 1. Stoğu Olmayanlar Filtresi (Sabit)
+            var html = `
+                <div class="filtre-grup">
+                    <label>Stok Durumu</label>
+                    <label class="stok-filtre-toggle">
+                        <input type="checkbox" id="filter-stock-toggle" ${this.state.filters.hideEmptyStock ? 'checked' : ''}>
+                        Stoğu Olmayanları Gizle
+                    </label>
+                </div>
+            `;
+            
+            // 2. Dinamik Öznitelik Filtreleri (Renk, Beden vb.)
+            var attrKeys = {}; // {color: Set(['Mavi', 'Yeşil']), size: Set(['42', '48'])}
+            
+            variations.forEach(v => {
+                if (v.attributes) {
+                    Object.keys(v.attributes).forEach(key => {
+                        if (!attrKeys[key]) attrKeys[key] = new Set();
+                        if (v.attributes[key]) {
+                            attrKeys[key].add(v.attributes[key]);
+                        }
+                    });
+                }
+            });
+            
+            Object.keys(attrKeys).forEach(key => {
+                var values = Array.from(attrKeys[key]).sort();
+                if (values.length > 1) {
+                    var label = key.charAt(0).toUpperCase() + key.slice(1);
+                    // Özel etiket isimleri
+                    if (key.includes('renk') || key.includes('color')) label = 'Renk';
+                    if (key.includes('beden') || key.includes('size')) label = 'Beden';
+                    if (key.includes('numara')) label = 'Numara';
+                    
                     html += `
-                        <div class="barkod-item-row" data-id="${parentProduct.id}" data-vid="${v.id}">
-                            <div class="item-info">
-                                <span class="item-name">${v.name}</span>
-                                <span class="item-sku">${v.sku || 'SKU YOK'} | Stok: ${v.warehouse_stock}</span>
-                            </div>
-                            <div class="item-qty-input">
-                                <label>Adet:</label>
-                                <input type="number" class="print-qty" value="${Math.ceil(v.warehouse_stock)}" min="0">
-                            </div>
+                        <div class="filtre-grup">
+                            <label>${label}</label>
+                            <select class="attr-filter" data-attr="${key}">
+                                <option value="">Tümü</option>
+                                ${values.map(val => `<option value="${val}">${val}</option>`).join('')}
+                            </select>
                         </div>
                     `;
                 }
             });
-
-            if (html === '') {
-                html = '<p style="text-align:center; padding:20px; color:var(--hk-text-muted);">Yazdırılacak stoklu varyasyon bulunamadı.</p>';
+            
+            filterContainer.innerHTML = html;
+            
+            // Event Listeners
+            var stockToggle = document.getElementById('filter-stock-toggle');
+            if (stockToggle) {
+                stockToggle.onchange = function() {
+                    self.state.filters.hideEmptyStock = this.checked;
+                    self.applyFilters();
+                };
             }
+            
+            filterContainer.querySelectorAll('.attr-filter').forEach(select => {
+                select.onchange = function() {
+                    var attr = this.dataset.attr;
+                    self.state.filters[attr] = this.value;
+                    self.applyFilters();
+                };
+            });
+        },
 
+        /**
+         * Filtreleri uygular ve listeyi günceller.
+         */
+        applyFilters: function() {
+            var variations = this.state.currentProduct.variations || [];
+            var filters = this.state.filters;
+            
+            var filtered = variations.filter(v => {
+                // Stok filtresi
+                if (filters.hideEmptyStock && parseFloat(v.warehouse_stock) <= 0) {
+                    return false;
+                }
+                
+                // Öznitelik filtreleri
+                var attrMatch = true;
+                Object.keys(filters).forEach(fKey => {
+                    if (fKey === 'hideEmptyStock') return;
+                    if (filters[fKey] && v.attributes && v.attributes[fKey] !== filters[fKey]) {
+                        attrMatch = false;
+                    }
+                });
+                
+                return attrMatch;
+            });
+            
+            this.renderBulkList(filtered);
+        },
+
+        /**
+         * Filtrelenmiş listeyi HTML olarak basar.
+         */
+        renderBulkList: function(variations) {
+            var container = document.getElementById('barkod-urun-listesi-konteynir');
+            var parentProduct = this.state.currentProduct;
+            
+            if (variations.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding:20px; color:var(--hk-text-muted);">Filtrelere uygun varyasyon bulunamadı.</p>';
+                return;
+            }
+            
+            var html = '';
+            variations.forEach(v => {
+                html += `
+                    <div class="barkod-item-row" data-id="${parentProduct.id}" data-vid="${v.id}">
+                        <div class="item-info">
+                            <span class="item-name">${v.name}</span>
+                            <span class="item-sku">${v.sku || 'SKU YOK'} | Stok: ${v.warehouse_stock}</span>
+                        </div>
+                        <div class="item-qty-input">
+                            <label>Adet:</label>
+                            <input type="number" class="print-qty" value="${Math.max(0, Math.ceil(v.warehouse_stock))}" min="0">
+                        </div>
+                    </div>
+                `;
+            });
+            
             container.innerHTML = html;
-            document.getElementById('barkod-yazdir-modal').style.display = 'flex';
         },
 
         /**

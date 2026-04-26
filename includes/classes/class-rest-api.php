@@ -1561,7 +1561,7 @@ function hizli_kasa_terminal_products($request)
             GROUP BY p.ID
         ", array_merge([$depo_id], $parent_ids)));
         if (!empty($v_results)) {
-            // --- Özellikleri Toplu Çek ---
+            // --- Özellikleri Toplu Çek ve İsimlerini Çöz ---
             $v_ids = wp_list_pluck($v_results, 'ID');
             $v_ids_ph = implode(',', array_fill(0, count($v_ids), '%d'));
             $v_meta_raw = $wpdb->get_results($wpdb->prepare("
@@ -1570,12 +1570,34 @@ function hizli_kasa_terminal_products($request)
             ", $v_ids));
 
             $v_meta_map = [];
+            $tax_slug_map = [];
             foreach ($v_meta_raw as $m) {
                 $v_meta_map[$m->post_id][$m->meta_key] = $m->meta_value;
+                $tax = str_replace('attribute_', '', $m->meta_key);
+                if ($tax && $m->meta_value) {
+                    $tax_slug_map[$tax][] = $m->meta_value;
+                }
+            }
+
+            // Term isimlerini çöz
+            $term_names = [];
+            foreach ($tax_slug_map as $tax => $slugs) {
+                $slugs = array_unique($slugs);
+                foreach ($slugs as $slug) {
+                    $term = get_term_by('slug', $slug, $tax);
+                    $term_names[$tax][$slug] = $term ? $term->name : $slug;
+                }
             }
 
             foreach ($v_results as $v) {
-                $v->attributes = isset($v_meta_map[$v->ID]) ? $v_meta_map[$v->ID] : [];
+                $raw_attrs = isset($v_meta_map[$v->ID]) ? $v_meta_map[$v->ID] : [];
+                $clean_attrs = [];
+                foreach ($raw_attrs as $ak => $av) {
+                    $tax = str_replace('attribute_', '', $ak);
+                    $clean_k = str_replace('pa_', '', $tax); // pa_renk -> renk
+                    $clean_attrs[$clean_k] = isset($term_names[$tax][$av]) ? $term_names[$tax][$av] : $av;
+                }
+                $v->attributes = $clean_attrs;
                 $variations_by_parent[$v->post_parent][] = $v;
             }
 
@@ -1606,14 +1628,14 @@ function hizli_kasa_terminal_products($request)
                     $color_b = ''; $size_b = '';
 
                     foreach ($attrs_a as $k => $val) {
-                        $k_clean = strtolower(str_replace(['attribute_pa_', 'attribute_'], '', $k));
-                        if (strpos($k_clean, 'renk') !== false || strpos($k_clean, 'color') !== false) $color_a = $val;
-                        if (strpos($k_clean, 'beden') !== false || strpos($k_clean, 'size') !== false || strpos($k_clean, 'numara') !== false) $size_a = $val;
+                        $k_low = strtolower($k);
+                        if (strpos($k_low, 'renk') !== false || strpos($k_low, 'color') !== false) $color_a = $val;
+                        if (strpos($k_low, 'beden') !== false || strpos($k_low, 'size') !== false || strpos($k_low, 'numara') !== false) $size_a = $val;
                     }
                     foreach ($attrs_b as $k => $val) {
-                        $k_clean = strtolower(str_replace(['attribute_pa_', 'attribute_'], '', $k));
-                        if (strpos($k_clean, 'renk') !== false || strpos($k_clean, 'color') !== false) $color_b = $val;
-                        if (strpos($k_clean, 'beden') !== false || strpos($k_clean, 'size') !== false || strpos($k_clean, 'numara') !== false) $size_b = $val;
+                        $k_low = strtolower($k);
+                        if (strpos($k_low, 'renk') !== false || strpos($k_low, 'color') !== false) $color_b = $val;
+                        if (strpos($k_low, 'beden') !== false || strpos($k_low, 'size') !== false || strpos($k_low, 'numara') !== false) $size_b = $val;
                     }
 
                     // Önce Renk

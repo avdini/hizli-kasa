@@ -123,6 +123,10 @@ if (!defined('ABSPATH')) exit;
             <h3 id="barkod-modal-baslik">Barkod Yazdır</h3>
             <p id="barkod-modal-alt-baslik">Yazdırılacak adetleri kontrol edin.</p>
         </div>
+
+        <div id="barkod-modal-filtreler" class="modal-filtreler" style="display:none;">
+            <!-- Filtreler JS tarafından dinamik oluşturulacak -->
+        </div>
         
         <div id="barkod-urun-listesi-konteynir" class="barkod-secim-listesi">
             <!-- Dinamik olarak dolacak: Ürün adı, varyant detayı ve adet girişi -->
