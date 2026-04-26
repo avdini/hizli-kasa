@@ -1062,6 +1062,12 @@ function hizli_kasa_get_order_details($request)
         'total' => $order->get_total(),
         'items' => $items,
         'payment' => $order->get_payment_method_title(),
+        'payment_method' => $order->get_payment_method(),
+        'payment_details' => [
+            'nakit' => (float) $order->get_meta('_odeme_nakit'),
+            'kart'  => (float) $order->get_meta('_odeme_kart'),
+            'iban'  => (float) $order->get_meta('_odeme_iban'),
+        ],
         'kasiyer' => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
         'kasa_no' => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
         'depo_id' => (int) $order->get_meta('_hk_cikis_depo_id'),
