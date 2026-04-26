@@ -86,9 +86,7 @@ if (!defined('ABSPATH')) exit;
                 <!-- İade ürünleri buraya gelecek -->
             </ul>
         </div>
-        <div id="iade-odeme-yontemi-alani"></div>
-
-        <div class="iade-ozet-alani">
+        <div id="iade-iskonto-konteyner-alani">
             <div id="iade-iskonto-konteyner" style="display:none;">
                 <div class="iskonto-girdi-satiri">
                     <span>Düşülecek İskonto (TL):</span>
@@ -99,7 +97,11 @@ if (!defined('ABSPATH')) exit;
                     <span id="iade-kalan-iskonto">0.00 TL</span>
                 </div>
             </div>
+        </div>
 
+        <div id="iade-odeme-yontemi-alani"></div>
+
+        <div class="iade-ozet-alani">
             <div class="iade-toplam-satir">
                 <span>İADE EDİLECEK TOPLAM:</span>
                 <span id="iade-toplam-tutar">0.00 TL</span>
