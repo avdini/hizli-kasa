@@ -187,7 +187,9 @@
                 netCiro -= ozet.toplam_masraf;
             }
 
-            html += '<tr><td colspan="2" style="height:10px;"></td></tr>' +
+            html += '<tr><td colspan="2" style="height:15px;"></td></tr>' +
+                '<tr><td colspan="2" style="background:#f1f2f6; padding:8px; font-weight:bold; text-align:center; border-radius:4px; color:#2f3542;">📊 NET DURUM</td></tr>' +
+                '<tr><td colspan="2" style="height:5px;"></td></tr>' +
                 '<tr><td><strong>NET NAKİT (Kasadaki)</strong></td><td class="gs-sag"><strong>' + ozet.net_nakit.toFixed(2) + ' TL</strong></td></tr>' +
                 '<tr><td><strong>NET KART</strong></td><td class="gs-sag"><strong>' + ozet.net_kart.toFixed(2) + ' TL</strong></td></tr>' +
                 '<tr><td><strong>NET IBAN</strong></td><td class="gs-sag"><strong>' + ozet.net_iban.toFixed(2) + ' TL</strong></td></tr>' +
@@ -360,11 +362,13 @@
                 netCiro -= ozet.toplam_masraf;
             }
 
+            html += '<tr><td colspan="2" style="height:10px;"></td></tr>';
+            html += '<tr><td colspan="2" style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; text-align:center;">--- NET KASA DURUMU ---</td></tr>';
             html += '<tr><td colspan="2" style="height:5px;"></td></tr>';
-            html += '<tr style="border-top:1px solid #000;"><td style="font-weight:bold; font-size:14px;">NET CİRO</td><td style="text-align:right; font-weight:bold; font-size:14px;">' + netCiro.toFixed(2) + ' TL</td></tr>';
-            html += '<tr><td>Net Nakit Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_nakit.toFixed(2) + ' TL</td></tr>';
-            html += '<tr><td>Net Kart Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_kart.toFixed(2) + ' TL</td></tr>';
-            html += '<tr><td>Net IBAN Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_iban.toFixed(2) + ' TL</td></tr>';
+            html += '<tr style="border-bottom:1px dashed #eee;"><td>Net Nakit Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_nakit.toFixed(2) + ' TL</td></tr>';
+            html += '<tr style="border-bottom:1px dashed #eee;"><td>Net Kart Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_kart.toFixed(2) + ' TL</td></tr>';
+            html += '<tr style="border-bottom:1px dashed #eee;"><td>Net IBAN Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_iban.toFixed(2) + ' TL</td></tr>';
+            html += '<tr style="border-top:1px solid #000;"><td style="font-weight:bold; font-size:14px; padding-top:4px;">NET CİRO</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:4px;">' + netCiro.toFixed(2) + ' TL</td></tr>';
             html += '</table>';
             html += '</div>';
 
