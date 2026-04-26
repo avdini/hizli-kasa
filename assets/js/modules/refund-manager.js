@@ -373,6 +373,10 @@ const RefundManager = (function () {
                     <label>İade Ödeme Yöntemi:</label>
                     <div class="iade-odeme-secenekleri">
                         <label class="iade-odeme-btn-label">
+                            <input type="radio" name="iade_payment_method" value="split" ${defaultMethod === 'split' ? 'checked' : ''}>
+                            <span>🌓 Böl</span>
+                        </label>
+                        <label class="iade-odeme-btn-label">
                             <input type="radio" name="iade_payment_method" value="nakit" ${defaultMethod === 'nakit' ? 'checked' : ''}>
                             <span>💵 Nakit</span>
                         </label>
@@ -383,10 +387,6 @@ const RefundManager = (function () {
                         <label class="iade-odeme-btn-label">
                             <input type="radio" name="iade_payment_method" value="iban" ${defaultMethod === 'iban' ? 'checked' : ''}>
                             <span>🏦 IBAN</span>
-                        </label>
-                        <label class="iade-odeme-btn-label">
-                            <input type="radio" name="iade_payment_method" value="split" ${defaultMethod === 'split' ? 'checked' : ''}>
-                            <span>🌓 Böl</span>
                         </label>
                     </div>
                 </div>
