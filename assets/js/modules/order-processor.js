@@ -47,6 +47,19 @@
                 var state = HK.State;
                 if (state.sepet.length === 0) return;
 
+                // Müşteri Telefonu Doğrulaması (Eğer girilmişse)
+                var phoneInput = document.getElementById("musteri-telefon");
+                if (phoneInput && phoneInput.value.trim() !== "") {
+                    var rawPhone = phoneInput.value.replace(/\D/g, '');
+                    if (rawPhone.length !== 11 || rawPhone[0] !== '0') {
+                        HK.UIRenderer.showToast("Lütfen geçerli bir telefon numarası giriniz (05xx...)", "error", true);
+                        var musteriPanel = document.getElementById("musteri-telefon-panel");
+                        if (musteriPanel) musteriPanel.style.display = "block";
+                        phoneInput.focus();
+                        return;
+                    }
+                }
+
                 self.toggleLoading(true);
 
                 var sorunlar = await self.sonStokKontrolu();
@@ -83,12 +96,36 @@
 
             if (phoneInput) {
                 phoneInput.addEventListener("input", function (e) {
-                    var x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+                    var val = e.target.value.replace(/\D/g, '');
+                    
+                    // Eğer kullanıcı doğrudan 5 ile başlıyorsa başına 0 ekle (Türkiye için kolaylık)
+                    if (val.length > 0 && val[0] === '5' && val.length <= 10) {
+                        val = '0' + val;
+                    }
+                    
+                    // Max 11 hane
+                    if (val.length > 11) val = val.substring(0, 11);
+
+                    var x = val.match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
                     if (!x[1]) {
                         e.target.value = '';
-                        return;
+                    } else {
+                        e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + (x[3] ? ') ' + x[3] : '') + (x[4] ? ' ' + x[4] : '') + (x[5] ? ' ' + x[5] : '');
                     }
-                    e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + (x[3] ? ') ' + x[3] : '') + (x[4] ? ' ' + x[4] : '') + (x[5] ? ' ' + x[5] : '');
+
+                    // Görsel doğrulama geri bildirimi
+                    var grup = e.target.closest('.musteri-input-grup');
+                    if (grup) {
+                        if (val.length === 0) {
+                            grup.classList.remove('gecerli', 'gecersiz');
+                        } else if (val.length === 11 && val[0] === '0') {
+                            grup.classList.add('gecerli');
+                            grup.classList.remove('gecersiz');
+                        } else {
+                            grup.classList.add('gecersiz');
+                            grup.classList.remove('gecerli');
+                        }
+                    }
                 });
             }
         },
