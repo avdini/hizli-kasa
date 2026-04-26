@@ -102,31 +102,41 @@ if (!defined('ABSPATH')) exit;
     <div class="modal-icerik iade-onay-modal-icerik">
         <h3>İadeyi Onayla</h3>
         
-        <div id="iade-modal-ozet" style="margin-bottom: 20px; padding: 15px; background: var(--hk-bg-body); border-radius: 10px; border: 1px solid var(--hk-border);">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: bold; color: var(--hk-text-muted);">İade Edilecek Toplam:</span>
-                <span id="iade-modal-toplam" style="font-size: 24px; font-weight: 900; color: var(--hk-danger);">0.00 TL</span>
-            </div>
-        </div>
-
-        <div id="iade-iskonto-konteyner-alani" style="padding: 0; margin-bottom: 20px;">
-            <div id="iade-iskonto-konteyner" style="display:none; margin-bottom: 0;">
-                <div class="iskonto-girdi-satiri">
-                    <span>Düşülecek İskonto (TL):</span>
-                    <input type="text" id="iade-iskonto-input" class="hk-currency-mask" placeholder="0,00" inputmode="decimal" value="0">
-                </div>
-                <div class="iskonto-limit-satiri">
-                    <span>Kalan İskonto Limiti:</span>
-                    <span id="iade-kalan-iskonto">0.00 TL</span>
+        <div class="iade-modal-layout">
+            <div class="iade-modal-sol">
+                <div id="iade-modal-siparis-ozet">
+                    <!-- Orijinal sipariş özeti buraya kopyalanacak -->
                 </div>
             </div>
-        </div>
+            
+            <div class="iade-modal-sag">
+                <div id="iade-modal-ozet" style="margin-bottom: 20px; padding: 15px; background: var(--hk-bg-body); border-radius: 10px; border: 1px solid var(--hk-border);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: bold; color: var(--hk-text-muted);">İade Edilecek Toplam:</span>
+                        <span id="iade-modal-toplam" style="font-size: 24px; font-weight: 900; color: var(--hk-danger);">0.00 TL</span>
+                    </div>
+                </div>
 
-        <div id="iade-odeme-yontemi-alani" style="padding: 0; margin-bottom: 20px;"></div>
+                <div id="iade-iskonto-konteyner-alani" style="padding: 0; margin-bottom: 20px;">
+                    <div id="iade-iskonto-konteyner" style="display:none; margin-bottom: 0;">
+                        <div class="iskonto-girdi-satiri">
+                            <span>Düşülecek İskonto (TL):</span>
+                            <input type="text" id="iade-iskonto-input" class="hk-currency-mask" placeholder="0,00" inputmode="decimal" value="0">
+                        </div>
+                        <div class="iskonto-limit-satiri">
+                            <span>Kalan İskonto Limiti:</span>
+                            <span id="iade-kalan-iskonto">0.00 TL</span>
+                        </div>
+                    </div>
+                </div>
 
-        <div class="modal-butonlar">
-            <button id="iade-modal-vazgec" style="background: var(--hk-bg-body); color: var(--hk-text-main); border: 1px solid var(--hk-border);">Vazgeç</button>
-            <button id="iade-modal-tamamla" style="background: var(--hk-accent); color: white;">İadeyi Onayla ve Bitir</button>
+                <div id="iade-odeme-yontemi-alani" style="padding: 0; margin-bottom: 20px;"></div>
+
+                <div class="modal-butonlar">
+                    <button id="iade-modal-vazgec" style="background: var(--hk-bg-body); color: var(--hk-text-main); border: 1px solid var(--hk-border);">Vazgeç</button>
+                    <button id="iade-modal-tamamla" style="background: var(--hk-accent); color: white;">İadeyi Onayla ve Bitir</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

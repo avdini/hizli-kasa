@@ -647,6 +647,29 @@
 
 /* İade Onay Modalı Özel Genişlik */
 .iade-onay-modal-icerik {
-    width: 95% !important;
-    max-width: 900px !important;
+    width: 98% !important;
+    max-width: 1400px !important;
+    height: 95vh !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.iade-modal-layout {
+    display: flex;
+    gap: 30px;
+    flex: 1;
+    min-height: 0; /* İçerik taşması için önemli */
+}
+
+.iade-modal-sol {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 15px;
+    border-right: 1px solid var(--hk-border);
+}
+
+.iade-modal-sag {
+    width: 450px;
+    display: flex;
+    flex-direction: column;
 }

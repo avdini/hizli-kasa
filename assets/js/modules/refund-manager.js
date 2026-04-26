@@ -329,6 +329,13 @@ const RefundManager = (function () {
 
         modal.style.display = 'flex';
         
+        // Sipariş özetini modalın soluna kopyala
+        const sidebarOzet = document.querySelector('.siparis-ozet-v2');
+        const modalOzetKonteynir = document.getElementById('iade-modal-siparis-ozet');
+        if (sidebarOzet && modalOzetKonteynir) {
+            modalOzetKonteynir.innerHTML = sidebarOzet.innerHTML;
+        }
+
         // Modal içindeki toplamı güncelle
         const cartTotal = refundCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
         document.getElementById('iade-modal-toplam').innerText = cartTotal.toFixed(2) + ' TL';
@@ -421,19 +428,11 @@ const RefundManager = (function () {
             </div>
         `;
 
-        // Eğer split ise değerleri doldur
-        if (defaultMethod === 'split' && originalOrder.payment_details) {
-            const refundTotal = getRefundFinalTotal();
-            const orderTotal = parseFloat(originalOrder.total) || 1;
-            const ratio = refundTotal / orderTotal;
-            
-            const nVal = (originalOrder.payment_details.nakit * ratio).toFixed(2);
-            const kVal = (originalOrder.payment_details.kart * ratio).toFixed(2);
-            const iVal = (originalOrder.payment_details.iban * ratio).toFixed(2);
-            
-            document.getElementById('iade-bol-nakit').value = HK.CurrencyMask.format(nVal);
-            document.getElementById('iade-bol-kart').value = HK.CurrencyMask.format(kVal);
-            document.getElementById('iade-bol-iban').value = HK.CurrencyMask.format(iVal);
+        // Eğer split ise değerleri sıfırla (Kasiyer manuel girecek)
+        if (defaultMethod === 'split') {
+            document.getElementById('iade-bol-nakit').value = '0,00';
+            document.getElementById('iade-bol-kart').value = '0,00';
+            document.getElementById('iade-bol-iban').value = '0,00';
             
             calculateRefundSplit();
         }
@@ -446,25 +445,11 @@ const RefundManager = (function () {
             r.addEventListener('change', () => {
                 bolDetay.style.display = r.value === 'split' ? 'block' : 'none';
                 if (r.value === 'split') {
-                    // Otomatik doldurmayı dene (ilk inputa tüm tutarı yaz veya pro-rata yap)
-                    const refundTotal = getRefundFinalTotal();
-                    const orderTotal = parseFloat(originalOrder.total) || 1;
-                    const ratio = refundTotal / orderTotal;
-
-                    const nVal = (originalOrder.payment_details?.nakit || 0) * ratio;
-                    const kVal = (originalOrder.payment_details?.kart || 0) * ratio;
-                    const iVal = (originalOrder.payment_details?.iban || 0) * ratio;
-
-                    // Eğer orjinal sipariş split değilse hepsini nakite yaz
-                    if (!originalOrder.payment_details || (nVal + kVal + iVal === 0)) {
-                        document.getElementById('iade-bol-nakit').value = HK.CurrencyMask.format(refundTotal);
-                        document.getElementById('iade-bol-kart').value = '0,00';
-                        document.getElementById('iade-bol-iban').value = '0,00';
-                    } else {
-                        document.getElementById('iade-bol-nakit').value = HK.CurrencyMask.format(nVal.toFixed(2));
-                        document.getElementById('iade-bol-kart').value = HK.CurrencyMask.format(kVal.toFixed(2));
-                        document.getElementById('iade-bol-iban').value = HK.CurrencyMask.format(iVal.toFixed(2));
-                    }
+                    // Varsayılan olarak hepsini sıfırla (Kasiyer manuel girecek)
+                    document.getElementById('iade-bol-nakit').value = '0,00';
+                    document.getElementById('iade-bol-kart').value = '0,00';
+                    document.getElementById('iade-bol-iban').value = '0,00';
+                    
                     calculateRefundSplit();
                 }
             });
