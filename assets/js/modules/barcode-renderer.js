@@ -105,6 +105,9 @@
             if (!filterContainer) return;
             filterContainer.style.display = 'flex';
             
+            // Mevcut filtreleri sıfırla veya koru (Multi-select için [] kullanacağız)
+            if (!this.state.filters.attributes) this.state.filters.attributes = {};
+
             // 1. Stoğu Olmayanlar Filtresi (Sabit)
             var html = `
                 <div class="filtre-grup">
@@ -134,18 +137,23 @@
                 var values = Array.from(attrKeys[key]).sort();
                 if (values.length > 1) {
                     var label = key.charAt(0).toUpperCase() + key.slice(1);
-                    // Özel etiket isimleri
                     if (key.includes('renk') || key.includes('color')) label = 'Renk';
                     if (key.includes('beden') || key.includes('size')) label = 'Beden';
                     if (key.includes('numara')) label = 'Numara';
+
+                    if (!this.state.filters.attributes[key]) this.state.filters.attributes[key] = [];
                     
                     html += `
                         <div class="filtre-grup">
                             <label>${label}</label>
-                            <select class="attr-filter" data-attr="${key}">
-                                <option value="">Tümü</option>
-                                ${values.map(val => `<option value="${val}">${val}</option>`).join('')}
-                            </select>
+                            <div class="attr-checkbox-list" data-attr="${key}">
+                                ${values.map(val => `
+                                    <label>
+                                        <input type="checkbox" value="${val}" ${this.state.filters.attributes[key].includes(val) ? 'checked' : ''}>
+                                        ${val}
+                                    </label>
+                                `).join('')}
+                            </div>
                         </div>
                     `;
                 }
@@ -162,12 +170,22 @@
                 };
             }
             
-            filterContainer.querySelectorAll('.attr-filter').forEach(select => {
-                select.onchange = function() {
-                    var attr = this.dataset.attr;
-                    self.state.filters[attr] = this.value;
-                    self.applyFilters();
-                };
+            filterContainer.querySelectorAll('.attr-checkbox-list').forEach(list => {
+                var attr = list.dataset.attr;
+                list.querySelectorAll('input').forEach(input => {
+                    input.onchange = function() {
+                        var val = this.value;
+                        var currentFilters = self.state.filters.attributes[attr] || [];
+                        
+                        if (this.checked) {
+                            if (!currentFilters.includes(val)) currentFilters.push(val);
+                        } else {
+                            self.state.filters.attributes[attr] = currentFilters.filter(v => v !== val);
+                        }
+                        
+                        self.applyFilters();
+                    };
+                });
             });
         },
 
@@ -179,19 +197,24 @@
             var filters = this.state.filters;
             
             var filtered = variations.filter(v => {
-                // Stok filtresi
+                // 1. Stok filtresi
                 if (filters.hideEmptyStock && parseFloat(v.warehouse_stock) <= 0) {
                     return false;
                 }
                 
-                // Öznitelik filtreleri
+                // 2. Öznitelik filtreleri (Multi-select)
                 var attrMatch = true;
-                Object.keys(filters).forEach(fKey => {
-                    if (fKey === 'hideEmptyStock') return;
-                    if (filters[fKey] && v.attributes && v.attributes[fKey] !== filters[fKey]) {
-                        attrMatch = false;
-                    }
-                });
+                if (filters.attributes) {
+                    Object.keys(filters.attributes).forEach(fKey => {
+                        var selectedValues = filters.attributes[fKey];
+                        if (selectedValues && selectedValues.length > 0) {
+                            // Eğer bu öznitelik için seçim yapılmışsa, varyasyonun değeri bunlardan biri olmalı
+                            if (!v.attributes || !selectedValues.includes(v.attributes[fKey])) {
+                                attrMatch = false;
+                            }
+                        }
+                    });
+                }
                 
                 return attrMatch;
             });

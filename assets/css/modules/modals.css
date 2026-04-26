@@ -468,6 +468,42 @@
     width: 100%;
 }
 
+.attr-checkbox-list {
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    border-radius: 8px;
+    padding: 8px;
+    max-height: 120px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.attr-checkbox-list label {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: var(--hk-text-main) !important;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.2s;
+    margin-bottom: 0 !important;
+}
+
+.attr-checkbox-list label:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.attr-checkbox-list input {
+    width: auto !important;
+    margin-bottom: 0 !important;
+    cursor: pointer;
+}
+
 .stok-filtre-toggle {
     display: flex;
     align-items: center;
