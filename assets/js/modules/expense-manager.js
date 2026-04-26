@@ -8,19 +8,14 @@
     'use strict';
 
     HK.ExpenseManager = {
-        initialized: false,
         isProcessing: false,
-
 
         /**
          * Modülü başlat
          */
         init: function() {
-            if (this.initialized) return;
-            
             this.bindEvents();
             this.loadExpenses();
-            this.initialized = true;
         },
 
         /**
@@ -35,28 +30,34 @@
             if (!form) return;
 
             // Kategori değişince "Diğer" kontrolü
-            katSelect.addEventListener('change', function() {
-                if (this.value === 'Diger') {
-                    ozelKatAlan.style.display = 'block';
-                } else {
-                    ozelKatAlan.style.display = 'none';
-                }
-            });
+            if (katSelect && !katSelect.dataset.bound) {
+                katSelect.dataset.bound = "true";
+                katSelect.addEventListener('change', function() {
+                    if (this.value === 'Diger') {
+                        ozelKatAlan.style.display = 'block';
+                    } else {
+                        ozelKatAlan.style.display = 'none';
+                    }
+                });
+            }
 
             // Buton tıklaması (Daha güvenli, sayfa yenilemeyi önler)
             const saveBtn = document.getElementById('masraf-kaydet-btn');
-            if (saveBtn) {
+            if (saveBtn && !saveBtn.dataset.bound) {
+                saveBtn.dataset.bound = "true";
                 console.log("HK Masraf: Olay dinleyicisi bağlandı.");
                 saveBtn.addEventListener('click', async function(e) {
                     console.log("HK Masraf: Kaydet butonuna basıldı.");
                     await self.saveExpense();
                 });
-            } else {
+            } else if (!saveBtn) {
                 console.warn("HK Masraf: Kaydet butonu bulunamadı!");
             }
 
             // Ödeme yöntemi seçici görsel efekti
             document.querySelectorAll('input[name="payment_method"]').forEach(input => {
+                if (input.dataset.bound) return;
+                input.dataset.bound = "true";
                 input.addEventListener('change', function() {
                     // CSS :has selectorü ile yönetiliyor ancak eski tarayıcı desteği gerekirse burası kullanılabilir
                 });
@@ -128,6 +129,7 @@
         /**
          * Yeni masraf kaydet
          */
+        saveExpense: async function() {
             if (this.isProcessing) return;
 
             const btn = document.getElementById('masraf-kaydet-btn');
