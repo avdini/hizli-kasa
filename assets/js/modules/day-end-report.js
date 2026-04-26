@@ -169,15 +169,28 @@
             }
 
             if (isGenel && ozet.toplam_masraf > 0) {
-                var diger_masraf = ozet.toplam_masraf - ozet.nakit_masraf;
-                html += '<tr><td colspan="2" style="height:10px;"></td></tr>' +
-                '<tr><td style="color:#c0392b;">💸 Nakit Masraf</td><td class="gs-sag" style="color:#c0392b;">-' + ozet.nakit_masraf.toFixed(2) + ' TL</td></tr>' +
-                '<tr><td style="color:#c0392b;">💸 Diğer Masraf</td><td class="gs-sag" style="color:#c0392b;">-' + diger_masraf.toFixed(2) + ' TL</td></tr>';
+                html += '<tr><td colspan="2" style="height:10px;"></td></tr>';
+                if (ozet.nakit_masraf > 0) {
+                    html += '<tr><td style="color:#c0392b;">💸 Nakit Masraf</td><td class="gs-sag" style="color:#c0392b;">-' + ozet.nakit_masraf.toFixed(2) + ' TL</td></tr>';
+                }
+                if (ozet.kart_masraf > 0) {
+                    html += '<tr><td style="color:#c0392b;">💸 Kart Masraf</td><td class="gs-sag" style="color:#c0392b;">-' + ozet.kart_masraf.toFixed(2) + ' TL</td></tr>';
+                }
+                if (ozet.iban_masraf > 0) {
+                    html += '<tr><td style="color:#c0392b;">💸 IBAN Masraf</td><td class="gs-sag" style="color:#c0392b;">-' + ozet.iban_masraf.toFixed(2) + ' TL</td></tr>';
+                }
+                
+                var diger_masraf = ozet.toplam_masraf - (ozet.nakit_masraf + ozet.kart_masraf + ozet.iban_masraf);
+                if (diger_masraf > 0.01) {
+                    html += '<tr><td style="color:#c0392b;">💸 Diğer Masraf</td><td class="gs-sag" style="color:#c0392b;">-' + diger_masraf.toFixed(2) + ' TL</td></tr>';
+                }
                 netCiro -= ozet.toplam_masraf;
             }
 
             html += '<tr><td colspan="2" style="height:10px;"></td></tr>' +
                 '<tr><td><strong>NET NAKİT (Kasadaki)</strong></td><td class="gs-sag"><strong>' + ozet.net_nakit.toFixed(2) + ' TL</strong></td></tr>' +
+                '<tr><td><strong>NET KART</strong></td><td class="gs-sag"><strong>' + ozet.net_kart.toFixed(2) + ' TL</strong></td></tr>' +
+                '<tr><td><strong>NET IBAN</strong></td><td class="gs-sag"><strong>' + ozet.net_iban.toFixed(2) + ' TL</strong></td></tr>' +
                 '<tr class="gs-toplam-satir" style="background:#f8f9fa;"><td><strong>NET CİRO</strong></td><td class="gs-sag"><strong>' + netCiro.toFixed(2) + ' TL</strong></td></tr>' +
                 '</table>' +
             '</div>';
@@ -350,6 +363,8 @@
             html += '<tr><td colspan="2" style="height:5px;"></td></tr>';
             html += '<tr style="border-top:1px solid #000;"><td style="font-weight:bold; font-size:14px;">NET CİRO</td><td style="text-align:right; font-weight:bold; font-size:14px;">' + netCiro.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>Kasadaki Net Nakit</td><td style="text-align:right; font-weight:bold;">' + ozet.net_nakit.toFixed(2) + ' TL</td></tr>';
+            html += '<tr><td>Net Kart Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_kart.toFixed(2) + ' TL</td></tr>';
+            html += '<tr><td>Net IBAN Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_iban.toFixed(2) + ' TL</td></tr>';
             html += '</table>';
             html += '</div>';
 

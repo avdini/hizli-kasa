@@ -472,6 +472,8 @@ function hizli_kasa_gun_sonu_raporu($request)
     $masraf_table = Hizli_Kasa_Database::get_tables()['masraflar'];
     $toplam_masraf = 0;
     $nakit_masraf = 0;
+    $kart_masraf = 0;
+    $iban_masraf = 0;
     $masraf_listesi = array();
 
     if ($is_general) {
@@ -483,6 +485,10 @@ function hizli_kasa_gun_sonu_raporu($request)
             $toplam_masraf += $amt;
             if ($m->payment_method === 'nakit') {
                 $nakit_masraf += $amt;
+            } elseif ($m->payment_method === 'kart') {
+                $kart_masraf += $amt;
+            } elseif ($m->payment_method === 'iban') {
+                $iban_masraf += $amt;
             }
             $masraf_listesi[] = array(
                 'kategori' => $m->category,
@@ -512,7 +518,11 @@ function hizli_kasa_gun_sonu_raporu($request)
             'iban_toplam' => round($iban_toplam, 2),
             'toplam_masraf' => round($toplam_masraf, 2),
             'nakit_masraf' => round($nakit_masraf, 2),
+            'kart_masraf' => round($kart_masraf, 2),
+            'iban_masraf' => round($iban_masraf, 2),
             'net_nakit' => round($nakit_toplam - $nakit_masraf - $iade_nakit, 2),
+            'net_kart' => round($kart_toplam - $kart_masraf - $iade_kart, 2),
+            'net_iban' => round($iban_toplam - $iban_masraf - $iade_iban, 2),
             'urun_adet_toplam' => $urun_adet,
             'toplam_iade' => round($iade_toplam, 2),
             'iade_adet' => $iade_adet,
