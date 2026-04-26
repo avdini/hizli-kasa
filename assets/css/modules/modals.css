@@ -447,6 +447,7 @@
     flex-direction: column;
     gap: 6px;
     min-width: 150px;
+    position: relative; /* Dropdown için */
 }
 
 .filtre-grup label {
@@ -457,27 +458,66 @@
     color: var(--hk-text-muted);
 }
 
-.filtre-grup select {
+.multi-select-trigger {
     background: var(--hk-bg-card);
     border: 1px solid var(--hk-border);
     color: var(--hk-text-main);
-    padding: 8px;
+    padding: 10px 12px;
     border-radius: 8px;
     font-size: 13px;
-    outline: none;
-    width: 100%;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.multi-select-trigger:hover {
+    border-color: var(--hk-accent);
+    background: var(--hk-bg-hover);
+}
+
+.multi-select-trigger span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+}
+
+.multi-select-trigger::after {
+    content: '▼';
+    font-size: 10px;
+    opacity: 0.5;
+    transition: transform 0.2s;
+}
+
+.filtre-grup.is-open .multi-select-trigger::after {
+    transform: rotate(180deg);
 }
 
 .attr-checkbox-list {
+    display: none; /* Varsayılan kapalı */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
     background: var(--hk-bg-card);
     border: 1px solid var(--hk-border);
     border-radius: 8px;
     padding: 8px;
-    max-height: 120px;
+    max-height: 200px;
     overflow-y: auto;
-    display: flex;
     flex-direction: column;
     gap: 4px;
+    z-index: 100;
+    box-shadow: var(--hk-shadow-md);
+    margin-top: 4px;
+}
+
+.filtre-grup.is-open .attr-checkbox-list {
+    display: flex;
 }
 
 .attr-checkbox-list label {

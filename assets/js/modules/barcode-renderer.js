@@ -143,10 +143,16 @@
 
                     if (!this.state.filters.attributes[key]) this.state.filters.attributes[key] = [];
                     
+                    var selected = this.state.filters.attributes[key];
+                    var summary = selected.length > 0 ? selected.join(', ') : 'Tümü';
+
                     html += `
-                        <div class="filtre-grup">
+                        <div class="filtre-grup" data-attr-group="${key}">
                             <label>${label}</label>
-                            <div class="attr-checkbox-list" data-attr="${key}">
+                            <div class="multi-select-trigger" onclick="event.stopPropagation(); this.parentElement.classList.toggle('is-open')">
+                                <span>${summary}</span>
+                            </div>
+                            <div class="attr-checkbox-list" data-attr="${key}" onclick="event.stopPropagation()">
                                 ${values.map(val => `
                                     <label>
                                         <input type="checkbox" value="${val}" ${this.state.filters.attributes[key].includes(val) ? 'checked' : ''}>
@@ -161,6 +167,11 @@
             
             filterContainer.innerHTML = html;
             
+            // Dışarı tıklayınca kapat
+            document.onclick = function() {
+                document.querySelectorAll('.filtre-grup.is-open').forEach(el => el.classList.remove('is-open'));
+            };
+
             // Event Listeners
             var stockToggle = document.getElementById('filter-stock-toggle');
             if (stockToggle) {
@@ -172,6 +183,8 @@
             
             filterContainer.querySelectorAll('.attr-checkbox-list').forEach(list => {
                 var attr = list.dataset.attr;
+                var triggerSpan = list.parentElement.querySelector('.multi-select-trigger span');
+
                 list.querySelectorAll('input').forEach(input => {
                     input.onchange = function() {
                         var val = this.value;
@@ -183,6 +196,10 @@
                             self.state.filters.attributes[attr] = currentFilters.filter(v => v !== val);
                         }
                         
+                        // Özeti güncelle
+                        var newSelected = self.state.filters.attributes[attr];
+                        triggerSpan.innerText = newSelected.length > 0 ? newSelected.join(', ') : 'Tümü';
+
                         self.applyFilters();
                     };
                 });
