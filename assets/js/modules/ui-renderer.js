@@ -124,6 +124,13 @@ window.HizliKasa = window.HizliKasa || {};
                         } else {
                             state.sepet.splice(idx, 1);
                         }
+
+                        // Ürün eksiltildiğinde iskontoyu sıfırla (Kasiyerin tekrar değerlendirmesi için)
+                        if (state.iskontoTutar > 0) {
+                            state.iskontoTutar = 0;
+                            self.showToast("Sepet değiştiği için iskonto sıfırlandı.", "info");
+                        }
+
                         self.arayuzuGuncelle();
                     };
                 })(index));
