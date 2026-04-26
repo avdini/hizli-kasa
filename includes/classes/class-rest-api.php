@@ -660,7 +660,8 @@ function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent
                     'sku' => $v->sku ?: '',
                     'warehouse_stock' => (float) $v->warehouse_stock,
                     'stock_quantity' => (float) $v->stock_quantity,
-                    'images' => $var_img ? [['src' => $var_img]] : []
+                    'images' => $var_img ? [['src' => $var_img]] : [],
+                    'attributes' => $v->attributes ?? []
                 ];
             }
         }
@@ -1559,27 +1560,77 @@ function hizli_kasa_terminal_products($request)
             WHERE p.post_type = 'product_variation' AND p.post_status = 'publish' AND p.post_parent IN ($ids_placeholders)
             GROUP BY p.ID
         ", array_merge([$depo_id], $parent_ids)));
-        foreach ($v_results as $v) {
-            $variations_by_parent[$v->post_parent][] = $v;
-        }
+        if (!empty($v_results)) {
+            // --- Özellikleri Toplu Çek ---
+            $v_ids = wp_list_pluck($v_results, 'ID');
+            $v_ids_ph = implode(',', array_fill(0, count($v_ids), '%d'));
+            $v_meta_raw = $wpdb->get_results($wpdb->prepare("
+                SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta}
+                WHERE post_id IN ($v_ids_ph) AND meta_key LIKE 'attribute_%'
+            ", $v_ids));
 
-        if (!empty($search_ids)) {
-            $needle = function_exists('mb_strtolower') ? mb_strtolower($s) : strtolower($s);
+            $v_meta_map = [];
+            foreach ($v_meta_raw as $m) {
+                $v_meta_map[$m->post_id][$m->meta_key] = $m->meta_value;
+            }
+
+            foreach ($v_results as $v) {
+                $v->attributes = isset($v_meta_map[$v->ID]) ? $v_meta_map[$v->ID] : [];
+                $variations_by_parent[$v->post_parent][] = $v;
+            }
+
+            // --- Sıralama Mantığı: Renk -> Beden/Numara -> Başlık ---
             foreach ($variations_by_parent as $parent_id => &$variation_rows) {
-                usort($variation_rows, function ($a, $b) use ($needle) {
-                    $a_name = function_exists('mb_strtolower') ? mb_strtolower((string) $a->post_title) : strtolower((string) $a->post_title);
-                    $b_name = function_exists('mb_strtolower') ? mb_strtolower((string) $b->post_title) : strtolower((string) $b->post_title);
-                    $a_sku = function_exists('mb_strtolower') ? mb_strtolower((string) $a->sku) : strtolower((string) $a->sku);
-                    $b_sku = function_exists('mb_strtolower') ? mb_strtolower((string) $b->sku) : strtolower((string) $b->sku);
+                usort($variation_rows, function ($a, $b) use ($s) {
+                    // 1. Arama Puanı (Eğer arama yapılıyorsa)
+                    if (!empty($s)) {
+                        $needle = function_exists('mb_strtolower') ? mb_strtolower($s) : strtolower($s);
+                        $a_name = function_exists('mb_strtolower') ? mb_strtolower((string) $a->post_title) : strtolower((string) $a->post_title);
+                        $b_name = function_exists('mb_strtolower') ? mb_strtolower((string) $b->post_title) : strtolower((string) $b->post_title);
+                        $a_sku = function_exists('mb_strtolower') ? mb_strtolower((string) $a->sku) : strtolower((string) $a->sku);
+                        $b_sku = function_exists('mb_strtolower') ? mb_strtolower((string) $b->sku) : strtolower((string) $b->sku);
 
-                    $a_score = ((strpos($a_sku, $needle) !== false) ? 20 : 0) + ((strpos($a_name, $needle) !== false) ? 10 : 0);
-                    $b_score = ((strpos($b_sku, $needle) !== false) ? 20 : 0) + ((strpos($b_name, $needle) !== false) ? 10 : 0);
+                        $a_score = ((strpos($a_sku, $needle) !== false) ? 20 : 0) + ((strpos($a_name, $needle) !== false) ? 10 : 0);
+                        $b_score = ((strpos($b_sku, $needle) !== false) ? 20 : 0) + ((strpos($b_name, $needle) !== false) ? 10 : 0);
 
-                    if ($a_score === $b_score) {
-                        return strnatcasecmp((string) $a->post_title, (string) $b->post_title);
+                        if ($a_score !== $b_score) {
+                            return $b_score <=> $a_score;
+                        }
                     }
 
-                    return $b_score <=> $a_score;
+                    // 2. Renk ve Beden/Numara Bazlı Sıralama
+                    $attrs_a = $a->attributes ?? [];
+                    $attrs_b = $b->attributes ?? [];
+
+                    $color_a = ''; $size_a = '';
+                    $color_b = ''; $size_b = '';
+
+                    foreach ($attrs_a as $k => $val) {
+                        $k_clean = strtolower(str_replace(['attribute_pa_', 'attribute_'], '', $k));
+                        if (strpos($k_clean, 'renk') !== false || strpos($k_clean, 'color') !== false) $color_a = $val;
+                        if (strpos($k_clean, 'beden') !== false || strpos($k_clean, 'size') !== false || strpos($k_clean, 'numara') !== false) $size_a = $val;
+                    }
+                    foreach ($attrs_b as $k => $val) {
+                        $k_clean = strtolower(str_replace(['attribute_pa_', 'attribute_'], '', $k));
+                        if (strpos($k_clean, 'renk') !== false || strpos($k_clean, 'color') !== false) $color_b = $val;
+                        if (strpos($k_clean, 'beden') !== false || strpos($k_clean, 'size') !== false || strpos($k_clean, 'numara') !== false) $size_b = $val;
+                    }
+
+                    // Önce Renk
+                    if ($color_a !== $color_b) {
+                        return strnatcasecmp($color_a, $color_b);
+                    }
+
+                    // Sonra Beden/Numara
+                    if ($size_a !== $size_b) {
+                        if (is_numeric($size_a) && is_numeric($size_b)) {
+                            return (float) $size_a <=> (float) $size_b;
+                        }
+                        return strnatcasecmp($size_a, $size_b);
+                    }
+
+                    // Fallback: Başlık
+                    return strnatcasecmp((string) $a->post_title, (string) $b->post_title);
                 });
             }
             unset($variation_rows);
