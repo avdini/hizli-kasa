@@ -397,7 +397,10 @@
 .report-item-list-wrapper {
     display: block;
     position: relative;
-    padding-right: 0;
+}
+
+.report-item-list:first-child .order-item-row {
+    padding-right: 140px;
 }
 
 .report-items-toggle-icon-btn {
@@ -442,20 +445,21 @@
 }
 
 .report-items-toggle-row {
-    margin-top: 6px;
+    position: absolute;
+    top: 12px;
+    right: 0;
+    margin: 0;
     display: flex;
     align-items: center;
     gap: 8px;
+    background: transparent;
+    z-index: 5;
 }
 
 .report-items-toggle-label {
-    font-size: 12px;
-    color: var(--hk-text-main);
-}
-
-.report-items-caption {
     font-size: 11px;
     color: var(--hk-text-muted);
+    font-weight: 600;
 }
 
 .report-items-extra {

@@ -214,11 +214,10 @@
                 '<div class="report-item-list-wrapper">' +
                     '<ul class="order-item-list">' + firstItemHtml + '</ul>' +
                     '<div class="report-items-toggle-row">' +
+                        '<span class="report-items-toggle-label" data-more-count="' + (items.length - 1) + '">' + (items.length - 1) + ' ürün daha göster</span>' +
                         '<button type="button" class="report-items-toggle-icon-btn is-closed" aria-expanded="false" aria-label="Diğer ürünleri göster" title="Diğer ürünleri göster">' +
                             '<span class="report-toggle-icon" aria-hidden="true">⌄</span>' +
                         '</button>' +
-                        '<span class="report-items-toggle-label" data-more-count="' + (items.length - 1) + '">' + (items.length - 1) + ' ürün daha göster</span>' +
-                        '<span class="report-items-caption">Sepetteki ürünler</span>' +
                     '</div>' +
                     '<div class="report-items-extra" style="display:none;">' +
                         '<ul class="order-item-list order-item-list-extra">' + remainingItemsHtml + '</ul>' +
@@ -352,23 +351,29 @@
                 });
             });
 
-            tbody.querySelectorAll(".report-items-toggle-icon-btn").forEach(function(btn) {
-                btn.addEventListener("click", function() {
+            tbody.querySelectorAll(".report-items-toggle-row").forEach(function(row) {
+                row.style.cursor = "pointer";
+                row.addEventListener("click", function(e) {
                     var wrapper = this.closest(".report-item-list-wrapper");
                     if (!wrapper) return;
 
                     var extra = wrapper.querySelector(".report-items-extra");
                     if (!extra) return;
+                    var btn = wrapper.querySelector(".report-items-toggle-icon-btn");
                     var label = wrapper.querySelector(".report-items-toggle-label");
                     var moreCount = label ? Number(label.dataset.moreCount || 0) : 0;
 
                     var isOpen = extra.style.display === "block";
                     extra.style.display = isOpen ? "none" : "block";
-                    this.setAttribute("aria-expanded", isOpen ? "false" : "true");
-                    this.setAttribute("aria-label", isOpen ? "Diğer ürünleri göster" : "Diğer ürünleri gizle");
-                    this.setAttribute("title", isOpen ? "Diğer ürünleri göster" : "Diğer ürünleri gizle");
-                    this.classList.toggle("is-open", !isOpen);
-                    this.classList.toggle("is-closed", isOpen);
+                    
+                    if (btn) {
+                        btn.setAttribute("aria-expanded", isOpen ? "false" : "true");
+                        btn.setAttribute("aria-label", isOpen ? "Diğer ürünleri göster" : "Diğer ürünleri gizle");
+                        btn.setAttribute("title", isOpen ? "Diğer ürünleri göster" : "Diğer ürünleri gizle");
+                        btn.classList.toggle("is-open", !isOpen);
+                        btn.classList.toggle("is-closed", isOpen);
+                    }
+
                     if (label) {
                         label.textContent = isOpen ? (moreCount + " ürün daha göster") : "Ürünleri gizle";
                     }
