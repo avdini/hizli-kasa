@@ -6,6 +6,7 @@ const RefundManager = (function () {
     const HK = window.HizliKasa;
     let originalOrder = null;
     let refundCart = [];
+    let refundSplitData = null;
 
     function init() {
         // İade sekmesi her yüklendiğinde (lazy load sonrası) elementleri tekrar yakala
@@ -283,7 +284,29 @@ const RefundManager = (function () {
                             <input type="radio" name="iade_payment_method" value="iban">
                             <span>🏦 IBAN</span>
                         </label>
+                        <label class="iade-odeme-btn-label">
+                            <input type="radio" name="iade_payment_method" value="split">
+                            <span>🌓 Böl</span>
+                        </label>
                     </div>
+                </div>
+
+                <div id="iade-bol-detay" style="display:none; margin-top: 15px; padding: 12px; background: var(--hk-bg-body); border-radius: 8px; border: 1px dashed var(--hk-accent);">
+                    <div class="iade-bol-input-grup" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                        <div>
+                            <label style="font-size:11px; color:var(--hk-text-muted);">💵 Nakit</label>
+                            <input type="text" id="iade-bol-nakit" class="hk-input hk-currency-mask" placeholder="0,00" style="padding: 6px; font-size:13px;">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; color:var(--hk-text-muted);">💳 Kart</label>
+                            <input type="text" id="iade-bol-kart" class="hk-input hk-currency-mask" placeholder="0,00" style="padding: 6px; font-size:13px;">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; color:var(--hk-text-muted);">🏦 IBAN</label>
+                            <input type="text" id="iade-bol-iban" class="hk-input hk-currency-mask" placeholder="0,00" style="padding: 6px; font-size:13px;">
+                        </div>
+                    </div>
+                    <div id="iade-bol-kalan-uyari" style="margin-top: 10px; font-size: 12px; font-weight: bold; text-align: center;"></div>
                 </div>
 
                 <div class="iade-ayar-satir" style="margin-top: 15px;">
@@ -304,7 +327,57 @@ const RefundManager = (function () {
                 </div>
             </div>
         `;
+
+        // Event Listeners for Split UI
+        const radios = container.querySelectorAll('input[name="iade_payment_method"]');
+        const bolDetay = container.querySelector('#iade-bol-detay');
+        
+        radios.forEach(r => {
+            r.addEventListener('change', () => {
+                bolDetay.style.display = r.value === 'split' ? 'block' : 'none';
+                if (r.value === 'split') {
+                    // Otomatik doldurmayı dene (ilk inputa tüm tutarı yaz)
+                    const total = getRefundFinalTotal();
+                    document.getElementById('iade-bol-nakit').value = HK.CurrencyMask.format(total);
+                    calculateRefundSplit();
+                }
+            });
+        });
+
+        const bolInputs = container.querySelectorAll('.iade-bol-input-grup input');
+        bolInputs.forEach(inp => {
+            inp.addEventListener('input', calculateRefundSplit);
+        });
+
         container.style.display = 'block';
+    }
+
+    function calculateRefundSplit() {
+        const total = getRefundFinalTotal();
+        const nakit = HK.CurrencyMask.parse(document.getElementById('iade-bol-nakit')?.value || "0");
+        const kart = HK.CurrencyMask.parse(document.getElementById('iade-bol-kart')?.value || "0");
+        const iban = HK.CurrencyMask.parse(document.getElementById('iade-bol-iban')?.value || "0");
+
+        const girenToplam = nakit + kart + iban;
+        const kalan = total - girenToplam;
+        const uyariArea = document.getElementById('iade-bol-kalan-uyari');
+
+        if (!uyariArea) return;
+
+        if (Math.abs(kalan) < 0.01) {
+            uyariArea.innerHTML = '<span style="color:var(--hk-success);">✅ Tutar Tamamlandı</span>';
+            refundSplitData = { nakit, kart, iban };
+        } else {
+            const farkMetni = kalan > 0 ? `Kalan: ${kalan.toFixed(2)} TL` : `Fazla: ${Math.abs(kalan).toFixed(2)} TL`;
+            uyariArea.innerHTML = `<span style="color:var(--hk-danger);">${farkMetni}</span>`;
+            refundSplitData = null;
+        }
+    }
+
+    function getRefundFinalTotal() {
+        const cartTotal = refundCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const discount = HK.CurrencyMask.parse(document.getElementById('iade-iskonto-input')?.value || "0");
+        return Math.abs(cartTotal - discount);
     }
 
     function addToRefundCart(itemId) {
@@ -395,6 +468,10 @@ const RefundManager = (function () {
 
         totalSpan.innerText = `-${Math.abs(finalTotal).toFixed(2)} TL`;
         onaylaBtn.disabled = refundCart.length === 0;
+
+        if (document.querySelector('input[name="iade_payment_method"]:checked')?.value === 'split') {
+            calculateRefundSplit();
+        }
     }
 
     async function processRefund() {
@@ -406,6 +483,11 @@ const RefundManager = (function () {
             const selectedKasa = document.getElementById('iade-hedef-kasa') ? document.getElementById('iade-hedef-kasa').value : (kasaAyar.kasaNo || "1");
             const paymentMethod = document.querySelector('input[name="iade_payment_method"]:checked')?.value || "nakit";
 
+            if (paymentMethod === 'split' && !refundSplitData) {
+                alert('Lütfen bölünmüş ödeme tutarlarını kontrol edin! Toplam eşleşmiyor.');
+                return;
+            }
+
             const response = await fetch(`${apiBase}hizli-kasa/v1/process-refund`, {
                 method: 'POST',
                 headers: { 
@@ -416,6 +498,7 @@ const RefundManager = (function () {
                     original_order_id: originalOrder.id,
                     kasa_no: selectedKasa,
                     payment_method: paymentMethod,
+                    split_data: refundSplitData,
                     refund_discount: HK.CurrencyMask.parse(document.getElementById('iade-iskonto-input')?.value || "0"),
                     items: refundCart.map(item => ({
                         id: item.id,
