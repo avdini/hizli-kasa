@@ -218,11 +218,23 @@ const RefundManager = (function () {
         const container = document.getElementById('iade-siparis-detay');
         if (!container) return;
 
+        let odemeDetay = '';
+        if (originalOrder.payment_details) {
+            const p = originalOrder.payment_details;
+            const detaylar = [];
+            if (p.nakit > 0) detaylar.push(`💵 Nakit: ${p.nakit.toFixed(2)} TL`);
+            if (p.kart > 0) detaylar.push(`💳 Kart: ${p.kart.toFixed(2)} TL`);
+            if (p.iban > 0) detaylar.push(`🏦 IBAN: ${p.iban.toFixed(2)} TL`);
+            if (detaylar.length > 0) {
+                odemeDetay = `<br><span style="font-size:12px; opacity:0.9; display:block; margin-top:4px;">💰 Ödeme Dağılımı: ${detaylar.join(' — ')}</span>`;
+            }
+        }
+
         let html = `
             <div class="siparis-ozet">
                 <strong>Sipariş: #${originalOrder.id}</strong> | Tarih: ${originalOrder.date} <br>
-                <span>Ödeme: ${originalOrder.payment}</span> | <span>Toplam: ${originalOrder.total} TL</span> <br>
-                <span class="original-kasa-bilgi">📢 Bu sipariş <strong>Kasa ${originalOrder.kasa_no || 'Bilinmiyor'}</strong> üzerinden satılmış. (Kasiyer: ${originalOrder.kasiyer || '-'})</span>
+                <span>Ödeme: ${originalOrder.payment}</span> | <span>Toplam: ${originalOrder.total} TL</span> ${odemeDetay}
+                <span class="original-kasa-bilgi" style="display:block; margin-top:8px;">📢 Bu sipariş <strong>Kasa ${originalOrder.kasa_no || 'Bilinmiyor'}</strong> üzerinden satılmış. (Kasiyer: ${originalOrder.kasiyer || '-'})</span>
             </div>
             
             <div class="urun-listesi-baslik">İade Edilecek Ürünleri Seçin</div>
