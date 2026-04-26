@@ -85,6 +85,140 @@
             }
         },
 
+        fieldLabelMap: {
+            _hk_cikis_depo_id: 'Depo ID',
+            _hk_cikis_depo_adi: 'Depo',
+            _hizli_kasa_kasa_no: 'Kasa No',
+            _hizli_kasa_kasiyer: 'Kasiyer',
+            _hizli_kasa_musteri_telefon: 'Telefon',
+            _hizli_kasa_original_order: 'Orijinal Sipariş',
+            _hizli_kasa_is_refund: 'İade Kaydı',
+            _odeme_nakit: 'Nakit Ödeme',
+            _odeme_kart: 'Kart Ödeme',
+            _odeme_iban: 'IBAN Ödeme',
+            _ara_toplam: 'Ara Toplam',
+            _etiket_toplami: 'Etiket Toplamı',
+            _hk_refunded_discount: 'İade Edilen İskonto',
+            _hk_has_refund: 'İade Durumu',
+            _hk_refunded_qty: 'İade Edilen Adet'
+        },
+
+        currencyFieldKeys: ['_odeme_nakit', '_odeme_kart', '_odeme_iban', '_ara_toplam', '_etiket_toplami', '_hk_refunded_discount'],
+
+        escapeHtml: function(value) {
+            return String(value === null || value === undefined ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        },
+
+        formatCurrency: function(value) {
+            var amount = Number(value);
+            if (isNaN(amount)) return '-';
+            return '₺ ' + amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        },
+
+        humanizeKey: function(key) {
+            if (!key) return '-';
+            return key
+                .replace(/^_+/, '')
+                .replace(/hizli_kasa/g, '')
+                .replace(/hk_/g, '')
+                .replace(/_/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .replace(/\b\w/g, function(l) { return l.toUpperCase(); });
+        },
+
+        formatMetaField: function(key, value) {
+            var normalizedKey = String(key || '');
+            var label = this.fieldLabelMap[normalizedKey] || this.humanizeKey(normalizedKey);
+            var raw = value;
+            var display = '-';
+
+            if (raw !== null && raw !== undefined && raw !== '') {
+                if (this.currencyFieldKeys.indexOf(normalizedKey) !== -1) {
+                    display = this.formatCurrency(raw);
+                } else if (normalizedKey === '_hk_cikis_depo_id') {
+                    display = 'Depo #' + this.escapeHtml(raw);
+                } else if (normalizedKey === '_hizli_kasa_original_order') {
+                    display = '#' + this.escapeHtml(raw);
+                } else if (normalizedKey === '_hizli_kasa_is_refund' || normalizedKey === '_hk_has_refund') {
+                    display = (String(raw) === 'yes') ? 'Evet' : 'Hayır';
+                } else {
+                    display = this.escapeHtml(raw);
+                }
+            }
+
+            return { label: label, value: display };
+        },
+
+        getItemImageUrl: function(item) {
+            if (!item) return '';
+            if (typeof item.image === 'string' && item.image) return item.image;
+            if (typeof item.thumbnail === 'string' && item.thumbnail) return item.thumbnail;
+            if (item.images && item.images.length && item.images[0] && item.images[0].src) return item.images[0].src;
+            return '';
+        },
+
+        renderItemMetaTags: function(meta) {
+            var self = this;
+            if (!meta || typeof meta !== 'object') return '';
+
+            return Object.keys(meta).map(function(key) {
+                var field = self.formatMetaField(key, meta[key]);
+                return '<span class="meta-tag" title="' + self.escapeHtml(field.label) + '">' + self.escapeHtml(field.label) + ': ' + field.value + '</span>';
+            }).join('');
+        },
+
+        renderOrderItemRow: function(item) {
+            var imageUrl = this.getItemImageUrl(item);
+            var imageHtml = imageUrl
+                ? '<img class="report-item-image" src="' + this.escapeHtml(imageUrl) + '" alt="' + this.escapeHtml(item.name || 'Ürün') + '" loading="lazy" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';" /><div class="report-item-image-placeholder" style="display:none;">🖼️</div>'
+                : '<div class="report-item-image-placeholder">🖼️</div>';
+
+            var priceFormatted = this.formatCurrency(item.price || 0);
+            var subtotalFormatted = this.formatCurrency(item.subtotal || 0);
+            var qty = Number(item.qty || 0);
+            var metaStr = this.renderItemMetaTags(item.meta);
+
+            return (
+                '<li class="order-item-row">' +
+                    '<div class="report-item-media">' + imageHtml + '</div>' +
+                    '<div class="report-item-content">' +
+                        '<strong>' + this.escapeHtml(item.name || 'Ürün') + '</strong>' +
+                        '<div class="report-item-subline">Adet: ' + this.escapeHtml(qty) + ' <span class="item-price-calc">(' + priceFormatted + ' x ' + this.escapeHtml(qty) + ' = ' + subtotalFormatted + ')</span></div>' +
+                        (metaStr ? '<div class="report-item-meta-tags">' + metaStr + '</div>' : '') +
+                    '</div>' +
+                '</li>'
+            );
+        },
+
+        renderOrderItemsList: function(items) {
+            var self = this;
+            if (!Array.isArray(items) || !items.length) {
+                return '<div class="report-empty-items">Ürün bulunamadı.</div>';
+            }
+
+            return '<ul class="order-item-list">' + items.map(function(item) {
+                return self.renderOrderItemRow(item);
+            }).join('') + '</ul>';
+        },
+
+        renderOrderMetaDetails: function(meta) {
+            var self = this;
+            if (!meta || typeof meta !== 'object' || !Object.keys(meta).length) {
+                return 'Meta bilgisi yok.';
+            }
+
+            return Object.keys(meta).map(function(key) {
+                var field = self.formatMetaField(key, meta[key]);
+                return '<div class="meta-item"><span class="meta-key">' + self.escapeHtml(field.label) + ':</span><span class="meta-value">' + field.value + '</span></div>';
+            }).join('');
+        },
+
         loadOrders: async function(page) {
             this.currentPageOrders = page || 1;
             var tbody = document.getElementById("all-orders-body");
@@ -162,34 +296,18 @@
             }
 
             orders.forEach(order => {
-                var itemsHtml = '<ul class="order-item-list">';
-                order.items.forEach(item => {
-                    var metaStr = "";
-                    if (item.meta) {
-                        Object.keys(item.meta).forEach(k => {
-                            metaStr += `<span class="meta-tag" title="${k}">${item.meta[k]}</span>`;
-                        });
-                    }
-                    var priceFormatted = parseFloat(item.price || 0).toLocaleString('tr-TR', {minimumFractionDigits:2});
-                    var subtotalFormatted = parseFloat(item.subtotal || 0).toLocaleString('tr-TR', {minimumFractionDigits:2});
-                    itemsHtml += `<li><strong>${item.name}</strong> x ${item.qty} <span class="item-price-calc">(${priceFormatted} TL x ${item.qty} = ${subtotalFormatted} TL)</span> ${metaStr}</li>`;
-                });
-                itemsHtml += '</ul>';
-
-                var metaDetails = "";
-                if (order.meta) {
-                    Object.keys(order.meta).forEach(k => {
-                        metaDetails += `<div class="meta-item"><span class="meta-key">${k}:</span> ${order.meta[k]}</div>`;
-                    });
-                }
+                var itemsHtml = this.renderOrderItemsList(order.items);
+                var metaDetails = this.renderOrderMetaDetails(order.meta);
+                var orderTotal = this.formatCurrency(order.total || 0);
+                var kasaNoLabel = order.kasa_no ? ('Kasa: ' + this.escapeHtml(order.kasa_no)) : '-';
 
                 var tr = document.createElement("tr");
                 tr.innerHTML = `
-                    <td>${order.date}</td>
-                    <td><span style="font-weight:bold; color:var(--hk-accent);">#${order.id}</span></td>
-                    <td>${order.cashier} <br><small style="color:#888;">${order.kasa_no}</small></td>
+                    <td>${this.escapeHtml(order.date || '-')}</td>
+                    <td><span class="report-order-id">#${this.escapeHtml(order.id || '-')}</span></td>
+                    <td>${this.escapeHtml(order.cashier || '-')} <br><small class="report-kasa-no">${kasaNoLabel}</small></td>
                     <td>${itemsHtml}</td>
-                    <td style="font-weight:bold;">${parseFloat(order.total).toLocaleString('tr-TR', {minimumFractionDigits:2})} TL</td>
+                    <td class="report-total-cell">${orderTotal}</td>
                     <td><button class="btn-detail" data-id="${order.id}">🔍 Meta</button></td>
                 `;
                 tbody.appendChild(tr);

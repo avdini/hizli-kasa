@@ -2427,13 +2427,31 @@ function hizli_kasa_get_reports_data($request, $is_refund = false)
             $qty = $item->get_quantity();
             $total = (float) $item->get_total();
             $unit_price = ($qty != 0) ? $total / $qty : 0;
+            $product = $item->get_product();
+            $image_url = '';
+            if ($product) {
+                $image_id = $product->get_image_id();
+                if (!$image_id && $product->is_type('variation')) {
+                    $parent_id = $product->get_parent_id();
+                    if ($parent_id) {
+                        $parent_product = wc_get_product($parent_id);
+                        if ($parent_product) {
+                            $image_id = $parent_product->get_image_id();
+                        }
+                    }
+                }
+                if ($image_id) {
+                    $image_url = wp_get_attachment_image_url($image_id, 'thumbnail') ?: '';
+                }
+            }
 
             $order_data['items'][] = array(
                 'name' => $item->get_name(),
                 'qty' => $qty,
                 'price' => round($unit_price, 2),
                 'subtotal' => round($total, 2),
-                'meta' => $product_meta
+                'meta' => $product_meta,
+                'image' => $image_url,
             );
         }
 
