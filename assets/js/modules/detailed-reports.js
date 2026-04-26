@@ -486,7 +486,6 @@
                     var btn = e.target.closest(".btn-view-report");
                     if (btn) {
                         var date = btn.dataset.date;
-                        if (HK.UIRenderer) HK.UIRenderer.showToast("Rapor hazırlanıyor: " + date, "info");
                         
                         if (HK.DayEndReport) {
                             HK.DayEndReport.raporuGetir('all', date);

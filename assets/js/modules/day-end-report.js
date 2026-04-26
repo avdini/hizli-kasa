@@ -102,8 +102,6 @@
             this.els.gunSonuModal.style.setProperty("display", "flex", "important");
             this.els.gunSonuYukleniyor.style.display = "block";
             this.els.gunSonuIcerik.style.display = "none";
-            
-            if (HK.UIRenderer) HK.UIRenderer.showToast("Rapor verileri çekiliyor...", "info");
 
             try {
                 var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/gun-sonu-raporu?kasa_no=${finalKasaNo}`;
