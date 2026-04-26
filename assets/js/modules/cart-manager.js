@@ -163,29 +163,41 @@ window.HizliKasa = window.HizliKasa || {};
                        item.variation_id === eklenecekUrun.variation_id;
             });
 
-            var sepettekiMevcutAdet = mevcutUrunIndex !== -1 ? state.sepet[mevcutUrunIndex].quantity : 0;
+            // Stok Kontrolü
+            var urunStok = parseInt(urun.stock_quantity);
+            var sepettekiMevcutAdet = mevcutUrunIndex !== -1 ? parseInt(state.sepet[mevcutUrunIndex].quantity) : 0;
 
             // Diğer kasalarda bu üründen ne kadar var?
             var digerBilgi = this.digerKasalardakiBilgi(eklenecekUrun.product_id, eklenecekUrun.variation_id);
-            var digerKasalardakiAdet = digerBilgi.adet;
+            var digerKasalardakiAdet = parseInt(digerBilgi.adet);
             var toplamBekleyenAdet = sepettekiMevcutAdet + digerKasalardakiAdet + 1;
 
-            // Stok Kontrolü (Site)
+            console.log("HK Stok Kontrol Log:", {
+                urun_adi: urun.name,
+                sku: urun.sku,
+                manage_stock: urun.manage_stock,
+                site_stok: urunStok,
+                sepetteki_adet: sepettekiMevcutAdet,
+                diger_kasalardaki_adet: digerKasalardakiAdet,
+                toplam_bekleyen: toplamBekleyenAdet,
+                aktif_kasa: state.aktifKasaId
+            });
+
             if (urun.manage_stock && urun.stock_quantity !== null) {
-                if (toplamBekleyenAdet > urun.stock_quantity) {
-                    var mesaj = "HATA: ÜRÜN BAŞKA KASADA İŞLEMDE!";
+                if (toplamBekleyenAdet > urunStok) {
+                    var mesaj = "";
                     if (digerKasalardakiAdet > 0) {
                         mesaj = "DİKKAT: Ürün Kasa " + digerBilgi.kasalar.join(", ") + " üzerinde işlemde! Stok yetersiz.";
                     } else {
                         mesaj = "HATA: Yetersiz Stok! (Maksimum: " + urun.stock_quantity + ")";
                     }
+                    
+                    durumMetni.innerText = mesaj;
+                    durumMetni.style.color = "#e74c3c";
 
                     if (HK.UIRenderer) {
                         HK.UIRenderer.showToast("Stok Yetersiz! [" + (urun.sku || 'SKU Yok') + "] - " + urun.name, 'error', true);
                     }
-
-                    durumMetni.innerText = mesaj;
-                    durumMetni.style.color = "#e74c3c";
                     return;
                 }
             } else if (urun.stock_status === 'outofstock') {
