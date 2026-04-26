@@ -669,7 +669,7 @@
 }
 
 .iade-modal-sag {
-    width: 450px;
+    flex: 1;
     display: flex;
     flex-direction: column;
 }

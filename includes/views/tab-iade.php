@@ -104,7 +104,7 @@ if (!defined('ABSPATH')) exit;
         
         <div class="iade-modal-layout">
             <div class="iade-modal-sol">
-                <div id="iade-modal-siparis-ozet">
+                <div id="iade-modal-siparis-ozet" class="siparis-ozet-v2">
                     <!-- Orijinal sipariş özeti buraya kopyalanacak -->
                 </div>
             </div>
