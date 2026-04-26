@@ -192,6 +192,14 @@ add_action('rest_api_init', function () {
             return hizli_kasa_can_access_app();
         }
     ));
+
+    register_rest_route('hizli-kasa/v1', '/reports/order-receipt/(?P<id>\d+)', array(
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_get_reports_order_receipt',
+        'permission_callback' => function () {
+            return hizli_kasa_can_access_app();
+        }
+    ));
 });
 
 /**
@@ -2324,6 +2332,159 @@ function hizli_kasa_get_reports_orders($request)
 function hizli_kasa_get_reports_refunds($request)
 {
     return hizli_kasa_get_reports_data($request, true);
+}
+
+/**
+ * Raporlar sekmesinden izole fiş yazdırma için güncel sipariş snapshot'u döner.
+ * Bu çıktı kasa anlık satış fişinden bağımsızdır, sadece rapor kullanımına yöneliktir.
+ */
+function hizli_kasa_get_reports_order_receipt($request)
+{
+    $order_id = (int) $request->get_param('id');
+    $order = wc_get_order($order_id);
+
+    if (!$order) {
+        return new WP_Error('no_order', 'Sipariş bulunamadı.', array('status' => 404));
+    }
+
+    if ($order->get_meta('_hizli_kasa_is_refund') === 'yes') {
+        return new WP_Error('invalid_order', 'İade siparişi için bu fiş oluşturulamaz.', array('status' => 400));
+    }
+
+    $get_meta_value = function ($meta_array, $key, $default = '') {
+        foreach ((array) $meta_array as $meta_obj) {
+            if (!is_object($meta_obj) || !isset($meta_obj->key)) {
+                continue;
+            }
+            if ($meta_obj->key === $key) {
+                return $meta_obj->value;
+            }
+        }
+        return $default;
+    };
+
+    $refund_orders = wc_get_orders(array(
+        'limit' => -1,
+        'status' => array('processing', 'completed', 'on-hold'),
+        'meta_key' => '_hizli_kasa_original_order',
+        'meta_value' => (string) $order_id,
+    ));
+
+    $refunded_qty_map = array();
+    $refunded_total_map = array();
+    $refund_total_abs = 0.0;
+    $refunded_manual_discount = 0.0;
+    $payment_adjustments = array('nakit' => 0.0, 'kart' => 0.0, 'iban' => 0.0);
+
+    foreach ($refund_orders as $refund_order) {
+        if (!$refund_order instanceof WC_Order) {
+            continue;
+        }
+
+        $refund_total_abs += abs((float) $refund_order->get_total());
+        $refunded_manual_discount += (float) $refund_order->get_meta('_hk_refunded_discount');
+
+        $payment_adjustments['nakit'] += (float) $refund_order->get_meta('_odeme_nakit');
+        $payment_adjustments['kart'] += (float) $refund_order->get_meta('_odeme_kart');
+        $payment_adjustments['iban'] += (float) $refund_order->get_meta('_odeme_iban');
+
+        foreach ($refund_order->get_items() as $refund_item) {
+            $product_id = (int) $refund_item->get_product_id();
+            $variation_id = (int) $refund_item->get_variation_id();
+            $key = $product_id . ':' . $variation_id;
+
+            $qty_abs = abs((float) $refund_item->get_quantity());
+            $total_abs = abs((float) $refund_item->get_total());
+
+            if (!isset($refunded_qty_map[$key])) {
+                $refunded_qty_map[$key] = 0.0;
+            }
+            if (!isset($refunded_total_map[$key])) {
+                $refunded_total_map[$key] = 0.0;
+            }
+
+            $refunded_qty_map[$key] += $qty_abs;
+            $refunded_total_map[$key] += $total_abs;
+        }
+    }
+
+    $items = array();
+    $current_etiket_toplami = 0.0;
+    $current_ara_toplam = 0.0;
+
+    foreach ($order->get_items() as $item) {
+        $product_id = (int) $item->get_product_id();
+        $variation_id = (int) $item->get_variation_id();
+        $key = $product_id . ':' . $variation_id;
+
+        $original_qty = (float) $item->get_quantity();
+        $original_total = (float) $item->get_total();
+        $refunded_qty = isset($refunded_qty_map[$key]) ? (float) $refunded_qty_map[$key] : 0.0;
+        $refunded_total = isset($refunded_total_map[$key]) ? (float) $refunded_total_map[$key] : 0.0;
+
+        $current_qty = max(0.0, $original_qty - $refunded_qty);
+        if ($current_qty <= 0.00001) {
+            continue;
+        }
+
+        $current_total = max(0.0, $original_total - $refunded_total);
+        $item_meta = $item->get_meta_data();
+        $etiket_unit = (float) $get_meta_value($item_meta, '_etiket_fiyat', ($original_qty > 0 ? $original_total / $original_qty : 0));
+        $kampanya_unit = (float) $get_meta_value($item_meta, '_kampanya_fiyat', ($original_qty > 0 ? $original_total / $original_qty : 0));
+
+        $line_etiket_total = $etiket_unit * $current_qty;
+        $line_kampanya_total = $kampanya_unit * $current_qty;
+
+        $product = $item->get_product();
+        $sku = $product ? $product->get_sku() : '';
+
+        $items[] = array(
+            'name' => $item->get_name(),
+            'sku' => $sku ?: '',
+            'quantity' => (float) $current_qty,
+            'line_total' => round($current_total, 2),
+            'etiket_total' => round($line_etiket_total, 2),
+            'kampanya_total' => round($line_kampanya_total, 2),
+        );
+
+        $current_etiket_toplami += $line_etiket_total;
+        $current_ara_toplam += $line_kampanya_total;
+    }
+
+    $original_total = (float) $order->get_total();
+    $current_total = max(0.0, $original_total - $refund_total_abs);
+    $manual_discount = max(0.0, hizli_kasa_get_order_manual_discount($order) - $refunded_manual_discount);
+    $auto_discount = max(0.0, $current_ara_toplam - $current_total - $manual_discount);
+
+    $payment = array(
+        'nakit' => (float) $order->get_meta('_odeme_nakit') + $payment_adjustments['nakit'],
+        'kart' => (float) $order->get_meta('_odeme_kart') + $payment_adjustments['kart'],
+        'iban' => (float) $order->get_meta('_odeme_iban') + $payment_adjustments['iban'],
+    );
+
+    return array(
+        'order_id' => $order_id,
+        'order_number' => $order->get_order_number(),
+        'barcode_value' => (string) $order_id,
+        'created_at' => $order->get_date_created() ? $order->get_date_created()->date('d.m.Y H:i') : '',
+        'printed_at' => current_time('d.m.Y H:i:s'),
+        'has_refund_adjustment' => $refund_total_abs > 0.00001,
+        'cashier' => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
+        'kasa_no' => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
+        'items' => $items,
+        'totals' => array(
+            'etiket_toplami' => round($current_etiket_toplami, 2),
+            'ara_toplam' => round($current_ara_toplam, 2),
+            'auto_discount' => round($auto_discount, 2),
+            'manual_discount' => round($manual_discount, 2),
+            'genel_toplam' => round($current_total, 2),
+        ),
+        'payment' => array(
+            'nakit' => round($payment['nakit'], 2),
+            'kart' => round($payment['kart'], 2),
+            'iban' => round($payment['iban'], 2),
+        ),
+    );
 }
 
 /**

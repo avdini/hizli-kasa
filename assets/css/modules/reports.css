@@ -226,6 +226,28 @@
     color: #fff;
 }
 
+.btn-reprint {
+    padding: 4px 8px;
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--hk-text-main);
+}
+
+.btn-reprint:hover {
+    background: var(--hk-success);
+    color: #fff;
+    border-color: var(--hk-success);
+}
+
+.report-action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 .meta-details-row {
     background: var(--hk-bg-body);
     display: none;

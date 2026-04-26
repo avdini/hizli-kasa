@@ -54,6 +54,11 @@ document.addEventListener("DOMContentLoaded", function() {
         HK.OrderEditReports.init();
     }
 
+    // 7.8 Raporlar izole fiş yazdırıcıyı başlat
+    if (HK.ReportReceiptPrinter) {
+        HK.ReportReceiptPrinter.init();
+    }
+
     // 8. Depo Yöneticisini başlat (async — aktif depoyu server'dan/localStorage'dan yükler)
     if (HK.DepoManager) {
         HK.DepoManager.init().then(function() {

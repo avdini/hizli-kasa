@@ -317,13 +317,17 @@
                 var kasaNoLabel = order.kasa_no ? ('Kasa: ' + this.escapeHtml(order.kasa_no)) : '-';
 
                 var tr = document.createElement("tr");
+                var actionButtons = '<button class="btn-detail" data-id="' + this.escapeHtml(order.id || '') + '">🔍 Meta</button>';
+                if (type === 'orders') {
+                    actionButtons += '<button class="btn-reprint" data-id="' + this.escapeHtml(order.id || '') + '">🧾 Fiş Yazdır</button>';
+                }
                 tr.innerHTML = `
                     <td>${this.escapeHtml(order.date || '-')}</td>
                     <td><span class="report-order-id">#${this.escapeHtml(order.id || '-')}</span></td>
                     <td>${this.escapeHtml(order.cashier || '-')} <br><small class="report-kasa-no">${kasaNoLabel}</small></td>
                     <td>${itemsHtml}</td>
                     <td class="report-total-cell">${orderTotal}</td>
-                    <td><button class="btn-detail" data-id="${order.id}">🔍 Meta</button></td>
+                    <td><div class="report-action-buttons">${actionButtons}</div></td>
                 `;
                 tbody.appendChild(tr);
 
