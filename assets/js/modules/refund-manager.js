@@ -10,7 +10,7 @@ const RefundManager = (function () {
 
     function init() {
         // İade sekmesi her yüklendiğinde (lazy load sonrası) elementleri tekrar yakala
-        document.addEventListener('hkTabLoaded', function(e) {
+        document.addEventListener('hkTabLoaded', function (e) {
             if (e.detail.tab === 'iade') {
                 bindEvents();
             }
@@ -55,7 +55,7 @@ const RefundManager = (function () {
         // Telefon maskeleme (İade arama alanı için)
         const telInput = document.getElementById('iade-arama-telefon');
         if (telInput) {
-            telInput.addEventListener('input', function(e) {
+            telInput.addEventListener('input', function (e) {
                 var x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
                 if (!x[1]) { e.target.value = ''; return; }
                 e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + (x[3] ? ') ' + x[3] : '') + (x[4] ? ' ' + x[4] : '') + (x[5] ? ' ' + x[5] : '');
@@ -83,7 +83,7 @@ const RefundManager = (function () {
                 const kalan = (originalOrder.manual_discount || 0) - (originalOrder.refunded_manual_discount || 0);
                 const sepetToplami = refundCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
                 const maxDusebilir = Math.min(kalan, sepetToplami);
-                
+
                 if (HK.CurrencyMask.parse(iskontoInput.value) > maxDusebilir) {
                     iskontoInput.value = HK.CurrencyMask.format(maxDusebilir);
                 }
@@ -142,7 +142,7 @@ const RefundManager = (function () {
     function renderSearchResults(results) {
         const container = document.getElementById('iade-arama-sonuclari');
         const list = document.getElementById('iade-sonuc-listesi');
-        
+
         if (!list) return;
         if (!results || results.length === 0) {
             list.innerHTML = '<li class="sonuc-yok">Eşleşen sipariş bulunamadı.</li>';
@@ -168,7 +168,7 @@ const RefundManager = (function () {
                 `;
             }).join('');
         }
-        
+
         container.style.display = 'block';
 
         // Kapatma butonu ekle (Eğer yoksa)
@@ -294,7 +294,7 @@ const RefundManager = (function () {
         `;
 
         originalOrder.items.forEach(item => {
-            var depoBadge = item.depo_adi 
+            var depoBadge = item.depo_adi
                 ? '<span class="depo-badge" title="Çıkış Deposu">📦 ' + item.depo_adi + '</span>'
                 : '<span class="depo-badge depo-bilinmeyen" title="Depo bilgisi yok">📦 Bilinmeyen</span>';
 
@@ -314,12 +314,12 @@ const RefundManager = (function () {
 
         html += `</div>`;
         container.innerHTML = html;
-        
+
         // Sepeti sıfırla
         refundCart = [];
         const iskontoInput = document.getElementById('iade-iskonto-input');
         if (iskontoInput) iskontoInput.value = "";
-        
+
         renderRefundCart();
     }
 
@@ -328,7 +328,7 @@ const RefundManager = (function () {
         if (!modal) return;
 
         modal.style.display = 'flex';
-        
+
         // Sipariş özetini modalın soluna kopyala
         const sidebarOzet = document.querySelector('.siparis-ozet-v2');
         const modalOzetKonteynir = document.getElementById('iade-modal-siparis-ozet');
@@ -374,7 +374,7 @@ const RefundManager = (function () {
                     <div class="iade-odeme-secenekleri">
                         <label class="iade-odeme-btn-label">
                             <input type="radio" name="iade_payment_method" value="split" ${defaultMethod === 'split' ? 'checked' : ''}>
-                            <span>🌓 Böl</span>
+                            <span>➗ Böl</span>
                         </label>
                         <label class="iade-odeme-btn-label">
                             <input type="radio" name="iade_payment_method" value="nakit" ${defaultMethod === 'nakit' ? 'checked' : ''}>
@@ -413,16 +413,16 @@ const RefundManager = (function () {
                     <label>İadenin İşleneceği Kasa:</label>
                     <select id="iade-hedef-kasa" class="hk-input">
                         ${(() => {
-                            let options = '';
-                            const total = kasaAyar.toplamKasa || 3;
-                            const originalKasaNo = parseInt(originalOrder.kasa_no) || 1;
-                            const defaultKasa = (originalKasaNo > 0 && originalKasaNo <= total) ? originalKasaNo : 1;
-                            
-                            for (let i = 1; i <= total; i++) {
-                                options += `<option value="${i}" ${defaultKasa == i ? 'selected' : ''}>Kasa ${i}</option>`;
-                            }
-                            return options;
-                        })()}
+                let options = '';
+                const total = kasaAyar.toplamKasa || 3;
+                const originalKasaNo = parseInt(originalOrder.kasa_no) || 1;
+                const defaultKasa = (originalKasaNo > 0 && originalKasaNo <= total) ? originalKasaNo : 1;
+
+                for (let i = 1; i <= total; i++) {
+                    options += `<option value="${i}" ${defaultKasa == i ? 'selected' : ''}>Kasa ${i}</option>`;
+                }
+                return options;
+            })()}
                     </select>
                 </div>
             </div>
@@ -433,14 +433,14 @@ const RefundManager = (function () {
             document.getElementById('iade-bol-nakit').value = '0,00';
             document.getElementById('iade-bol-kart').value = '0,00';
             document.getElementById('iade-bol-iban').value = '0,00';
-            
+
             calculateRefundSplit();
         }
 
         // Event Listeners for Split UI
         const radios = container.querySelectorAll('input[name="iade_payment_method"]');
         const bolDetay = container.querySelector('#iade-bol-detay');
-        
+
         radios.forEach(r => {
             r.addEventListener('change', () => {
                 bolDetay.style.display = r.value === 'split' ? 'block' : 'none';
@@ -449,7 +449,7 @@ const RefundManager = (function () {
                     document.getElementById('iade-bol-nakit').value = '0,00';
                     document.getElementById('iade-bol-kart').value = '0,00';
                     document.getElementById('iade-bol-iban').value = '0,00';
-                    
+
                     calculateRefundSplit();
                 }
             });
@@ -503,7 +503,7 @@ const RefundManager = (function () {
         if (!item) return;
 
         const cartItem = refundCart.find(i => i.item_id == itemId);
-        
+
         if (cartItem) {
             if (cartItem.qty < item.qty) {
                 cartItem.qty++;
@@ -511,8 +511,8 @@ const RefundManager = (function () {
                 alert('Siparişteki adetten fazla iade edilemez.');
             }
         } else {
-            refundCart.push({ 
-                ...item, 
+            refundCart.push({
+                ...item,
                 qty: 1,
                 variation_id: item.variation_id || 0,
                 depo_id: item.depo_id || 0  // Orijinal çıkış deposu
@@ -531,7 +531,7 @@ const RefundManager = (function () {
         const list = document.getElementById('iade-sepet-listesi');
         const totalSpan = document.getElementById('iade-toplam-tutar');
         const onaylaBtn = document.getElementById('iade-onayla-btn');
-        
+
         if (!list) return;
 
         let total = 0;
@@ -553,7 +553,7 @@ const RefundManager = (function () {
         });
 
         list.innerHTML = html || '<p class="iade-bos-sepet">İade edilecek ürün seçilmedi.</p>';
-        
+
         // Yan paneldeki toplamı güncelle (iskonto düşülmeden önceki sepet toplamı)
         totalSpan.innerText = `-${total.toFixed(2)} TL`;
         onaylaBtn.disabled = refundCart.length === 0;
@@ -570,11 +570,11 @@ const RefundManager = (function () {
         const iskontoKonteyner = document.getElementById('iade-iskonto-konteyner');
         const iskontoInput = document.getElementById('iade-iskonto-input');
         const kalanIskontoSpan = document.getElementById('iade-kalan-iskonto');
-        
+
         if (!originalOrder || !iskontoKonteyner) return;
 
         const kalanIskonto = (originalOrder.manual_discount || 0) - (originalOrder.refunded_manual_discount || 0);
-        
+
         if (kalanIskonto > 0) {
             iskontoKonteyner.style.display = 'block';
             kalanIskontoSpan.innerText = `${kalanIskonto.toFixed(2)} TL`;
@@ -583,7 +583,7 @@ const RefundManager = (function () {
             iskontoKonteyner.style.display = 'none';
             if (iskontoInput) iskontoInput.value = 0;
         }
-        
+
         // Modal toplamını güncelle (Eğer modal açıksa)
         const modalToplam = document.getElementById('iade-modal-toplam');
         if (modalToplam) {
@@ -608,7 +608,7 @@ const RefundManager = (function () {
 
             const response = await fetch(`${apiBase}hizli-kasa/v1/process-refund`, {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'X-WP-Nonce': kasaAyar.nonce,
                     'Content-Type': 'application/json'
                 },
@@ -632,7 +632,7 @@ const RefundManager = (function () {
             const data = await response.json();
             if (data.success) {
                 alert('İade başarıyla tamamlandı. Sipariş No: #' + data.order_id);
-                
+
                 closeRefundModal();
 
                 // Ekranı temizle

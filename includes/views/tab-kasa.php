@@ -94,7 +94,7 @@ if (!defined('ABSPATH'))
 
             <!-- Ödeme Tipi Seçici -->
             <div class="odeme-secici">
-                <div class="odeme-btn" id="bol-buton" data-tip="split">🌓 Ödemeyi Böl</div>
+                <div class="odeme-btn" id="bol-buton" data-tip="split">➗ Ödemeyi Böl</div>
                 <div class="odeme-btn aktif" data-tip="card">💳 Kredi Kartı</div>
                 <div class="odeme-btn" data-tip="cash">💵 Nakit (-%5)</div>
                 <div class="odeme-btn" data-tip="iban">🏦 IBAN (-%5)</div>
