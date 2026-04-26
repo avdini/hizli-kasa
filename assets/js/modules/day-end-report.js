@@ -79,25 +79,25 @@
          * @param {String|null} tarih Belirli bir tarih (YYYY-MM-DD)
          */
         raporuGetir: async function (kasaId, tarih) {
-            console.log("HK.DayEndReport: raporuGetir called", {kasaId, tarih});
             var self = this;
             var state = HK.State;
             var finalKasaNo = kasaId || state.aktifKasaId;
 
-            if (!this.els || !this.els.gunSonuModal) {
-                console.warn("HK.DayEndReport: Elements not found! Re-initializing...");
-                this.init();
-            }
+            console.log("HK.DayEndReport: Initializing elements...");
+            this.init(); // Her seferinde tazele (Elementler DOM'da yer değiştirmiş olabilir)
 
-            if (!this.els.gunSonuModal) {
-                console.error("HK.DayEndReport: gunSonuModal still not found!");
+            if (!this.els || !this.els.gunSonuModal) {
+                console.error("HK.DayEndReport: Modal element found:", !!document.getElementById("gun-sonu-modal"));
+                if (HK.UIRenderer) HK.UIRenderer.showToast("Kritik Hata: Rapor penceresi bulunamadı!", "error");
                 return;
             }
 
             // Modalı aç, yükleniyor göster
-            this.els.gunSonuModal.style.display = "flex";
+            this.els.gunSonuModal.style.setProperty("display", "flex", "important");
             this.els.gunSonuYukleniyor.style.display = "block";
             this.els.gunSonuIcerik.style.display = "none";
+            
+            if (HK.UIRenderer) HK.UIRenderer.showToast("Rapor verileri çekiliyor...", "info");
 
             try {
                 var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/gun-sonu-raporu?kasa_no=${finalKasaNo}`;
@@ -119,6 +119,7 @@
             } catch (error) {
                 console.error("Gün sonu raporu hatası:", error);
                 self.els.gunSonuYukleniyor.innerHTML = '<p style="color: #e74c3c; text-align:center;">Rapor yüklenirken hata oluştu!</p>';
+                if (HK.UIRenderer) HK.UIRenderer.showToast("Rapor verisi alınamadı!", "error");
             }
         },
 

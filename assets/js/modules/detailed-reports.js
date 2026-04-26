@@ -42,7 +42,23 @@
 
                 btn.addEventListener("click", function() {
                     var target = this.dataset.target;
-                    console.log("HK.DetailedReports: Sub-tab clicked", target);
+                    
+                    // Buton aktiflik durumunu güncelle
+                    document.querySelectorAll(".rapor-alt-btn").forEach(b => b.classList.remove("aktif"));
+                    this.classList.add("aktif");
+
+                    // Panelleri gizle/göster
+                    document.querySelectorAll(".rapor-icerik-paneli").forEach(p => {
+                        p.classList.remove("aktif");
+                        p.style.display = "none";
+                    });
+
+                    var panel = document.getElementById(target);
+                    if (panel) {
+                        panel.classList.add("aktif");
+                        panel.style.display = "block";
+                    }
+
                     if (target === 'rapor-tum-siparisler') {
                         self.loadOrders(1);
                     } else if (target === 'rapor-iade-listesi') {
@@ -442,6 +458,7 @@
         },
 
         renderDayEndHistory: function(tbody, history) {
+            var self = this;
             tbody.innerHTML = "";
             if (!history || history.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px;">Bu tarih aralığında gün sonu kaydı bulunamadı.</td></tr>';
@@ -463,17 +480,23 @@
                 tbody.appendChild(tr);
             });
 
-            tbody.querySelectorAll(".btn-view-report").forEach(btn => {
-                btn.addEventListener("click", function() {
-                    var date = this.dataset.date;
-                    console.log("HK.DetailedReports: View report button clicked for date:", date);
-                    if (window.HizliKasa && window.HizliKasa.DayEndReport) {
-                        window.HizliKasa.DayEndReport.raporuGetir('all', date);
-                    } else {
-                        console.error("HK.DetailedReports: DayEndReport module not found!");
+            // Event Delegation: Tbody'ye bir kez dinleyici ekle (eğer daha önce eklenmemişse)
+            if (!tbody.dataset.listenerBound) {
+                tbody.addEventListener("click", function(e) {
+                    var btn = e.target.closest(".btn-view-report");
+                    if (btn) {
+                        var date = btn.dataset.date;
+                        if (HK.UIRenderer) HK.UIRenderer.showToast("Rapor hazırlanıyor: " + date, "info");
+                        
+                        if (HK.DayEndReport) {
+                            HK.DayEndReport.raporuGetir('all', date);
+                        } else {
+                            if (HK.UIRenderer) HK.UIRenderer.showToast("Hata: Gün Sonu modülü yüklenemedi!", "error");
+                        }
                     }
                 });
-            });
+                tbody.dataset.listenerBound = "true";
+            }
         }
     };
 
