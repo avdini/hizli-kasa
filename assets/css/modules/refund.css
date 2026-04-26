@@ -442,7 +442,12 @@
 }
 
 /* İade Ödeme Yöntemi ve Ayarlar Paneli */
-#iade-iskonto-konteyner-alani, #iade-odeme-yontemi-alani {
+#iade-iskonto-konteyner-alani {
+    padding: 0 20px;
+    margin-top: 15px;
+}
+
+#iade-odeme-yontemi-alani {
     padding: 0 20px;
 }
 
@@ -451,7 +456,6 @@
     border: 1px solid var(--hk-border);
     border-radius: 12px;
     padding: 15px;
-    margin-bottom: 20px;
 }
 
 .iade-ayar-satir label {
