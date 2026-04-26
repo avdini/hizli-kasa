@@ -98,9 +98,10 @@
             _odeme_iban: 'IBAN Ödeme',
             _ara_toplam: 'Ara Toplam',
             _etiket_toplami: 'Etiket Toplamı',
-            _hk_refunded_discount: 'İade Edilen İskonto',
+            _hk_kaynak: 'Kaynak',
             _hk_has_refund: 'İade Durumu',
-            _hk_refunded_qty: 'İade Edilen Adet'
+            _hk_refunded_qty: 'İade Edilen Adet',
+            _hk_is_fully_refunded: 'Tam İade'
         },
 
         currencyFieldKeys: ['_odeme_nakit', '_odeme_kart', '_odeme_iban', '_ara_toplam', '_etiket_toplami', '_hk_refunded_discount'],
@@ -142,11 +143,11 @@
                 if (this.currencyFieldKeys.indexOf(normalizedKey) !== -1) {
                     display = this.formatCurrency(raw);
                 } else if (normalizedKey === '_hk_cikis_depo_id') {
-                    display = 'Depo #' + this.escapeHtml(raw);
-                } else if (normalizedKey === '_hizli_kasa_original_order') {
-                    display = '#' + this.escapeHtml(raw);
-                } else if (normalizedKey === '_hizli_kasa_is_refund' || normalizedKey === '_hk_has_refund') {
+                    return null; // Depo ID gitsin
+                } else if (normalizedKey === '_hizli_kasa_is_refund' || normalizedKey === '_hk_has_refund' || normalizedKey === '_hk_is_fully_refunded') {
                     display = (String(raw) === 'yes') ? 'Evet' : 'Hayır';
+                } else if (normalizedKey === '_hk_kaynak') {
+                    display = (raw === 'pos_satis') ? 'Kasa Satışı' : this.escapeHtml(raw);
                 } else {
                     display = this.escapeHtml(raw);
                 }
@@ -169,6 +170,7 @@
 
             return Object.keys(meta).map(function(key) {
                 var field = self.formatMetaField(key, meta[key]);
+                if (!field) return '';
                 return '<span class="meta-tag" title="' + self.escapeHtml(field.label) + '">' + self.escapeHtml(field.label) + ': ' + field.value + '</span>';
             }).join('');
         },
@@ -232,6 +234,7 @@
 
             return Object.keys(meta).map(function(key) {
                 var field = self.formatMetaField(key, meta[key]);
+                if (!field) return '';
                 return '<div class="meta-item"><span class="meta-key">' + self.escapeHtml(field.label) + ':</span><span class="meta-value">' + field.value + '</span></div>';
             }).join('');
         },
