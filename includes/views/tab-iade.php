@@ -99,7 +99,7 @@ if (!defined('ABSPATH')) exit;
 
 <!-- İade Onay Modalı -->
 <div id="iade-onay-modal" class="hk-modal-overlay">
-    <div class="modal-icerik" style="width: 450px;">
+    <div class="modal-icerik iade-onay-modal-icerik">
         <h3>İadeyi Onayla</h3>
         
         <div id="iade-modal-ozet" style="margin-bottom: 20px; padding: 15px; background: var(--hk-bg-body); border-radius: 10px; border: 1px solid var(--hk-border);">

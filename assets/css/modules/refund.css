@@ -644,3 +644,9 @@
     color: var(--hk-text-main);
     font-size: 14px;
 }
+
+/* İade Onay Modalı Özel Genişlik */
+.iade-onay-modal-icerik {
+    width: 95% !important;
+    max-width: 900px !important;
+}
