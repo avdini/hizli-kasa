@@ -102,7 +102,8 @@
             _hk_has_refund: 'İade Durumu',
             _hk_refunded_qty: 'İade Edilen Adet',
             _hk_is_fully_refunded: 'Tam İade',
-            _hk_iade_depo_ozet: 'İade Edilen Depolar'
+            _hk_iade_depo_ozet: 'İade Edilen Depolar',
+            _hk_refunded_discount: 'İade Edilen İskonto'
         },
 
         currencyFieldKeys: ['_odeme_nakit', '_odeme_kart', '_odeme_iban', '_ara_toplam', '_etiket_toplami', '_hk_refunded_discount'],
