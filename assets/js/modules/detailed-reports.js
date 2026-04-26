@@ -214,9 +214,8 @@
                 '<div class="report-item-list-wrapper">' +
                     '<ul class="order-item-list">' + firstItemHtml + '</ul>' +
                     '<div class="report-items-toggle-row">' +
-                        '<span class="report-items-toggle-label" data-more-count="' + (items.length - 1) + '">' + (items.length - 1) + ' ürün daha göster</span>' +
-                        '<button type="button" class="report-items-toggle-icon-btn is-closed" aria-expanded="false" aria-label="Diğer ürünleri göster" title="Diğer ürünleri göster">' +
-                            '<span class="report-toggle-icon" aria-hidden="true">⌄</span>' +
+                        '<button type="button" class="report-items-toggle-icon-btn is-closed" data-more-count="' + (items.length - 1) + '" aria-expanded="false" aria-label="Diğer ürünleri göster" title="Diğer ürünleri göster">' +
+                            '<span class="report-toggle-icon" aria-hidden="true">+' + (items.length - 1) + '</span>' +
                         '</button>' +
                     '</div>' +
                     '<div class="report-items-extra" style="display:none;">' +
@@ -367,15 +366,17 @@
                     extra.style.display = isOpen ? "none" : "block";
                     
                     if (btn) {
+                        var moreCount = btn.dataset.moreCount;
                         btn.setAttribute("aria-expanded", isOpen ? "false" : "true");
                         btn.setAttribute("aria-label", isOpen ? "Diğer ürünleri göster" : "Diğer ürünleri gizle");
                         btn.setAttribute("title", isOpen ? "Diğer ürünleri göster" : "Diğer ürünleri gizle");
                         btn.classList.toggle("is-open", !isOpen);
                         btn.classList.toggle("is-closed", isOpen);
-                    }
-
-                    if (label) {
-                        label.textContent = isOpen ? (moreCount + " ürün daha göster") : "Ürünleri gizle";
+                        
+                        var icon = btn.querySelector(".report-toggle-icon");
+                        if (icon) {
+                            icon.textContent = isOpen ? ("+" + moreCount) : "✕";
+                        }
                     }
                 });
             });

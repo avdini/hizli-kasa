@@ -124,16 +124,7 @@
     display: inline-block;
 }
 
-.meta-tag {
-    display: inline-block;
-    background: var(--hk-accent);
-    color: white;
-    font-size: 10px;
-    padding: 0 5px;
-    border-radius: 3px;
-    margin-left: 5px;
-    vertical-align: middle;
-}
+
 
 /* Detayli raporlar alt sekmeleri */
 .rapor-alt-btn {
@@ -219,6 +210,7 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 12px;
+    color: var(--hk-text-main);
 }
 
 .btn-detail:hover {
@@ -400,11 +392,11 @@
 }
 
 .report-item-list:first-child .order-item-row {
-    padding-right: 140px;
+    padding-right: 40px;
 }
 
 .report-items-toggle-icon-btn {
-    width: 26px;
+    min-width: 28px;
     height: 26px;
     border: 1px solid var(--hk-border);
     background: var(--hk-bg-body);
@@ -414,7 +406,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
+    padding: 0 4px;
+    font-weight: 700;
 }
 
 .report-items-toggle-icon-btn:hover {
@@ -432,17 +425,14 @@
 }
 
 .report-toggle-icon {
-    font-size: 16px;
+    font-size: 12px;
     line-height: 26px;
-    transition: transform 0.2s ease;
     display: inline-block;
     width: 100%;
     text-align: center;
 }
 
-.report-items-toggle-icon-btn.is-open .report-toggle-icon {
-    transform: rotate(180deg);
-}
+
 
 .report-items-toggle-row {
     position: absolute;
@@ -456,11 +446,7 @@
     z-index: 5;
 }
 
-.report-items-toggle-label {
-    font-size: 11px;
-    color: var(--hk-text-muted);
-    font-weight: 600;
-}
+
 
 .report-items-extra {
     margin-top: 6px;
