@@ -245,15 +245,122 @@
 .bos-ikon { font-size: 48px; margin-bottom: 10px; }
 
 /* Sipariş Detay ve Satırlar */
-.siparis-ozet {
-    background: #e1f5fe;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    color: #0277bd;
-    font-size: 14px;
-    line-height: 1.6;
+/* Sipariş Detay ve Satırlar - Yeni Tasarım */
+.siparis-ozet-v2 {
+    background: #fff;
+    border: 1px solid var(--hk-border);
+    border-radius: 12px;
+    margin-bottom: 25px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
+
+.siparis-ozet-v2 .ozet-ust {
+    background: #f8fafc;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--hk-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.siparis-ozet-v2 .ozet-sol {
+    display: flex;
+    flex-direction: column;
+}
+
+.siparis-ozet-v2 .ozet-no {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--hk-accent);
+}
+
+.siparis-ozet-v2 .ozet-tarih {
+    font-size: 12px;
+    color: var(--hk-text-muted);
+}
+
+.siparis-ozet-v2 .ozet-sag {
+    text-align: right;
+}
+
+.siparis-ozet-v2 .ozet-toplam-label {
+    display: block;
+    font-size: 10px;
+    font-weight: bold;
+    color: var(--hk-text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.siparis-ozet-v2 .ozet-toplam-deger {
+    font-size: 22px;
+    font-weight: 900;
+    color: #2c3e50;
+}
+
+.siparis-ozet-v2 .ozet-govde {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--hk-border);
+}
+
+.siparis-ozet-v2 .ozet-kart {
+    background: #fff;
+    padding: 15px 20px;
+}
+
+.siparis-ozet-v2 .kart-baslik {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--hk-text-muted);
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+}
+
+.siparis-ozet-v2 .ozet-satir {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.siparis-ozet-v2 .ozet-satir .label {
+    color: #7f8c8d;
+}
+
+.siparis-ozet-v2 .ozet-satir .deger {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.siparis-ozet-v2 .ozet-satir .deger.highlight {
+    color: #e67e22;
+    background: #fff3e0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 800;
+}
+
+.siparis-ozet-v2 .ozet-odeme-detay {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.siparis-ozet-v2 .odeme-turu {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-weight: bold;
+    border: 1px solid transparent;
+}
+
+.siparis-ozet-v2 .odeme-turu.nakit { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+.siparis-ozet-v2 .odeme-turu.kart { background: #e3f2fd; color: #1565c0; border-color: #bbdefb; }
+.siparis-ozet-v2 .odeme-turu.iban { background: #f3e5f5; color: #7b1fa2; border-color: #e1bee7; }
 
 .urun-listesi-baslik {
     font-weight: bold;

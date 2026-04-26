@@ -218,23 +218,57 @@ const RefundManager = (function () {
         const container = document.getElementById('iade-siparis-detay');
         if (!container) return;
 
-        let odemeDetay = '';
+        let odemeDetayHtml = '';
         if (originalOrder.payment_details) {
             const p = originalOrder.payment_details;
             const detaylar = [];
-            if (p.nakit > 0) detaylar.push(`💵 Nakit: ${p.nakit.toFixed(2)} TL`);
-            if (p.kart > 0) detaylar.push(`💳 Kart: ${p.kart.toFixed(2)} TL`);
-            if (p.iban > 0) detaylar.push(`🏦 IBAN: ${p.iban.toFixed(2)} TL`);
+            if (p.nakit > 0) detaylar.push(`<span class="odeme-turu nakit">💵 ${p.nakit.toFixed(2)} TL</span>`);
+            if (p.kart > 0) detaylar.push(`<span class="odeme-turu kart">💳 ${p.kart.toFixed(2)} TL</span>`);
+            if (p.iban > 0) detaylar.push(`<span class="odeme-turu iban">🏦 ${p.iban.toFixed(2)} TL</span>`);
             if (detaylar.length > 0) {
-                odemeDetay = `<br><span style="font-size:12px; opacity:0.9; display:block; margin-top:4px;">💰 Ödeme Dağılımı: ${detaylar.join(' — ')}</span>`;
+                odemeDetayHtml = `<div class="ozet-odeme-detay">${detaylar.join('')}</div>`;
             }
         }
 
         let html = `
-            <div class="siparis-ozet">
-                <strong>Sipariş: #${originalOrder.id}</strong> | Tarih: ${originalOrder.date} <br>
-                <span>Ödeme: ${originalOrder.payment}</span> | <span>Toplam: ${originalOrder.total} TL</span> ${odemeDetay}
-                <span class="original-kasa-bilgi" style="display:block; margin-top:8px;">📢 Bu sipariş <strong>Kasa ${originalOrder.kasa_no || 'Bilinmiyor'}</strong> üzerinden satılmış. (Kasiyer: ${originalOrder.kasiyer || '-'})</span>
+            <div class="siparis-ozet-v2">
+                <div class="ozet-ust">
+                    <div class="ozet-sol">
+                        <span class="ozet-no">#${originalOrder.id}</span>
+                        <span class="ozet-tarih">${originalOrder.date}</span>
+                    </div>
+                    <div class="ozet-sag">
+                        <span class="ozet-toplam-label">SİPARİŞ TOPLAMI</span>
+                        <span class="ozet-toplam-deger">${originalOrder.total} TL</span>
+                    </div>
+                </div>
+                
+                <div class="ozet-govde">
+                    <div class="ozet-kart">
+                        <div class="kart-baslik">💳 ÖDEME BİLGİLERİ</div>
+                        <div class="kart-icerik">
+                            <div class="ozet-satir">
+                                <span class="label">Yöntem:</span>
+                                <span class="deger">${originalOrder.payment}</span>
+                            </div>
+                            ${odemeDetayHtml}
+                        </div>
+                    </div>
+
+                    <div class="ozet-kart">
+                        <div class="kart-baslik">🏪 İŞLEM DETAYI</div>
+                        <div class="kart-icerik">
+                            <div class="ozet-satir">
+                                <span class="label">Kasa:</span>
+                                <span class="deger highlight">Kasa ${originalOrder.kasa_no || 'Bilinmiyor'}</span>
+                            </div>
+                            <div class="ozet-satir">
+                                <span class="label">Kasiyer:</span>
+                                <span class="deger">${originalOrder.kasiyer || '-'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div class="urun-listesi-baslik">İade Edilecek Ürünleri Seçin</div>
