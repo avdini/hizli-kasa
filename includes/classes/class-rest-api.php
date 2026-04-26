@@ -556,8 +556,10 @@ function hizli_kasa_ozel_arama($data)
     if ($exact) {
         // Barkod okuyucu için tam SKU eşleşmesi
         $found_ids = $wpdb->get_col($wpdb->prepare("
-            SELECT post_id FROM {$wpdb->postmeta} 
-            WHERE meta_key = '_sku' AND meta_value = %s 
+            SELECT pm.post_id FROM {$wpdb->postmeta} pm
+            JOIN {$wpdb->posts} p ON pm.post_id = p.ID
+            WHERE pm.meta_key = '_sku' AND pm.meta_value = %s 
+            AND p.post_status = 'publish'
             LIMIT 10", $s));
     } else {
         // 1. Advanced Woo Search Entegrasyonu

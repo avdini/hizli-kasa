@@ -172,17 +172,6 @@ window.HizliKasa = window.HizliKasa || {};
             var digerKasalardakiAdet = parseInt(digerBilgi.adet);
             var toplamBekleyenAdet = sepettekiMevcutAdet + digerKasalardakiAdet + 1;
 
-            console.log("HK Stok Kontrol Log:", {
-                urun_adi: urun.name,
-                sku: urun.sku,
-                manage_stock: urun.manage_stock,
-                site_stok: urunStok,
-                sepetteki_adet: sepettekiMevcutAdet,
-                diger_kasalardaki_adet: digerKasalardakiAdet,
-                toplam_bekleyen: toplamBekleyenAdet,
-                aktif_kasa: state.aktifKasaId
-            });
-
             if (urun.manage_stock && urun.stock_quantity !== null) {
                 if (toplamBekleyenAdet > urunStok) {
                     var mesaj = "";
@@ -196,13 +185,13 @@ window.HizliKasa = window.HizliKasa || {};
                     durumMetni.style.color = "#e74c3c";
 
                     if (HK.UIRenderer) {
-                        HK.UIRenderer.showToast("Stok Yetersiz! [" + (urun.sku || 'SKU Yok') + "] - " + urun.name, 'error', true);
+                        HK.UIRenderer.showToast("Stok Yetersiz: " + urun.name, 'error', true);
                     }
                     return;
                 }
             } else if (urun.stock_status === 'outofstock') {
                 if (HK.UIRenderer) {
-                    HK.UIRenderer.showToast("Stok Yok! [" + (urun.sku || 'SKU Yok') + "] - " + urun.name, 'error', true);
+                    HK.UIRenderer.showToast("Stok Yok: " + urun.name, 'error', true);
                 }
                 durumMetni.innerText = "HATA: Ürün stokta yok!";
                 durumMetni.style.color = "red";
