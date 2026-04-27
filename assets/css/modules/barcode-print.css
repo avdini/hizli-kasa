@@ -150,6 +150,7 @@
         /* Aşağı kaydırmak için */
         padding-left: 1mm;
         padding-right: 1.5mm;
+        /* eskiden 3mm idi */
         padding-bottom: 0.2mm;
         /* border-left kaldırıldı */
     }
@@ -239,6 +240,8 @@
         /* Fiyatı yukarı, bedene yaklaştırıyoruz */
         text-align: right;
         white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum";
     }
 
     .price-single {
@@ -271,7 +274,7 @@
     }
 
     .price-new {
-        font-size: 14pt;
+        font-size: 13.5pt;
         /* Biraz küçülttük sığması için */
         font-weight: 900;
         letter-spacing: -0.8px;
