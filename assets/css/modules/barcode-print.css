@@ -157,6 +157,7 @@
         font-size: 6pt;
         font-weight: 600;
         margin-bottom: 0;
+        transform: translateY(-3mm);
     }
 
     .barcode-container {
@@ -167,6 +168,7 @@
         justify-content: center;
         margin: 0;
         overflow: hidden;
+        transform: translateY(-3mm);
     }
 
     .barcode-svg {
@@ -187,12 +189,13 @@
     }
 
     .attr-color {
-        margin-bottom: 0.6mm;
+        margin-bottom: 0.7mm;
         /* Renk ve Beden arasına küçük bir boşluk */
         display: flex;
         align-items: center;
         gap: 2px;
         line-height: 0.9;
+        transform: translateY(-3mm);
     }
 
     .attr-size {
@@ -201,6 +204,7 @@
         align-items: center;
         gap: 2px;
         line-height: 0.9;
+        transform: translateY(-3mm);
     }
 
     .color-label,
