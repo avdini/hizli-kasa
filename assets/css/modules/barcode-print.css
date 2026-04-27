@@ -128,7 +128,7 @@
         display: flex;
         flex: 1;
         gap: 1mm;
-        padding-left: 3mm;
+        padding-left: 2mm;
     }
 
     .col-left {
@@ -155,7 +155,7 @@
     .model-no {
         font-size: 6pt;
         font-weight: 600;
-        margin-bottom: 0.5mm;
+        margin-bottom: 0;
     }
 
     .barcode-container {
@@ -171,7 +171,7 @@
     .sku-text {
         font-size: 7pt;
         font-weight: 700;
-        margin-top: 0.5mm;
+        margin-top: 0;
     }
 
     .attributes {
