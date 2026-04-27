@@ -118,6 +118,7 @@
         line-height: 1.1;
         display: -webkit-box;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-transform: uppercase;
@@ -209,9 +210,20 @@
 
     .price-old {
         font-size: 9pt;
-        text-decoration: line-through;
-        text-decoration-thickness: 0.2px;
-        color: #666;
+        color: #000;
+        position: relative;
+        text-decoration: none;
+    }
+
+    .price-old::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 55%;
+        width: 100%;
+        height: 1px;
+        background: #000;
+        transform: translateY(-50%);
     }
 
     .price-new {
