@@ -18,10 +18,11 @@ if (!defined('ABSPATH')) exit;
                 <div style="margin-bottom: 20px;">
                     <label>Kategori</label>
                     <select id="masraf-kategori" class="hk-input">
+                        <option value="Çalışan Giderleri" selected>Çalışan Giderleri</option>
+                        <option value="Ürün Masrafı">Ürün Masrafı</option>
+                        <option value="Kargo">Kargo</option>
                         <option value="Mutfak (Çay, Kahve vs.)">Mutfak (Çay, Kahve vs.)</option>
                         <option value="Fatura (Elektrik, Su vs.)">Fatura (Elektrik, Su vs.)</option>
-                        <option value="Ürün Masrafı">Ürün Masrafı</option>
-                        <option value="Çalışan Giderleri">Çalışan Giderleri</option>
                         <option value="Kırtasiye / Ofis">Kırtasiye / Ofis</option>
                         <option value="Temizlik">Temizlik</option>
                         <option value="Diger">Diğer...</option>

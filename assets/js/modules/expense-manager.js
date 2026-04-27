@@ -182,7 +182,7 @@
                 tutarInput.value = '';
                 aciklamaInput.value = '';
                 ozelKatInput.value = '';
-                katSelect.value = 'Mutfak (Çay, Kahve vs.)';
+                katSelect.value = 'Çalışan Giderleri';
                 document.getElementById('ozel-kategori-alan').style.display = 'none';
 
                 // Listeyi yenile
