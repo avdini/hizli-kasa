@@ -2220,6 +2220,7 @@ function hizli_kasa_get_recent_orders($request)
             'is_split' => $is_split,
             'discount' => hizli_kasa_get_order_manual_discount($order),
             'manual_discount' => hizli_kasa_get_order_manual_discount($order),
+            'phone' => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '',
             'items' => $items
         ];
     }
@@ -2236,6 +2237,7 @@ function hizli_kasa_update_order($request)
     $order_id = intval($data['order_id']);
     $new_payment = sanitize_text_field($data['payment_method'] ?? '');
     $new_discount = isset($data['discount']) ? floatval($data['discount']) : null;
+    $new_phone = sanitize_text_field($data['phone'] ?? '');
     $item_changes = $data['items'] ?? [];
 
     $order = wc_get_order($order_id);
@@ -2251,12 +2253,21 @@ function hizli_kasa_update_order($request)
     $old_data = [
         'total' => $order->get_total(),
         'payment' => $order->get_payment_method(),
+        'phone' => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '',
         'discount' => hizli_kasa_get_order_manual_discount($order),
         'items' => []
     ];
 
     $depo_id = (int) $order->get_meta('_hk_cikis_depo_id');
     $log_details = [];
+
+    // 0. Telefon Güncelleme
+    $old_phone = $old_data['phone'];
+    if ($new_phone !== $old_phone) {
+        $order->update_meta_data('_hizli_kasa_musteri_telefon', $new_phone);
+        $order->set_billing_phone($new_phone);
+        $log_details[] = "Telefon: " . ($old_phone ?: 'Yok') . " -> " . ($new_phone ?: 'Yok');
+    }
 
     // 1. İskonto Güncelleme
     if ($new_discount !== null && round($new_discount, 2) != round($old_data['discount'], 2)) {

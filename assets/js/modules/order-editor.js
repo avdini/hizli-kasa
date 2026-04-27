@@ -44,6 +44,29 @@
                     self.saveChanges();
                 });
             }
+
+            // Telefon Maskeleme
+            var phoneInput = document.getElementById("edit-order-phone");
+            if (phoneInput) {
+                phoneInput.addEventListener("input", function(e) {
+                    var val = e.target.value.replace(/\D/g, '');
+                    
+                    // Eğer kullanıcı doğrudan 5 ile başlıyorsa başına 0 ekle (Türkiye için kolaylık)
+                    if (val.length > 0 && val[0] === '5' && val.length <= 10) {
+                        val = '0' + val;
+                    }
+                    
+                    // Max 11 hane
+                    if (val.length > 11) val = val.substring(0, 11);
+
+                    var x = val.match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+                    if (!x[1]) {
+                        e.target.value = '';
+                    } else {
+                        e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + (x[3] ? ') ' + x[3] : '') + (x[4] ? ' ' + x[4] : '') + (x[5] ? ' ' + x[5] : '');
+                    }
+                });
+            }
         },
 
         openModal: function() {
@@ -116,6 +139,7 @@
             document.getElementById("order-edit-detail-view").style.display = "block";
             
             document.getElementById("edit-order-payment").value = order.payment_method;
+            document.getElementById("edit-order-phone").value = order.phone || "";
             var discountVal = parseFloat(order.manual_discount || order.discount || 0);
             document.getElementById("edit-order-discount").value = discountVal > 0 ? HK.CurrencyMask.format(discountVal) : "";
             this.renderItems();
@@ -180,6 +204,7 @@
         saveChanges: async function() {
             var self = this;
             var paymentMethod = document.getElementById("edit-order-payment").value;
+            var phone = document.getElementById("edit-order-phone").value;
             var discount = HK.CurrencyMask.parse(document.getElementById("edit-order-discount").value || "0");
             var changes = [];
 
@@ -190,9 +215,24 @@
                 });
             }
 
-            if (changes.length === 0 && paymentMethod === this.activeOrder.payment_method && discount === parseFloat(this.activeOrder.manual_discount || this.activeOrder.discount || 0)) {
+            var hasItemChanges = changes.length > 0;
+            var hasPaymentChanges = paymentMethod !== this.activeOrder.payment_method;
+            var hasPhoneChanges = phone !== (this.activeOrder.phone || "");
+            var hasDiscountChanges = discount !== parseFloat(this.activeOrder.manual_discount || this.activeOrder.discount || 0);
+
+            if (!hasItemChanges && !hasPaymentChanges && !hasPhoneChanges && !hasDiscountChanges) {
                 HK.UIRenderer.showToast("Herhangi bir değişiklik yapılmadı.", 'info');
                 return;
+            }
+
+            // Telefon doğrulaması (boş değilse)
+            if (phone.trim() !== "") {
+                var rawPhone = phone.replace(/\D/g, '');
+                if (rawPhone.length !== 11 || rawPhone[0] !== '0') {
+                    HK.UIRenderer.showToast("Lütfen geçerli bir telefon numarası giriniz (05xx...)", "error", true);
+                    document.getElementById("edit-order-phone").focus();
+                    return;
+                }
             }
 
             if (!confirm("Sipariş düzenlenecek ve stoklar güncellenecek. Emin misiniz?")) return;
@@ -211,6 +251,7 @@
                     body: JSON.stringify({
                         order_id: this.activeOrder.id,
                         payment_method: paymentMethod,
+                        phone: phone,
                         discount: discount,
                         items: changes
                     })

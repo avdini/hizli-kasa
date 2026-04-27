@@ -270,6 +270,12 @@ if (!defined('ABSPATH')) exit;
             </div>
 
             <div style="margin-top:15px;">
+                <label><strong>Müşteri Telefonu:</strong></label>
+                <input type="text" id="edit-order-phone" class="hk-input" placeholder="0 (5xx) xxx xx xx"
+                    autocomplete="off" style="margin-top:5px;">
+            </div>
+
+            <div style="margin-top:15px;">
                 <label><strong>İskonto (TL):</strong></label>
                 <input type="text" id="edit-order-discount" class="hk-input hk-currency-mask" placeholder="0,00"
                     inputmode="decimal" style="margin-top:5px;">
