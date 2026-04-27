@@ -355,16 +355,13 @@
                     var svg = lastLabel.querySelector('.barcode-svg');
                     var code = item.label.barcode_no;
                     
-                    // EAN-8 mi yoksa CODE128 mi?
+                    // Her zaman CODE128 kullan (Görsel bütünlük ve esneklik için)
                     var format = "CODE128";
-                    if (/^\d+$/.test(code) && (code.length === 7 || code.length === 8)) {
-                        format = "EAN8";
-                    }
 
                     JsBarcode(svg, code, {
                         format: format,
-                        width: 1.5,
-                        height: 48,
+                        width: 1.2,
+                        height: 50,
                         displayValue: false,
                         margin: 0
                     });

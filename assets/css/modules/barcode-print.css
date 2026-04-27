@@ -166,7 +166,8 @@
 
     .barcode-svg {
         max-width: 100%;
-        height: auto;
+        height: 14mm !important;
+        display: block;
     }
 
     .sku-text {
