@@ -20,6 +20,8 @@
             currentPage: 1,
             perPage: 24,
             isLoading: false,
+            orderby: 'date',
+            order: 'desc',
             total: 0
         },
 
@@ -75,6 +77,18 @@
             if (perPageSelect) {
                 perPageSelect.addEventListener('change', function() {
                     self.state.perPage = parseInt(this.value);
+                    self.state.currentPage = 1;
+                    self.loadProducts();
+                });
+            }
+
+            // --- Sıralama Dinleyicisi ---
+            var sortSelect = document.getElementById('terminal-siralama-select');
+            if (sortSelect) {
+                sortSelect.addEventListener('change', function() {
+                    var parts = this.value.split('|');
+                    self.state.orderby = parts[0];
+                    self.state.order   = parts[1];
                     self.state.currentPage = 1;
                     self.loadProducts();
                 });
@@ -233,6 +247,8 @@
                 var offset = (this.state.currentPage - 1) * this.state.perPage;
                 var url = kasaAyar.rootApiUrl + 'hizli-kasa/v1/terminal/products?limit=' + this.state.perPage + '&offset=' + offset + '&depo_id=' + depoId;
                 if (s) url += '&s=' + encodeURIComponent(s);
+                if (this.state.orderby) url += '&orderby=' + this.state.orderby;
+                if (this.state.order)   url += '&order=' + this.state.order;
                 var fetchOptions = { headers: { 'X-WP-Nonce': kasaAyar.nonce } };
                 if (controller) {
                     fetchOptions.signal = controller.signal;

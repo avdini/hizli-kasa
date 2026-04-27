@@ -89,6 +89,52 @@
     opacity: 0.5;
 }
 
+.arama-kutusu-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.siralama-kutusu {
+    position: relative;
+}
+
+.terminal-select {
+    background: var(--hk-bg-input);
+    border: 1px solid var(--hk-border);
+    color: var(--hk-text-main);
+    padding: 12px 15px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s;
+    min-width: 200px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    padding-right: 40px;
+    box-shadow: var(--hk-shadow-sm);
+}
+
+.terminal-select:hover {
+    border-color: var(--hk-accent);
+    background-color: var(--hk-bg-hover);
+    transform: translateY(-1px);
+}
+
+.terminal-select:focus {
+    border-color: var(--hk-accent);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.terminal-select option {
+    background: var(--hk-bg-card);
+    color: var(--hk-text-main);
+}
+
 .terminal-body {
     flex: 1;
     background: var(--hk-bg-card);

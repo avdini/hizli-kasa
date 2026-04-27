@@ -1585,7 +1585,14 @@ function hizli_kasa_terminal_products($request)
 
     $params = [];
     $search_ids = [];
-    $order_by = "p.post_title ASC";
+
+    // --- Sıralama Ayarları ---
+    $orderby = $request->get_param('orderby');
+    $order   = strtoupper($request->get_param('order') ?: 'DESC');
+    if (!in_array($order, ['ASC', 'DESC'])) $order = 'DESC';
+
+    // Varsayılan: Yayın Tarihi (Yeni -> Eski)
+    $order_by = "p.post_date DESC";
 
     if (!empty($s)) {
         $search_ids = hizli_kasa_get_terminal_search_product_ids($s, $depo_id);
@@ -1593,9 +1600,31 @@ function hizli_kasa_terminal_products($request)
         if (!empty($search_ids)) {
             $ids_ph = implode(',', array_map('intval', $search_ids));
             $where .= " AND p.ID IN ($ids_ph)";
-            $order_by = "FIELD(p.ID, $ids_ph)";
+            // Arama yapıldığında ve özel sıralama seçilmediğinde alaka düzeyine göre sırala
+            if (empty($orderby)) {
+                $order_by = "FIELD(p.ID, $ids_ph)";
+            }
         } else {
             $where .= " AND p.ID = 0";
+        }
+    }
+
+    // Özel sıralama seçilmişse (veya arama yoksa varsayılanlar)
+    if (!empty($orderby)) {
+        switch ($orderby) {
+            case 'title':
+                $order_by = "p.post_title $order";
+                break;
+            case 'stock':
+                $order_by = "sk_filter.quantity $order";
+                break;
+            case 'price':
+                $join_extra .= " LEFT JOIN {$wpdb->postmeta} pm_price ON (pm_price.post_id = p.ID AND pm_price.meta_key = '_price')";
+                $order_by = "pm_price.meta_value+0 $order";
+                break;
+            case 'date':
+                $order_by = "p.post_date $order";
+                break;
         }
     }
 

@@ -24,9 +24,25 @@ if (!defined('ABSPATH')) exit;
             </div>
         </div>
 
-        <div class="arama-kutusu">
-            <input type="text" id="terminal-arama-input" placeholder="Ürün adı veya barkod okutun..." autocomplete="off">
-            <span class="arama-ikon">🔍</span>
+        <div class="arama-kutusu-wrapper">
+            <!-- Sıralama Seçici -->
+            <div class="siralama-kutusu">
+                <select id="terminal-siralama-select" class="terminal-select">
+                    <option value="date|desc">Yeni Eklenenler</option>
+                    <option value="date|asc">Eski Eklenenler</option>
+                    <option value="title|asc">Ürün Adı (A-Z)</option>
+                    <option value="title|desc">Ürün Adı (Z-A)</option>
+                    <option value="stock|desc">Stok (Azalan)</option>
+                    <option value="stock|asc">Stok (Artan)</option>
+                    <option value="price|asc">Fiyat (Düşükten Yükseğe)</option>
+                    <option value="price|desc">Fiyat (Yüksekten Düşüğe)</option>
+                </select>
+            </div>
+
+            <div class="arama-kutusu">
+                <input type="text" id="terminal-arama-input" placeholder="Ürün adı veya barkod okutun..." autocomplete="off">
+                <span class="arama-ikon">🔍</span>
+            </div>
         </div>
     </div>
 

@@ -108,7 +108,7 @@
                 if (tarih) {
                     url += '&tarih=' + tarih;
                 }
-                
+
                 var response = await fetch(url, {
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });
@@ -180,7 +180,7 @@
                 '<tr><td>💵 Nakit Satış</td><td class="gs-sag">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>' +
                 '<tr><td>💳 Kart Satış</td><td class="gs-sag">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>' +
                 '<tr><td>🏦 IBAN Satış</td><td class="gs-sag">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>' +
-                '<tr class="gs-toplam-satir" style="color:#27ae60;"><td><strong>SATIŞ TOPLAMI</strong></td><td class="gs-sag"><strong>' + ozet.toplam_ciro.toFixed(2) + ' TL</strong></td></tr>';
+                '<tr class="gs-toplam-satir" style="color:#27ae60;"><td><strong>TOPLAMCİRO</strong></td><td class="gs-sag"><strong>' + ozet.toplam_ciro.toFixed(2) + ' TL</strong></td></tr>';
 
             if (ozet.toplam_iade > 0) {
                 html += '<tr><td colspan="2" style="height:10px;"></td></tr>' +
@@ -214,7 +214,7 @@
                 '<tr><td><strong>NET NAKİT (Kasadaki)</strong></td><td class="gs-sag"><strong>' + ozet.net_nakit.toFixed(2) + ' TL</strong></td></tr>' +
                 '<tr><td><strong>NET KART</strong></td><td class="gs-sag"><strong>' + ozet.net_kart.toFixed(2) + ' TL</strong></td></tr>' +
                 '<tr><td><strong>NET IBAN</strong></td><td class="gs-sag"><strong>' + ozet.net_iban.toFixed(2) + ' TL</strong></td></tr>' +
-                '<tr class="gs-toplam-satir" style="background:#f8f9fa;"><td><strong>NET CİRO</strong></td><td class="gs-sag"><strong>' + netCiro.toFixed(2) + ' TL</strong></td></tr>' +
+                '<tr class="gs-toplam-satir" style="background:#f8f9fa;"><td><strong>NET KASA TOPLAMI</strong></td><td class="gs-sag"><strong>' + netCiro.toFixed(2) + ' TL</strong></td></tr>' +
                 '</table>' +
                 '</div>';
 
@@ -363,10 +363,10 @@
             html += '<div style="margin-bottom:8px;">';
             html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">ÖDEME DAĞILIMI</p>';
             html += '<table style="width:100%; font-size:12px; border-collapse:collapse;">';
-            html += '<tr><td>Nakit Satış</td><td style="text-align:right;">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>Kredi Kartı</td><td style="text-align:right;">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>IBAN / Havale</td><td style="text-align:right;">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>';
-            html += '<tr style="border-top:1px dashed #000;"><td style="font-weight:bold;">SATIŞ TOPLAMI</td><td style="text-align:right; font-weight:bold;">' + ozet.toplam_ciro.toFixed(2) + ' TL</td></tr>';
+            html += '<tr><td>Nakit Satış</td><td style="text-align:right;">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>';
+            html += '<tr style="border-top:1px dashed #000;"><td style="font-weight:bold;">TOPLAM CİRO</td><td style="text-align:right; font-weight:bold;">' + ozet.toplam_ciro.toFixed(2) + ' TL</td></tr>';
 
             if (ozet.toplam_iade > 0) {
                 html += '<tr><td colspan="2" style="height:3px;"></td></tr>';
@@ -386,10 +386,10 @@
             html += '<tr><td colspan="2" style="height:10px;"></td></tr>';
             html += '<tr><td colspan="2" style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; text-align:center;">--- NET KASA DURUMU ---</td></tr>';
             html += '<tr><td colspan="2" style="height:5px;"></td></tr>';
-            html += '<tr style="border-bottom:1px dashed #eee;"><td>Net Nakit Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_nakit.toFixed(2) + ' TL</td></tr>';
             html += '<tr style="border-bottom:1px dashed #eee;"><td>Net Kart Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_kart.toFixed(2) + ' TL</td></tr>';
             html += '<tr style="border-bottom:1px dashed #eee;"><td>Net IBAN Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_iban.toFixed(2) + ' TL</td></tr>';
-            html += '<tr style="border-top:1px solid #000;"><td style="font-weight:bold; font-size:14px; padding-top:4px;">NET CİRO</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:4px;">' + netCiro.toFixed(2) + ' TL</td></tr>';
+            html += '<tr style="border-bottom:1px dashed #eee;"><td>Net Nakit Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_nakit.toFixed(2) + ' TL</td></tr>';
+            html += '<tr style="border-top:1px solid #000;"><td style="font-weight:bold; font-size:14px; padding-top:4px;">NET KASA TOPLAMI</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:4px;">' + netCiro.toFixed(2) + ' TL</td></tr>';
             html += '</table>';
             html += '</div>';
 
