@@ -362,6 +362,8 @@
             html += '<tr><td>IBAN / Havale</td><td style="text-align:right;">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>Nakit Satış</td><td style="text-align:right;">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr style="border-top:1px dashed #000;"><td style="font-weight:bold; font-size:14px; padding-top:2px;">TOPLAM CİRO</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:2px;">' + ozet.toplam_ciro.toFixed(2) + ' TL</td></tr>';
+            html += '</table>';
+            html += '</div>';
 
             // GİDERLER
             var toplamGider = (ozet.toplam_iade || 0);
@@ -393,9 +395,10 @@
             }
 
 
-            html += '<tr><td colspan="2" style="height:10px;"></td></tr>';
-            html += '<tr><td colspan="2" style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; text-align:center;">--- NET KASA DURUMU ---</td></tr>';
-            html += '<tr><td colspan="2" style="height:5px;"></td></tr>';
+            // ─── NET KASA DURUMU ───
+            html += '<div style="margin-bottom:8px;">';
+            html += '<p style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; text-align:center; margin:0 0 5px;">--- NET KASA DURUMU ---</p>';
+            html += '<table style="width:100%; font-size:12px; border-collapse:collapse;">';
             html += '<tr style="border-bottom:1px dashed #eee;"><td>Net Kart Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_kart.toFixed(2) + ' TL</td></tr>';
             html += '<tr style="border-bottom:1px dashed #eee;"><td>Net IBAN Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_iban.toFixed(2) + ' TL</td></tr>';
             html += '<tr style="border-bottom:1px dashed #eee;"><td>Net Nakit Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_nakit.toFixed(2) + ' TL</td></tr>';
