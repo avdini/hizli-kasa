@@ -186,20 +186,28 @@
     }
 
     .attr-color {
-        margin-bottom: 0.2mm;
+        margin-bottom: 0.5mm;
     }
 
     .attr-size {
-        font-weight: normal;
-        /* Etiket normal */
-        margin-bottom: 0.2mm;
-        /* Fiyatla aradaki boşluğu kontrol eder */
+        margin-bottom: 0.5mm;
+    }
+
+    .color-label, .size-label {
+        font-weight: 300;
+        font-size: 7pt;
+        opacity: 0.8;
+    }
+
+    .color-val {
+        font-size: 8pt;
+        font-weight: 600;
     }
 
     .size-val {
-        font-size: 9pt;
+        font-size: 14pt;
         font-weight: 900;
-        /* Değer bold */
+        line-height: 1;
     }
 
     .price-section {
