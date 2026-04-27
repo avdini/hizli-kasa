@@ -361,28 +361,37 @@
             html += '<tr><td>Kredi Kartı</td><td style="text-align:right;">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>IBAN / Havale</td><td style="text-align:right;">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>Nakit Satış</td><td style="text-align:right;">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>';
-            html += '<tr style="border-top:1px dashed #000;"><td style="font-weight:bold;">TOPLAM CİRO</td><td style="text-align:right; font-weight:bold;">' + ozet.toplam_ciro.toFixed(2) + ' TL</td></tr>';
+            html += '<tr style="border-top:1px dashed #000;"><td style="font-weight:bold; font-size:14px; padding-top:2px;">TOPLAM CİRO</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:2px;">' + ozet.toplam_ciro.toFixed(2) + ' TL</td></tr>';
 
-            if (ozet.toplam_iade > 0) {
-                html += '<tr><td colspan="2" style="height:3px;"></td></tr>';
-                html += '<tr><td>Nakit İade</td><td style="text-align:right;">-' + ozet.iade_nakit.toFixed(2) + ' TL</td></tr>';
-                html += '<tr><td>Kart İade</td><td style="text-align:right;">-' + ozet.iade_kart.toFixed(2) + ' TL</td></tr>';
-                html += '<tr><td>IBAN İade</td><td style="text-align:right;">-' + ozet.iade_iban.toFixed(2) + ' TL</td></tr>';
+            // GİDERLER
+            var toplamGider = (ozet.toplam_iade || 0);
+            if (isGenel) {
+                toplamGider += (ozet.toplam_masraf || 0);
             }
 
-            if (isGenel && ozet.toplam_masraf > 0) {
-                html += '<tr><td colspan="2" style="height:3px;"></td></tr>';
-                if (ozet.nakit_masraf > 0) {
-                    html += '<tr><td>Nakit Masraf</td><td style="text-align:right;">-' + ozet.nakit_masraf.toFixed(2) + ' TL</td></tr>';
+            if (toplamGider > 0) {
+                html += '<div style="margin-bottom:8px;">';
+                html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">GİDERLER</p>';
+                html += '<table style="width:100%; font-size:12px; border-collapse:collapse;">';
+                
+                // İadeler
+                if (ozet.iade_kart > 0) html += '<tr><td>Kart İade</td><td style="text-align:right;">-' + ozet.iade_kart.toFixed(2) + ' TL</td></tr>';
+                if (ozet.iade_iban > 0) html += '<tr><td>IBAN İade</td><td style="text-align:right;">-' + ozet.iade_iban.toFixed(2) + ' TL</td></tr>';
+                if (ozet.iade_nakit > 0) html += '<tr><td>Nakit İade</td><td style="text-align:right;">-' + ozet.iade_nakit.toFixed(2) + ' TL</td></tr>';
+                
+                // Masraflar (Sadece Genel raporda)
+                if (isGenel) {
+                    if (ozet.kart_masraf > 0) html += '<tr><td>Kart Masraf</td><td style="text-align:right;">-' + ozet.kart_masraf.toFixed(2) + ' TL</td></tr>';
+                    if (ozet.iban_masraf > 0) html += '<tr><td>IBAN Masraf</td><td style="text-align:right;">-' + ozet.iban_masraf.toFixed(2) + ' TL</td></tr>';
+                    if (ozet.nakit_masraf > 0) html += '<tr><td>Nakit Masraf</td><td style="text-align:right;">-' + ozet.nakit_masraf.toFixed(2) + ' TL</td></tr>';
+                    netCiro -= ozet.toplam_masraf;
                 }
-                if (ozet.kart_masraf > 0) {
-                    html += '<tr><td>Kart Masraf</td><td style="text-align:right;">-' + ozet.kart_masraf.toFixed(2) + ' TL</td></tr>';
-                }
-                if (ozet.iban_masraf > 0) {
-                    html += '<tr><td>IBAN Masraf</td><td style="text-align:right;">-' + ozet.iban_masraf.toFixed(2) + ' TL</td></tr>';
-                }
-                netCiro -= ozet.toplam_masraf;
+
+                html += '<tr style="border-top:1px dashed #000;"><td style="font-weight:bold; font-size:13px; padding-top:2px;">TOPLAM GİDER</td><td style="text-align:right; font-weight:bold; font-size:13px; padding-top:2px;">-' + toplamGider.toFixed(2) + ' TL</td></tr>';
+                html += '</table>';
+                html += '</div>';
             }
+
 
             html += '<tr><td colspan="2" style="height:10px;"></td></tr>';
             html += '<tr><td colspan="2" style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; text-align:center;">--- NET KASA DURUMU ---</td></tr>';
