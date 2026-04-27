@@ -186,12 +186,20 @@
         line-height: 1.2;
     }
 
-    .attr-color, .attr-size {
+    .attr-color {
+        margin-bottom: 0.4mm; /* Renk ve Beden arasına küçük bir boşluk */
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        line-height: 0.9;
+    }
+
+    .attr-size {
         margin-bottom: 0mm;
         display: flex;
         align-items: center;
         gap: 2px;
-        line-height: 0.9; /* Satır yüksekliğini daralttık */
+        line-height: 0.9;
     }
 
     .color-label, .size-label {
