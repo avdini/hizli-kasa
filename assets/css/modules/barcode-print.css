@@ -161,7 +161,7 @@
     .barcode-container {
         width: 100%;
         text-align: center;
-        margin-bottom: -1.5mm;
+        margin-bottom: 0.5mm;
     }
 
     .barcode-svg {
@@ -173,7 +173,7 @@
     .sku-text {
         font-size: 7pt;
         font-weight: 700;
-        margin-top: 0;
+        margin-top: 0.5mm;
     }
 
     .attributes {
