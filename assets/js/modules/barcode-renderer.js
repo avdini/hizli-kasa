@@ -364,7 +364,7 @@
                     JsBarcode(svg, code, {
                         format: format,
                         width: barWidth,
-                        height: 50,
+                        height: 80,
                         displayValue: false,
                         margin: 0
                     });
