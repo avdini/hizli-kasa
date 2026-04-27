@@ -149,6 +149,7 @@
         justify-content: flex-end;
         /* Aşağı kaydırmak için */
         padding-left: 1mm;
+        padding-right: 1.5mm;
         padding-bottom: 0.2mm;
         /* border-left kaldırıldı */
     }
@@ -181,6 +182,7 @@
         font-size: 7pt;
         font-weight: 700;
         margin-top: 0;
+        transform: translateY(-3mm);
     }
 
     .attributes {
