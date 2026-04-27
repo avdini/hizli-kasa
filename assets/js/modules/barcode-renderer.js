@@ -358,13 +358,19 @@
                     // Her zaman CODE128 kullan (Görsel bütünlük ve esneklik için)
                     var format = "CODE128";
 
+                    // İçeriğe göre dinamik genişlik (Kutuya tam yayılması için 2.0 kullanıyoruz)
+                    var barWidth = 2.0;
+
                     JsBarcode(svg, code, {
                         format: format,
-                        width: 1.2,
+                        width: barWidth,
                         height: 50,
                         displayValue: false,
                         margin: 0
                     });
+
+                    // Barkodu kutuya tam sığdır (CSS ile birlikte çalışır)
+                    svg.setAttribute("preserveAspectRatio", "none");
                 }
             });
 
