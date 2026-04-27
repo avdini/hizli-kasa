@@ -125,10 +125,23 @@ window.HizliKasa = window.HizliKasa || {};
                             state.sepet.splice(idx, 1);
                         }
 
-                        // Ürün eksiltildiğinde iskontoyu sıfırla (Kasiyerin tekrar değerlendirmesi için)
+                        // Ürün eksiltildiğinde iskontoyu ve ödeme yöntemini sıfırla (Kasiyerin tekrar değerlendirmesi için)
+                        var resetMesajlari = [];
+                        
                         if (state.iskontoTutar > 0) {
                             state.iskontoTutar = 0;
-                            self.showToast("Sepet değiştiği için iskonto sıfırlandı.", "info");
+                            resetMesajlari.push("iskonto");
+                        }
+                        
+                        if (state.odemeTipi !== "card" || state.splitData !== null) {
+                            state.odemeTipi = "card";
+                            state.splitData = null;
+                            resetMesajlari.push("ödeme yöntemi");
+                        }
+
+                        if (resetMesajlari.length > 0) {
+                            var mesaj = "Sepet değiştiği için " + resetMesajlari.join(" ve ") + " sıfırlandı.";
+                            self.showToast(mesaj, "info");
                         }
 
                         self.arayuzuGuncelle();
