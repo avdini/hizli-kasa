@@ -397,7 +397,7 @@
 
             // ─── NET KASA DURUMU ───
             html += '<div style="margin-bottom:8px;">';
-            html += '<p style="font-weight:bold; font-size:13px; border-bottom:1px solid #000; padding-bottom:2px; text-align:center; margin:0 0 5px;">--- NET KASA DURUMU ---</p>';
+            html += '<p style="font-weight:bold; font-size:13px; text-align:center; margin:0 0 5px;">--- NET KASA DURUMU ---</p>';
             html += '<table style="width:100%; font-size:12px; border-collapse:collapse;">';
             html += '<tr style="border-bottom:1px dashed #eee;"><td>Net Kart Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_kart.toFixed(2) + ' TL</td></tr>';
             html += '<tr style="border-bottom:1px dashed #eee;"><td>Net IBAN Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_iban.toFixed(2) + ' TL</td></tr>';
