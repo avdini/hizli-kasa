@@ -132,7 +132,7 @@
     }
 
     .col-left {
-        width: 55%;
+        width: 48%;
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
@@ -142,7 +142,7 @@
     }
 
     .col-right {
-        width: 45%;
+        width: 52%;
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
@@ -229,9 +229,9 @@
     }
 
     .price-new {
-        font-size: 15pt;
+        font-size: 14pt;
         /* Biraz küçülttük sığması için */
         font-weight: 900;
-        letter-spacing: -0.5px;
+        letter-spacing: -0.8px;
     }
 }
