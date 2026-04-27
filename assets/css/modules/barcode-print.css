@@ -1,7 +1,7 @@
 /**
  * Hızlı Kasa - Barkod Tasarımı ve Yazdırma CSS
  */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
 /* Modal Stilleri */
 .barkod-modal-genis {
@@ -187,36 +187,38 @@
     }
 
     .attr-color, .attr-size {
-        margin-bottom: 0mm; /* Boşluğu tamamen kapattık */
+        margin-bottom: 0mm;
         display: flex;
         align-items: center;
         gap: 2px;
-        line-height: 1;
+        line-height: 0.9; /* Satır yüksekliğini daralttık */
     }
 
     .color-label, .size-label {
-        font-weight: 200;
-        font-size: 6pt;
-        color: #000; /* Kesin siyah (termal yazıcılar için) */
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 100 !important;
+        font-size: 7pt;
+        color: #000;
         white-space: nowrap;
         display: inline-block;
-        transform: scale(0.8); /* İnce görünüm için fiziksel küçültme */
+        transform: scaleX(0.8); /* Sadece yatayda daraltarak incelik hissi veriyoruz, boyu koruyoruz */
         transform-origin: left center;
     }
 
     .color-val {
         font-size: 8pt;
         font-weight: 600;
-        line-height: 1;
+        line-height: 0.9;
     }
 
     .size-val {
         font-size: 14pt;
         font-weight: 900;
-        line-height: 1.1;
+        line-height: 0.9;
     }
 
     .price-section {
+        margin-top: -1.5mm; /* Fiyatı yukarı, bedene yaklaştırıyoruz */
         text-align: right;
         white-space: nowrap;
     }
