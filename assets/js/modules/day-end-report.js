@@ -200,11 +200,6 @@
                 if (ozet.iban_masraf > 0) {
                     html += '<tr><td style="color:#c0392b;">💸 IBAN Masraf</td><td class="gs-sag" style="color:#c0392b;">-' + ozet.iban_masraf.toFixed(2) + ' TL</td></tr>';
                 }
-
-                var diger_masraf = ozet.toplam_masraf - (ozet.nakit_masraf + ozet.kart_masraf + ozet.iban_masraf);
-                if (diger_masraf > 0.01) {
-                    html += '<tr><td style="color:#c0392b;">💸 Diğer Masraf</td><td class="gs-sag" style="color:#c0392b;">-' + diger_masraf.toFixed(2) + ' TL</td></tr>';
-                }
                 netCiro -= ozet.toplam_masraf;
             }
 
@@ -376,10 +371,16 @@
             }
 
             if (isGenel && ozet.toplam_masraf > 0) {
-                var diger_masraf = ozet.toplam_masraf - ozet.nakit_masraf;
                 html += '<tr><td colspan="2" style="height:3px;"></td></tr>';
-                html += '<tr><td>Nakit Masraf</td><td style="text-align:right;">-' + ozet.nakit_masraf.toFixed(2) + ' TL</td></tr>';
-                html += '<tr><td>Diğer Masraf</td><td style="text-align:right;">-' + diger_masraf.toFixed(2) + ' TL</td></tr>';
+                if (ozet.nakit_masraf > 0) {
+                    html += '<tr><td>Nakit Masraf</td><td style="text-align:right;">-' + ozet.nakit_masraf.toFixed(2) + ' TL</td></tr>';
+                }
+                if (ozet.kart_masraf > 0) {
+                    html += '<tr><td>Kart Masraf</td><td style="text-align:right;">-' + ozet.kart_masraf.toFixed(2) + ' TL</td></tr>';
+                }
+                if (ozet.iban_masraf > 0) {
+                    html += '<tr><td>IBAN Masraf</td><td style="text-align:right;">-' + ozet.iban_masraf.toFixed(2) + ' TL</td></tr>';
+                }
                 netCiro -= ozet.toplam_masraf;
             }
 
