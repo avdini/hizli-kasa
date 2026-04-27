@@ -12,7 +12,8 @@
 }
 
 .barkod-secim-listesi {
-    flex: 1; /* Kalan tüm alanı doldurur */
+    flex: 1;
+    /* Kalan tüm alanı doldurur */
     overflow-y: auto;
     margin: 15px 0;
     padding: 10px;
@@ -209,7 +210,7 @@
     .price-old {
         font-size: 9pt;
         text-decoration: line-through;
-        text-decoration-thickness: 0.5px;
+        text-decoration-thickness: 0.2px;
         color: #666;
     }
 
