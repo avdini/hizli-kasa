@@ -202,7 +202,7 @@
     }
 
     .price-single {
-        font-size: 11pt;
+        font-size: 13pt;
         /* Biraz küçülttük sığması için */
         font-weight: 900;
         letter-spacing: -0.5px;
@@ -229,7 +229,7 @@
     }
 
     .price-new {
-        font-size: 11pt;
+        font-size: 13pt;
         /* Biraz küçülttük sığması için */
         font-weight: 900;
         letter-spacing: -0.5px;
