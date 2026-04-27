@@ -186,7 +186,7 @@
     .attr-size {
         font-weight: normal;
         /* Etiket normal */
-        margin-bottom: 1mm;
+        margin-bottom: 0.2mm;
         /* Fiyatla aradaki boşluğu kontrol eder */
     }
 
@@ -214,6 +214,8 @@
         position: relative;
         text-decoration: none;
         display: inline-block;
+        line-height: 0.9;
+        margin-bottom: -0.5mm;
     }
 
     .price-old::after {
@@ -233,5 +235,6 @@
         /* Biraz küçülttük sığması için */
         font-weight: 900;
         letter-spacing: -0.8px;
+        line-height: 1;
     }
 }
