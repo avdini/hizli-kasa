@@ -1255,6 +1255,13 @@ function hizli_kasa_search_orders($request)
  */
 function hizli_kasa_process_refund($request)
 {
+    // WooCommerce email bildirimlerini bu işlem için devre dışı bırakıyoruz.
+    // İade (negatif) siparişleri standart şablonlarda hatalı göründüğü için özel bir mail göndereceğiz.
+    $emails_to_disable = ['new_order', 'customer_completed_order', 'customer_processing_order', 'customer_on_hold_order', 'customer_refunded_order', 'customer_invoice'];
+    foreach ($emails_to_disable as $email_id) {
+        add_filter("woocommerce_email_enabled_{$email_id}", '__return_false', 999);
+    }
+
     $data = $request->get_json_params();
     $original_order_id = sanitize_text_field($data['original_order_id']);
     $refund_items = $data['items'];
@@ -1447,6 +1454,9 @@ function hizli_kasa_process_refund($request)
     $refund_order->calculate_totals();
     $refund_order->save();
 
+    // Özel iade bildirim mailini gönder
+    hizli_kasa_send_custom_refund_email($refund_order);
+
     // --- Orijinal Siparişin Tamamının İade Edilip Edilmediğini Kontrol Et ---
     if ($original_order) {
         $all_refunded = true;
@@ -1472,6 +1482,85 @@ function hizli_kasa_process_refund($request)
         'total' => $refund_order->get_total(),
         'message' => 'İade başarıyla oluşturuldu.'
     );
+}
+
+/**
+ * İade siparişi için özel HTML e-postası gönderir.
+ */
+function hizli_kasa_send_custom_refund_email($order)
+{
+    if (!$order || !is_a($order, 'WC_Order'))
+        return;
+
+    $order_id = $order->get_id();
+    $original_order_id = $order->get_meta('_hizli_kasa_original_order');
+    $kasiyer = $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmeyen';
+    $kasa_no = $order->get_meta('_hizli_kasa_kasa_no') ?: '1';
+    $total = number_format(abs($order->get_total()), 2, ',', '.');
+    $date = $order->get_date_created()->date('d.m.Y H:i');
+
+    $admin_email = get_option('admin_email');
+    $subject = "🔄 Yeni İade İşlemi Bildirimi (#{$order_id})";
+
+    $items_html = '';
+    foreach ($order->get_items() as $item) {
+        $items_html .= sprintf(
+            '<li style="margin-bottom: 8px;"><strong>%s</strong><br><span style="color:#7f8c8d; font-size:13px;">%d adet x %s TL</span></li>',
+            $item->get_name(),
+            abs($item->get_quantity()),
+            number_format(abs($item->get_total() / $item->get_quantity()), 2, ',', '.')
+        );
+    }
+
+    $message = "
+    <html>
+    <body style='font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; margin: 0;'>
+        <div style='max-width: 600px; margin: 20px auto; background-color: #ffffff; padding: 30px; border-radius: 12px; border: 1px solid #e0e0e0; box-shadow: 0 4px 12px rgba(0,0,0,0.08);'>
+            <div style='text-align: center; margin-bottom: 30px;'>
+                <div style='background-color: #fff4e6; width: 70px; height: 70px; line-height: 70px; border-radius: 50%; margin: 0 auto 15px; font-size: 35px;'>🔄</div>
+                <h2 style='color: #e67e22; margin: 0; font-size: 24px;'>Yeni İade İşlemi</h2>
+                <p style='color: #7f8c8d; margin: 5px 0 0; font-size: 16px;'>POS terminalinden iade faturası kesildi</p>
+            </div>
+            
+            <div style='background-color: #f9f9f9; border-radius: 10px; padding: 20px; margin-bottom: 30px;'>
+                <table style='width: 100%; border-collapse: collapse;'>
+                    <tr>
+                        <td style='padding: 10px 0; color: #7f8c8d; font-size: 14px;'>İade Numarası:</td>
+                        <td style='padding: 10px 0; font-weight: bold; text-align: right;'>#{$order_id}</td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 10px 0; color: #7f8c8d; font-size: 14px;'>Asıl Sipariş:</td>
+                        <td style='padding: 10px 0; font-weight: bold; text-align: right;'>#{$original_order_id}</td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 10px 0; color: #7f8c8d; font-size: 14px;'>İşlem Tarihi:</td>
+                        <td style='padding: 10px 0; text-align: right;'>{$date}</td>
+                    </tr>
+                    <tr>
+                        <td style='padding: 10px 0; color: #7f8c8d; font-size: 14px;'>Kasiyer / Kasa:</td>
+                        <td style='padding: 10px 0; text-align: right;'>{$kasiyer} (Kasa {$kasa_no})</td>
+                    </tr>
+                    <tr style='border-top: 2px solid #eeeeee;'>
+                        <td style='padding: 20px 0 0; font-size: 20px; font-weight: bold; color: #e67e22;'>Toplam İade:</td>
+                        <td style='padding: 20px 0 0; font-size: 20px; font-weight: bold; color: #e67e22; text-align: right;'>{$total} TL</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style='margin-bottom: 10px; font-weight: bold; color: #2c3e50; font-size: 16px; border-bottom: 2px solid #f4f7f6; padding-bottom: 8px;'>İade Edilen Ürünler</div>
+            <ul style='padding-left: 20px; color: #34495e; line-height: 1.5; margin-top: 15px;'>
+                {$items_html}
+            </ul>
+            
+            <div style='margin-top: 40px; padding-top: 20px; border-top: 1px solid #eeeeee; text-align: center; font-size: 13px; color: #95a5a6;'>
+                <p>Bu bilgilendirme e-postası <strong>Hızlı Kasa POS</strong> sistemi tarafından otomatik olarak oluşturulmuştur.</p>
+            </div>
+        </div>
+    </body>
+    </html>";
+
+    $headers = array('Content-Type: text/html; charset=UTF-8');
+    wp_mail($admin_email, $subject, $message, $headers);
 }
 
 /**
