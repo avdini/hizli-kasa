@@ -22,6 +22,8 @@ class Hizli_Kasa_Stock_Manager {
         add_action('woocommerce_order_status_processing', [self::class, 'handle_online_order_stock'], 10, 2);
         // woocommerce_checkout_order_processed yerine woocommerce_new_order daha geneldir (REST API'yi de kapsar)
         add_action('woocommerce_new_order', [self::class, 'handle_pos_order_stock'], 10, 2);
+        // Sipariş iptal edildiğinde stok iadesi tetikleyici
+        add_action('woocommerce_order_status_cancelled', [self::class, 'handle_cancelled_order_stock'], 10, 2);
     }
 
     /**
@@ -108,7 +110,8 @@ class Hizli_Kasa_Stock_Manager {
             $variation_id = $item->get_variation_id();
             $qty = $item->get_quantity();
 
-            self::priority_stock_deduction($product_id, $variation_id, $qty);
+            // Item objesini de gönderiyoruz ki hangi depodan ne kadar düşüldüğünü kaydedebilelim
+            self::priority_stock_deduction($product_id, $variation_id, $qty, $item);
         }
     }
 
@@ -197,7 +200,7 @@ class Hizli_Kasa_Stock_Manager {
     /**
      * Online satışlar için öncelikli stok düşümü.
      */
-    public static function priority_stock_deduction($product_id, $variation_id, $total_to_deduct) {
+    public static function priority_stock_deduction($product_id, $variation_id, $total_to_deduct, $item = null) {
         global $wpdb;
         $tables = Hizli_Kasa_Database::get_tables();
         
@@ -209,6 +212,7 @@ class Hizli_Kasa_Stock_Manager {
             priority DESC");
 
         $remaining = $total_to_deduct;
+        $deductions = [];
 
         foreach ($depolar as $d) {
             if ($remaining <= 0) break;
@@ -222,12 +226,34 @@ class Hizli_Kasa_Stock_Manager {
 
             $to_take = min($stock, $remaining);
             self::update_warehouse_stock($product_id, $variation_id, $d->id, -$to_take, "Online Satış (Otomatik)");
+            
+            $deductions[] = ['depo_id' => $d->id, 'qty' => $to_take];
             $remaining -= $to_take;
         }
 
         // Eğer hala düşülecek stok kaldıysa (tüm depolar tükendiyse), öncelikli depodan eksiye düşür
         if ($remaining > 0 && $online_depo_id) {
             self::update_warehouse_stock($product_id, $variation_id, $online_depo_id, -$remaining, "Online Satış (Stok Yetersiz - Eksiye Düştü)");
+            
+            // Eğer bu depo zaten listeye eklenmişse miktarını artır, yoksa yeni ekle
+            $found = false;
+            if (!empty($deductions)) {
+                foreach ($deductions as &$ded) {
+                    if ($ded['depo_id'] == $online_depo_id) {
+                        $ded['qty'] += $remaining;
+                        $found = true;
+                        break;
+                    }
+                }
+            }
+            if (!$found) {
+                $deductions[] = ['depo_id' => $online_depo_id, 'qty' => $remaining];
+            }
+        }
+
+        // Kesintileri sipariş kalemine kaydet (İptal durumunda geri iade için)
+        if ($item && !empty($deductions)) {
+            wc_update_order_item_meta($item->get_id(), '_hk_deductions', $deductions);
         }
     }
 
@@ -475,6 +501,49 @@ class Hizli_Kasa_Stock_Manager {
 
         if ($inserted === false) {
             error_log('Hızlı Kasa DB Hatası (Unmatched Insert): ' . $wpdb->last_error);
+        }
+    }
+    /**
+     * Sipariş iptal edildiğinde stokları ilgili depolara geri iade eder.
+     */
+    public static function handle_cancelled_order_stock($order_id, $order = false) {
+        if (!$order) {
+            $order = wc_get_order($order_id);
+        }
+        if (!$order) return;
+
+        hizli_kasa_log("handle_cancelled_order_stock tetiklendi. Sipariş ID: $order_id");
+
+        foreach ($order->get_items() as $item_id => $item) {
+            $product_id = $item->get_product_id();
+            $variation_id = $item->get_variation_id();
+
+            // 1. Online Sipariş Düşümleri (_hk_deductions)
+            $deductions = wc_get_order_item_meta($item_id, '_hk_deductions', true);
+            
+            if (!empty($deductions) && is_array($deductions)) {
+                foreach ($deductions as $ded) {
+                    $depo_id = intval($ded['depo_id']);
+                    $qty = floatval($ded['qty']);
+                    
+                    if ($depo_id && $qty > 0) {
+                        self::update_warehouse_stock($product_id, $variation_id, $depo_id, $qty, "Sipariş İptali (#$order_id)");
+                        hizli_kasa_log("İptal: Online stok iade edildi. Depo: $depo_id, Ürün: $product_id, Adet: $qty");
+                    }
+                }
+            } else {
+                // 2. POS Siparişi Düşümü (_hk_cikis_depo_id)
+                $depo_id = (int) wc_get_order_item_meta($item_id, '_hk_cikis_depo_id', true);
+                $qty = (float) wc_get_order_item_meta($item_id, '_hk_cikis_depo_adet', true);
+                
+                // Eğer adet meta'sı yoksa item adetini kullan
+                if (!$qty) $qty = $item->get_quantity();
+
+                if ($depo_id && $qty > 0) {
+                    self::update_warehouse_stock($product_id, $variation_id, $depo_id, $qty, "Sipariş İptali (#$order_id)");
+                    hizli_kasa_log("İptal: POS stok iade edildi. Depo: $depo_id, Ürün: $product_id, Adet: $qty");
+                }
+            }
         }
     }
 }
