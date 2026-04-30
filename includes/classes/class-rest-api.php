@@ -2141,46 +2141,44 @@ function hizli_kasa_warehouse_stock_check($request)
             $stock_status = $product->get_stock_status();
         }
 
-        // 2. Aktif depo stoğu
+        // 2. Aktif depo stoğu ve rezervasyonu
         $depo_stock = 0;
+        $depo_reserved = 0;
         if ($depo_id) {
-            if ($variation_id > 0) {
-                $depo_stock = (float) $wpdb->get_var($wpdb->prepare(
-                    "SELECT quantity FROM $stok_table WHERE variation_id = %d AND location_id = %d",
-                    $variation_id,
-                    $depo_id
-                ));
-            } else {
-                $depo_stock = (float) $wpdb->get_var($wpdb->prepare(
-                    "SELECT quantity FROM $stok_table WHERE product_id = %d AND variation_id = 0 AND location_id = %d",
-                    $product_id,
-                    $depo_id
-                ));
+            $stock_row = $wpdb->get_row($wpdb->prepare(
+                "SELECT quantity, reserved FROM $stok_table WHERE product_id = %d AND variation_id = %d AND location_id = %d",
+                $product_id,
+                $variation_id,
+                $depo_id
+            ));
+            if ($stock_row) {
+                $depo_stock = (float) $stock_row->quantity;
+                $depo_reserved = (float) $stock_row->reserved;
             }
         }
 
-        // 3. Diğer depolardaki toplam stok
+        // 3. Diğer depolardaki toplam stok ve rezervasyon
         $other_depo_stock = 0;
+        $other_depo_reserved = 0;
         if ($depo_id) {
-            if ($variation_id > 0) {
-                $other_depo_stock = (float) $wpdb->get_var($wpdb->prepare(
-                    "SELECT COALESCE(SUM(quantity), 0) FROM $stok_table WHERE variation_id = %d AND location_id != %d",
-                    $variation_id,
-                    $depo_id
-                ));
-            } else {
-                $other_depo_stock = (float) $wpdb->get_var($wpdb->prepare(
-                    "SELECT COALESCE(SUM(quantity), 0) FROM $stok_table WHERE product_id = %d AND variation_id = 0 AND location_id != %d",
-                    $product_id,
-                    $depo_id
-                ));
+            $other_rows = $wpdb->get_row($wpdb->prepare(
+                "SELECT COALESCE(SUM(quantity), 0) as total_qty, COALESCE(SUM(reserved), 0) as total_res FROM $stok_table WHERE product_id = %d AND variation_id = %d AND location_id != %d",
+                $product_id,
+                $variation_id,
+                $depo_id
+            ));
+            if ($other_rows) {
+                $other_depo_stock = (float) $other_rows->total_qty;
+                $other_depo_reserved = (float) $other_rows->total_res;
             }
         }
 
-        // 4. Kontrol sonuçları
+        // 4. Kontrol sonuçları (Rezervasyon dahil)
         $site_ok = true;
         $depo_ok = true;
         $warning = null;
+
+        $available_depo = $depo_stock - $depo_reserved;
 
         if ($manage_stock && $site_stock !== null) {
             $site_ok = ($requested_qty <= $site_stock);
@@ -2188,16 +2186,20 @@ function hizli_kasa_warehouse_stock_check($request)
             $site_ok = false;
         }
 
-        if ($depo_id && $depo_stock !== null) {
-            $depo_ok = ($requested_qty <= $depo_stock);
+        if ($depo_id) {
+            $depo_ok = ($requested_qty <= $available_depo);
         }
 
         // Uyarı mesajları
         if ($site_ok && !$depo_ok) {
-            if ($other_depo_stock >= $requested_qty) {
-                $warning = "Sitede var ama bu depoda yok — başka depoda gözüküyor!";
+            if (($depo_stock + $other_depo_stock - $depo_reserved - $other_depo_reserved) >= $requested_qty) {
+                $warning = "Sitede var ama bu depoda rezerve/yok — başka depoda gözüküyor!";
             } else {
-                $warning = "Depoda yetersiz stok! (Depo: " . (int) $depo_stock . ", İhtiyaç: $requested_qty)";
+                if ($depo_reserved > 0) {
+                    $warning = "⚠️ Kritik Stok Uyarısı! Ürünün {$depo_reserved} adedi internet siparişleri için ayırtılmıştır. (Depoda Toplam: " . (int)$depo_stock . ")";
+                } else {
+                    $warning = "Depoda yetersiz stok! (Depo: " . (int) $depo_stock . ", İhtiyaç: $requested_qty)";
+                }
             }
         } elseif (!$site_ok) {
             $warning = "Site stoğu yetersiz! (Site: " . ($site_stock !== null ? (int) $site_stock : 'N/A') . ", İhtiyaç: $requested_qty)";
@@ -2209,6 +2211,8 @@ function hizli_kasa_warehouse_stock_check($request)
             'name' => $name,
             'site_stock' => $site_stock,
             'depo_stock' => (float) $depo_stock,
+            'depo_reserved' => (float) $depo_reserved,
+            'available_stock' => (float) $available_depo,
             'other_depo_stock' => (float) $other_depo_stock,
             'requested_qty' => $requested_qty,
             'site_ok' => $site_ok,

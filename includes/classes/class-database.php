@@ -61,6 +61,7 @@ class Hizli_Kasa_Database {
             variation_id bigint(20) DEFAULT 0,
             location_id bigint(20) NOT NULL,
             quantity decimal(15,4) DEFAULT 0.0000,
+            reserved decimal(15,4) DEFAULT 0.0000,
             updated_at datetime,
             PRIMARY KEY  (id),
             KEY product_id (product_id),

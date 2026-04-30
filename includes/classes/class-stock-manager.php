@@ -19,11 +19,17 @@ class Hizli_Kasa_Stock_Manager {
      * Hookları Başlat
      */
     public static function listen() {
-        add_action('woocommerce_order_status_processing', [self::class, 'handle_online_order_stock'], 10, 2);
-        // woocommerce_checkout_order_processed yerine woocommerce_new_order daha geneldir (REST API'yi de kapsar)
-        add_action('woocommerce_new_order', [self::class, 'handle_pos_order_stock'], 10, 2);
-        // Sipariş iptal edildiğinde stok iadesi tetikleyici
+        // Online Sipariş: İşleniyor durumuna geçtiğinde stok AYIRT (Reserve)
+        add_action('woocommerce_order_status_processing', [self::class, 'handle_online_order_reservation'], 10, 2);
+        
+        // Online Sipariş: Tamamlandığında stoğu KESİNLEŞTİR (Deduct)
+        add_action('woocommerce_order_status_completed', [self::class, 'handle_online_order_completion'], 10, 2);
+        
+        // Sipariş iptal edildiğinde (Online ise rezervasyonu bırak, POS ise stoğu geri koy)
         add_action('woocommerce_order_status_cancelled', [self::class, 'handle_cancelled_order_stock'], 10, 2);
+        
+        // POS Siparişi: Yeni sipariş oluşturulduğunda direkt fiziksel stoktan düş
+        add_action('woocommerce_new_order', [self::class, 'handle_pos_order_stock'], 10, 2);
     }
 
     /**
@@ -100,18 +106,57 @@ class Hizli_Kasa_Stock_Manager {
     /**
      * Online siparişlerde (web) öncelikli stok düşümü yapar.
      */
-    public static function handle_online_order_stock($order_id, $order) {
+    /**
+     * Online siparişlerde stok rezervasyonu yapar.
+     */
+    public static function handle_online_order_reservation($order_id, $order = false) {
+        if (!$order) $order = wc_get_order($order_id);
+        if (!$order) return;
+
         // Eğer sipariş "Hızlı Kasa" üzerinden gelmişse bu fonksiyonu atla 
-        // (Çünkü POS kendi deposundan zaten düşüm yapacak)
         if ($order->get_meta('_hizli_kasa_kasiyer')) return;
+
+        hizli_kasa_log("handle_online_order_reservation tetiklendi. Sipariş ID: $order_id");
 
         foreach ($order->get_items() as $item) {
             $product_id = $item->get_product_id();
             $variation_id = $item->get_variation_id();
             $qty = $item->get_quantity();
 
-            // Item objesini de gönderiyoruz ki hangi depodan ne kadar düşüldüğünü kaydedebilelim
-            self::priority_stock_deduction($product_id, $variation_id, $qty, $item);
+            self::priority_stock_reservation($product_id, $variation_id, $qty, $item);
+        }
+    }
+
+    /**
+     * Online sipariş tamamlandığında rezervasyonu fiziksel düşüme çevirir.
+     */
+    public static function handle_online_order_completion($order_id, $order = false) {
+        if (!$order) $order = wc_get_order($order_id);
+        if (!$order) return;
+
+        // Eğer sipariş "Hızlı Kasa" üzerinden gelmişse bu fonksiyonu atla 
+        if ($order->get_meta('_hizli_kasa_kasiyer')) return;
+
+        hizli_kasa_log("handle_online_order_completion tetiklendi. Sipariş ID: $order_id");
+
+        foreach ($order->get_items() as $item_id => $item) {
+            $product_id = $item->get_product_id();
+            $variation_id = $item->get_variation_id();
+            
+            // Rezerve bilgisini al
+            $reservations = wc_get_order_item_meta($item_id, '_hk_reservations', true);
+            if (empty($reservations)) continue;
+
+            foreach ($reservations as $res) {
+                $depo_id = intval($res['depo_id']);
+                $qty = floatval($res['qty']);
+
+                // 1. Rezervasyonu kaldır
+                self::update_warehouse_stock_reservation($product_id, $variation_id, $depo_id, -$qty);
+                
+                // 2. Fiziksel stoğu düş (Zaten rezerve olduğu için conflict kontrolüne gerek yok)
+                self::update_warehouse_stock($product_id, $variation_id, $depo_id, -$qty, "Online Sipariş Tamamlandı (#$order_id)");
+            }
         }
     }
 
@@ -187,6 +232,13 @@ class Hizli_Kasa_Stock_Manager {
             hizli_kasa_log("DB Insert: " . ($result !== false ? "BAŞARILI" : "HATA: " . $wpdb->last_error));
         }
 
+        // Rezervasyon Çatışma Kontrolü: Fiziksel stok rezerve edilenin altına düştü mü?
+        if ($change_amount < 0) {
+            $reserved = $current ? floatval($current->reserved) : 0;
+            if ($new_qty < $reserved) {
+                self::resolve_stock_reservation_conflict($product_id, $variation_id, $location_id, $reserved - $new_qty);
+            }
+        }
         self::log_movement($product_id, $variation_id, $location_id, $old_qty, $new_qty, $reason);
 
         // Uyuşmazlık önbelleğini sıfırla
@@ -195,6 +247,114 @@ class Hizli_Kasa_Stock_Manager {
         }
 
         return $new_qty;
+    }
+
+    /**
+     * Belirli bir depoda rezervasyon miktarını günceller.
+     */
+    public static function update_warehouse_stock_reservation($product_id, $variation_id, $location_id, $change_amount) {
+        global $wpdb;
+        $tables = Hizli_Kasa_Database::get_tables();
+
+        $current = $wpdb->get_row($wpdb->prepare("
+            SELECT id, reserved FROM {$tables['stok_konumlari']} 
+            WHERE product_id = %d AND variation_id = %d AND location_id = %d
+        ", $product_id, $variation_id, $location_id));
+
+        $old_res = $current ? floatval($current->reserved) : 0;
+        $new_res = max(0, $old_res + $change_amount);
+
+        if ($current) {
+            $wpdb->update($tables['stok_konumlari'], ['reserved' => $new_res], ['id' => $current->id]);
+        } else {
+            $wpdb->insert($tables['stok_konumlari'], [
+                'product_id'   => $product_id,
+                'variation_id' => $variation_id,
+                'location_id'  => $location_id,
+                'reserved'     => $new_res
+            ]);
+        }
+        
+        hizli_kasa_log("Rezervasyon Güncellendi: L:$location_id, P:$product_id, V:$variation_id, Old:$old_res, New:$new_res");
+        return $new_res;
+    }
+
+    /**
+     * Rezervasyon çatışmasını çözer (Stok fiziksel olarak rezerve edilenin altına düştüğünde).
+     */
+    public static function resolve_stock_reservation_conflict($product_id, $variation_id, $location_id, $amount_to_resolve) {
+        global $wpdb;
+        $tables = Hizli_Kasa_Database::get_tables();
+        
+        // Bu depodaki aktif rezervasyonları çek
+        $wpdb->query($wpdb->prepare("
+            UPDATE {$tables['stok_konumlari']} 
+            SET reserved = GREATEST(0, reserved - %f) 
+            WHERE product_id = %d AND variation_id = %d AND location_id = %d
+        ", $amount_to_resolve, $product_id, $variation_id, $location_id));
+        
+        hizli_kasa_log("Rezervasyon çatışması giderildi: L:$location_id, P:$product_id, V:$variation_id, Miktar:$amount_to_resolve");
+    }
+
+    /**
+     * Online satışlar için öncelikli stok rezervasyonu.
+     */
+    public static function priority_stock_reservation($product_id, $variation_id, $total_to_deduct, $item = null) {
+        global $wpdb;
+        $tables = Hizli_Kasa_Database::get_tables();
+        
+        $online_depo_id = get_option('hizli_kasa_varsayilan_online_depo');
+        
+        // Depoları önceliğe göre getir
+        $depolar = $wpdb->get_results("SELECT id FROM {$tables['depolar']} ORDER BY 
+            (CASE WHEN id = " . intval($online_depo_id) . " THEN 1 ELSE 0 END) DESC, 
+            priority DESC");
+
+        $remaining = $total_to_deduct;
+        $reservations = [];
+
+        foreach ($depolar as $d) {
+            if ($remaining <= 0) break;
+
+            $stock_data = $wpdb->get_row($wpdb->prepare("
+                SELECT quantity, reserved FROM {$tables['stok_konumlari']} 
+                WHERE product_id = %d AND variation_id = %d AND location_id = %d
+            ", $product_id, $variation_id, $d->id));
+
+            $qty = $stock_data ? floatval($stock_data->quantity) : 0;
+            $res = $stock_data ? floatval($stock_data->reserved) : 0;
+            $available = $qty - $res;
+
+            if ($available <= 0) continue;
+
+            $to_take = min($available, $remaining);
+            self::update_warehouse_stock_reservation($product_id, $variation_id, $d->id, $to_take);
+            
+            $reservations[] = ['depo_id' => $d->id, 'qty' => $to_take];
+            $remaining -= $to_take;
+        }
+
+        // Eğer hala rezerve edilecek miktar kaldıysa, öncelikli depodan eksiye düşerek rezerve et
+        if ($remaining > 0 && $online_depo_id) {
+            self::update_warehouse_stock_reservation($product_id, $variation_id, $online_depo_id, $remaining);
+            
+            $found = false;
+            foreach ($reservations as &$r) {
+                if ($r['depo_id'] == $online_depo_id) {
+                    $r['qty'] += $remaining;
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                $reservations[] = ['depo_id' => $online_depo_id, 'qty' => $remaining];
+            }
+        }
+
+        // Rezervasyonları sipariş kalemine kaydet
+        if ($item && !empty($reservations)) {
+            wc_update_order_item_meta($item->get_id(), '_hk_reservations', $reservations);
+        }
     }
 
     /**
@@ -504,7 +664,7 @@ class Hizli_Kasa_Stock_Manager {
         }
     }
     /**
-     * Sipariş iptal edildiğinde stokları ilgili depolara geri iade eder.
+     * Sipariş iptal edildiğinde (veya iade) stokları ilgili depolara geri iade eder veya rezervasyonu kaldırır.
      */
     public static function handle_cancelled_order_stock($order_id, $order = false) {
         if (!$order) {
@@ -518,17 +678,17 @@ class Hizli_Kasa_Stock_Manager {
             $product_id = $item->get_product_id();
             $variation_id = $item->get_variation_id();
 
-            // 1. Online Sipariş Düşümleri (_hk_deductions)
-            $deductions = wc_get_order_item_meta($item_id, '_hk_deductions', true);
+            // 1. Online Sipariş Rezervasyonları (_hk_reservations)
+            $reservations = wc_get_order_item_meta($item_id, '_hk_reservations', true);
             
-            if (!empty($deductions) && is_array($deductions)) {
-                foreach ($deductions as $ded) {
-                    $depo_id = intval($ded['depo_id']);
-                    $qty = floatval($ded['qty']);
+            if (!empty($reservations) && is_array($reservations)) {
+                foreach ($reservations as $res) {
+                    $depo_id = intval($res['depo_id']);
+                    $qty = floatval($res['qty']);
                     
                     if ($depo_id && $qty > 0) {
-                        self::update_warehouse_stock($product_id, $variation_id, $depo_id, $qty, "Sipariş İptali (#$order_id)");
-                        hizli_kasa_log("İptal: Online stok iade edildi. Depo: $depo_id, Ürün: $product_id, Adet: $qty");
+                        self::update_warehouse_stock_reservation($product_id, $variation_id, $depo_id, -$qty);
+                        hizli_kasa_log("İptal: Online rezervasyon bırakıldı. Depo: $depo_id, Ürün: $product_id, Adet: $qty");
                     }
                 }
             } else {
@@ -542,6 +702,63 @@ class Hizli_Kasa_Stock_Manager {
                 if ($depo_id && $qty > 0) {
                     self::update_warehouse_stock($product_id, $variation_id, $depo_id, $qty, "Sipariş İptali (#$order_id)");
                     hizli_kasa_log("İptal: POS stok iade edildi. Depo: $depo_id, Ürün: $product_id, Adet: $qty");
+                }
+            }
+        }
+    }
+
+    /**
+     * Fiziksel stok yetersiz kaldığında çakışan rezervasyonları iptal eder.
+     */
+    private static function resolve_stock_reservation_conflict($product_id, $variation_id, $location_id, $conflict_qty) {
+        global $wpdb;
+        
+        hizli_kasa_log("STOK ÇAKIŞMASI: P:$product_id, V:$variation_id, L:$location_id, Çakışan Adet: $conflict_qty");
+
+        // Bu ürün/varyasyon ve depo için AKTİF rezervasyonu olan siparişleri bul
+        // En yeni siparişten başlayarak iptal et
+        $orders_query = $wpdb->prepare("
+            SELECT im.order_item_id, i.order_id, im.meta_value as reservations
+            FROM {$wpdb->prefix}woocommerce_order_itemmeta im
+            JOIN {$wpdb->prefix}woocommerce_order_items i ON im.order_item_id = i.order_item_id
+            JOIN {$wpdb->posts} p ON i.order_id = p.ID
+            WHERE im.meta_key = '_hk_reservations'
+              AND p.post_status = 'wc-processing'
+            ORDER BY p.post_date DESC
+        ");
+        
+        $results = $wpdb->get_results($orders_query);
+        $remaining_to_fix = $conflict_qty;
+
+        foreach ($results as $row) {
+            if ($remaining_to_fix <= 0) break;
+
+            $reservations = maybe_unserialize($row->reservations);
+            if (!is_array($reservations)) continue;
+
+            foreach ($reservations as &$res) {
+                if ($res['depo_id'] == $location_id) {
+                    $order = wc_get_order($row->order_id);
+                    if (!$order) continue;
+
+                    // Bu siparişten ne kadar rezerve edilmiş?
+                    $res_qty = floatval($res['qty']);
+                    $to_cancel = min($res_qty, $remaining_to_fix);
+
+                    // Siparişi "Failed" (Başarısız) durumuna al
+                    $order->update_status('failed', sprintf('Stok yetersizliği nedeniyle sistem tarafından iptal edildi. (POS Satışı Çakışması, Ürün ID: %d, Depo ID: %d)', ($variation_id ?: $product_id), $location_id));
+                    
+                    // Rezervasyonu tamamen kaldır (çünkü sipariş failed oldu)
+                    foreach ($reservations as $r) {
+                        self::update_warehouse_stock_reservation($product_id, $variation_id, $r['depo_id'], -$r['qty']);
+                    }
+                    
+                    // Meta'yı temizle
+                    wc_delete_order_item_meta($row->order_item_id, '_hk_reservations');
+                    
+                    $remaining_to_fix -= $to_cancel;
+                    hizli_kasa_log("Çatışma Çözüldü: Sipariş #{$row->order_id} başarısız durumuna alındı.");
+                    break; 
                 }
             }
         }
