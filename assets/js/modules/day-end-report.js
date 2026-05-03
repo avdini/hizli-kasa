@@ -566,8 +566,13 @@
             var netIban = (ozet.iban_toplam || 0) - (ozet.iade_iban || 0);
             var netNakit = (ozet.nakit_toplam || 0) - (ozet.iade_nakit || 0);
             var genelToplam = (ozet.toplam_ciro || 0) - (ozet.toplam_iade || 0);
-            var masraf = (ozet.toplam_masraf || 0);
-            var netKasa = genelToplam - masraf;
+            
+            var masrafKart = (ozet.kart_masraf || 0);
+            var masrafIban = (ozet.iban_masraf || 0);
+            var masrafNakit = (ozet.nakit_masraf || 0);
+            var toplamMasraf = (ozet.toplam_masraf || 0);
+            
+            var netKasa = genelToplam - toplamMasraf;
 
             html += '<div style="margin-bottom:10px;">';
             html += '<table style="width:100%; font-size:14px; border-collapse:collapse; font-family:monospace;">';
@@ -577,9 +582,19 @@
             html += '<tr><td style="padding:4px 0;">IBAN TOPLAM</td><td style="text-align:right;">' + netIban.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td style="padding:4px 0;">NAKİT TOPLAM</td><td style="text-align:right;">' + netNakit.toFixed(2) + ' TL</td></tr>';
             
-            html += '<tr><td colspan="2" style="height:10px;"></td></tr>';
-            
-            html += '<tr><td style="padding:4px 0;">MASRAF</td><td style="text-align:right;">-' + masraf.toFixed(2) + ' TL</td></tr>';
+            if (toplamMasraf > 0) {
+                html += '<tr><td colspan="2" style="height:10px;"></td></tr>';
+                
+                if (masrafKart > 0) {
+                    html += '<tr><td style="padding:4px 0;">KART MASRAF</td><td style="text-align:right;">-' + masrafKart.toFixed(2) + ' TL</td></tr>';
+                }
+                if (masrafIban > 0) {
+                    html += '<tr><td style="padding:4px 0;">IBAN MASRAF</td><td style="text-align:right;">-' + masrafIban.toFixed(2) + ' TL</td></tr>';
+                }
+                if (masrafNakit > 0) {
+                    html += '<tr><td style="padding:4px 0;">NAKİT MASRAF</td><td style="text-align:right;">-' + masrafNakit.toFixed(2) + ' TL</td></tr>';
+                }
+            }
             
             html += '<tr style="border-top:1px solid #000; font-size:16px;"><td style="padding:6px 0; font-weight:bold;">NET TOPLAM</td><td style="text-align:right; font-weight:bold;">' + netKasa.toFixed(2) + ' TL</td></tr>';
             
