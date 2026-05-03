@@ -83,7 +83,12 @@
                 success: function(response) {
                     if (response && response.ozet) {
                         var ozet = response.ozet;
-                        var genelNet = ozet.net_nakit + ozet.net_kart + ozet.net_iban;
+                        
+                        // Yeni hesaplama: Toplam - Sadece İade (Masraflar düşülmüyor)
+                        var nakitGosterilecek = ozet.nakit_toplam - ozet.iade_nakit;
+                        var kartGosterilecek = ozet.kart_toplam - ozet.iade_kart;
+                        var ibanGosterilecek = ozet.iban_toplam - ozet.iade_iban;
+                        var genelGosterilecek = nakitGosterilecek + kartGosterilecek + ibanGosterilecek;
 
                         // Etiketleri Güncelle
                         if (kapsam === 'tum') {
@@ -95,13 +100,13 @@
                         }
 
                         // UI Güncelle
-                        self.$toplamText.text(HK.UIRenderer ? HK.UIRenderer.formatPara(genelNet) + ' TL' : genelNet.toFixed(2) + ' TL');
+                        self.$toplamText.text(HK.UIRenderer ? HK.UIRenderer.formatPara(genelGosterilecek) + ' TL' : genelGosterilecek.toFixed(2) + ' TL');
                         
                         // Modal Güncelle
-                        self.$netKart.text(HK.UIRenderer ? HK.UIRenderer.formatPara(ozet.net_kart) + ' TL' : ozet.net_kart.toFixed(2) + ' TL');
-                        self.$netIban.text(HK.UIRenderer ? HK.UIRenderer.formatPara(ozet.net_iban) + ' TL' : ozet.net_iban.toFixed(2) + ' TL');
-                        self.$netNakit.text(HK.UIRenderer ? HK.UIRenderer.formatPara(ozet.net_nakit) + ' TL' : ozet.net_nakit.toFixed(2) + ' TL');
-                        self.$genelNet.text(HK.UIRenderer ? HK.UIRenderer.formatPara(genelNet) + ' TL' : genelNet.toFixed(2) + ' TL');
+                        self.$netKart.text(HK.UIRenderer ? HK.UIRenderer.formatPara(kartGosterilecek) + ' TL' : kartGosterilecek.toFixed(2) + ' TL');
+                        self.$netIban.text(HK.UIRenderer ? HK.UIRenderer.formatPara(ibanGosterilecek) + ' TL' : ibanGosterilecek.toFixed(2) + ' TL');
+                        self.$netNakit.text(HK.UIRenderer ? HK.UIRenderer.formatPara(nakitGosterilecek) + ' TL' : nakitGosterilecek.toFixed(2) + ' TL');
+                        self.$genelNet.text(HK.UIRenderer ? HK.UIRenderer.formatPara(genelGosterilecek) + ' TL' : genelGosterilecek.toFixed(2) + ' TL');
                     }
                 },
                 complete: function() {

@@ -301,25 +301,25 @@ if (!defined('ABSPATH')) exit;
         </h3>
         
         <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:16px;">
-            <span>💳 Net Kart:</span>
+            <span>💳 Kart:</span>
             <strong id="anlik-net-kart">0.00 TL</strong>
         </div>
         <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:16px;">
-            <span>🏦 Net IBAN:</span>
+            <span>🏦 IBAN:</span>
             <strong id="anlik-net-iban">0.00 TL</strong>
         </div>
         <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:16px;">
-            <span>💵 Net Nakit:</span>
+            <span>💵 Nakit:</span>
             <strong id="anlik-net-nakit">0.00 TL</strong>
         </div>
         
         <div style="display:flex; justify-content:space-between; margin-top:20px; padding-top:15px; border-top:2px solid var(--hk-border); font-size:18px; font-weight:bold; color:var(--hk-success);">
-            <span>Genel Net Kasa:</span>
+            <span>Genel Kasa Durumu:</span>
             <span id="anlik-genel-net">0.00 TL</span>
         </div>
         
         <p style="font-size: 11px; color: var(--hk-text-muted); margin-top: 15px; text-align: center; font-style: italic;">
-            * İadeler ve masraflar düşülmüş net rakamlardır.
+            * Sadece iadeler düşülmüştür, masraflar dahil değildir.
         </p>
 
         <div class="modal-butonlar" style="margin-top:25px;">

@@ -50,7 +50,7 @@ if (!defined('ABSPATH'))
                 <h2 id="durum">Kasa Hazır</h2>
                 <div class="kasa-baslik-sag" style="display: flex; gap: 10px; align-items: center;">
                     <button id="anlik-kasa-buton" class="ust-buton-kucuk" style="background: var(--hk-bg-hover); color: var(--hk-text-main); border: 1px solid var(--hk-border); display: flex; align-items: center; gap: 6px;">
-                        <span>📊</span> <span id="anlik-kasa-etiket"></span> Net Kasa: <strong id="anlik-kasa-toplam-text">...</strong>
+                        <span>📊</span> <span id="anlik-kasa-etiket"></span> Kasa: <strong id="anlik-kasa-toplam-text">...</strong>
                     </button>
                     <button id="manuel-urun-buton" class="ust-buton-kucuk">El ile Ürün Ekle</button>
                 </div>
