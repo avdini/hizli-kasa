@@ -93,7 +93,7 @@ const RefundManager = (function () {
 
         const modalToplamInput = document.getElementById('iade-modal-toplam-input');
         if (modalToplamInput) {
-            modalToplamInput.oninput = () => {
+            modalToplamInput.onchange = () => {
                 if (!originalOrder) return;
                 
                 const enteredTotal = HK.CurrencyMask.parse(modalToplamInput.value);
