@@ -91,6 +91,52 @@ const RefundManager = (function () {
             };
         }
 
+        const modalToplamInput = document.getElementById('iade-modal-toplam-input');
+        if (modalToplamInput) {
+            modalToplamInput.oninput = () => {
+                if (!originalOrder) return;
+                
+                const enteredTotal = HK.CurrencyMask.parse(modalToplamInput.value);
+                const cartTotal = refundCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                
+                let requiredDiscount = cartTotal - enteredTotal;
+                let finalTotal = enteredTotal;
+                let hasCorrection = false;
+                
+                // Doğrulama 1: Negatif iskonto engeli (Toplam > Sepet)
+                if (requiredDiscount < 0) {
+                    requiredDiscount = 0;
+                    finalTotal = cartTotal;
+                    hasCorrection = true;
+                }
+                
+                // Doğrulama 2: Maksimum iskonto engeli
+                const maxDusebilir = (originalOrder.manual_discount || 0) - (originalOrder.refunded_manual_discount || 0);
+                if (requiredDiscount > maxDusebilir) {
+                    requiredDiscount = maxDusebilir;
+                    finalTotal = cartTotal - maxDusebilir;
+                    hasCorrection = true;
+                    alert('⚠️ Maksimum iskonto limitini aştınız!\nTutar izin verilen limite (' + finalTotal.toFixed(2) + ' TL) göre düzeltildi.');
+                }
+                
+                // İskonto alanını güncelle
+                const iskontoInput = document.getElementById('iade-iskonto-input');
+                if (iskontoInput) {
+                    iskontoInput.value = HK.CurrencyMask.format(requiredDiscount);
+                }
+                
+                // Kendi değerini de (eğer düzeltme varsa) güncelle
+                if (hasCorrection) {
+                    modalToplamInput.value = HK.CurrencyMask.format(finalTotal);
+                }
+                
+                // Bölünmüş ödeme hesaplamasını tetikle
+                if (document.querySelector('input[name="iade_payment_method"]:checked')?.value === 'split') {
+                    calculateRefundSplit();
+                }
+            };
+        }
+
         // Modül konteynerine tıklandığında input'u tekrar odakla (Hızlı barkod için)
         const container = document.getElementById('iade-modul-konteyner');
         if (container) {
@@ -338,7 +384,10 @@ const RefundManager = (function () {
 
         // Modal içindeki toplamı güncelle
         const cartTotal = refundCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-        document.getElementById('iade-modal-toplam').innerText = cartTotal.toFixed(2) + ' TL';
+        const modalToplamInput = document.getElementById('iade-modal-toplam-input');
+        if (modalToplamInput) {
+            modalToplamInput.value = HK.CurrencyMask.format(cartTotal);
+        }
 
         // Ayarları render et (Ödeme yöntemleri vs)
         renderRefundSettings();
@@ -585,10 +634,10 @@ const RefundManager = (function () {
         }
 
         // Modal toplamını güncelle (Eğer modal açıksa)
-        const modalToplam = document.getElementById('iade-modal-toplam');
-        if (modalToplam) {
+        const modalToplamInput = document.getElementById('iade-modal-toplam-input');
+        if (modalToplamInput) {
             const finalTotal = getRefundFinalTotal();
-            modalToplam.innerText = `${finalTotal.toFixed(2)} TL`;
+            modalToplamInput.value = HK.CurrencyMask.format(finalTotal);
         }
     }
 

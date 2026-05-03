@@ -113,7 +113,10 @@ if (!defined('ABSPATH')) exit;
                 <div id="iade-modal-ozet" style="margin-bottom: 20px; padding: 15px; background: var(--hk-bg-body); border-radius: 10px; border: 1px solid var(--hk-border);">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-weight: bold; color: var(--hk-text-muted);">İade Edilecek Toplam:</span>
-                        <span id="iade-modal-toplam" style="font-size: 24px; font-weight: 900; color: var(--hk-danger);">0.00 TL</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="text" id="iade-modal-toplam-input" class="hk-currency-mask" style="font-size: 24px; font-weight: 900; color: var(--hk-danger); background: var(--hk-bg-input); border: 1px dashed var(--hk-border); border-radius: 8px; width: 140px; text-align: right; padding: 4px 8px;" value="0,00">
+                            <span style="font-size: 24px; font-weight: 900; color: var(--hk-danger);">TL</span>
+                        </div>
                     </div>
                 </div>
 
