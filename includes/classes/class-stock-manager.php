@@ -15,9 +15,6 @@ class Hizli_Kasa_Stock_Manager {
     /**
      * Hookları Başlat
      */
-    /**
-     * Hookları Başlat
-     */
     public static function listen() {
         // Online Sipariş: İşleniyor durumuna geçtiğinde stok AYIRT (Reserve)
         add_action('woocommerce_order_status_processing', [self::class, 'handle_online_order_reservation'], 10, 2);
@@ -279,22 +276,6 @@ class Hizli_Kasa_Stock_Manager {
         return $new_res;
     }
 
-    /**
-     * Rezervasyon çatışmasını çözer (Stok fiziksel olarak rezerve edilenin altına düştüğünde).
-     */
-    public static function resolve_stock_reservation_conflict($product_id, $variation_id, $location_id, $amount_to_resolve) {
-        global $wpdb;
-        $tables = Hizli_Kasa_Database::get_tables();
-        
-        // Bu depodaki aktif rezervasyonları çek
-        $wpdb->query($wpdb->prepare("
-            UPDATE {$tables['stok_konumlari']} 
-            SET reserved = GREATEST(0, reserved - %f) 
-            WHERE product_id = %d AND variation_id = %d AND location_id = %d
-        ", $amount_to_resolve, $product_id, $variation_id, $location_id));
-        
-        hizli_kasa_log("Rezervasyon çatışması giderildi: L:$location_id, P:$product_id, V:$variation_id, Miktar:$amount_to_resolve");
-    }
 
     /**
      * Online satışlar için öncelikli stok rezervasyonu.
@@ -710,7 +691,7 @@ class Hizli_Kasa_Stock_Manager {
     /**
      * Fiziksel stok yetersiz kaldığında çakışan rezervasyonları iptal eder.
      */
-    private static function resolve_stock_reservation_conflict($product_id, $variation_id, $location_id, $conflict_qty) {
+    public static function resolve_stock_reservation_conflict($product_id, $variation_id, $location_id, $conflict_qty) {
         global $wpdb;
         
         hizli_kasa_log("STOK ÇAKIŞMASI: P:$product_id, V:$variation_id, L:$location_id, Çakışan Adet: $conflict_qty");
