@@ -315,6 +315,8 @@ window.HizliKasa = window.HizliKasa || {};
                     var durumMetni = document.getElementById("durum");
                     durumMetni.innerText = "Kasa " + yeniId + " Aktif (v" + state.CURRENT_VERSION + ")";
                     durumMetni.style.color = "#2c3e50";
+
+                    jQuery(document).trigger('hk:kasa-degisti');
                 });
             });
         },
@@ -380,6 +382,16 @@ window.HizliKasa = window.HizliKasa || {};
                     }
                 }, 4000);
             }
+        },
+
+        /**
+         * Para birimini formatlar (Örn: 1.234,56)
+         * @param {number} tutar 
+         * @returns {string}
+         */
+        formatPara: function(tutar) {
+            if (isNaN(tutar)) return "0,00";
+            return parseFloat(tutar).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
     };
 

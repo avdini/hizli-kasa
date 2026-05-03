@@ -340,6 +340,7 @@
                     durumMetni.style.color = "#27ae60";
                     HK.CartManager.sepetiTemizle();
                     document.getElementById("fis-onay-modal").style.display = "flex";
+                    jQuery(document).trigger('hk:siparis-tamamlandi');
                 } else {
                     durumMetni.innerText = "HATA: " + (orderResult.message || "API sorunu!");
                     durumMetni.style.color = "red";

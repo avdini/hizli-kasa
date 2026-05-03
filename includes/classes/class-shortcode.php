@@ -103,6 +103,7 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-order-processor', $js_base . 'modules/order-processor.js', array('kasa-cart-manager', 'kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-receipt-printer', $js_base . 'modules/receipt-printer.js', array('kasa-order-processor'), $pos_version, true);
     wp_enqueue_script('kasa-day-end-report', $js_base . 'modules/day-end-report.js', array('kasa-cart-manager'), $pos_version, true);
+    wp_enqueue_script('kasa-anlik-kasa', $js_base . 'modules/anlik-kasa.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-app-navigation', $js_base . 'modules/app-navigation.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-refund-manager', $js_base . 'modules/refund-manager.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-expense-manager', $js_base . 'modules/expense-manager.js', array('kasa-ui-renderer'), $pos_version, true);
@@ -150,6 +151,7 @@ function hizli_kasa_uygulamasi()
         'yuvarlaModu'     => get_option('hizli_kasa_yuvarlama_modu', '1'),
         'kritikStokEsigi' => (int)get_option('hizli_kasa_kritik_stok_esigi', 5),
         'toplamKasa'      => (int)get_option('hizli_kasa_toplam_kasa', 3),
+        'anlikKasaKapsam' => get_option('hizli_kasa_anlik_kasa_kapsam', 'secili'),
         'tema'            => get_user_meta(get_current_user_id(), '_hizli_kasa_tema', true) ?: 'light'
     ));
 

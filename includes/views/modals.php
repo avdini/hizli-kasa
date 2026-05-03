@@ -289,3 +289,39 @@ if (!defined('ABSPATH')) exit;
         </div>
     </div>
 </div>
+
+<!-- Anlık Kasa Durumu Modalı -->
+<div id="anlik-kasa-modal" class="modal-cerceve"
+    style="display:none; position:fixed; z-index:10006; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+    <div class="modal-icerik" style="width: 400px !important;">
+        <h3 style="margin-bottom:20px; border-bottom:1px solid var(--hk-border); padding-bottom:10px; display: flex; align-items: center; gap: 10px;">
+            <span>📊</span> <span id="anlik-kasa-baslik">Anlık Kasa Durumu</span>
+        </h3>
+        
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:16px;">
+            <span>💳 Net Kart:</span>
+            <strong id="anlik-net-kart">0.00 TL</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:16px;">
+            <span>🏦 Net IBAN:</span>
+            <strong id="anlik-net-iban">0.00 TL</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:12px; font-size:16px;">
+            <span>💵 Net Nakit:</span>
+            <strong id="anlik-net-nakit">0.00 TL</strong>
+        </div>
+        
+        <div style="display:flex; justify-content:space-between; margin-top:20px; padding-top:15px; border-top:2px solid var(--hk-border); font-size:18px; font-weight:bold; color:var(--hk-success);">
+            <span>Genel Net Kasa:</span>
+            <span id="anlik-genel-net">0.00 TL</span>
+        </div>
+        
+        <p style="font-size: 11px; color: var(--hk-text-muted); margin-top: 15px; text-align: center; font-style: italic;">
+            * İadeler ve masraflar düşülmüş net rakamlardır.
+        </p>
+
+        <div class="modal-butonlar" style="margin-top:25px;">
+            <button id="anlik-kasa-kapat" class="hk-btn-primary" style="width:100%; padding:12px;">Kapat (Esc)</button>
+        </div>
+    </div>
+</div>

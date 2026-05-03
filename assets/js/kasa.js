@@ -34,6 +34,11 @@ document.addEventListener("DOMContentLoaded", function() {
     // 6. Gün sonu raporu modülünü başlat
     HK.DayEndReport.init();
 
+    // 6.1 Anlık kasa durumu modülünü başlat
+    if (HK.AnlikKasa) {
+        HK.AnlikKasa.init();
+    }
+
     // 7. Tema Yöneticisini başlat
     if (HK.ThemeManager) {
         HK.ThemeManager.init();

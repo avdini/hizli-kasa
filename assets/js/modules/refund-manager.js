@@ -647,6 +647,7 @@ const RefundManager = (function () {
                 refundCart = [];
                 renderRefundCart();
                 renderRefundSettings();
+                jQuery(document).trigger('hk:iade-tamamlandi');
             } else {
                 throw new Error(data.message || 'İşlem başarısız');
             }

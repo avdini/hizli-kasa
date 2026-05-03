@@ -187,6 +187,7 @@
 
                 // Listeyi yenile
                 await this.loadExpenses();
+                jQuery(document).trigger('hk:masraf-guncellendi');
 
             } catch (error) {
                 alert('Hata: ' + error.message);
@@ -215,6 +216,7 @@
 
                         if (response.ok) {
                             await self.loadExpenses();
+                            jQuery(document).trigger('hk:masraf-guncellendi');
                         }
                     } catch (error) {
                         alert('Silme hatası');

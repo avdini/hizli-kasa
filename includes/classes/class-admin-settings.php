@@ -170,6 +170,10 @@ function hizli_kasa_ayarlari_kaydet()
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_genel_rapor_aktif', array(
         'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
     ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_anlik_kasa_kapsam', array(
+        'type' => 'string',
+        'default' => 'secili'
+    ));
     // Bildirim Ayarları (Ayrı grup - Resetlenmeyi önlemek için)
     register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_mismatch_check_enabled');
     register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_mismatch_interval');
@@ -1066,6 +1070,17 @@ function hizli_kasa_ayarlar_sayfasi()
                                     <option value="tum" <?php selected($edit_kapsam, 'tum'); ?>>Tüm Kasalar</option>
                                 </select>
                                 <p class="description">"Sipariş Düzenle" butonuna tıklandığında hangi siparişlerin gösterileceğini belirleyin.</p>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">Anlık Kasa Gösterge Kapsamı</th>
+                            <td>
+                                <?php $anlik_kapsam = get_option('hizli_kasa_anlik_kasa_kapsam', 'secili'); ?>
+                                <select name="hizli_kasa_anlik_kasa_kapsam">
+                                    <option value="secili" <?php selected($anlik_kapsam, 'secili'); ?>>Sadece Aktif Kasayı Göster</option>
+                                    <option value="tum" <?php selected($anlik_kapsam, 'tum'); ?>>Tüm Kasaların Toplamını Göster</option>
+                                </select>
+                                <p class="description">Terminalin üst kısmındaki "Net Kasa" göstergesinin hangi veriyi baz alacağını seçin.</p>
                             </td>
                         </tr>
                         <tr valign="top">
