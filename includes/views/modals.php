@@ -225,6 +225,8 @@ if (!defined('ABSPATH')) exit;
         <div class="modal-butonlar" style="margin-top:20px; flex-shrink:0;">
             <button id="gun-sonu-kapat"
                 style="background:var(--hk-bg-hover); color:var(--hk-text-main); border:1px solid var(--hk-border);">Kapat</button>
+            <button id="gun-sonu-yazdir-basit" class="hk-btn-primary"
+                style="display:none; padding:12px; width:auto; min-width:150px; background:var(--hk-success); border-color:var(--hk-success);">🖨️ Basit Yazdır</button>
             <button id="gun-sonu-yazdir-ozet" class="hk-btn-primary"
                 style="display:none; padding:12px; width:auto; min-width:150px;">🖨️ Yazdır</button>
             <button id="gun-sonu-yazdir"

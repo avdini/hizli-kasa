@@ -26,6 +26,7 @@
                 gunSonuKapat: document.getElementById("gun-sonu-kapat"),
                 gunSonuYazdir: document.getElementById("gun-sonu-yazdir"),
                 gunSonuYazdirOzet: document.getElementById("gun-sonu-yazdir-ozet"),
+                gunSonuYazdirBasit: document.getElementById("gun-sonu-yazdir-basit"),
                 gunSonuIcerik: document.getElementById("gun-sonu-icerik"),
                 gunSonuYukleniyor: document.getElementById("gun-sonu-yukleniyor"),
                 gunSonuSablon: document.getElementById("gun-sonu-sablon"),
@@ -66,6 +67,13 @@
                     self._yazdir(false);
                 });
                 this.els.gunSonuYazdirOzet.dataset.bound = "true";
+            }
+
+            if (this.els.gunSonuYazdirBasit && !this.els.gunSonuYazdirBasit.dataset.bound) {
+                this.els.gunSonuYazdirBasit.addEventListener("click", function () {
+                    self._yazdirBasit();
+                });
+                this.els.gunSonuYazdirBasit.dataset.bound = "true";
             }
 
             // Modal dış tıklama ile kapama
@@ -154,6 +162,9 @@
 
             this.els.gunSonuYazdir.style.display = "inline-block";
             if (this.els.gunSonuYazdirOzet) this.els.gunSonuYazdirOzet.style.display = "inline-block";
+            if (this.els.gunSonuYazdirBasit) {
+                this.els.gunSonuYazdirBasit.style.display = (rapor.kasa_no === 'Genel') ? "inline-block" : "none";
+            }
 
             var html = '';
 
@@ -520,6 +531,62 @@
             sablon.style.display = "block";
             HK.PrintManager.print('report');
             sablon.style.display = "none";
+        },
+
+        /**
+         * Basit fiş şablonunu yazdır
+         */
+        _yazdirBasit: function () {
+            if (!this.data) return;
+
+            this._fisSablonuDoldurBasit(this.data);
+
+            var sablon = this.els.gunSonuSablon;
+            if (!sablon) return;
+
+            var normalFis = document.getElementById("fis-sablon");
+            if (normalFis) normalFis.style.display = "none";
+
+            sablon.style.display = "block";
+            HK.PrintManager.print('report');
+            sablon.style.display = "none";
+        },
+
+        /**
+         * Basit fiş şablonunu doldur (iadeler düşülmüş rakamlar)
+         */
+        _fisSablonuDoldurBasit: function (rapor) {
+            var sablon = this.els.gunSonuSablon;
+            if (!sablon) return;
+
+            var ozet = rapor.ozet;
+            var html = '';
+
+            var netKart = (ozet.kart_toplam || 0) - (ozet.iade_kart || 0);
+            var netIban = (ozet.iban_toplam || 0) - (ozet.iade_iban || 0);
+            var netNakit = (ozet.nakit_toplam || 0) - (ozet.iade_nakit || 0);
+            var genelToplam = (ozet.toplam_ciro || 0) - (ozet.toplam_iade || 0);
+            var masraf = (ozet.toplam_masraf || 0);
+            var netKasa = genelToplam - masraf;
+
+            html += '<div style="margin-bottom:10px;">';
+            html += '<table style="width:100%; font-size:14px; border-collapse:collapse; font-family:monospace;">';
+            
+            html += '<tr style="border-bottom:1px dashed #000;"><td style="padding:4px 0;">GENEL TOPLAM</td><td style="text-align:right; font-weight:bold;">' + genelToplam.toFixed(2) + ' TL</td></tr>';
+            html += '<tr><td style="padding:4px 0;">KART TOPLAM</td><td style="text-align:right;">' + netKart.toFixed(2) + ' TL</td></tr>';
+            html += '<tr><td style="padding:4px 0;">IBAN TOPLAM</td><td style="text-align:right;">' + netIban.toFixed(2) + ' TL</td></tr>';
+            html += '<tr><td style="padding:4px 0;">NAKİT TOPLAM</td><td style="text-align:right;">' + netNakit.toFixed(2) + ' TL</td></tr>';
+            
+            html += '<tr><td colspan="2" style="height:10px;"></td></tr>';
+            
+            html += '<tr><td style="padding:4px 0;">MASRAF</td><td style="text-align:right;">-' + masraf.toFixed(2) + ' TL</td></tr>';
+            
+            html += '<tr style="border-top:1px solid #000; font-size:16px;"><td style="padding:6px 0; font-weight:bold;">NET TOPLAM</td><td style="text-align:right; font-weight:bold;">' + netKasa.toFixed(2) + ' TL</td></tr>';
+            
+            html += '</table>';
+            html += '</div>';
+
+            sablon.innerHTML = html;
         }
     };
 
