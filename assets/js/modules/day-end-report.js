@@ -594,9 +594,22 @@
                 if (masrafNakit > 0) {
                     html += '<tr><td style="padding:4px 0;">NAKİT MASRAF</td><td style="text-align:right;">-' + masrafNakit.toFixed(2) + ' TL</td></tr>';
                 }
+
+                // DEĞİŞEN NETLERİ GÖSTER
+                html += '<tr><td colspan="2" style="height:10px;"></td></tr>';
+                html += '<tr><td colspan="2" style="border-top:1px dashed #000;"></td></tr>';
+                if (masrafKart > 0) {
+                    html += '<tr style="font-size:14px;"><td style="padding:6px 0; font-weight:bold;">NET KART</td><td style="text-align:right; font-weight:bold;">' + (netKart - masrafKart).toFixed(2) + ' TL</td></tr>';
+                }
+                if (masrafIban > 0) {
+                    html += '<tr style="font-size:14px;"><td style="padding:6px 0; font-weight:bold;">NET IBAN</td><td style="text-align:right; font-weight:bold;">' + (netIban - masrafIban).toFixed(2) + ' TL</td></tr>';
+                }
+                if (masrafNakit > 0) {
+                    html += '<tr style="font-size:14px;"><td style="padding:6px 0; font-weight:bold;">NET NAKİT</td><td style="text-align:right; font-weight:bold;">' + (netNakit - masrafNakit).toFixed(2) + ' TL</td></tr>';
+                }
             }
             
-            html += '<tr style="border-top:1px solid #000; font-size:16px;"><td style="padding:6px 0; font-weight:bold;">NET TOPLAM</td><td style="text-align:right; font-weight:bold;">' + netKasa.toFixed(2) + ' TL</td></tr>';
+            html += '<tr style="border-top:1px solid #000; font-size:16px;"><td style="padding:6px 0; font-weight:bold;">NET KASA TOPLAMI</td><td style="text-align:right; font-weight:bold;">' + netKasa.toFixed(2) + ' TL</td></tr>';
             
             html += '</table>';
             html += '</div>';
