@@ -609,7 +609,7 @@
                 }
             }
             
-            html += '<tr style="border-top:1px solid #000; font-size:16px;"><td style="padding:6px 0; font-weight:bold;">NET KASA TOPLAMI</td><td style="text-align:right; font-weight:bold;">' + netKasa.toFixed(2) + ' TL</td></tr>';
+            // html += '<tr style="border-top:1px solid #000; font-size:16px;"><td style="padding:6px 0; font-weight:bold;">NET KASA TOPLAMI</td><td style="text-align:right; font-weight:bold;">' + netKasa.toFixed(2) + ' TL</td></tr>';
             
             html += '</table>';
             html += '<div style="height:60px;"></div>'; // Alt kısma boşluk ekle (Yazıcıda kesilmemesi için)
