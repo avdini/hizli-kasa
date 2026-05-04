@@ -10,7 +10,7 @@ if (!defined('ABSPATH'))
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--hk-border); padding-bottom: 15px;">
         <div>
             <h2 style="margin:0; color: var(--hk-text-main); display: flex; align-items: center; gap: 10px;">🚚 Depo ve Sevk Yönetimi</h2>
-            <p style="color: var(--hk-text-muted); margin: 5px 0 0 0; font-size: 13px;">Şubeler arası stok transferi, ürün talebi ve çıkış işlemleri.</p>
+            <p style="color: var(--hk-text-muted); margin: 5px 0 0 0; font-size: 13px;">Şubeler arası stok transferi, ürün talebi ve çıkış işlemleri (Geliştirme Aşamasında).</p>
         </div>
     </div>
 
@@ -24,76 +24,45 @@ if (!defined('ABSPATH'))
 
     <!-- 1. GENEL SEKMESİ -->
     <div id="sevk-genel" class="sevk-icerik-paneli aktif">
-        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="margin:0; color:var(--hk-accent);">Tüm Sevk İşlemleri</h3>
-                <div style="display:flex; gap:10px;">
-                    <select class="hk-input" id="sevk-filtre-durum">
-                        <option value="all">Tüm Durumlar</option>
-                        <option value="pending">Bekliyor</option>
-                        <option value="transit">Yolda</option>
-                        <option value="completed">Tamamlandı</option>
-                    </select>
-                </div>
-            </div>
-            
-            <table class="gs-tablo" id="sevk-listesi-tablosu">
-                <thead>
-                    <tr>
-                        <th>Tarih</th>
-                        <th>Sevk No</th>
-                        <th>Gönderen</th>
-                        <th>Alıcı</th>
-                        <th>Durum</th>
-                        <th>İşlem</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td colspan="6" style="text-align:center; padding:40px;">Veriler yükleniyor...</td></tr>
-                </tbody>
-            </table>
+        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 40px; text-align: center; border: 2px dashed var(--hk-border); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <span style="font-size: 48px; margin-bottom: 15px; display: block;">📊</span>
+            <h3 style="margin-top:0; color:var(--hk-accent);">Gelişmiş Sevk Takip Paneli (Çok Yakında)</h3>
+            <p style="color:var(--hk-text-muted); font-size:15px; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+                Bu alanda şubeler arası tüm sevk hareketlerini, bekleyen/yolda/tamamlanan transferleri grafiklerle ve gelişmiş filtrelerle detaylı bir şekilde takip edebileceğiniz bir kontrol paneli planlıyoruz.
+            </p>
         </div>
     </div>
 
     <!-- 2. SEVK KABUL SEKMESİ -->
     <div id="sevk-kabul" class="sevk-icerik-paneli" style="display: none;">
-        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            <h3 style="margin-top:0; color:var(--hk-accent);">Gelen Sevkleri Kabul Et</h3>
-            <p style="color:var(--hk-text-muted); font-size:14px;">Şubenize yola çıkmış olan sevkleri buradan onaylayarak stoğunuza katabilirsiniz.</p>
-            <div style="padding: 40px; text-align: center; border: 2px dashed var(--hk-border); border-radius: 8px; margin-top: 20px;">
-                <span style="font-size: 32px; margin-bottom: 10px; display: block;">📦</span>
-                <p>Şu an bekleyen gelen sevk bulunmuyor.</p>
-            </div>
+        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 40px; text-align: center; border: 2px dashed var(--hk-border); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <span style="font-size: 48px; margin-bottom: 15px; display: block;">📥</span>
+            <h3 style="margin-top:0; color:var(--hk-accent);">Sevk Kabul ve Onay İşlemleri (Çok Yakında)</h3>
+            <p style="color:var(--hk-text-muted); font-size:15px; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+                Burada, şubenize gelen kolileri açarken içinden çıkan ürünleri tek tek barkod okutarak sisteme girecek ve gönderen şubenin/deponun çıkış yaptığı sayılarla sizin teslim aldıklarınızın uyuşup uyuşmadığını milimetrik olarak kontrol edebileceğiniz bir sistem üzerinde çalışıyoruz.
+            </p>
         </div>
     </div>
 
     <!-- 3. SEVK İSTE SEKMESİ -->
     <div id="sevk-iste" class="sevk-icerik-paneli" style="display: none;">
-        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            <h3 style="margin-top:0; color:var(--hk-accent);">Yeni Sevk Talebi Oluştur</h3>
-            <p style="color:var(--hk-text-muted); font-size:14px;">Diğer depolardan veya merkezden ürün talebinde bulunun.</p>
-            <div style="display: flex; gap: 15px; margin-top: 20px;">
-                <select class="hk-input" style="flex: 1;">
-                    <option value="">Hedef Depo Seçin...</option>
-                </select>
-                <input type="text" class="hk-input" placeholder="Barkod okutun veya ürün arayın..." style="flex: 2;">
-                <button class="hk-btn-primary">Ürün Ekle</button>
-            </div>
+        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 40px; text-align: center; border: 2px dashed var(--hk-border); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <span style="font-size: 48px; margin-bottom: 15px; display: block;">📤</span>
+            <h3 style="margin-top:0; color:var(--hk-accent);">Şubeler Arası Ürün Talebi (Çok Yakında)</h3>
+            <p style="color:var(--hk-text-muted); font-size:15px; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+                Stoğunuzda tükenen ürünler için merkezden veya çevre şubelerden kolayca talep oluşturabilmeniz adına pratik bir sipariş modülü hazırlıyoruz. İhtiyacınız olan ürünleri aratarak veya okutarak hızlıca "Sevk İste" listesine ekleyebileceksiniz.
+            </p>
         </div>
     </div>
 
     <!-- 4. SEVK ÇIKIŞ SEKMESİ -->
     <div id="sevk-cikis" class="sevk-icerik-paneli" style="display: none;">
-        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            <h3 style="margin-top:0; color:var(--hk-accent);">Sevk Çıkışı Yap</h3>
-            <p style="color:var(--hk-text-muted); font-size:14px;">Başka bir şubeye elinizdeki stoklardan ürün gönderin.</p>
-            <div style="display: flex; gap: 15px; margin-top: 20px;">
-                <select class="hk-input" style="flex: 1;">
-                    <option value="">Gönderilecek Depo Seçin...</option>
-                </select>
-                <input type="text" class="hk-input" placeholder="Gönderilecek ürün barkodu okutun..." style="flex: 2;">
-                <button class="hk-btn-primary">Ürün Ekle</button>
-            </div>
+        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 40px; text-align: center; border: 2px dashed var(--hk-border); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <span style="font-size: 48px; margin-bottom: 15px; display: block;">📦</span>
+            <h3 style="margin-top:0; color:var(--hk-accent);">Sevk Çıkış ve Barkod Kontrolü (Çok Yakında)</h3>
+            <p style="color:var(--hk-text-muted); font-size:15px; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+                Diğer şubelere ürün gönderirken paketlediğiniz ürünleri barkod okutarak "Sevk Listesi"ne alacak ve yola çıkarabileceksiniz. Karşı taraf da bu sayede yoldaki ürünleri eksiksiz takip edebilecek.
+            </p>
         </div>
     </div>
 </div>
@@ -134,31 +103,34 @@ if (!defined('ABSPATH'))
 </style>
 
 <script>
-// Sevk sekmesi alt menü geçiş mantığı
-document.addEventListener('DOMContentLoaded', function() {
-    // Sayfa DOM yüklendiğinde ve tab-sevk çağrıldığında çalışır
-    const sevkTabContainer = document.querySelector('.sevk-alt-sekmeler');
-    if(sevkTabContainer) {
-        document.querySelectorAll('.sevk-alt-btn').forEach(button => {
-            button.addEventListener('click', function() {
+// Event Delegation ile sekme geçişi (Ajax ile yüklense bile çalışır)
+// window nesnesinde event listener varsa tekrar eklememek için kontrol
+if (!window.sevkTabEventsBound) {
+    document.body.addEventListener('click', function(e) {
+        if (e.target.classList.contains('sevk-alt-btn')) {
+            const btn = e.target;
+            const container = btn.closest('.hk-tab-container');
+            
+            if (container) {
                 // Aktif butonu güncelle
-                document.querySelectorAll('.sevk-alt-btn').forEach(btn => btn.classList.remove('aktif'));
-                this.classList.add('aktif');
+                container.querySelectorAll('.sevk-alt-btn').forEach(b => b.classList.remove('aktif'));
+                btn.classList.add('aktif');
 
                 // Hedef paneli göster
-                const targetId = this.getAttribute('data-target');
-                document.querySelectorAll('.sevk-icerik-paneli').forEach(panel => {
+                const targetId = btn.getAttribute('data-target');
+                container.querySelectorAll('.sevk-icerik-paneli').forEach(panel => {
                     panel.style.display = 'none';
                     panel.classList.remove('aktif');
                 });
                 
-                const targetPanel = document.getElementById(targetId);
+                const targetPanel = container.querySelector('#' + targetId);
                 if(targetPanel) {
                     targetPanel.style.display = 'block';
                     targetPanel.classList.add('aktif');
                 }
-            });
-        });
-    }
-});
+            }
+        }
+    });
+    window.sevkTabEventsBound = true;
+}
 </script>
