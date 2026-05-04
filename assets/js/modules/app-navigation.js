@@ -177,3 +177,30 @@ const AppNavigation = (function () {
 document.addEventListener('DOMContentLoaded', () => {
     AppNavigation.init();
 });
+
+// Sevk alt sekmeleri için event delegation (Dinamik yüklendiği için body'ye bağlıyoruz)
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('sevk-alt-btn')) {
+        const btn = e.target;
+        const container = btn.closest('.hk-tab-container');
+        
+        if (container) {
+            // Aktif butonu güncelle
+            container.querySelectorAll('.sevk-alt-btn').forEach(b => b.classList.remove('aktif'));
+            btn.classList.add('aktif');
+
+            // Hedef paneli göster
+            const targetId = btn.getAttribute('data-target');
+            container.querySelectorAll('.sevk-icerik-paneli').forEach(panel => {
+                panel.style.display = 'none';
+                panel.classList.remove('aktif');
+            });
+            
+            const targetPanel = container.querySelector('#' + targetId);
+            if(targetPanel) {
+                targetPanel.style.display = 'block';
+                targetPanel.classList.add('aktif');
+            }
+        }
+    }
+});

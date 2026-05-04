@@ -101,36 +101,4 @@ if (!defined('ABSPATH'))
     border-color: var(--hk-accent);
 }
 </style>
-
-<script>
-// Event Delegation ile sekme geçişi (Ajax ile yüklense bile çalışır)
-// window nesnesinde event listener varsa tekrar eklememek için kontrol
-if (!window.sevkTabEventsBound) {
-    document.body.addEventListener('click', function(e) {
-        if (e.target.classList.contains('sevk-alt-btn')) {
-            const btn = e.target;
-            const container = btn.closest('.hk-tab-container');
-            
-            if (container) {
-                // Aktif butonu güncelle
-                container.querySelectorAll('.sevk-alt-btn').forEach(b => b.classList.remove('aktif'));
-                btn.classList.add('aktif');
-
-                // Hedef paneli göster
-                const targetId = btn.getAttribute('data-target');
-                container.querySelectorAll('.sevk-icerik-paneli').forEach(panel => {
-                    panel.style.display = 'none';
-                    panel.classList.remove('aktif');
-                });
-                
-                const targetPanel = container.querySelector('#' + targetId);
-                if(targetPanel) {
-                    targetPanel.style.display = 'block';
-                    targetPanel.classList.add('aktif');
-                }
-            }
-        }
-    });
-    window.sevkTabEventsBound = true;
-}
-</script>
+
