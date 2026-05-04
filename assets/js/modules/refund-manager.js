@@ -154,18 +154,30 @@ const RefundManager = (function () {
                 closeRefundModal();
             }
         });
+
+        // Depo değiştiğinde ekranı temizle (başka deponun siparişi kalmasın)
+        document.addEventListener('hkActiveDepoChanged', function() {
+            originalOrder = null;
+            refundCart = [];
+            const container = document.getElementById('iade-siparis-detay');
+            if (container) container.innerHTML = '<div class="iade-bos-state">Lütfen iade edilecek siparişi seçin veya okutun.</div>';
+            renderRefundCart();
+            closeSearchResults();
+        });
     }
 
     async function advancedSearchOrders() {
         document.querySelector('.iade-sol-panel').classList.add('searching-mode');
 
+        const depo_id = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
         const params = new URLSearchParams({
             phone: document.getElementById('iade-arama-telefon').value,
             barcode: document.getElementById('iade-arama-urun').value,
             price_min: document.getElementById('iade-arama-fiyat-min').value,
             price_max: document.getElementById('iade-arama-fiyat-max').value,
             date_start: document.getElementById('iade-arama-tarih-bas').value,
-            date_end: document.getElementById('iade-arama-tarih-bit').value
+            date_end: document.getElementById('iade-arama-tarih-bit').value,
+            depo_id: depo_id
         });
 
         showLoading();
@@ -257,8 +269,9 @@ const RefundManager = (function () {
 
         showLoading();
         try {
+            const depo_id = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
             const apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
-            const response = await fetch(`${apiBase}hizli-kasa/v1/get-order?id=${id}`, {
+            const response = await fetch(`${apiBase}hizli-kasa/v1/get-order?id=${id}&depo_id=${depo_id}`, {
                 headers: { 'X-WP-Nonce': kasaAyar.nonce }
             });
 

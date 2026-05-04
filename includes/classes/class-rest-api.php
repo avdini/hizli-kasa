@@ -1054,6 +1054,14 @@ function hizli_kasa_get_order_details($request)
         return new WP_Error('no_order', 'Sipariş bulunamadı.', array('status' => 404));
     }
 
+    $depo_id = intval($request->get_param('depo_id'));
+    if ($depo_id > 0) {
+        $order_depo = (int) $order->get_meta('_hk_cikis_depo_id');
+        if ($order_depo !== $depo_id) {
+            return new WP_Error('wrong_depo', 'Bu sipariş farklı bir depoya ait olduğu için bu ekrandan iade edilemez.', array('status' => 403));
+        }
+    }
+
     // Depo adlarını ID'ye göre cache'le (aynı depo birden fazla item'da olabilir)
     $depo_names_cache = [];
 
@@ -1206,6 +1214,14 @@ function hizli_kasa_search_orders($request)
             'key' => '_hizli_kasa_musteri_telefon',
             'value' => $phone,
             'compare' => 'LIKE',
+        );
+    }
+
+    $depo_id = intval($request->get_param('depo_id'));
+    if ($depo_id > 0) {
+        $meta_query[] = array(
+            'key' => '_hk_cikis_depo_id',
+            'value' => $depo_id,
         );
     }
 
