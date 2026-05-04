@@ -27,6 +27,15 @@ window.HizliKasa = window.HizliKasa || {};
     HK.CartManager = {
 
         /**
+         * localStorage anahtarını depo bazlı oluşturur
+         * @param {number|string} kasaId
+         */
+        _slotKey: function(kasaId) {
+            var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
+            return 'hizli_kasa_hafiza_slot_' + kasaId + '_depo_' + depoId;
+        },
+
+        /**
          * Mevcut sepeti localStorage'a kaydet
          */
         sepetiKaydet: function() {
@@ -39,7 +48,7 @@ window.HizliKasa = window.HizliKasa || {};
                 odemeTipi: state.odemeTipi,
                 splitData: state.splitData
             };
-            localStorage.setItem('hizli_kasa_hafiza_slot_' + state.aktifKasaId, JSON.stringify(veri));
+            localStorage.setItem(this._slotKey(state.aktifKasaId), JSON.stringify(veri));
 
             if (HK.UIRenderer) {
                 HK.UIRenderer.sidebarGuncelle();
@@ -54,7 +63,7 @@ window.HizliKasa = window.HizliKasa || {};
             var state = HK.State;
             if (kasaId) state.aktifKasaId = parseInt(kasaId);
 
-            var kaydedilen = localStorage.getItem('hizli_kasa_hafiza_slot_' + state.aktifKasaId);
+            var kaydedilen = localStorage.getItem(this._slotKey(state.aktifKasaId));
             if (kaydedilen) {
                 try {
                     var veri = JSON.parse(kaydedilen);
@@ -85,7 +94,7 @@ window.HizliKasa = window.HizliKasa || {};
          */
         sepetiTemizle: function() {
             var state = HK.State;
-            localStorage.removeItem('hizli_kasa_hafiza_slot_' + state.aktifKasaId);
+            localStorage.removeItem(this._slotKey(state.aktifKasaId));
             state.sepet = [];
             state.iskontoTutar = 0;
             state.odemeTipi = "card";
@@ -110,7 +119,7 @@ window.HizliKasa = window.HizliKasa || {};
             for (var i = 1; i <= state.MAX_KASA; i++) {
                 if (i === state.aktifKasaId) continue;
 
-                var slotVeri = localStorage.getItem('hizli_kasa_hafiza_slot_' + i);
+                var slotVeri = localStorage.getItem(this._slotKey(i));
                 if (slotVeri) {
                     try {
                         var veri = JSON.parse(slotVeri);
@@ -230,5 +239,10 @@ window.HizliKasa = window.HizliKasa || {};
             durumMetni.style.color = "#27ae60";
         }
     };
+
+    // Depo değiştiğinde sepeti o deponun hafızasından yükle
+    document.addEventListener('hkActiveDepoChanged', function() {
+        HK.CartManager.sepetiYukle();
+    });
 
 })(window.HizliKasa);

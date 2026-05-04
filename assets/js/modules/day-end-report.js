@@ -112,7 +112,8 @@
             this.els.gunSonuIcerik.style.display = "none";
 
             try {
-                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/gun-sonu-raporu?kasa_no=${finalKasaNo}`;
+                var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
+                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/gun-sonu-raporu?kasa_no=${finalKasaNo}&depo_id=${depoId}`;
                 if (tarih) {
                     url += '&tarih=' + tarih;
                 }
@@ -169,8 +170,9 @@
             var html = '';
 
             // ▧ Genel Bilgiler
+            var depoAdi = HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '';
             html += '<div class="gs-ozet-baslik">' +
-                '<h3 style="margin:0;">📊 Kasa ' + rapor.kasa_no + ' — Gün Sonu Raporu</h3>' +
+                '<h3 style="margin:0;">📊 Kasa ' + rapor.kasa_no + ' ' + (depoAdi ? '— ' + depoAdi : '') + ' — Gün Sonu Raporu</h3>' +
                 '<p style="margin:3px 0 0; color:#999; font-size:13px;">' + rapor.tarih_okunabilir + ' • Rapor: ' + rapor.rapor_zamani + '</p>' +
                 '</div>';
 
@@ -333,11 +335,12 @@
 
             // ─── BAŞLIK ───
             var baslik = (rapor.kasa_no === 'Genel') ? 'GENEL GÜN SONU RAPORU' : 'GÜN SONU RAPORU';
+            var depoAdi = HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '';
 
             html += '<div style="text-align:center; margin-bottom:8px; border-bottom:1px solid #000; padding-bottom:8px;">';
             html += '<h2 style="margin:0; font-size:16px;">' + (document.querySelector('#fis-sablon h2') ? document.querySelector('#fis-sablon h2').innerText : 'MAĞAZA') + '</h2>';
             html += '<p style="margin:3px 0; font-size:13px; font-weight:bold;">' + baslik + '</p>';
-            html += '<p style="margin:2px 0; font-size:11px;">Kasa: ' + rapor.kasa_no + '</p>';
+            html += '<p style="margin:2px 0; font-size:11px;">Kasa: ' + rapor.kasa_no + (depoAdi ? ' / ' + depoAdi : '') + '</p>';
             html += '<p style="margin:2px 0; font-size:11px;">' + rapor.tarih_okunabilir + '</p>';
             html += '<p style="margin:2px 0; font-size:10px;">Rapor: ' + rapor.rapor_zamani + '</p>';
             html += '</div>';

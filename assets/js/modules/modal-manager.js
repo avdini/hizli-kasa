@@ -204,8 +204,9 @@
 
                 self._aramaTimeout = setTimeout(async function() {
                     try {
+                        var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
                         var apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
-                        var response = await fetch(apiBase + 'hizli-kasa/v1/search?s=' + encodeURIComponent(query), {
+                        var response = await fetch(apiBase + 'hizli-kasa/v1/search?s=' + encodeURIComponent(query) + '&depo_id=' + depoId, {
                             headers: { 'X-WP-Nonce': kasaAyar.nonce }
                         });
                         var data = await response.json();
@@ -321,11 +322,24 @@
             var nameHtml = 
                 '<span style="font-weight:bold; font-size:14px; color: ' + (outOfStock ? '#c0392b' : 'inherit') + '">' +
                     urun.name +
-                    (outOfStock ? ' <small style="color:#e74c3c; font-weight:bold;">(STOKTA YOK)</small>' : '') +
+                    (outOfStock ? ' <small style="color:#e74c3c; font-weight:bold;">(SİTE STOK YOK)</small>' : '') +
                 '</span>' +
                 '<span class="sonuc-sku">' + (urun.sku || 'SKU yok') + '</span>';
 
-            var stockHtml = (urun.manage_stock) ? 'Stok: ' + (urun.stock_quantity || 0) : '';
+            var warehouseStock = urun.warehouse_stock;
+            var warehouseHtml = '';
+            if (warehouseStock !== undefined && warehouseStock !== null) {
+                if (warehouseStock <= 0) {
+                    warehouseHtml = '<div style="background:#e74c3c; color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:bold; display:inline-block; margin-top:2px;">DEPODA YOK</div>';
+                } else if (warehouseStock <= 3) {
+                    warehouseHtml = '<div style="background:#f39c12; color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:bold; display:inline-block; margin-top:2px;">AZ STOK: ' + warehouseStock + '</div>';
+                } else {
+                    warehouseHtml = '<div style="background:#27ae60; color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:bold; display:inline-block; margin-top:2px;">DEPO: ' + warehouseStock + '</div>';
+                }
+            }
+
+            var stockHtml = (urun.manage_stock) ? 'Site: ' + (urun.stock_quantity || 0) : '';
+            if (warehouseHtml) stockHtml += '<br>' + warehouseHtml;
             
             var priceHtml = '';
             if (!isVariableParent) {

@@ -67,6 +67,14 @@
                     }
                 });
             }
+
+            // Depo değiştiğinde listeyi yenile
+            document.addEventListener('hkActiveDepoChanged', function() {
+                var modal = document.getElementById("order-edit-modal");
+                if (modal && modal.style.display === "flex") {
+                    self.loadRecentOrders();
+                }
+            });
         },
 
         openModal: function() {
@@ -85,7 +93,8 @@
             container.innerHTML = "";
 
             try {
-                var response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/recent-orders?kasa_no=' + HK.State.aktifKasaId, {
+                var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
+                var response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/recent-orders?kasa_no=' + HK.State.aktifKasaId + '&depo_id=' + depoId, {
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });
                 var orders = await response.json();

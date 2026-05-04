@@ -60,6 +60,11 @@
             $(document).on('hk:kasa-degisti', function() {
                 self.guncelle();
             });
+
+            // Depo değiştiğinde güncelle
+            document.addEventListener('hkActiveDepoChanged', function() {
+                self.guncelle();
+            });
         },
 
         guncelle: function(callback) {
@@ -70,12 +75,15 @@
             // UI'da yükleniyor hissi ver (opsiyonel)
             this.$toplamText.css('opacity', '0.5');
 
+            var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
+
             $.ajax({
                 url: kasaAyar.rootApiUrl + 'hizli-kasa/v1/gun-sonu-raporu',
                 method: 'GET',
                 data: {
                     kasa_no: kasaNo,
-                    tarih: new Date().toISOString().split('T')[0]
+                    tarih: new Date().toISOString().split('T')[0],
+                    depo_id: depoId
                 },
                 beforeSend: function(xhr) {
                     xhr.setRequestHeader('X-WP-Nonce', kasaAyar.nonce);
@@ -91,12 +99,15 @@
                         var genelGosterilecek = nakitGosterilecek + kartGosterilecek + ibanGosterilecek;
 
                         // Etiketleri Güncelle
+                        var depoAdi = HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '';
+                        var depoEtiketi = depoAdi ? ' (' + depoAdi + ')' : '';
+
                         if (kapsam === 'tum') {
-                            self.$etiket.text('(Genel)');
-                            self.$baslik.text('Anlık Kasa Durumu (Tüm Kasalar)');
+                            self.$etiket.text('(Genel)' + depoEtiketi);
+                            self.$baslik.text('Anlık Kasa Durumu (Tüm Kasalar' + depoEtiketi + ')');
                         } else {
-                            self.$etiket.text('(Kasa ' + kasaNo + ')');
-                            self.$baslik.text('Anlık Kasa Durumu (Kasa ' + kasaNo + ')');
+                            self.$etiket.text('(Kasa ' + kasaNo + ')' + depoEtiketi);
+                            self.$baslik.text('Anlık Kasa Durumu (Kasa ' + kasaNo + depoEtiketi + ')');
                         }
 
                         // UI Güncelle

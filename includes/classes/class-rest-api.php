@@ -323,6 +323,8 @@ function hizli_kasa_gun_sonu_raporu($request)
     $tarih_baslangic = $tarih . ' 00:00:00';
     $tarih_bitis = $tarih . ' 23:59:59';
 
+    $depo_id = intval($request->get_param('depo_id'));
+
     $args = array(
         'limit' => -1,
         'status' => array('processing', 'completed', 'on-hold'),
@@ -331,16 +333,29 @@ function hizli_kasa_gun_sonu_raporu($request)
         'order' => 'ASC',
     );
 
+    $meta_query = array();
+
     if (!$is_general) {
-        $args['meta_key'] = '_hizli_kasa_kasa_no';
-        $args['meta_value'] = $kasa_no;
-    } else {
-        $args['meta_query'] = array(
-            array(
-                'key' => '_hizli_kasa_kasa_no',
-                'compare' => 'EXISTS',
-            ),
+        $meta_query[] = array(
+            'key' => '_hizli_kasa_kasa_no',
+            'value' => $kasa_no,
         );
+    } else {
+        $meta_query[] = array(
+            'key' => '_hizli_kasa_kasa_no',
+            'compare' => 'EXISTS',
+        );
+    }
+
+    if ($depo_id > 0) {
+        $meta_query[] = array(
+            'key' => '_hk_cikis_depo_id',
+            'value' => $depo_id,
+        );
+    }
+
+    if (!empty($meta_query)) {
+        $args['meta_query'] = $meta_query;
     }
 
     $orders = wc_get_orders($args);
@@ -484,8 +499,13 @@ function hizli_kasa_gun_sonu_raporu($request)
     $iban_masraf = 0;
     $masraf_listesi = array();
 
-    if ($is_general) {
-        $m_query = $wpdb->prepare("SELECT category, amount, payment_method, description FROM $masraf_table WHERE DATE(created_at) = %s ORDER BY created_at ASC", $tarih);
+    if ($is_general || $depo_id > 0) {
+        if ($depo_id > 0) {
+            $m_query = $wpdb->prepare("SELECT category, amount, payment_method, description FROM $masraf_table WHERE DATE(created_at) = %s AND location_id = %d ORDER BY created_at ASC", $tarih, $depo_id);
+        } else {
+            $m_query = $wpdb->prepare("SELECT category, amount, payment_method, description FROM $masraf_table WHERE DATE(created_at) = %s ORDER BY created_at ASC", $tarih);
+        }
+        
         $masraflar_raw = $wpdb->get_results($m_query);
 
         foreach ($masraflar_raw as $m) {
@@ -2257,9 +2277,14 @@ function hizli_kasa_api_get_barcode_data($request)
 function hizli_kasa_get_recent_orders($request)
 {
     $kasa_no = sanitize_text_field($request->get_param('kasa_no'));
+    $depo_id = intval($request->get_param('depo_id'));
     $limit = get_option('hizli_kasa_edit_order_limit', 5);
     $user_id = get_current_user_id();
-    $depo_id = hizli_kasa_get_user_active_depo($user_id);
+
+    // Eğer parametre gelmemişse aktif depoyu kullan (fallback)
+    if (!$depo_id) {
+        $depo_id = hizli_kasa_get_user_active_depo($user_id);
+    }
 
     $kapsam = get_option('hizli_kasa_siparis_duzenle_kapsam', 'secili');
 
@@ -2271,16 +2296,29 @@ function hizli_kasa_get_recent_orders($request)
         'order' => 'DESC',
     );
 
+    $meta_query = array();
+
     if ($kapsam === 'tum') {
-        $args['meta_query'] = array(
-            array(
-                'key' => '_hizli_kasa_kasa_no',
-                'compare' => 'EXISTS',
-            ),
+        $meta_query[] = array(
+            'key' => '_hizli_kasa_kasa_no',
+            'compare' => 'EXISTS',
         );
     } else {
-        $args['meta_key'] = '_hizli_kasa_kasa_no';
-        $args['meta_value'] = $kasa_no;
+        $meta_query[] = array(
+            'key' => '_hizli_kasa_kasa_no',
+            'value' => $kasa_no,
+        );
+    }
+
+    if ($depo_id > 0) {
+        $meta_query[] = array(
+            'key' => '_hk_cikis_depo_id',
+            'value' => $depo_id,
+        );
+    }
+
+    if (!empty($meta_query)) {
+        $args['meta_query'] = $meta_query;
     }
 
     $orders = wc_get_orders($args);
