@@ -399,8 +399,8 @@
             var colorHtml = '';
             if (data.attributes.color) {
                 var colorVal = data.attributes.color;
-                var showColorLabel = colorVal.length <= 12;
-                var colorClass = colorVal.length > 18 ? 'color-val text-shrink' : 'color-val';
+                var showColorLabel = colorVal.length <= 8; // Eşik düşürüldü
+                var colorClass = colorVal.length > 14 ? 'color-val text-shrink' : 'color-val';
                 
                 colorHtml = `
                     <div class="attr-color">
@@ -414,8 +414,8 @@
             var sizeHtml = '';
             if (data.attributes.size) {
                 var sizeVal = data.attributes.size;
-                var showSizeLabel = sizeVal.length <= 10;
-                var sizeClass = sizeVal.length > 15 ? 'size-val text-shrink' : 'size-val';
+                var showSizeLabel = sizeVal.length <= 4; // Eşik düşürüldü (105 cm gibi değerlerde başlık kalksın)
+                var sizeClass = sizeVal.length > 7 ? 'size-val text-shrink' : 'size-val';
                 
                 sizeHtml = `
                     <div class="attr-size">
