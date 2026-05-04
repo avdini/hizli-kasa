@@ -199,6 +199,8 @@
         gap: 2px;
         line-height: 0.9;
         transform: translateY(-3mm);
+        max-width: 100%;
+        overflow: hidden;
     }
 
     .attr-size {
@@ -208,6 +210,8 @@
         gap: 2px;
         line-height: 0.9;
         transform: translateY(-3mm);
+        max-width: 100%;
+        overflow: hidden;
     }
 
     .color-label,
@@ -227,12 +231,30 @@
         font-size: 8pt;
         font-weight: 600;
         line-height: 0.9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+        max-width: 100%;
+    }
+
+    .color-val.text-shrink {
+        font-size: 6.5pt;
     }
 
     .size-val {
         font-size: 14pt;
         font-weight: 900;
         line-height: 0.9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+        max-width: 100%;
+    }
+
+    .size-val.text-shrink {
+        font-size: 10pt;
     }
 
     .price-section {

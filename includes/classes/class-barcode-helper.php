@@ -92,6 +92,9 @@ class Hizli_Kasa_Barcode_Helper {
                 $formatted['color'] = mb_convert_case($display_value, MB_CASE_TITLE, "UTF-8");
             } else if (mb_stripos($clean_name, 'beden') !== false || mb_stripos($clean_name, 'size') !== false || mb_stripos($clean_name, 'numara') !== false) {
                 $formatted['size'] = mb_strtoupper($display_value, "UTF-8");
+            } else if (mb_stripos($clean_name, 'ölçü') !== false || mb_stripos($clean_name, 'olcu') !== false || mb_stripos($clean_name, 'boy') !== false) {
+                $formatted['size'] = mb_strtoupper($display_value, "UTF-8");
+                $formatted['label'] = 'Ölçü';
             }
         }
 

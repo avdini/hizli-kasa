@@ -148,6 +148,7 @@
                     if (key.includes('renk') || key.includes('color')) label = 'Renk';
                     if (key.includes('beden') || key.includes('size')) label = 'Beden';
                     if (key.includes('numara')) label = 'Numara';
+                    if (key.includes('ölçü') || key.includes('olcu') || key.includes('boy')) label = 'Ölçü';
 
                     if (!this.state.filters.attributes[key]) this.state.filters.attributes[key] = [];
                     
@@ -394,6 +395,36 @@
                 priceHtml = `<div class="price-single">${data.price_data.price}</div>`;
             }
 
+            // Renk için dinamik kontrol
+            var colorHtml = '';
+            if (data.attributes.color) {
+                var colorVal = data.attributes.color;
+                var showColorLabel = colorVal.length <= 12;
+                var colorClass = colorVal.length > 18 ? 'color-val text-shrink' : 'color-val';
+                
+                colorHtml = `
+                    <div class="attr-color">
+                        ${showColorLabel ? '<span class="color-label">Renk:</span>' : ''}
+                        <span class="${colorClass}">${colorVal}</span>
+                    </div>
+                `;
+            }
+
+            // Beden/Numara/Ölçü için dinamik kontrol
+            var sizeHtml = '';
+            if (data.attributes.size) {
+                var sizeVal = data.attributes.size;
+                var showSizeLabel = sizeVal.length <= 10;
+                var sizeClass = sizeVal.length > 15 ? 'size-val text-shrink' : 'size-val';
+                
+                sizeHtml = `
+                    <div class="attr-size">
+                        ${showSizeLabel ? `<span class="size-label">${data.attributes.label}:</span>` : ''}
+                        <span class="${sizeClass}">${sizeVal}</span>
+                    </div>
+                `;
+            }
+
             return `
                 <div class="barcode-label">
                     <div class="label-header">
@@ -409,14 +440,8 @@
                         </div>
                         <div class="col-right">
                             <div class="attributes">
-                                <div class="attr-color">
-                                    <span class="color-label">Renk:</span>
-                                    <span class="color-val">${data.attributes.color || ''}</span>
-                                </div>
-                                <div class="attr-size">
-                                    <span class="size-label">${data.attributes.label}:</span>
-                                    <span class="size-val">${data.attributes.size || ''}</span>
-                                </div>
+                                ${colorHtml}
+                                ${sizeHtml}
                             </div>
                             <div class="price-section ${data.price_data.on_sale ? 'has-sale' : ''}">
                                 ${priceHtml}
