@@ -62,6 +62,15 @@
                     // CSS :has selectorü ile yönetiliyor ancak eski tarayıcı desteği gerekirse burası kullanılabilir
                 });
             });
+
+            // Depo değiştiğinde listeyi yenile
+            document.addEventListener('hkActiveDepoChanged', function() {
+                // Eğer masraf sekmesi aktifse veya DOM'da görünürse yenile
+                const listBody = document.getElementById('masraf-listesi-body');
+                if (listBody) {
+                    self.loadExpenses();
+                }
+            });
         },
 
         /**
