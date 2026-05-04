@@ -18,12 +18,14 @@ class Hizli_Kasa_Database {
     public static function get_tables() {
         global $wpdb;
         return [
-            'depolar'         => $wpdb->prefix . 'hizli_kasa_depolar',
-            'stok_konumlari'  => $wpdb->prefix . 'hizli_kasa_stok_konumlari',
+            'depolar'          => $wpdb->prefix . 'hizli_kasa_depolar',
+            'stok_konumlari'   => $wpdb->prefix . 'hizli_kasa_stok_konumlari',
             'stok_hareketleri' => $wpdb->prefix . 'hizli_kasa_stok_hareketleri',
             'unmatched_items'  => $wpdb->prefix . 'hizli_kasa_unmatched_items',
             'masraflar'        => $wpdb->prefix . 'hizli_kasa_masraflar',
             'order_edits'      => $wpdb->prefix . 'hizli_kasa_order_edits',
+            'sevkler'          => $wpdb->prefix . 'hizli_kasa_sevkler',
+            'sevk_kalemleri'   => $wpdb->prefix . 'hizli_kasa_sevk_kalemleri',
         ];
     }
 
@@ -37,7 +39,6 @@ class Hizli_Kasa_Database {
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-        // 1. Depolar Tablosu
         $sql1 = "CREATE TABLE {$tables['depolar']} (
             id bigint(20) NOT NULL AUTO_INCREMENT,
             name varchar(255) NOT NULL,
@@ -47,14 +48,11 @@ class Hizli_Kasa_Database {
             created_at datetime,
             PRIMARY KEY  (id)
         ) $charset_collate;";
-        $res1 = dbDelta($sql1);
+        dbDelta($sql1);
         if ($wpdb->last_error) {
             error_log('Hızlı Kasa DB Delta Hatası (Depolar): ' . $wpdb->last_error);
-        } else {
-            error_log('Hızlı Kasa DB Delta (Depolar): ' . print_r($res1, true));
         }
 
-        // 2. Stok Konumları Tablosu
         $sql2 = "CREATE TABLE {$tables['stok_konumlari']} (
             id bigint(20) NOT NULL AUTO_INCREMENT,
             product_id bigint(20) NOT NULL,
@@ -68,12 +66,11 @@ class Hizli_Kasa_Database {
             KEY variation_id (variation_id),
             KEY location_id (location_id)
         ) $charset_collate;";
-        $res2 = dbDelta($sql2);
+        dbDelta($sql2);
         if ($wpdb->last_error) {
             error_log('Hızlı Kasa DB Delta Hatası (Konumlar): ' . $wpdb->last_error);
         }
 
-        // 3. Stok Hareketleri (Log) Tablosu
         $sql3 = "CREATE TABLE {$tables['stok_hareketleri']} (
             id bigint(20) NOT NULL AUTO_INCREMENT,
             product_id bigint(20) NOT NULL,
@@ -89,12 +86,11 @@ class Hizli_Kasa_Database {
             KEY product_id (product_id),
             KEY location_id (location_id)
         ) $charset_collate;";
-        $res3 = dbDelta($sql3);
+        dbDelta($sql3);
         if ($wpdb->last_error) {
             error_log('Hızlı Kasa DB Delta Hatası (Hareketler): ' . $wpdb->last_error);
         }
 
-        // 4. Eşleşmeyen Ürünler Tablosu
         $sql4 = "CREATE TABLE {$tables['unmatched_items']} (
             id bigint(20) NOT NULL AUTO_INCREMENT,
             warehouse_name varchar(255) NOT NULL,
@@ -105,12 +101,11 @@ class Hizli_Kasa_Database {
             created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
             PRIMARY KEY  (id)
         ) $charset_collate;";
-        $res4 = dbDelta($sql4);
+        dbDelta($sql4);
         if ($wpdb->last_error) {
             error_log('Hızlı Kasa DB Delta Hatası (Eşleşmeyenler): ' . $wpdb->last_error);
         }
 
-        // 5. Masraflar Tablosu
         $sql5 = "CREATE TABLE {$tables['masraflar']} (
             id bigint(20) NOT NULL AUTO_INCREMENT,
             category varchar(100) NOT NULL,
@@ -126,12 +121,11 @@ class Hizli_Kasa_Database {
             KEY location_id (location_id),
             KEY created_at (created_at)
         ) $charset_collate;";
-        $res5 = dbDelta($sql5);
+        dbDelta($sql5);
         if ($wpdb->last_error) {
             error_log('Hızlı Kasa DB Delta Hatası (Masraflar): ' . $wpdb->last_error);
         }
 
-        // 6. Sipariş Düzenleme Logları Tablosu
         $sql6 = "CREATE TABLE {$tables['order_edits']} (
             id bigint(20) NOT NULL AUTO_INCREMENT,
             order_id bigint(20) NOT NULL,
@@ -145,9 +139,56 @@ class Hizli_Kasa_Database {
             KEY order_id (order_id),
             KEY created_at (created_at)
         ) $charset_collate;";
-        $res6 = dbDelta($sql6);
+        dbDelta($sql6);
         if ($wpdb->last_error) {
             error_log('Hızlı Kasa DB Delta Hatası (Düzenleme Logları): ' . $wpdb->last_error);
+        }
+
+        $sql7 = "CREATE TABLE {$tables['sevkler']} (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            sevk_no varchar(50) NOT NULL,
+            kaynak_depo_id bigint(20) NOT NULL,
+            hedef_depo_id bigint(20) NOT NULL,
+            durum varchar(30) NOT NULL DEFAULT 'taslak',
+            olusturan_user_id bigint(20) NOT NULL,
+            onaylayan_user_id bigint(20) DEFAULT NULL,
+            toplam_cesit int(11) DEFAULT 0,
+            toplam_adet decimal(15,4) DEFAULT 0.0000,
+            not_gonderici text,
+            not_alici text,
+            created_at datetime NOT NULL,
+            updated_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY sevk_no (sevk_no),
+            KEY kaynak_depo_id (kaynak_depo_id),
+            KEY hedef_depo_id (hedef_depo_id),
+            KEY durum (durum),
+            KEY created_at (created_at)
+        ) $charset_collate;";
+        dbDelta($sql7);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Sevkler): ' . $wpdb->last_error);
+        }
+
+        $sql8 = "CREATE TABLE {$tables['sevk_kalemleri']} (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            sevk_id bigint(20) NOT NULL,
+            product_id bigint(20) NOT NULL,
+            variation_id bigint(20) DEFAULT 0,
+            sku varchar(100) NOT NULL,
+            urun_adi varchar(255) NOT NULL,
+            gonderilen_adet decimal(15,4) DEFAULT 0.0000,
+            teslim_alinan_adet decimal(15,4) DEFAULT NULL,
+            created_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            KEY sevk_id (sevk_id),
+            KEY product_id (product_id),
+            KEY variation_id (variation_id),
+            KEY sku (sku)
+        ) $charset_collate;";
+        dbDelta($sql8);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Sevk Kalemleri): ' . $wpdb->last_error);
         }
     }
 
@@ -162,11 +203,7 @@ class Hizli_Kasa_Database {
             $wpdb->query("DROP TABLE IF EXISTS $table");
         }
 
-        // Ayarları temizle
         delete_option('hizli_kasa_varsayilan_online_depo');
         delete_option('hizli_kasa_depo_oncelikleri');
-        
-        // Eklenti tamamen devre dışı bırakıldığında silinecek diğer ayarlar
-        // delete_option('hizli_kasa_siparis_durumu'); // Bunu silmeyelim, ana eklenti ayarı
     }
 }

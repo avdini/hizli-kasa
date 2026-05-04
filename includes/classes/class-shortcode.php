@@ -76,7 +76,7 @@ function hizli_kasa_uygulamasi()
     $css_modules = [
         'theme-vars', 'reset', 'utilities', 'layout', 'sidebar',
         'cart', 'barcode', 'totals', 'modals', 'refund',
-        'stock-terminal', 'reports', 'toast', 'print', 'responsive', 'barcode-print', 'order-editor'
+        'stock-terminal', 'reports', 'toast', 'print', 'responsive', 'barcode-print', 'order-editor', 'sevk'
     ];
 
     foreach ($css_modules as $module) {
@@ -115,6 +115,7 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-order-edit-reports', $js_base . 'modules/order-edit-reports.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-detailed-reports', $js_base . 'modules/detailed-reports.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-report-receipt-printer', $js_base . 'modules/report-receipt-printer.js', array('kasa-detailed-reports', 'kasa-print-manager', 'jsbarcode'), $pos_version, true);
+    wp_enqueue_script('kasa-sevk-manager', $js_base . 'modules/sevk-manager.js', array('kasa-ui-renderer', 'kasa-depo-manager'), $pos_version, true);
     wp_enqueue_script('kasa-js', $js_base . 'kasa.js', array(
         'kasa-cart-manager',
         'kasa-ui-renderer',
@@ -131,6 +132,7 @@ function hizli_kasa_uygulamasi()
         'kasa-order-edit-reports',
         'kasa-detailed-reports',
         'kasa-report-receipt-printer',
+        'kasa-sevk-manager',
         'kasa-currency-mask'
     ), $pos_version, true);
 

@@ -200,6 +200,9 @@ document.addEventListener('click', function(e) {
             if(targetPanel) {
                 targetPanel.style.display = 'block';
                 targetPanel.classList.add('aktif');
+                document.dispatchEvent(new CustomEvent('hkSevkSubTabLoaded', {
+                    detail: { subTab: targetId }
+                }));
             }
         }
     }

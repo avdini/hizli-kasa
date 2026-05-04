@@ -6,99 +6,176 @@ if (!defined('ABSPATH'))
     exit;
 ?>
 
-<div class="hk-tab-container" style="padding: 20px; height: 100%; overflow-y: auto; box-sizing: border-box;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--hk-border); padding-bottom: 15px;">
+<div class="hk-tab-container sevk-shell">
+    <header class="sevk-header">
         <div>
-            <h2 style="margin:0; color: var(--hk-text-main); display: flex; align-items: center; gap: 10px;">🚚 Depo ve Sevk Yönetimi</h2>
-            <p style="color: var(--hk-text-muted); margin: 5px 0 0 0; font-size: 13px;">Şubeler arası stok transferi, ürün talebi ve çıkış işlemleri (Geliştirme Aşamasında).</p>
+            <h2>Sevk İşlemleri</h2>
+            <p>Depolar arası çıkış, kabul ve teslim doğrulama akışı.</p>
         </div>
-    </div>
-
-    <!-- Alt Sekme Navigasyonu -->
-    <div class="sevk-alt-sekmeler" style="display:flex; gap:10px; margin-bottom:20px;">
-        <button class="sevk-alt-btn aktif" data-target="sevk-genel">📋 Genel</button>
-        <button class="sevk-alt-btn" data-target="sevk-kabul">📥 Sevk Kabul</button>
-        <button class="sevk-alt-btn" data-target="sevk-iste">📤 Sevk İste</button>
-        <button class="sevk-alt-btn" data-target="sevk-cikis">📦 Sevk Çıkış</button>
-    </div>
-
-    <!-- 1. GENEL SEKMESİ -->
-    <div id="sevk-genel" class="sevk-icerik-paneli aktif">
-        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 40px; text-align: center; border: 2px dashed var(--hk-border); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            <span style="font-size: 48px; margin-bottom: 15px; display: block;">📊</span>
-            <h3 style="margin-top:0; color:var(--hk-accent);">Gelişmiş Sevk Takip Paneli (Çok Yakında)</h3>
-            <p style="color:var(--hk-text-muted); font-size:15px; max-width: 600px; margin: 0 auto; line-height: 1.6;">
-                Bu alanda şubeler arası tüm sevk hareketlerini, bekleyen/yolda/tamamlanan transferleri grafiklerle ve gelişmiş filtrelerle detaylı bir şekilde takip edebileceğiniz bir kontrol paneli planlıyoruz.
-            </p>
+        <div class="sevk-header-actions">
+            <span class="sevk-live-dot"></span>
+            <span id="sevk-active-depo-label">Depo hazırlanıyor...</span>
         </div>
-    </div>
+    </header>
 
-    <!-- 2. SEVK KABUL SEKMESİ -->
-    <div id="sevk-kabul" class="sevk-icerik-paneli" style="display: none;">
-        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 40px; text-align: center; border: 2px dashed var(--hk-border); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            <span style="font-size: 48px; margin-bottom: 15px; display: block;">📥</span>
-            <h3 style="margin-top:0; color:var(--hk-accent);">Sevk Kabul ve Onay İşlemleri (Çok Yakında)</h3>
-            <p style="color:var(--hk-text-muted); font-size:15px; max-width: 600px; margin: 0 auto; line-height: 1.6;">
-                Burada, şubenize gelen kolileri açarken içinden çıkan ürünleri tek tek barkod okutarak sisteme girecek ve gönderen şubenin/deponun çıkış yaptığı sayılarla sizin teslim aldıklarınızın uyuşup uyuşmadığını milimetrik olarak kontrol edebileceğiniz bir sistem üzerinde çalışıyoruz.
-            </p>
+    <nav class="sevk-alt-sekmeler" aria-label="Sevk alt sekmeleri">
+        <button class="sevk-alt-btn aktif" data-target="sevk-genel">Genel</button>
+        <button class="sevk-alt-btn" data-target="sevk-kabul">Sevk Kabul <span id="sevk-kabul-badge" class="sevk-tab-badge" style="display:none;">0</span></button>
+        <button class="sevk-alt-btn" data-target="sevk-iste">Sevk İste</button>
+        <button class="sevk-alt-btn" data-target="sevk-cikis">Sevk Çıkış</button>
+    </nav>
+
+    <section id="sevk-genel" class="sevk-icerik-paneli aktif">
+        <div class="sevk-dashboard-grid">
+            <article class="sevk-stat-card">
+                <span>Toplam Sevk</span>
+                <strong id="sevk-stat-total">0</strong>
+            </article>
+            <article class="sevk-stat-card">
+                <span>Yolda</span>
+                <strong id="sevk-stat-yolda">0</strong>
+            </article>
+            <article class="sevk-stat-card">
+                <span>Bekleyen</span>
+                <strong id="sevk-stat-bekleyen">0</strong>
+            </article>
+            <article class="sevk-stat-card">
+                <span>Tamamlanan</span>
+                <strong id="sevk-stat-tamamlanan">0</strong>
+            </article>
         </div>
-    </div>
 
-    <!-- 3. SEVK İSTE SEKMESİ -->
-    <div id="sevk-iste" class="sevk-icerik-paneli" style="display: none;">
-        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 40px; text-align: center; border: 2px dashed var(--hk-border); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            <span style="font-size: 48px; margin-bottom: 15px; display: block;">📤</span>
-            <h3 style="margin-top:0; color:var(--hk-accent);">Şubeler Arası Ürün Talebi (Çok Yakında)</h3>
-            <p style="color:var(--hk-text-muted); font-size:15px; max-width: 600px; margin: 0 auto; line-height: 1.6;">
-                Stoğunuzda tükenen ürünler için merkezden veya çevre şubelerden kolayca talep oluşturabilmeniz adına pratik bir sipariş modülü hazırlıyoruz. İhtiyacınız olan ürünleri aratarak veya okutarak hızlıca "Sevk İste" listesine ekleyebileceksiniz.
-            </p>
+        <div class="sevk-filter-bar">
+            <label>
+                Durum
+                <select id="sevk-genel-durum" class="hk-input">
+                    <option value="all">Tümü</option>
+                    <option value="onay_bekliyor">Bekleyen</option>
+                    <option value="gonderildi">Yolda</option>
+                    <option value="tamamlandi">Tamamlanan</option>
+                    <option value="uyusmazlik">Uyuşmazlık</option>
+                </select>
+            </label>
+            <label>
+                Başlangıç
+                <input type="date" id="sevk-genel-date-start" class="hk-input">
+            </label>
+            <label>
+                Bitiş
+                <input type="date" id="sevk-genel-date-end" class="hk-input">
+            </label>
+            <button type="button" id="sevk-genel-yenile" class="sevk-btn secondary">Yenile</button>
         </div>
-    </div>
 
-    <!-- 4. SEVK ÇIKIŞ SEKMESİ -->
-    <div id="sevk-cikis" class="sevk-icerik-paneli" style="display: none;">
-        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 40px; text-align: center; border: 2px dashed var(--hk-border); box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-            <span style="font-size: 48px; margin-bottom: 15px; display: block;">📦</span>
-            <h3 style="margin-top:0; color:var(--hk-accent);">Sevk Çıkış ve Barkod Kontrolü (Çok Yakında)</h3>
-            <p style="color:var(--hk-text-muted); font-size:15px; max-width: 600px; margin: 0 auto; line-height: 1.6;">
-                Diğer şubelere ürün gönderirken paketlediğiniz ürünleri barkod okutarak "Sevk Listesi"ne alacak ve yola çıkarabileceksiniz. Karşı taraf da bu sayede yoldaki ürünleri eksiksiz takip edebilecek.
-            </p>
+        <div class="sevk-table-wrap">
+            <table class="sevk-table">
+                <thead>
+                    <tr>
+                        <th>Sevk No</th>
+                        <th>Kaynak → Hedef</th>
+                        <th>Durum</th>
+                        <th>Tarih</th>
+                        <th>Çeşit / Adet</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="sevk-genel-listesi">
+                    <tr><td colspan="6" class="sevk-empty">Sevkler yükleniyor...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="sevk-kabul" class="sevk-icerik-paneli" style="display:none;">
+        <div class="sevk-split">
+            <aside class="sevk-list-panel">
+                <div class="sevk-panel-title">
+                    <h3>Gelen Sevkler</h3>
+                    <button type="button" id="sevk-kabul-yenile" class="sevk-icon-btn" title="Yenile">↻</button>
+                </div>
+                <div id="sevk-kabul-listesi" class="sevk-card-list"></div>
+            </aside>
+            <main id="sevk-kabul-detay" class="sevk-detail-panel">
+                <div class="sevk-empty-state">
+                    <h3>Bir sevk seçin</h3>
+                    <p>Onay, red ve teslim barkod kontrolü burada yapılır.</p>
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <section id="sevk-iste" class="sevk-icerik-paneli" style="display:none;">
+        <div class="sevk-placeholder">
+            <h3>Sevk İste</h3>
+            <p>Ürün talep modülü mevcut plana dahil edilmediği için bu alan şimdilik placeholder olarak korunuyor.</p>
+        </div>
+    </section>
+
+    <section id="sevk-cikis" class="sevk-icerik-paneli" style="display:none;">
+        <div class="sevk-wizard">
+            <div class="sevk-steps">
+                <span class="active" data-step-indicator="1">1. Oluştur</span>
+                <span data-step-indicator="2">2. Barkod</span>
+                <span data-step-indicator="3">3. Sonuç</span>
+            </div>
+
+            <div class="sevk-step-panel" data-step="1">
+                <div class="sevk-form-grid">
+                    <label>
+                        Kaynak Depo
+                        <input type="text" id="sevk-cikis-kaynak-label" class="hk-input" readonly>
+                    </label>
+                    <label>
+                        Hedef Depo
+                        <select id="sevk-cikis-hedef" class="hk-input"></select>
+                    </label>
+                </div>
+                <button type="button" id="sevk-cikis-olustur" class="sevk-btn primary">Sevk Oluştur</button>
+            </div>
+
+            <div class="sevk-step-panel" data-step="2" style="display:none;">
+                <div class="sevk-current-card">
+                    <div>
+                        <span id="sevk-cikis-no">SVK</span>
+                        <strong id="sevk-cikis-route">Kaynak → Hedef</strong>
+                    </div>
+                    <span class="sevk-scan-pill">Barkod tarama aktif</span>
+                </div>
+                <input type="text" id="sevk-cikis-barkod" class="hk-input sevk-barcode-input" placeholder="Barkod okutun veya yazıp Enter'a basın">
+                <div class="sevk-table-wrap compact">
+                    <table class="sevk-table">
+                        <thead>
+                            <tr>
+                                <th>Ürün</th>
+                                <th>SKU</th>
+                                <th>Adet</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="sevk-cikis-kalemler"></tbody>
+                    </table>
+                </div>
+                <div class="sevk-summary-row">
+                    <span id="sevk-cikis-ozet">0 çeşit ürün, 0 adet toplam</span>
+                    <textarea id="sevk-cikis-not" class="hk-input" rows="2" placeholder="Gönderici notu"></textarea>
+                    <button type="button" id="sevk-cikis-onayla" class="sevk-btn primary">Onayla ve Gönder</button>
+                </div>
+            </div>
+
+            <div class="sevk-step-panel" data-step="3" style="display:none;">
+                <div class="sevk-result-card">
+                    <h3>Sevk onaya gönderildi</h3>
+                    <p id="sevk-cikis-sonuc">Alıcı deponun onayı bekleniyor.</p>
+                    <button type="button" id="sevk-cikis-yeni" class="sevk-btn secondary">Yeni Sevk Oluştur</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="sevk-detay-modal" class="sevk-modal" style="display:none;">
+        <div class="sevk-modal-content">
+            <button type="button" id="sevk-modal-kapat" class="sevk-modal-close">×</button>
+            <div id="sevk-modal-body"></div>
         </div>
     </div>
 </div>
-
-<style>
-/* Sevk Sekmesi Özel CSS */
-.sevk-alt-btn {
-    padding: 10px 20px;
-    border: 1px solid var(--hk-border);
-    border-radius: 8px;
-    background: var(--hk-bg-body);
-    color: var(--hk-text-main);
-    cursor: pointer;
-    font-weight: 700;
-    transition: all 0.2s;
-}
-
-.sevk-alt-btn.aktif {
-    background: var(--hk-accent);
-    color: #fff;
-    border-color: var(--hk-accent);
-}
-
-.sevk-alt-btn:hover:not(.aktif) {
-    background: var(--hk-bg-hover);
-}
-
-#hizli-kasa-app.theme-dark .sevk-alt-btn {
-    background: #1e293b;
-    border-color: #334155;
-    color: #f1f5f9;
-}
-#hizli-kasa-app.theme-dark .sevk-alt-btn.aktif {
-    background: var(--hk-accent);
-    color: #fff;
-    border-color: var(--hk-accent);
-}
-</style>
-

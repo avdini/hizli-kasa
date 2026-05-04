@@ -71,9 +71,15 @@ document.addEventListener("DOMContentLoaded", function() {
             if (HK.StockTerminal) {
                 HK.StockTerminal.init();
             }
+            if (HK.SevkManager) {
+                HK.SevkManager.init();
+            }
         });
     } else if (HK.StockTerminal) {
         HK.StockTerminal.init();
+        if (HK.SevkManager) {
+            HK.SevkManager.init();
+        }
     }
 
     // 7. Sekmeler arası canlı senkronizasyon

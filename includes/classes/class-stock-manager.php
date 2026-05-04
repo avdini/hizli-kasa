@@ -246,6 +246,23 @@ class Hizli_Kasa_Stock_Manager {
         return $new_qty;
     }
 
+    public static function transfer_out($product_id, $variation_id, $kaynak_depo_id, $qty, $sevk_id) {
+        $sevk_no = self::get_transfer_sevk_no($sevk_id);
+        return self::update_warehouse_stock($product_id, $variation_id, $kaynak_depo_id, -abs((float) $qty), "Sevk Çıkış (#$sevk_no)");
+    }
+
+    public static function transfer_in($product_id, $variation_id, $hedef_depo_id, $qty, $sevk_id) {
+        $sevk_no = self::get_transfer_sevk_no($sevk_id);
+        return self::update_warehouse_stock($product_id, $variation_id, $hedef_depo_id, abs((float) $qty), "Sevk Giriş (#$sevk_no)");
+    }
+
+    private static function get_transfer_sevk_no($sevk_id) {
+        global $wpdb;
+        $tables = Hizli_Kasa_Database::get_tables();
+        $sevk_no = $wpdb->get_var($wpdb->prepare("SELECT sevk_no FROM {$tables['sevkler']} WHERE id = %d", $sevk_id));
+        return $sevk_no ?: (string) $sevk_id;
+    }
+
     /**
      * Belirli bir depoda rezervasyon miktarını günceller.
      */
