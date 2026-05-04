@@ -109,8 +109,9 @@
                 if (!activeBtn) return;
                 var activeTarget = activeBtn.dataset.target;
                 
-                // Sadece raporlar sekmesi görünürse yenile
-                if (document.getElementById('rapor-tum-siparisler')?.offsetParent !== null) {
+                // Raporlar sekmesi ana kapsayıcısı görünür mü?
+                var reportsTabContainer = document.querySelector('.rapor-alt-sekmeler');
+                if (reportsTabContainer && reportsTabContainer.offsetParent !== null) {
                     if (activeTarget === 'rapor-tum-siparisler') self.loadOrders(1);
                     else if (activeTarget === 'rapor-iade-listesi') self.loadRefunds(1);
                     else if (activeTarget === 'rapor-gun-sonu-arsivi') self.loadDayEndHistory();
