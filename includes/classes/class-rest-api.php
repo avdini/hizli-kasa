@@ -1432,9 +1432,16 @@ function hizli_kasa_process_refund($request)
     // İade işleminin yapıldığı depoyu sipariş seviyesinde kaydet (raporlama için)
     if ($fallback_depo_id) {
         $refund_order->update_meta_data('_hk_cikis_depo_id', $fallback_depo_id);
-        $depo_obj = hizli_kasa_get_depo($fallback_depo_id);
-        if ($depo_obj) {
-            $refund_order->update_meta_data('_hk_cikis_depo_adi', $depo_obj->name);
+        
+        global $wpdb;
+        $tables = Hizli_Kasa_Database::get_tables();
+        $depo_name = $wpdb->get_var($wpdb->prepare(
+            "SELECT name FROM {$tables['depolar']} WHERE id = %d",
+            $fallback_depo_id
+        ));
+
+        if ($depo_name) {
+            $refund_order->update_meta_data('_hk_cikis_depo_adi', $depo_name);
         }
     }
 
