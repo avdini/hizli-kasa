@@ -1429,6 +1429,15 @@ function hizli_kasa_process_refund($request)
     if (!$fallback_depo_id)
         $fallback_depo_id = hizli_kasa_get_user_active_depo($user_id);
 
+    // İade işleminin yapıldığı depoyu sipariş seviyesinde kaydet (raporlama için)
+    if ($fallback_depo_id) {
+        $refund_order->update_meta_data('_hk_cikis_depo_id', $fallback_depo_id);
+        $depo_obj = hizli_kasa_get_depo($fallback_depo_id);
+        if ($depo_obj) {
+            $refund_order->update_meta_data('_hk_cikis_depo_adi', $depo_obj->name);
+        }
+    }
+
     // Depo stok iadesi — orijinal çıkış deposuna geri yaz
     require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
     $iade_depo_ozet = []; // Hangi depoya ne kadar iade edildi
@@ -2898,8 +2907,10 @@ function hizli_kasa_get_reports_data($request, $is_refund = false)
             'id' => $order->get_id(),
             'date' => $date_str,
             'total' => $order->get_total(),
-            'cashier' => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmiyor',
-            'kasa_no' => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmiyor',
+            'cashier' => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmeyen',
+            'kasa_no' => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmeyen',
+            'depo_id' => (int) $order->get_meta('_hk_cikis_depo_id'),
+            'depo_adi' => $order->get_meta('_hk_cikis_depo_adi') ?: '-',
             'payment' => $order->get_payment_method_title(),
             'items' => array(),
             'meta' => array(),
