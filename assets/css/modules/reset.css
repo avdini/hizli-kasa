@@ -2,8 +2,12 @@
    AGRESİF TEMA TEMİZLEĞİ (STANDALONE FOCUS)
    ============================================= */
 
-/* 1. Tüm Tema Bileşenlerini Gizle */
-header, footer, aside, nav, .site-header, .site-footer, .header-wrapper, .footer-wrapper, 
+/* 1. Tüm Tema Bileşenlerini Gizle (Uygulama dışındakiler) */
+header:not(#hizli-kasa-app *), 
+footer:not(#hizli-kasa-app *), 
+aside:not(#hizli-kasa-app *), 
+nav:not(#hizli-kasa-app *), 
+.site-header, .site-footer, .header-wrapper, .footer-wrapper, 
 #header, #footer, #sidebar, .sidebar, .site-navigation, #site-navigation, .main-navigation,
 .navbar, .navbar-wrapper, .top-bar, .secondary-navigation, .breadcrumb, .entry-header, .entry-footer { 
     display: none !important; 
