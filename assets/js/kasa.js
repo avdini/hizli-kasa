@@ -79,8 +79,10 @@ document.addEventListener("DOMContentLoaded", function() {
     // 7. Sekmeler arası canlı senkronizasyon
     window.addEventListener('storage', function(e) {
         var state = HK.State;
+        var currentSlotKey = HK.CartManager ? HK.CartManager._slotKey(state.aktifKasaId) : ('hizli_kasa_hafiza_slot_' + state.aktifKasaId);
+        
         // Eğer değişiklik bizim aktif kasa slotumuzdaysa sepeti yenile
-        if (e.key === 'hizli_kasa_hafiza_slot_' + state.aktifKasaId) {
+        if (e.key === currentSlotKey) {
             HK.CartManager.sepetiYukle(state.aktifKasaId);
         }
         // Slotlar arası doluluk bilgisini güncellemek için sidebar'ı yenile
@@ -88,7 +90,15 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // 8. Başlangıç yüklemesi — kayıtlı sepeti yükle
-    HK.CartManager.sepetiYukle(localStorage.getItem('hizli_kasa_aktif_id') || 1);
+    // Not: DepoManager.init() içinde hkActiveDepoChanged tetiklendiği için
+    // CartManager zaten sepeti yükleyecektir. Yine de garantiye alalım.
+    var ilkKasaId = localStorage.getItem('hizli_kasa_aktif_id') || 1;
+    if (HK.DepoManager && HK.DepoManager.state.isLoaded) {
+        HK.CartManager.sepetiYukle(ilkKasaId);
+    } else {
+        // DepoManager henüz yüklenmediyse bekle (zaten hkActiveDepoChanged ile yüklenecek)
+        HK.State.aktifKasaId = parseInt(ilkKasaId);
+    }
 
     console.log("Hızlı Kasa v" + HK.State.CURRENT_VERSION + " başlatıldı.");
 });

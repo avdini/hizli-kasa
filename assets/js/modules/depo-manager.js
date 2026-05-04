@@ -140,6 +140,11 @@
                     if (resolved !== serverActive) {
                         self._saveToServer(resolved);
                     }
+
+                    // Aktif depo belirlendiğinde diğer modülleri haberdar et (sepet yüklemesi vb için)
+                    document.dispatchEvent(new CustomEvent('hkActiveDepoChanged', {
+                        detail: { depoId: resolved, prevDepoId: null }
+                    }));
                 }
 
             } catch(e) {

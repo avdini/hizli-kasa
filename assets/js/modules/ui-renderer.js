@@ -53,7 +53,8 @@ window.HizliKasa = window.HizliKasa || {};
                 btn.classList.toggle("aktif", parseInt(id) === state.aktifKasaId);
 
                 // Dolu kasa kontrolü (içinde ürün var mı?)
-                var slotVeri = localStorage.getItem('hizli_kasa_hafiza_slot_' + id);
+                var key = HK.CartManager ? HK.CartManager._slotKey(id) : ('hizli_kasa_hafiza_slot_' + id);
+                var slotVeri = localStorage.getItem(key);
                 if (slotVeri) {
                     var veri = JSON.parse(slotVeri);
                     btn.classList.toggle("dolu", veri.sepet && veri.sepet.length > 0);
