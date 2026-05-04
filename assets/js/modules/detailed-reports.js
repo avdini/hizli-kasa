@@ -102,6 +102,20 @@
                     if (activeTarget === 'rapor-gun-sonu-arsivi') self.loadDayEndHistory();
                 });
             }
+
+            // Depo değiştiğinde aktif raporu yenile
+            document.addEventListener('hkActiveDepoChanged', function() {
+                var activeBtn = document.querySelector(".rapor-alt-btn.aktif");
+                if (!activeBtn) return;
+                var activeTarget = activeBtn.dataset.target;
+                
+                // Sadece raporlar sekmesi görünürse yenile
+                if (document.getElementById('rapor-tum-siparisler')?.offsetParent !== null) {
+                    if (activeTarget === 'rapor-tum-siparisler') self.loadOrders(1);
+                    else if (activeTarget === 'rapor-iade-listesi') self.loadRefunds(1);
+                    else if (activeTarget === 'rapor-gun-sonu-arsivi') self.loadDayEndHistory();
+                }
+            });
         },
 
         fieldLabelMap: {
@@ -287,9 +301,10 @@
             var dateStart = document.getElementById("rapor-tarih-bas").value;
             var dateEnd = document.getElementById("rapor-tarih-bit").value;
             var search = document.getElementById("order-search-input").value;
+            var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
 
             try {
-                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/orders?page=${this.currentPageOrders}&per_page=${this.perPage}&date_start=${dateStart}&date_end=${dateEnd}&search=${encodeURIComponent(search)}`;
+                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/orders?page=${this.currentPageOrders}&per_page=${this.perPage}&date_start=${dateStart}&date_end=${dateEnd}&search=${encodeURIComponent(search)}&depo_id=${depoId}`;
                 console.log("HK.DetailedReports: Fetching orders from:", url);
                 
                 var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
@@ -321,9 +336,10 @@
             var dateStart = document.getElementById("rapor-tarih-bas").value;
             var dateEnd = document.getElementById("rapor-tarih-bit").value;
             var search = document.getElementById("refund-search-input").value;
+            var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
 
             try {
-                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/refunds?page=${this.currentPageRefunds}&per_page=${this.perPage}&date_start=${dateStart}&date_end=${dateEnd}&search=${encodeURIComponent(search)}`;
+                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/refunds?page=${this.currentPageRefunds}&per_page=${this.perPage}&date_start=${dateStart}&date_end=${dateEnd}&search=${encodeURIComponent(search)}&depo_id=${depoId}`;
                 console.log("HK.DetailedReports: Fetching refunds from:", url);
                 
                 var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
@@ -443,9 +459,10 @@
             
             var dateStart = document.getElementById("rapor-tarih-bas").value;
             var dateEnd = document.getElementById("rapor-tarih-bit").value;
+            var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
 
             try {
-                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/day-end-history?date_start=${dateStart}&date_end=${dateEnd}`;
+                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/day-end-history?date_start=${dateStart}&date_end=${dateEnd}&depo_id=${depoId}`;
                 var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
                 var res = await response.json();
 

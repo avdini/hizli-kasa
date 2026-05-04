@@ -2845,6 +2845,14 @@ function hizli_kasa_get_reports_data($request, $is_refund = false)
         'compare' => 'EXISTS',
     );
 
+    $depo_id = intval($request->get_param('depo_id'));
+    if ($depo_id > 0) {
+        $meta_query[] = array(
+            'key' => '_hk_cikis_depo_id',
+            'value' => $depo_id,
+        );
+    }
+
     // İade / Satış Ayrımı
     if ($is_refund) {
         $meta_query[] = array(
@@ -2972,9 +2980,12 @@ function hizli_kasa_get_day_end_history($request)
         $date_end = current_time('Y-m-d');
     }
 
-    // POS siparişlerini belirleyen ortak kriter: _hizli_kasa_kasa_no meta kaydı olması
-    // Satışlar ve İadeler ayrı ayrı hesaplanmalı
-    
+    $depo_id = intval($request->get_param('depo_id'));
+    $depo_where = "";
+    if ($depo_id > 0) {
+        $depo_where = $wpdb->prepare(" AND pm_depo.meta_value = %d ", $depo_id);
+    }
+
     $sql = $wpdb->prepare("
         SELECT 
             DATE(p.post_date) as order_date,
@@ -2985,9 +2996,11 @@ function hizli_kasa_get_day_end_history($request)
         INNER JOIN {$wpdb->postmeta} pm_pos ON p.ID = pm_pos.post_id AND pm_pos.meta_key = '_hizli_kasa_kasa_no'
         LEFT JOIN {$wpdb->postmeta} pm_refund ON p.ID = pm_refund.post_id AND pm_refund.meta_key = '_hizli_kasa_is_refund'
         LEFT JOIN {$wpdb->postmeta} pm_total ON p.ID = pm_total.post_id AND pm_total.meta_key = '_order_total'
+        " . ($depo_id > 0 ? "INNER JOIN {$wpdb->postmeta} pm_depo ON p.ID = pm_depo.post_id AND pm_depo.meta_key = '_hk_cikis_depo_id'" : "") . "
         WHERE p.post_type = 'shop_order' 
           AND p.post_status IN ('wc-processing', 'wc-completed', 'wc-on-hold')
           AND DATE(p.post_date) BETWEEN %s AND %s
+          $depo_where
         GROUP BY DATE(p.post_date)
         ORDER BY order_date DESC
     ", $date_start, $date_end);
