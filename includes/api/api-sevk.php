@@ -36,13 +36,6 @@ function hizli_kasa_sevk_tables() {
     return Hizli_Kasa_Database::get_tables();
 }
 
-/**
- * Sekme içeriğini yükler ve döner.
- */
-function hizli_kasa_sevk_tables() {
-    return Hizli_Kasa_Database::get_tables();
-}
-
 function hizli_kasa_sevk_status_label($durum) {
     $labels = [
         'taslak' => 'Taslak',
