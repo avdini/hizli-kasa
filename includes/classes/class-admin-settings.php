@@ -182,6 +182,21 @@ function hizli_kasa_ayarlari_kaydet()
         'default' => 5,
         'sanitize_callback' => 'intval'
     ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_reports_cache_ttl', array(
+        'type' => 'integer',
+        'default' => 15,
+        'sanitize_callback' => 'intval'
+    ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_depo_cache_ttl', array(
+        'type' => 'integer',
+        'default' => 24,
+        'sanitize_callback' => 'intval'
+    ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_user_perms_cache_ttl', array(
+        'type' => 'integer',
+        'default' => 12,
+        'sanitize_callback' => 'intval'
+    ));
     // Bildirim Ayarları (Ayrı grup - Resetlenmeyi önlemek için)
     register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_mismatch_check_enabled');
     register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_mismatch_interval');
@@ -318,20 +333,62 @@ function hizli_kasa_handle_depo_actions() {
  * Kullanıcının görebileceği depo ID listesini döner.
  */
 function hizli_kasa_get_user_view_depos($user_id) {
+    $cache_aktif = get_option('hizli_kasa_cache_aktif', '1') === '1';
+    $cache_key = "hk_user_view_depos_{$user_id}";
+    
+    if ($cache_aktif) {
+        $cached = get_transient($cache_key);
+        if ($cached !== false) return $cached;
+    }
+
     $raw = get_user_meta($user_id, '_hizli_kasa_depo_ids_view', true);
-    if (empty($raw)) return [];
+    if (empty($raw)) {
+        if ($cache_aktif) {
+            $ttl_hours = (int) get_option('hizli_kasa_user_perms_cache_ttl', 12);
+            set_transient($cache_key, [], $ttl_hours * HOUR_IN_SECONDS);
+        }
+        return [];
+    }
+    
     $ids = is_array($raw) ? $raw : json_decode($raw, true);
-    return array_map('intval', (array) $ids);
+    $result = array_map('intval', (array) $ids);
+    
+    if ($cache_aktif) {
+        $ttl_hours = (int) get_option('hizli_kasa_user_perms_cache_ttl', 12);
+        set_transient($cache_key, $result, $ttl_hours * HOUR_IN_SECONDS);
+    }
+    return $result;
 }
 
 /**
  * Kullanıcının yönetebileceği (stok değiştirebileceği) depo ID listesini döner.
  */
 function hizli_kasa_get_user_manage_depos($user_id) {
+    $cache_aktif = get_option('hizli_kasa_cache_aktif', '1') === '1';
+    $cache_key = "hk_user_manage_depos_{$user_id}";
+    
+    if ($cache_aktif) {
+        $cached = get_transient($cache_key);
+        if ($cached !== false) return $cached;
+    }
+
     $raw = get_user_meta($user_id, '_hizli_kasa_depo_ids_manage', true);
-    if (empty($raw)) return [];
+    if (empty($raw)) {
+        if ($cache_aktif) {
+            $ttl_hours = (int) get_option('hizli_kasa_user_perms_cache_ttl', 12);
+            set_transient($cache_key, [], $ttl_hours * HOUR_IN_SECONDS);
+        }
+        return [];
+    }
+    
     $ids = is_array($raw) ? $raw : json_decode($raw, true);
-    return array_map('intval', (array) $ids);
+    $result = array_map('intval', (array) $ids);
+    
+    if ($cache_aktif) {
+        $ttl_hours = (int) get_option('hizli_kasa_user_perms_cache_ttl', 12);
+        set_transient($cache_key, $result, $ttl_hours * HOUR_IN_SECONDS);
+    }
+    return $result;
 }
 
 /**
@@ -566,6 +623,20 @@ function hizli_kasa_ajax_clear_cache() {
     } elseif ($type === 'arama') {
         update_option('hizli_kasa_search_cache_version', time());
         wp_send_json_success(['message' => 'Ürün arama önbelleği temizlendi.']);
+    } elseif ($type === 'raporlar') {
+        update_option('hk_reports_cache_version', time());
+        wp_send_json_success(['message' => 'Raporlar ve istatistik önbelleği temizlendi.']);
+    } elseif ($type === 'yetkiler') {
+        global $wpdb;
+        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_hk_user_view_depos_%' OR option_name LIKE '_transient_hk_user_manage_depos_%'");
+        wp_send_json_success(['message' => 'Tüm kullanıcı yetki önbellekleri temizlendi.']);
+    } elseif ($type === 'all') {
+        delete_transient('hk_depo_list_all');
+        update_option('hizli_kasa_search_cache_version', time());
+        update_option('hk_reports_cache_version', time());
+        global $wpdb;
+        $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_hk_user_view_depos_%' OR option_name LIKE '_transient_hk_user_manage_depos_%'");
+        wp_send_json_success(['message' => 'Tüm önbellek modülleri başarıyla temizlendi.']);
     }
     
     wp_send_json_error(['message' => 'Geçersiz önbellek türü.']);
@@ -1187,47 +1258,131 @@ function hizli_kasa_ayarlar_sayfasi()
                 <?php include HIZLI_KASA_PATH . 'includes/views/tab-bildirimler.php'; ?>
 
             <?php elseif ($active_tab == 'onbellek'): ?>
-                <div class="card">
-                    <h3>Önbellek (Cache) Ayarları</h3>
-                    <p>Önbellek sistemi, sık değişmeyen verileri geçici olarak hafızada tutarak performansı artırır ve sunucu yükünü azaltır.</p>
-                    <form method="post" action="options.php">
-                        <?php settings_fields('hizli_kasa_ayar_grubu'); ?>
-                        <table class="form-table">
-                            <tr valign="top">
-                                <th scope="row">Önbellek Sistemi</th>
-                                <td>
-                                    <?php $cache_aktif = get_option('hizli_kasa_cache_aktif', '1'); ?>
-                                    <label>
-                                        <input type="checkbox" name="hizli_kasa_cache_aktif" value="1" <?php checked($cache_aktif, '1'); ?>>
-                                        Tüm önbellek sistemini aktifleştir
+                <div class="wrap hk-cache-wrap">
+                    <style>
+                        .hk-cache-grid { width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff; border: 1px solid #c3c4c7; box-shadow: 0 1px 1px rgba(0,0,0,.04); }
+                        .hk-cache-grid th, .hk-cache-grid td { padding: 15px; border-bottom: 1px solid #c3c4c7; text-align: left; vertical-align: middle; }
+                        .hk-cache-grid th { background: #f6f7f7; font-weight: 600; color: #1d2327; }
+                        .hk-cache-grid tr:last-child td { border-bottom: none; }
+                        .hk-cache-desc { font-size: 13px; color: #646970; margin-top: 4px; }
+                        .hk-cache-title { font-size: 14px; font-weight: 600; color: #1d2327; }
+                        .hk-cache-status-on { color: #00a32a; font-weight: bold; }
+                        .hk-cache-status-off { color: #d63638; font-weight: bold; }
+                        .hk-cache-ttl-input { width: 80px; text-align: center; }
+                    </style>
+
+                    <div class="card" style="max-width: 100%; padding: 20px;">
+                        <h2 style="margin-top:0;">Önbellek (Cache) Kontrol Merkezi</h2>
+                        <p>Sistemin ağır yük çeken kısımları için önbellekleme sürelerini ayarlayabilir ve yönetebilirsiniz.</p>
+                        
+                        <form method="post" action="options.php">
+                            <?php settings_fields('hizli_kasa_ayar_grubu'); ?>
+                            
+                            <?php $cache_aktif = get_option('hizli_kasa_cache_aktif', '1'); ?>
+                            <div style="background: <?php echo $cache_aktif ? '#f0f9eb' : '#fcf0f1'; ?>; border: 1px solid <?php echo $cache_aktif ? '#c2e0b4' : '#f5c6cb'; ?>; padding: 15px; border-radius: 4px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+                                <div>
+                                    <h3 style="margin: 0 0 5px;">Sistem Durumu: <?php echo $cache_aktif ? '<span class="hk-cache-status-on">AKTİF</span>' : '<span class="hk-cache-status-off">PASİF</span>'; ?></h3>
+                                    <p style="margin: 0; color: #666; font-size: 13px;">Tüm önbellek sistemini tek tuşla kapatabilirsiniz. Acil durumlarda sorun tespiti için kullanılır.</p>
+                                </div>
+                                <div>
+                                    <label class="button button-secondary">
+                                        <input type="checkbox" name="hizli_kasa_cache_aktif" value="1" <?php checked($cache_aktif, '1'); ?> style="margin-right: 8px;">
+                                        Sistemi Aç / Kapat
                                     </label>
-                                    <p class="description">Pasif yapıldığında tüm sorgular anlık olarak veritabanından çekilir (yavaşlayabilir).</p>
-                                </td>
-                            </tr>
-                            <tr valign="top">
-                                <th scope="row">Ürün Arama Önbellek Süresi</th>
-                                <td>
-                                    <input type="number" name="hizli_kasa_search_cache_ttl" value="<?php echo esc_attr(get_option('hizli_kasa_search_cache_ttl', 5)); ?>" min="1" max="1440" style="width:100px;">
-                                    <span> dakika</span>
-                                    <p class="description">Ürün aramalarında aynı kelime aratıldığında veritabanı sorgusu yerine kaç dakika önbellekten sonuç getirilsin? (Stok ve fiyatlar her zaman canlı çekilmeye devam edecektir.)</p>
-                                </td>
-                            </tr>
-                        </table>
-                        <?php submit_button('Ayarları Kaydet'); ?>
-                    </form>
-                </div>
-                
-                <div class="card" style="margin-top:20px;">
-                    <h3>Önbelleği Manuel Temizle</h3>
-                    <p>Eğer ürün aramasında yeni eklediğiniz ürünler hemen çıkmıyorsa veya depo listesi hatalı geliyorsa, önbelleği sıfırlayabilirsiniz.</p>
-                    
-                    <button type="button" class="button button-secondary" onclick="clearHKCache('depolar', this)">Depo Listesi Önbelleğini Temizle</button>
-                    <button type="button" class="button button-secondary" onclick="clearHKCache('arama', this)">Ürün Arama Önbelleğini Temizle</button>
-                    
+                                </div>
+                            </div>
+
+                            <table class="hk-cache-grid">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 25%;">Önbellek Grubu</th>
+                                        <th style="width: 40%;">Açıklama</th>
+                                        <th style="width: 15%;">TTL Süresi</th>
+                                        <th style="width: 20%;">Manuel İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Ürün Arama -->
+                                    <tr>
+                                        <td>
+                                            <div class="hk-cache-title">🔍 Ürün Araması</div>
+                                        </td>
+                                        <td>
+                                            POS ekranında yapılan metin aramalarının sonuçlarını (ID listesini) saklar.
+                                            <div class="hk-cache-desc">Not: Stok ve fiyatlar her zaman canlı çekilmeye devam eder. Eski stok gösterilmez.</div>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="hizli_kasa_search_cache_ttl" value="<?php echo esc_attr(get_option('hizli_kasa_search_cache_ttl', 5)); ?>" min="1" max="1440" class="hk-cache-ttl-input"> <span class="hk-cache-desc">dk</span>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="button button-small" onclick="clearHKCache('arama', this)">Arama Önbelleğini Temizle</button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Raporlar ve İstatistikler -->
+                                    <tr>
+                                        <td>
+                                            <div class="hk-cache-title">📊 Raporlar ve İstatistikler</div>
+                                        </td>
+                                        <td>
+                                            Gün Sonu, Dashboard ve Raporlar sekmelerindeki hesaplamaları saklar.
+                                            <div class="hk-cache-desc">Akıllı Yıkım: Yeni sipariş geldiğinde veya iptal edildiğinde otomatik temizlenir.</div>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="hizli_kasa_reports_cache_ttl" value="<?php echo esc_attr(get_option('hizli_kasa_reports_cache_ttl', 15)); ?>" min="1" max="1440" class="hk-cache-ttl-input"> <span class="hk-cache-desc">dk</span>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="button button-small" onclick="clearHKCache('raporlar', this)">Rapor Önbelleğini Temizle</button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Depo Listesi -->
+                                    <tr>
+                                        <td>
+                                            <div class="hk-cache-title">🏢 Depo Listesi</div>
+                                        </td>
+                                        <td>
+                                            Sistemdeki tüm depoların temel bilgilerini saklar.
+                                            <div class="hk-cache-desc">Akıllı Yıkım: Yeni depo eklendiğinde, silindiğinde veya güncellendiğinde otomatik temizlenir.</div>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="hizli_kasa_depo_cache_ttl" value="<?php echo esc_attr(get_option('hizli_kasa_depo_cache_ttl', 24)); ?>" min="1" max="720" class="hk-cache-ttl-input"> <span class="hk-cache-desc">saat</span>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="button button-small" onclick="clearHKCache('depolar', this)">Depo Önbelleğini Temizle</button>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Kullanıcı Yetkileri -->
+                                    <tr>
+                                        <td>
+                                            <div class="hk-cache-title">🔐 Kullanıcı Yetkileri</div>
+                                        </td>
+                                        <td>
+                                            Personelin hangi depoyu görebildiği ve yönetebildiği bilgisini saklar.
+                                            <div class="hk-cache-desc">Akıllı Yıkım: Profil güncellendiğinde otomatik temizlenir.</div>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="hizli_kasa_user_perms_cache_ttl" value="<?php echo esc_attr(get_option('hizli_kasa_user_perms_cache_ttl', 12)); ?>" min="1" max="720" class="hk-cache-ttl-input"> <span class="hk-cache-desc">saat</span>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="button button-small" onclick="clearHKCache('yetkiler', this)">Yetki Önbelleğini Temizle</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <div style="margin-top: 20px; display: flex; align-items: center; justify-content: space-between;">
+                                <?php submit_button('Ayarları Kaydet', 'primary', 'submit', false); ?>
+                                <button type="button" class="button button-link-delete" style="color: #d63638;" onclick="if(confirm('Tüm önbellek silinecek emin misiniz?')) clearHKCache('all', this)">Tüm Sistemi Temizle (Flush All)</button>
+                            </div>
+                        </form>
+                    </div>
+
                     <script>
                     function clearHKCache(type, btn) {
                         const originalText = btn.innerText;
-                        btn.innerText = "Temizleniyor...";
+                        btn.innerText = "İşleniyor...";
                         btn.disabled = true;
                         
                         jQuery.post(ajaxurl, {

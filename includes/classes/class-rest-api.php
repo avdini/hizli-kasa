@@ -369,6 +369,19 @@ function hizli_kasa_gun_sonu_raporu($request)
 
     $depo_id = intval($request->get_param('depo_id'));
 
+    // --- Önbellek (Cache) Kontrolü ---
+    $cache_aktif = get_option('hizli_kasa_cache_aktif', '1') === '1';
+    $cache_version = get_option('hk_reports_cache_version', '1');
+    $cache_key = 'hk_gs_' . $cache_version . '_' . md5($kasa_no . '_' . $tarih . '_' . $depo_id);
+
+    if ($cache_aktif) {
+        $cached_report = get_transient($cache_key);
+        if ($cached_report !== false) {
+            return $cached_report;
+        }
+    }
+    // --- Önbellek Sonu ---
+
     $args = array(
         'limit' => -1,
         'status' => array('processing', 'completed', 'on-hold'),
@@ -575,7 +588,7 @@ function hizli_kasa_gun_sonu_raporu($request)
         return $b['qty'] - $a['qty'];
     });
 
-    return array(
+    $report_data = array(
         'kasa_no' => ($kasa_no === 'all') ? 'Genel' : $kasa_no,
         'tarih' => $tarih,
         'tarih_okunabilir' => date_i18n('d.m.Y l', strtotime($tarih)),
@@ -608,6 +621,13 @@ function hizli_kasa_gun_sonu_raporu($request)
         'kasiyerler' => $kasiyer_map,
         'saat_dagilimi' => $saat_map,
     );
+
+    if (isset($cache_aktif) && $cache_aktif) {
+        $ttl_mins = (int) get_option('hizli_kasa_reports_cache_ttl', 15);
+        set_transient($cache_key, $report_data, $ttl_mins * MINUTE_IN_SECONDS);
+    }
+
+    return $report_data;
 }
 
 /**
@@ -3372,6 +3392,19 @@ function hizli_kasa_statistics_summary($request) {
     $date_end   = sanitize_text_field($request->get_param('date_end')   ?: current_time('Y-m-d'));
     $depo_id    = intval($request->get_param('depo_id'));
 
+    // --- Önbellek (Cache) Kontrolü ---
+    $cache_aktif = get_option('hizli_kasa_cache_aktif', '1') === '1';
+    $cache_version = get_option('hk_reports_cache_version', '1');
+    $cache_key = 'hk_stats_' . $cache_version . '_' . md5($date_start . '_' . $date_end . '_' . $depo_id);
+
+    if ($cache_aktif) {
+        $cached_stats = get_transient($cache_key);
+        if ($cached_stats !== false) {
+            return $cached_stats;
+        }
+    }
+    // --- Önbellek Sonu ---
+
     $ts_start = $date_start . ' 00:00:00';
     $ts_end   = $date_end   . ' 23:59:59';
 
@@ -3513,7 +3546,7 @@ function hizli_kasa_statistics_summary($request) {
     }
     unset($u);
 
-    return [
+    $response_data = [
         'kpi' => [
             'toplam_ciro'    => round($toplam_ciro, 2),
             'toplam_iade'    => round($toplam_iade, 2),
@@ -3532,4 +3565,11 @@ function hizli_kasa_statistics_summary($request) {
         'kasiyerler'      => $kasiyerler,
         'top_urunler'     => $top_urunler,
     ];
+
+    if (isset($cache_aktif) && $cache_aktif) {
+        $ttl_mins = (int) get_option('hizli_kasa_reports_cache_ttl', 15);
+        set_transient($cache_key, $response_data, $ttl_mins * MINUTE_IN_SECONDS);
+    }
+
+    return $response_data;
 }
