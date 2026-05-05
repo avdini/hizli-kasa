@@ -174,6 +174,14 @@ function hizli_kasa_ayarlari_kaydet()
         'type' => 'string',
         'default' => 'secili'
     ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_cache_aktif', array(
+        'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
+    ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_search_cache_ttl', array(
+        'type' => 'integer',
+        'default' => 5,
+        'sanitize_callback' => 'intval'
+    ));
     // Bildirim Ayarları (Ayrı grup - Resetlenmeyi önlemek için)
     register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_mismatch_check_enabled');
     register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_mismatch_interval');
@@ -242,6 +250,8 @@ function hizli_kasa_handle_depo_actions() {
             exit;
         }
 
+        delete_transient('hk_depo_list_all');
+
         wp_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=depo_eklendi'));
         exit;
     }
@@ -267,6 +277,8 @@ function hizli_kasa_handle_depo_actions() {
             'priority'    => intval($_POST['depo_priority'])
         ], ['id' => $id]);
 
+        delete_transient('hk_depo_list_all');
+
         wp_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=depo_guncellendi'));
         exit;
     }
@@ -286,6 +298,7 @@ function hizli_kasa_handle_depo_actions() {
             if ($depo_name) {
                 $wpdb->delete($wpdb->prefix . 'hizli_kasa_unmatched_items', ['warehouse_name' => $depo_name]);
             }
+            delete_transient('hk_depo_list_all');
         }
 
         $msg = $deleted ? 'depo_silindi' : 'depo_silme_hata';
@@ -537,6 +550,26 @@ add_action('wp_ajax_hizli_kasa_get_unmatched', 'hizli_kasa_ajax_get_unmatched');
 add_action('wp_ajax_hizli_kasa_delete_unmatched', 'hizli_kasa_ajax_delete_unmatched');
 add_action('wp_ajax_hizli_kasa_clear_all_unmatched', 'hizli_kasa_ajax_clear_all_unmatched');
 add_action('wp_ajax_hizli_kasa_manual_mismatch_check', 'hizli_kasa_ajax_manual_mismatch_check');
+add_action('wp_ajax_hizli_kasa_clear_cache', 'hizli_kasa_ajax_clear_cache');
+
+/**
+ * Önbellek Temizleme AJAX
+ */
+function hizli_kasa_ajax_clear_cache() {
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    
+    $type = isset($_POST['cache_type']) ? sanitize_text_field($_POST['cache_type']) : '';
+    
+    if ($type === 'depolar') {
+        delete_transient('hk_depo_list_all');
+        wp_send_json_success(['message' => 'Depo listesi önbelleği temizlendi.']);
+    } elseif ($type === 'arama') {
+        update_option('hizli_kasa_search_cache_version', time());
+        wp_send_json_success(['message' => 'Ürün arama önbelleği temizlendi.']);
+    }
+    
+    wp_send_json_error(['message' => 'Geçersiz önbellek türü.']);
+}
 
 /**
  * Manuel Uyuşmazlık Kontrolü AJAX
@@ -985,6 +1018,7 @@ function hizli_kasa_ayarlar_sayfasi()
             <a href="?page=hizli-kasa&tab=unmatched" class="nav-tab <?php echo $active_tab == 'unmatched' ? 'nav-tab-active' : ''; ?>">Eşleşmeyen Ürünler<?php echo $badge; ?></a>
             <a href="?page=hizli-kasa&tab=depolar" class="nav-tab <?php echo $active_tab == 'depolar' ? 'nav-tab-active' : ''; ?>">Depo Yönetimi</a>
             <a href="?page=hizli-kasa&tab=bildirimler" class="nav-tab <?php echo $active_tab == 'bildirimler' ? 'nav-tab-active' : ''; ?>">Bildirimler</a>
+            <a href="?page=hizli-kasa&tab=onbellek" class="nav-tab <?php echo $active_tab == 'onbellek' ? 'nav-tab-active' : ''; ?>">Önbellek (Cache)</a>
             <a href="?page=hizli-kasa&tab=araclar" class="nav-tab <?php echo $active_tab == 'araclar' ? 'nav-tab-active' : ''; ?>">Sistem Araçları</a>
         </h2>
 
@@ -1151,6 +1185,66 @@ function hizli_kasa_ayarlar_sayfasi()
 
             <?php elseif ($active_tab == 'bildirimler'): ?>
                 <?php include HIZLI_KASA_PATH . 'includes/views/tab-bildirimler.php'; ?>
+
+            <?php elseif ($active_tab == 'onbellek'): ?>
+                <div class="card">
+                    <h3>Önbellek (Cache) Ayarları</h3>
+                    <p>Önbellek sistemi, sık değişmeyen verileri geçici olarak hafızada tutarak performansı artırır ve sunucu yükünü azaltır.</p>
+                    <form method="post" action="options.php">
+                        <?php settings_fields('hizli_kasa_ayar_grubu'); ?>
+                        <table class="form-table">
+                            <tr valign="top">
+                                <th scope="row">Önbellek Sistemi</th>
+                                <td>
+                                    <?php $cache_aktif = get_option('hizli_kasa_cache_aktif', '1'); ?>
+                                    <label>
+                                        <input type="checkbox" name="hizli_kasa_cache_aktif" value="1" <?php checked($cache_aktif, '1'); ?>>
+                                        Tüm önbellek sistemini aktifleştir
+                                    </label>
+                                    <p class="description">Pasif yapıldığında tüm sorgular anlık olarak veritabanından çekilir (yavaşlayabilir).</p>
+                                </td>
+                            </tr>
+                            <tr valign="top">
+                                <th scope="row">Ürün Arama Önbellek Süresi</th>
+                                <td>
+                                    <input type="number" name="hizli_kasa_search_cache_ttl" value="<?php echo esc_attr(get_option('hizli_kasa_search_cache_ttl', 5)); ?>" min="1" max="1440" style="width:100px;">
+                                    <span> dakika</span>
+                                    <p class="description">Ürün aramalarında aynı kelime aratıldığında veritabanı sorgusu yerine kaç dakika önbellekten sonuç getirilsin? (Stok ve fiyatlar her zaman canlı çekilmeye devam edecektir.)</p>
+                                </td>
+                            </tr>
+                        </table>
+                        <?php submit_button('Ayarları Kaydet'); ?>
+                    </form>
+                </div>
+                
+                <div class="card" style="margin-top:20px;">
+                    <h3>Önbelleği Manuel Temizle</h3>
+                    <p>Eğer ürün aramasında yeni eklediğiniz ürünler hemen çıkmıyorsa veya depo listesi hatalı geliyorsa, önbelleği sıfırlayabilirsiniz.</p>
+                    
+                    <button type="button" class="button button-secondary" onclick="clearHKCache('depolar', this)">Depo Listesi Önbelleğini Temizle</button>
+                    <button type="button" class="button button-secondary" onclick="clearHKCache('arama', this)">Ürün Arama Önbelleğini Temizle</button>
+                    
+                    <script>
+                    function clearHKCache(type, btn) {
+                        const originalText = btn.innerText;
+                        btn.innerText = "Temizleniyor...";
+                        btn.disabled = true;
+                        
+                        jQuery.post(ajaxurl, {
+                            action: 'hizli_kasa_clear_cache',
+                            cache_type: type
+                        }, function(res) {
+                            alert(res.data.message);
+                            btn.innerText = originalText;
+                            btn.disabled = false;
+                        }).fail(function() {
+                            alert("Bir hata oluştu.");
+                            btn.innerText = originalText;
+                            btn.disabled = false;
+                        });
+                    }
+                    </script>
+                </div>
 
             <?php elseif ($active_tab == 'araclar'): ?>
                 <div class="card">

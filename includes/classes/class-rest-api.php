@@ -243,10 +243,18 @@ function hizli_kasa_api_user_depolar($request)
 {
     $user_id = get_current_user_id();
 
+    $cache_aktif = get_option('hizli_kasa_cache_aktif', '1') === '1';
+
     // Admin ise tüm depoları görebilir
     if (current_user_can('manage_options')) {
         global $wpdb;
-        $depolar_raw = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar ORDER BY priority DESC, name ASC");
+        $depolar_raw = $cache_aktif ? get_transient('hk_depo_list_all') : false;
+        if (false === $depolar_raw) {
+            $depolar_raw = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar ORDER BY priority DESC, name ASC");
+            if ($cache_aktif) {
+                set_transient('hk_depo_list_all', $depolar_raw, 24 * HOUR_IN_SECONDS);
+            }
+        }
         $view = array_map(fn($d) => ['id' => (int) $d->id, 'name' => $d->name], $depolar_raw);
         $manage_ids = array_column($view, 'id');
     } else {
@@ -258,11 +266,21 @@ function hizli_kasa_api_user_depolar($request)
         }
 
         global $wpdb;
-        if (!empty($view_ids)) {
-            $ids_ph = implode(',', array_map('intval', $view_ids));
-            $depolar_raw = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar WHERE id IN ($ids_ph) ORDER BY priority DESC, name ASC");
-        } else {
-            $depolar_raw = [];
+        $all_depolar_raw = $cache_aktif ? get_transient('hk_depo_list_all') : false;
+        if (false === $all_depolar_raw) {
+            $all_depolar_raw = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar ORDER BY priority DESC, name ASC");
+            if ($cache_aktif) {
+                set_transient('hk_depo_list_all', $all_depolar_raw, 24 * HOUR_IN_SECONDS);
+            }
+        }
+
+        $depolar_raw = [];
+        if (!empty($view_ids) && !empty($all_depolar_raw)) {
+            foreach ($all_depolar_raw as $d) {
+                if (in_array((int)$d->id, $view_ids)) {
+                    $depolar_raw[] = $d;
+                }
+            }
         }
         $view = array_map(fn($d) => ['id' => (int) $d->id, 'name' => $d->name], $depolar_raw);
     }
@@ -606,41 +624,58 @@ function hizli_kasa_ozel_arama($data)
     $exact = $data->get_param('exact');
 
     $found_ids = [];
+    $cache_aktif = get_option('hizli_kasa_cache_aktif', '1') === '1';
+    $cache_version = get_option('hizli_kasa_search_cache_version', '1');
+    $cache_key = 'hk_search_' . $cache_version . '_' . md5($s . '_' . $exact);
+    
+    if ($cache_aktif) {
+        $found_ids = get_transient($cache_key);
+    }
+    
+    if (false === $found_ids || !$cache_aktif) {
+        $found_ids = [];
 
-    if ($exact) {
-        // Barkod okuyucu için tam SKU eşleşmesi
-        $found_ids = $wpdb->get_col($wpdb->prepare("
-            SELECT pm.post_id FROM {$wpdb->postmeta} pm
-            JOIN {$wpdb->posts} p ON pm.post_id = p.ID
-            WHERE pm.meta_key = '_sku' AND pm.meta_value = %s 
-            AND p.post_status = 'publish'
-            LIMIT 10", $s));
-    } else {
-        // 1. Advanced Woo Search Entegrasyonu
-        if (class_exists('AWS_Search')) {
-            $aws_search = new AWS_Search();
-            $aws_results = $aws_search->search($s);
-            if (!empty($aws_results['products'])) {
-                foreach ($aws_results['products'] as $p_item) {
-                    $found_ids[] = (int) $p_item['id'];
+        if ($exact) {
+            // Barkod okuyucu için tam SKU eşleşmesi
+            $found_ids = $wpdb->get_col($wpdb->prepare("
+                SELECT pm.post_id FROM {$wpdb->postmeta} pm
+                JOIN {$wpdb->posts} p ON pm.post_id = p.ID
+                WHERE pm.meta_key = '_sku' AND pm.meta_value = %s 
+                AND p.post_status = 'publish'
+                LIMIT 10", $s));
+        } else {
+            // 1. Advanced Woo Search Entegrasyonu
+            if (class_exists('AWS_Search')) {
+                $aws_search = new AWS_Search();
+                $aws_results = $aws_search->search($s);
+                if (!empty($aws_results['products'])) {
+                    foreach ($aws_results['products'] as $p_item) {
+                        $found_ids[] = (int) $p_item['id'];
+                    }
+                }
+            } else {
+                // 2. Fallback Arama (Post Title ve SKU)
+                $words = explode(' ', $s);
+                $where_parts = [];
+                foreach ($words as $word) {
+                    if (empty($word) || mb_strlen($word) < 2)
+                        continue;
+                    $like = '%' . $wpdb->esc_like($word) . '%';
+                    $where_parts[] = $wpdb->prepare("(p.post_title LIKE %s OR pm.meta_value LIKE %s)", $like, $like);
+                }
+                if (!empty($where_parts)) {
+                    $where_clause = implode(' AND ', $where_parts);
+                    $found_ids = $wpdb->get_col("SELECT p.ID FROM {$wpdb->posts} p 
+                        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_sku'
+                        WHERE p.post_status = 'publish' AND p.post_type IN ('product', 'product_variation') AND ($where_clause) LIMIT 30");
                 }
             }
-        } else {
-            // 2. Fallback Arama (Post Title ve SKU)
-            $words = explode(' ', $s);
-            $where_parts = [];
-            foreach ($words as $word) {
-                if (empty($word) || mb_strlen($word) < 2)
-                    continue;
-                $like = '%' . $wpdb->esc_like($word) . '%';
-                $where_parts[] = $wpdb->prepare("(p.post_title LIKE %s OR pm.meta_value LIKE %s)", $like, $like);
-            }
-            if (!empty($where_parts)) {
-                $where_clause = implode(' AND ', $where_parts);
-                $found_ids = $wpdb->get_col("SELECT p.ID FROM {$wpdb->posts} p 
-                    LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_sku'
-                    WHERE p.post_status = 'publish' AND p.post_type IN ('product', 'product_variation') AND ($where_clause) LIMIT 30");
-            }
+        }
+
+        // Sadece ID listesini önbelleğe al (Stoklar hariç)
+        if ($cache_aktif) {
+            $ttl_mins = (int) get_option('hizli_kasa_search_cache_ttl', 5);
+            set_transient($cache_key, $found_ids, $ttl_mins * MINUTE_IN_SECONDS);
         }
     }
 
