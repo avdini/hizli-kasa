@@ -1,0 +1,303 @@
+/**
+ * Hızlı Kasa - İstatistik Dashboardu CSS
+ * @package HizliKasa
+ */
+
+/* =============================================
+   DASHBOARD ANA LAYOUT
+   ============================================= */
+
+#rapor-ozet-istatistik {
+    display: none;
+    animation: hk-fade-in 0.3s ease;
+}
+
+#rapor-ozet-istatistik.aktif {
+    display: block;
+}
+
+@keyframes hk-fade-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.stat-dashboard-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* =============================================
+   YÜKLENİYOR DURUMU
+   ============================================= */
+
+.stat-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    gap: 16px;
+    color: var(--hk-text-muted);
+}
+
+.stat-spinner {
+    width: 44px;
+    height: 44px;
+    border: 4px solid var(--hk-border);
+    border-top-color: var(--hk-accent);
+    border-radius: 50%;
+    animation: hk-spin 0.8s linear infinite;
+}
+
+@keyframes hk-spin {
+    to { transform: rotate(360deg); }
+}
+
+.stat-loading p {
+    margin: 0;
+    font-size: 15px;
+}
+
+/* =============================================
+   KPI KARTLARI
+   ============================================= */
+
+.stat-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 900px) {
+    .stat-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 500px) {
+    .stat-kpi-grid { grid-template-columns: 1fr; }
+}
+
+.stat-kpi-card {
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-kpi-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.stat-kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--kpi-color, var(--hk-accent));
+}
+
+.stat-kpi-icon {
+    font-size: 26px;
+    line-height: 1;
+}
+
+.stat-kpi-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    color: var(--hk-text-muted);
+}
+
+.stat-kpi-value {
+    font-size: 26px;
+    font-weight: 900;
+    color: var(--kpi-color, var(--hk-text-main));
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stat-kpi-sub {
+    font-size: 12px;
+    color: var(--hk-text-muted);
+}
+
+/* Renk varyantları */
+.stat-kpi-card.kpi-ciro   { --kpi-color: #10b981; }
+.stat-kpi-card.kpi-net    { --kpi-color: #3b82f6; }
+.stat-kpi-card.kpi-iade   { --kpi-color: #ef4444; }
+.stat-kpi-card.kpi-siparis { --kpi-color: #8b5cf6; }
+
+/* =============================================
+   GRAFİK GRID
+   ============================================= */
+
+.stat-charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.stat-charts-grid .stat-chart-full {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 900px) {
+    .stat-charts-grid { grid-template-columns: 1fr; }
+    .stat-charts-grid .stat-chart-full { grid-column: 1; }
+}
+
+.stat-chart-card {
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.stat-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.stat-chart-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--hk-text-main);
+    margin: 0;
+}
+
+.stat-chart-badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    color: var(--hk-text-muted);
+    font-weight: 600;
+}
+
+.stat-chart-body {
+    position: relative;
+    width: 100%;
+}
+
+/* Doughnut chart için wrapper */
+.stat-doughnut-wrap {
+    max-width: 260px;
+    margin: 0 auto;
+}
+
+/* =============================================
+   TOP ÜRÜNLER TABLOSU
+   ============================================= */
+
+.stat-top-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.stat-top-table th {
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--hk-text-muted);
+    border-bottom: 1px solid var(--hk-border);
+    font-weight: 700;
+}
+
+.stat-top-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--hk-border);
+    color: var(--hk-text-main);
+    vertical-align: middle;
+}
+
+.stat-top-table tr:last-child td {
+    border-bottom: none;
+}
+
+.stat-top-table tr:hover td {
+    background: var(--hk-bg-hover);
+}
+
+.stat-rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 800;
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    color: var(--hk-text-muted);
+}
+
+.stat-rank-badge.top-1 { background: #f59e0b; border-color: #f59e0b; color: #fff; }
+.stat-rank-badge.top-2 { background: #94a3b8; border-color: #94a3b8; color: #fff; }
+.stat-rank-badge.top-3 { background: #cd7c2f; border-color: #cd7c2f; color: #fff; }
+
+.stat-progress-bar-wrap {
+    width: 100%;
+    height: 5px;
+    background: var(--hk-border);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.stat-progress-bar {
+    height: 100%;
+    background: var(--hk-accent);
+    border-radius: 99px;
+    transition: width 0.6s ease;
+}
+
+/* =============================================
+   DARK TEMA
+   ============================================= */
+
+#hizli-kasa-app.theme-dark .stat-kpi-card,
+#hizli-kasa-app.theme-dark .stat-chart-card {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+#hizli-kasa-app.theme-dark .stat-kpi-card:hover,
+#hizli-kasa-app.theme-dark .stat-chart-card:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Boş Durum */
+.stat-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--hk-text-muted);
+}
+
+.stat-empty-state .stat-empty-icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.stat-empty-state p {
+    margin: 0;
+    font-size: 15px;
+}

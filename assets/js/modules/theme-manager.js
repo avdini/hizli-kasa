@@ -93,6 +93,9 @@
             if (HK.UIRenderer && HK.UIRenderer.showToast) {
                 HK.UIRenderer.showToast('Görünüm teması ' + (theme === 'dark' ? 'karanlık' : 'aydınlık') + ' olarak güncellendi.', 'success');
             }
+
+            // 5. Diğer modülleri bilgilendir (grafik yenileme vs.)
+            document.dispatchEvent(new CustomEvent('hkThemeChanged', { detail: { theme: theme } }));
         },
 
         /**

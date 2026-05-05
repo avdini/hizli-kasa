@@ -76,7 +76,7 @@ function hizli_kasa_uygulamasi()
     $css_modules = [
         'theme-vars', 'reset', 'utilities', 'layout', 'sidebar',
         'cart', 'barcode', 'totals', 'modals', 'refund',
-        'stock-terminal', 'reports', 'toast', 'print', 'responsive', 'barcode-print', 'order-editor', 'sevk'
+        'stock-terminal', 'reports', 'statistics', 'toast', 'print', 'responsive', 'barcode-print', 'order-editor', 'sevk'
     ];
 
     foreach ($css_modules as $module) {
@@ -93,6 +93,9 @@ function hizli_kasa_uygulamasi()
 
     // Barkod Kütüphanesi
     wp_enqueue_script('jsbarcode', 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js', array(), '3.11.0', true);
+
+    // Chart.js Kütüphanesi (İstatistik Dashboardu)
+    wp_enqueue_script('chartjs', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js', array(), '4.4.3', true);
 
     wp_enqueue_script('kasa-print-manager', $js_base . 'modules/print-manager.js', array(), $pos_version, true);
     wp_enqueue_script('kasa-currency-mask', $js_base . 'modules/currency-mask.js', array(), $pos_version, true);
@@ -116,6 +119,7 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-detailed-reports', $js_base . 'modules/detailed-reports.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-report-receipt-printer', $js_base . 'modules/report-receipt-printer.js', array('kasa-detailed-reports', 'kasa-print-manager', 'jsbarcode'), $pos_version, true);
     wp_enqueue_script('kasa-sevk-manager', $js_base . 'modules/sevk-manager.js', array('kasa-ui-renderer', 'kasa-depo-manager'), $pos_version, true);
+    wp_enqueue_script('kasa-statistics-dashboard', $js_base . 'modules/statistics-dashboard.js', array('kasa-ui-renderer', 'kasa-depo-manager', 'chartjs'), $pos_version, true);
     wp_enqueue_script('kasa-js', $js_base . 'kasa.js', array(
         'kasa-cart-manager',
         'kasa-ui-renderer',
@@ -133,6 +137,7 @@ function hizli_kasa_uygulamasi()
         'kasa-detailed-reports',
         'kasa-report-receipt-printer',
         'kasa-sevk-manager',
+        'kasa-statistics-dashboard',
         'kasa-currency-mask'
     ), $pos_version, true);
 
@@ -162,5 +167,3 @@ function hizli_kasa_uygulamasi()
     include HIZLI_KASA_PATH . 'includes/template-app.php';
     return ob_get_clean();
 }
-
-

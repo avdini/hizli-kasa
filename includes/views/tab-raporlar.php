@@ -15,7 +15,7 @@
         <button class="rapor-alt-btn" data-target="rapor-iade-listesi">🔙 İadeler</button>
         <button class="rapor-alt-btn" data-target="rapor-siparis-duzenleme">✏️ Sipariş Düzenlemeleri</button>
         <button class="rapor-alt-btn" data-target="rapor-gun-sonu-arsivi">📂 Gün Sonu Arşivi</button>
-        <button class="rapor-alt-btn" data-target="rapor-ozet-istatistik">📈 Özel İstatistikler (Yakında)</button>
+        <button class="rapor-alt-btn" data-target="rapor-ozet-istatistik">📈 İstatistik Dashboardu</button>
     </div>
 
     <!-- Rapor İçerik Alanları -->
@@ -121,11 +121,7 @@
     </div>
 
     <div id="rapor-ozet-istatistik" class="rapor-icerik-paneli" style="display:none;">
-        <div style="text-align:center; padding:50px;">
-            <div style="font-size:48px;">📈</div>
-            <h3>Gelişmiş İstatistikler</h3>
-            <p>Satış grafiklerini ve performans analizlerini içeren bu modül bir sonraki güncelleme ile eklenecektir.</p>
-        </div>
+        <!-- İçerik HK.StatisticsDashboard tarafından dinamik olarak doldurulur -->
     </div>
 
     <!-- Raporlar İçin İzole Fiş Şablonu (Sadece Yazdırma İçin) -->
