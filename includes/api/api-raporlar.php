@@ -574,6 +574,8 @@ function hizli_kasa_get_reports_data($request, $is_refund = false)
         );
     }
 
+    $meta_query['relation'] = 'AND';
+
     if (!empty($meta_query)) {
         $args['meta_query'] = $meta_query;
     }
@@ -597,6 +599,12 @@ function hizli_kasa_get_reports_data($request, $is_refund = false)
     foreach ($orders as $order) {
         if (!$order instanceof WC_Order)
             continue;
+
+        // HPOS Güvenlik Filtresi: meta_query HPOS'ta bazen is_refund koşulunu
+        // es geçebiliyor. PHP seviyesinde ikinci kez kontrol ediyoruz.
+        $order_is_refund = ($order->get_meta('_hizli_kasa_is_refund') === 'yes');
+        if ($is_refund && !$order_is_refund) continue; // İade bekleniyorken normal sipariş geldi
+        if (!$is_refund && $order_is_refund) continue;  // Sipariş bekleniyorken iade geldi
 
         $date_created = $order->get_date_created();
         $date_str = $date_created ? $date_created->date('Y-m-d H:i:s') : 'Bilinmiyor';

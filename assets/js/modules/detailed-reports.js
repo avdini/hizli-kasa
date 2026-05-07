@@ -314,6 +314,12 @@
                 var res = await response.json();
                 console.log("HK.DetailedReports: Orders data received:", res);
 
+                if (!response.ok) {
+                    console.error("HK.DetailedReports: Orders API error", response.status, res);
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:orange;">⚠️ ' + (res.message || 'Siparişler yüklenemedi. Lütfen sayfayı yenileyip tekrar deneyin.') + '</td></tr>';
+                    return;
+                }
+
                 this.renderTable(tbody, res.orders, 'orders');
                 this.renderPagination(pagin, res.max_pages, this.currentPageOrders, 'orders');
 
@@ -348,6 +354,12 @@
                 
                 var res = await response.json();
                 console.log("HK.DetailedReports: Refunds data received:", res);
+
+                if (!response.ok) {
+                    console.error("HK.DetailedReports: Refunds API error", response.status, res);
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px; color:orange;">⚠️ ' + (res.message || 'İadeler yüklenemedi. Lütfen sayfayı yenileyip tekrar deneyin.') + '</td></tr>';
+                    return;
+                }
 
                 this.renderTable(tbody, res.orders, 'refunds');
                 this.renderPagination(pagin, res.max_pages, this.currentPageRefunds, 'refunds');
