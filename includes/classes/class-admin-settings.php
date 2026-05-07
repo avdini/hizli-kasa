@@ -174,25 +174,25 @@ function hizli_kasa_ayarlari_kaydet()
         'type' => 'string',
         'default' => 'secili'
     ));
-    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_cache_aktif', array(
+    register_setting('hizli_kasa_cache_grubu', 'hizli_kasa_cache_aktif', array(
         'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
     ));
-    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_search_cache_ttl', array(
+    register_setting('hizli_kasa_cache_grubu', 'hizli_kasa_search_cache_ttl', array(
         'type' => 'integer',
         'default' => 5,
         'sanitize_callback' => 'intval'
     ));
-    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_reports_cache_ttl', array(
+    register_setting('hizli_kasa_cache_grubu', 'hizli_kasa_reports_cache_ttl', array(
         'type' => 'integer',
         'default' => 15,
         'sanitize_callback' => 'intval'
     ));
-    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_depo_cache_ttl', array(
+    register_setting('hizli_kasa_cache_grubu', 'hizli_kasa_depo_cache_ttl', array(
         'type' => 'integer',
         'default' => 24,
         'sanitize_callback' => 'intval'
     ));
-    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_user_perms_cache_ttl', array(
+    register_setting('hizli_kasa_cache_grubu', 'hizli_kasa_user_perms_cache_ttl', array(
         'type' => 'integer',
         'default' => 12,
         'sanitize_callback' => 'intval'
@@ -1276,7 +1276,7 @@ function hizli_kasa_ayarlar_sayfasi()
                         <p>Sistemin ağır yük çeken kısımları için önbellekleme sürelerini ayarlayabilir ve yönetebilirsiniz.</p>
                         
                         <form method="post" action="options.php">
-                            <?php settings_fields('hizli_kasa_ayar_grubu'); ?>
+                            <?php settings_fields('hizli_kasa_cache_grubu'); ?>
                             
                             <?php $cache_aktif = get_option('hizli_kasa_cache_aktif', '1'); ?>
                             <div style="background: <?php echo $cache_aktif ? '#f0f9eb' : '#fcf0f1'; ?>; border: 1px solid <?php echo $cache_aktif ? '#c2e0b4' : '#f5c6cb'; ?>; padding: 15px; border-radius: 4px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
