@@ -708,7 +708,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
                 FROM {$wpdb->posts} p
                 LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
                 LEFT JOIN {$wpdb->postmeta} pm_stock ON (p.ID = pm_stock.post_id AND pm_stock.meta_key = '_stock')
-                LEFT JOIN $stok_table sk ON (p.ID = sk.variation_id OR (p.post_type = 'product' AND p.ID = sk.product_id AND sk.variation_id = 0))
+                LEFT JOIN $stok_table sk ON sk.variation_id = IF(p.post_type = 'product_variation', p.ID, 0) AND sk.product_id = IF(p.post_type = 'product_variation', p.post_parent, p.ID)
                 WHERE $where_sql
                 GROUP BY p.ID
                 $having_sql";
