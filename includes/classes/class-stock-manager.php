@@ -467,6 +467,7 @@ class Hizli_Kasa_Stock_Manager {
         $data = [];
         foreach ($results as $row) {
             $sku = get_post_meta($row->variation_id ?: $row->product_id, '_sku', true);
+            
             $data[] = [
                 'Depo Adı'     => $row->warehouse,
                 'Öncelik'     => $row->priority,
@@ -553,13 +554,21 @@ class Hizli_Kasa_Stock_Manager {
 
             $product_name   = $safe_row['urunadi'] ?? $safe_row['productname'] ?? $row['Ürün Adı'] ?? '';
 
-            if (empty($warehouse_name) || empty($sku)) continue;
+            // SKU veya Ürün Adı yoksa atla
+            if (empty($warehouse_name) || (empty($sku) && empty($product_name))) continue;
 
             // 1. Depoyu Bul veya Oluştur/Güncelle
             $depo_id = self::get_or_create_warehouse($warehouse_name, $stats, $priority, $address);
 
             // 2. Ürünü Bul
-            $ids = self::find_product_by_sku($sku);
+            $ids = false;
+            if (!empty($sku)) {
+                $ids = self::find_product_by_sku($sku);
+            }
+            // SKU boşsa veya SKU'dan bulunamadıysa Ürün Adı ile ara
+            if (!$ids && !empty($product_name)) {
+                $ids = self::find_product_by_name($product_name);
+            }
 
             if ($ids) {
                 // Eşleşti -> Güncelle
@@ -620,6 +629,27 @@ class Hizli_Kasa_Stock_Manager {
 
         $post = get_post($id);
         if (!$post || ($post->post_type !== 'product' && $post->post_type !== 'product_variation')) return false;
+
+        if ($post->post_type === 'product_variation') {
+            return ['product_id' => $post->post_parent, 'variation_id' => $id];
+        }
+
+        return ['product_id' => $id, 'variation_id' => 0];
+    }
+
+    /**
+     * İsim (post_title) ile ürün veya varyasyon bulur (SKU Fallback).
+     */
+    private static function find_product_by_name($product_name) {
+        if (empty($product_name)) return false;
+        global $wpdb;
+        
+        $id = $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_title = %s AND post_type IN ('product', 'product_variation') AND post_status = 'publish' LIMIT 1", $product_name));
+        
+        if (!$id) return false;
+
+        $post = get_post($id);
+        if (!$post) return false;
 
         if ($post->post_type === 'product_variation') {
             return ['product_id' => $post->post_parent, 'variation_id' => $id];
