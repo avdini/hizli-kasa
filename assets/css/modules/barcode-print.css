@@ -69,6 +69,35 @@
     text-align: center;
 }
 
+/* Eksik SKU Uyarısı */
+.barkod-item-row.missing-sku {
+    border-left: 4px solid var(--hk-danger);
+    background: rgba(231, 76, 60, 0.05);
+}
+
+.barkod-item-row.missing-sku .item-name {
+    color: var(--hk-danger);
+}
+
+.barkod-item-row.missing-sku .sku-warning-badge {
+    background: var(--hk-danger);
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 10px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.barkod-item-row.missing-sku .print-qty:disabled {
+    background: var(--hk-bg-sidebar);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+
 /* Yazdırma Alanı - Ekranda gizli */
 #hk-barcode-print-area {
     display: none;

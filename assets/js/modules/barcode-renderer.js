@@ -58,15 +58,17 @@
 
             document.getElementById('barkod-modal-baslik').innerText = 'Barkod Yazdır';
             
+            var hasSku = product.sku && product.sku.trim() !== '';
+            
             container.innerHTML = `
-                <div class="barkod-item-row" data-id="${product.id}" data-vid="${product.variation_id || 0}">
+                <div class="barkod-item-row ${!hasSku ? 'missing-sku' : ''}" data-id="${product.id}" data-vid="${product.variation_id || 0}">
                     <div class="item-info">
-                        <span class="item-name">${product.name}</span>
-                        <span class="item-sku">${product.sku || 'SKU YOK'}</span>
+                        <span class="item-name">${product.name} ${!hasSku ? '<span class="sku-warning-badge">SKU EKSİK</span>' : ''}</span>
+                        <span class="item-sku">${product.sku || 'SKU TANIMLANMAMIŞ'}</span>
                     </div>
                     <div class="item-qty-input">
                         <label>Adet:</label>
-                        <input type="number" class="print-qty" value="1" min="1">
+                        <input type="number" class="print-qty" value="${hasSku ? '1' : '0'}" min="${hasSku ? '1' : '0'}" ${!hasSku ? 'disabled' : ''}>
                     </div>
                 </div>
             `;
@@ -262,15 +264,18 @@
             
             var html = '';
             variations.forEach(v => {
+                var hasSku = v.sku && v.sku.trim() !== '';
+                var defaultQty = hasSku ? Math.max(0, Math.ceil(v.warehouse_stock)) : 0;
+
                 html += `
-                    <div class="barkod-item-row" data-id="${parentProduct.id}" data-vid="${v.id}">
+                    <div class="barkod-item-row ${!hasSku ? 'missing-sku' : ''}" data-id="${parentProduct.id}" data-vid="${v.id}">
                         <div class="item-info">
-                            <span class="item-name">${v.name}</span>
-                            <span class="item-sku">${v.sku || 'SKU YOK'} | Stok: ${v.warehouse_stock}</span>
+                            <span class="item-name">${v.name} ${!hasSku ? '<span class="sku-warning-badge">SKU EKSİK</span>' : ''}</span>
+                            <span class="item-sku">${v.sku || 'SKU TANIMLANMAMIŞ'} | Stok: ${v.warehouse_stock}</span>
                         </div>
                         <div class="item-qty-input">
                             <label>Adet:</label>
-                            <input type="number" class="print-qty" value="${Math.max(0, Math.ceil(v.warehouse_stock))}" min="0">
+                            <input type="number" class="print-qty" value="${defaultQty}" min="0" ${!hasSku ? 'disabled' : ''}>
                         </div>
                     </div>
                 `;
