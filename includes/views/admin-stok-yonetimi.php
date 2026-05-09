@@ -6,14 +6,28 @@ $depo_table = $wpdb->prefix . 'hizli_kasa_depolar';
 $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priority DESC");
 ?>
 
+<div id="hk-pending-bar" style="display:none; position:sticky; top:32px; z-index:9998; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; padding:10px 18px; margin-bottom:12px; align-items:center; justify-content:space-between; box-shadow:0 2px 8px rgba(251,191,36,0.3);">
+  <span style="font-size:13px; font-weight:500;">⏳ <strong id="hk-pending-count">0</strong> değişiklik kaydedilmeyi bekliyor</span>
+  <div style="display:flex; gap:8px;">
+    <button type="button" class="button" onclick="cancelPendingChanges()">✕ İptal</button>
+    <button type="button" id="btn-save-changes" class="button button-primary" onclick="savePendingChanges()" disabled>💾 Değişiklikleri Kaydet</button>
+  </div>
+</div>
+<div id="hk-save-notice" style="display:none; margin-bottom:12px; padding:10px 16px; border-radius:8px; font-weight:500; font-size:13px;"></div>
+
 <div class="hizli-kasa-admin-stock-wrap">
     <div class="stock-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; background:#fff; padding:15px; border-radius:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1);">
         <div class="search-box" style="flex:1; display:flex; align-items:center; gap:15px;">
             <input type="text" id="admin-product-search" placeholder="Ürün adı veya SKU ile arayın..." style="width:100%; max-width:400px; padding:8px 12px; border-radius:4px;">
             <label style="display:inline-flex; align-items:center; gap:8px; font-size:13px; color:#d63638; font-weight:600; cursor:pointer; background:#fff5f5; padding:5px 12px; border-radius:6px; border:1px solid #fecaca;">
-                <input type="checkbox" id="filter-mismatch" onchange="loadStockList()"> 
+                <input type="checkbox" id="filter-mismatch" onchange="currentPage=1; loadStockList()"> 
                 <span class="dashicons dashicons-warning" style="font-size:18px; width:18px; height:18px; color:#d63638;"></span>
                 Stok Uyuşmazlığı Olanlar
+            </label>
+            <label style="display:inline-flex; align-items:center; gap:8px; font-size:13px; color:#64748b; font-weight:600; cursor:pointer; background:#f1f5f9; padding:5px 12px; border-radius:6px; border:1px solid #cbd5e1;">
+                <input type="checkbox" id="filter-zero-stock" onchange="currentPage=1; loadStockList()"> 
+                <span class="dashicons dashicons-minus" style="font-size:18px; width:18px; height:18px; color:#64748b;"></span>
+                Stoku Sıfır Olanlar
             </label>
         </div>
         <div class="actions" style="display:flex; gap:10px; align-items:center;">
@@ -32,9 +46,10 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
         <table class="wp-list-table widefat fixed striped table-view-list products">
             <thead>
                 <tr>
-                    <th style="width:50px;">Görsel</th>
+                    <th style="width:36px; padding:12px 8px;"><input type="checkbox" id="select-all-rows"></th>
+                    <th style="width:56px;">Görsel</th>
                     <th>Ürün Bilgisi</th>
-                    <th style="width:100px;">Site Stoğu</th>
+                    <th style="width:130px; text-align:center;">Site Stoğu</th>
                     <?php foreach($depolar as $d): ?>
                         <th style="text-align:center; background: #f0f6fb; border-left:1px solid #ccd0d4;">
                             <?php echo esc_html($d->name); ?>
@@ -44,7 +59,7 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
             </thead>
             <tbody id="admin-stock-list-body">
                 <tr>
-                    <td colspan="<?php echo count($depolar) + 3; ?>" style="text-align:center; padding:50px;">
+                    <td colspan="<?php echo count($depolar) + 4; ?>" style="text-align:center; padding:50px;">
                         <span class="spinner is-active" style="float:none;"></span> Ürünler yükleniyor...
                     </td>
                 </tr>
@@ -55,6 +70,22 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
     <div class="pagination-wrap" id="admin-stock-pagination" style="margin-top:20px; text-align:right;">
         <!-- Sayfalama buraya gelecek -->
     </div>
+</div>
+
+<div id="hk-bulk-toolbar" style="display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:9999; background:#1e293b; color:#fff; border-radius:12px; padding:12px 20px; box-shadow:0 8px 32px rgba(0,0,0,0.35); align-items:center; gap:10px; white-space:nowrap;">
+  <span style="font-size:13px; opacity:0.8;"><strong id="hk-selected-count">0</strong> satır seçili</span>
+  <div style="width:1px; height:24px; background:rgba(255,255,255,0.2);"></div>
+  <select id="bulk-col-select" style="background:#334155; color:#fff; border:1px solid #475569; border-radius:6px; padding:5px 8px; font-size:12px;">
+    <option value="wc_stock">Site Stoğu</option>
+    <?php foreach($depolar as $d): ?>
+      <option value="did_<?php echo $d->id; ?>"><?php echo esc_html($d->name); ?></option>
+    <?php endforeach; ?>
+  </select>
+  <input type="number" id="bulk-val-input" placeholder="Değer" min="0" style="width:80px; background:#334155; color:#fff; border:1px solid #475569; border-radius:6px; padding:5px 8px; font-size:12px;">
+  <button type="button" onclick="broadcastToSelected()" style="background:#3b82f6; color:#fff; border:none; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer;">📢 Seçilenlere Uygula</button>
+  <button type="button" onclick="fillDown()" style="background:#10b981; color:#fff; border:none; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer;">↓ Aşağı Doldur</button>
+  <button type="button" onclick="fillUp()" style="background:#8b5cf6; color:#fff; border:none; border-radius:6px; padding:6px 12px; font-size:12px; cursor:pointer;">↑ Yukarı Doldur</button>
+  <button type="button" onclick="clearSelection()" style="background:transparent; color:#94a3b8; border:1px solid #475569; border-radius:6px; padding:6px 10px; font-size:12px; cursor:pointer;">✕</button>
 </div>
 
 <!-- İçe Aktar Modalı -->
@@ -129,6 +160,12 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
 </div>
 
 <style>
+/* Custom Checkbox */
+.hk-row-cb { cursor:pointer; width:16px; height:16px; margin:0 !important; }
+
+/* Bulky Rows */
+#admin-stock-table-container td { padding: 12px 10px; font-size:14px; }
+
 .stock-qty-control {
     display: flex;
     align-items: center;
@@ -136,8 +173,8 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
     gap: 8px;
 }
 .btn-qty {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     border-radius: 4px;
     border: 1px solid #ddd;
     background: #fff;
@@ -245,6 +282,8 @@ $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priorit
 
 /* Hover Effect */
 #admin-stock-list-body tr:hover { background-color: #e0e7ff !important; } /* Daha belirgin hover */
+#admin-stock-list-body tr.hk-selected { background-color: #e0e7ff !important; }
+#admin-stock-list-body tr.hk-pending { background-color: #fef3c7 !important; }
 
 .variation-indent::before {
     content: '';
@@ -300,6 +339,51 @@ console.log('Hızlı Kasa JS Başlatıldı.');
 jQuery(document).ready(function($) {
     let currentPage = 1;
     let searchTimeout = null;
+    let pendingChanges = {};
+
+    function updateSaveButtonState() {
+        const count = Object.keys(pendingChanges).length;
+        $('#hk-pending-count').text(count);
+        if (count > 0) {
+            $('#hk-pending-bar').css('display', 'flex');
+            $('#btn-save-changes').prop('disabled', false);
+        } else {
+            $('#hk-pending-bar').hide();
+            $('#btn-save-changes').prop('disabled', true);
+        }
+    }
+
+    // Select All
+    $('#select-all-rows').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        $('.hk-row-cb').filter(':visible').prop('checked', isChecked);
+        updateBulkToolbar();
+    });
+
+    $(document).on('change', '.hk-row-cb', function(e) {
+        e.stopPropagation(); // Satır aç/kapatı tetiklemesin
+        updateBulkToolbar();
+    });
+
+    function updateBulkToolbar() {
+        const selected = $('.hk-row-cb:checked').length;
+        if (selected > 0) {
+            $('#hk-selected-count').text(selected);
+            $('#hk-bulk-toolbar').css('display', 'flex');
+            $('.hk-row-cb').each(function() {
+                $(this).closest('tr').toggleClass('hk-selected', $(this).is(':checked'));
+            });
+        } else {
+            $('#hk-bulk-toolbar').hide();
+            $('#admin-stock-list-body tr').removeClass('hk-selected');
+        }
+    }
+
+    window.clearSelection = function() {
+        $('.hk-row-cb').prop('checked', false);
+        $('#select-all-rows').prop('checked', false);
+        updateBulkToolbar();
+    };
 
     // Arama Tetikleyici
     $('#admin-product-search').on('input', function() {
@@ -443,6 +527,7 @@ jQuery(document).ready(function($) {
         console.log('HK Debug: loadStockList called, page:', page);
         const query = $('#admin-product-search').val();
         const filterMismatch = $('#filter-mismatch').is(':checked');
+        const filterZeroStock = $('#filter-zero-stock').is(':checked');
         const $body = $('#admin-stock-list-body');
         const ajax_url = (typeof ajaxurl !== 'undefined') ? ajaxurl : '/wp-admin/admin-ajax.php';
         
@@ -450,14 +535,16 @@ jQuery(document).ready(function($) {
             action: 'hizli_kasa_get_admin_stock_list',
             s: query,
             paged: page,
-            filter_mismatch: filterMismatch
+            filter_mismatch: filterMismatch,
+            filter_zero_stock: filterZeroStock
         });
 
         $.post(ajax_url, {
             action: 'hizli_kasa_get_admin_stock_list',
             s: query,
             paged: page,
-            filter_mismatch: filterMismatch
+            filter_mismatch: filterMismatch,
+            filter_zero_stock: filterZeroStock
         }, function(res) {
             console.log('HK Debug: AJAX Response received:', res);
             $body.css('opacity', '1');
@@ -520,6 +607,7 @@ jQuery(document).ready(function($) {
             const mismatchIcon = p.has_mismatch ? '<span class="dashicons dashicons-warning" style="color:#d63638; font-size:18px; margin-left:8px;" title="Depo stok toplamı site stoğu ile uyuşmuyor!"></span>' : '';
 
             let row = `<tr class="${isVariable ? 'row-variable' : ''} ${stripeClass}" data-id="${p.id}">
+                <td style="text-align:center;"><input type="checkbox" class="hk-row-cb" value="${p.id}"></td>
                 <td><img src="${p.thumbnail}" style="width:40px; height:40px; border-radius:4px; object-fit:cover;"></td>
                 <td style="vertical-align:middle;">
                     <div style="display:flex; align-items:center;">
@@ -530,15 +618,19 @@ jQuery(document).ready(function($) {
                     </div>
                     <code style="font-size:10px; color:#64748b; margin-left:${isVariable ? '26px' : '0'};">SKU: ${p.sku || 'N/A'}</code>
                 </td>
-                <td style="font-weight:bold; color:#64748b; vertical-align:middle; ${p.has_mismatch ? 'color:#d63638;' : ''}">
-                    ${isVariable ? '-' : p.wc_stock}
+                <td style="font-weight:bold; color:#64748b; vertical-align:middle; text-align:center; ${p.has_mismatch ? 'color:#d63638;' : ''}">
+                    ${isVariable ? '-' : `
+                    <div class="stock-qty-control" data-pid="${p.id}" data-vid="0" data-did="0" data-type="wc_stock">
+                        <span class="qty-value">${p.wc_stock}</span>
+                    </div>
+                    `}
                     ${p.has_mismatch && !isVariable ? `<div style="font-size:9px; font-weight:normal; opacity:0.8;">Depo: ${p.total_warehouse_stock}</div>` : ''}
                 </td>`;
             
             p.warehouse_stocks.forEach(ws => {
                 row += `<td style="text-align:center; border-left:1px solid #eee; vertical-align:middle;">
                     ${isVariable ? '<span style="color:#cbd5e1">—</span>' : `
-                    <div class="stock-qty-control" data-pid="${p.id}" data-vid="${p.variation_id}" data-did="${ws.depo_id}">
+                    <div class="stock-qty-control" data-pid="${p.id}" data-vid="${p.variation_id}" data-did="${ws.depo_id}" data-type="warehouse">
                         <button class="btn-qty minus" onclick="updateStock(this, -1)">-</button>
                         <span class="qty-value">${ws.qty}</span>
                         <button class="btn-qty plus" onclick="updateStock(this, 1)">+</button>
@@ -552,7 +644,8 @@ jQuery(document).ready(function($) {
             // Varyasyonları Ekle
             if(isVariable && p.variations) {
                 p.variations.forEach(v => {
-                    let vRow = `<tr class="row-variation child-of-${p.id} hidden-variation">
+                    let vRow = `<tr class="row-variation child-of-${p.id} hidden-variation" data-id="${p.id}" data-vid="${v.variation_id}">
+                        <td style="text-align:center;"><input type="checkbox" class="hk-row-cb" value="${v.variation_id}"></td>
                         <td style="text-align:right;"><img src="${v.thumbnail}" style="width:30px; height:30px; border-radius:4px; object-fit:cover;"></td>
                         <td class="variation-indent" style="vertical-align:middle;">
                             <div style="display:flex; align-items:center;">
@@ -562,14 +655,16 @@ jQuery(document).ready(function($) {
                             </div>
                             <code style="font-size:10px; color:#94a3b8;">SKU: ${v.sku || 'N/A'}</code>
                         </td>
-                        <td style="font-weight:600; color:#64748b; vertical-align:middle; ${v.has_mismatch ? 'color:#d63638;' : ''}">
-                            ${v.wc_stock}
+                        <td style="font-weight:600; color:#64748b; vertical-align:middle; text-align:center; ${v.has_mismatch ? 'color:#d63638;' : ''}">
+                            <div class="stock-qty-control" data-pid="${p.id}" data-vid="${v.variation_id}" data-did="0" data-type="wc_stock">
+                                <span class="qty-value">${v.wc_stock}</span>
+                            </div>
                             ${v.has_mismatch ? `<div style="font-size:9px; font-weight:normal; opacity:0.8;">Depo: ${v.total_warehouse_stock}</div>` : ''}
                         </td>`;
 
                     v.warehouse_stocks.forEach(vws => {
                         vRow += `<td style="text-align:center; border-left:1px solid #eee; vertical-align:middle;">
-                            <div class="stock-qty-control" data-pid="${v.id}" data-vid="${v.variation_id}" data-did="${vws.depo_id}">
+                            <div class="stock-qty-control" data-pid="${p.id}" data-vid="${v.variation_id}" data-did="${vws.depo_id}" data-type="warehouse">
                                 <button class="btn-qty minus" onclick="updateStock(this, -1)">-</button>
                                 <span class="qty-value">${vws.qty}</span>
                                 <button class="btn-qty plus" onclick="updateStock(this, 1)">+</button>
@@ -612,33 +707,145 @@ jQuery(document).ready(function($) {
 
     function saveStock($parent, inputVal) {
         const $val = $parent.find('.qty-value');
-        let data = {
-            action: 'hizli_kasa_admin_update_stock',
-            product_id: $parent.data('pid'),
-            variation_id: $parent.data('vid'),
-            depo_id: $parent.data('did')
-        };
-
-        // Smart Syntax Kontrolü
-        if (inputVal.startsWith('+') || inputVal.startsWith('-')) {
-            data.change = inputVal;
-        } else {
-            data.set_qty = inputVal;
-        }
-
-        $parent.addClass('updating');
+        const currentQty = parseFloat($val.text()) || 0;
+        let newQty = 0;
         
-        jQuery.post(ajaxurl, data, function(res) {
-            $parent.removeClass('updating');
-            if(res.success) {
-                $val.text(res.data.new_qty).addClass('qty-changed');
-                setTimeout(() => $val.removeClass('qty-changed'), 1000);
+        if (inputVal.startsWith('+') || inputVal.startsWith('-')) {
+            newQty = currentQty + parseFloat(inputVal);
+        } else {
+            newQty = parseFloat(inputVal);
+        }
+        if (newQty < 0) newQty = 0;
+        
+        $val.text(newQty).addClass('qty-changed');
+        setTimeout(() => $val.removeClass('qty-changed'), 1000);
+        
+        const pid = $parent.data('pid');
+        const vid = $parent.data('vid');
+        const did = $parent.data('did');
+        const type = $parent.data('type');
+        
+        const key = type === 'wc_stock' ? `wc_${pid}_${vid}` : `w_${pid}_${vid}_${did}`;
+        pendingChanges[key] = { pid, vid, did, new_qty: newQty, type };
+        
+        $parent.closest('tr').addClass('hk-pending');
+        updateSaveButtonState();
+    }
+
+    window.savePendingChanges = function() {
+        if (Object.keys(pendingChanges).length === 0) return;
+        
+        $('#btn-save-changes').prop('disabled', true).text('Kaydediliyor...');
+        
+        $.post(ajaxurl, {
+            action: 'hizli_kasa_batch_update_stock',
+            changes: JSON.stringify(Object.values(pendingChanges))
+        }, function(res) {
+            if (res.success) {
+                pendingChanges = {};
+                updateSaveButtonState();
+                $('#admin-stock-list-body tr').removeClass('hk-pending');
+                $('#btn-save-changes').text('💾 Değişiklikleri Kaydet');
+                
+                $('#hk-save-notice').text(res.data.updated + ' ürün stok bilgisi başarıyla güncellendi.').css({'display': 'block', 'background': '#ecfdf5', 'color': '#065f46', 'border': '1px solid #d1fae5'});
+                setTimeout(() => $('#hk-save-notice').fadeOut(), 3000);
+                
+                clearSelection();
+                loadStockList(currentPage);
             } else {
-                alert(res.data.message);
-                loadStockList(); // Hata varsa tabloyu eski haline getir
+                alert('Kaydetme hatası: ' + (res.data ? res.data.message : 'Bilinmeyen hata'));
+                $('#btn-save-changes').prop('disabled', false).text('💾 Değişiklikleri Kaydet');
+            }
+        }).fail(function() {
+            alert('Sunucu hatası oluştu!');
+            $('#btn-save-changes').prop('disabled', false).text('💾 Değişiklikleri Kaydet');
+        });
+    };
+
+    window.cancelPendingChanges = function() {
+        pendingChanges = {};
+        updateSaveButtonState();
+        $('#admin-stock-list-body tr').removeClass('hk-pending');
+        loadStockList(currentPage);
+    };
+
+    // Bulk Mod A: Yayma
+    window.broadcastToSelected = function() {
+        const targetCol = $('#bulk-col-select').val(); // 'wc_stock' veya 'did_1' vb.
+        const val = $('#bulk-val-input').val();
+        if (val === '') { alert('Lütfen bir değer girin.'); return; }
+        
+        $('.hk-row-cb:checked').each(function() {
+            const $tr = $(this).closest('tr');
+            let $control;
+            if (targetCol === 'wc_stock') {
+                $control = $tr.find('.stock-qty-control[data-type="wc_stock"]');
+            } else {
+                const did = targetCol.replace('did_', '');
+                $control = $tr.find(`.stock-qty-control[data-type="warehouse"][data-did="${did}"]`);
+            }
+            if ($control.length) {
+                saveStock($control, val);
             }
         });
-    }
+    };
+
+    // Bulk Mod C: Aşağı Doldur (Fill-Down)
+    window.fillDown = function() {
+        const targetCol = $('#bulk-col-select').val();
+        const selectedRows = $('.hk-row-cb:checked').closest('tr');
+        if (selectedRows.length === 0) return;
+        
+        selectedRows.each(function() {
+            const $tr = $(this);
+            // Sadece görünür satırları dikkate al (Açık olan varyasyonlar vb.)
+            const $nextTr = $tr.nextAll('tr:visible').first();
+            if ($nextTr.length === 0) return;
+            
+            let $sourceControl, $targetControl;
+            if (targetCol === 'wc_stock') {
+                $sourceControl = $tr.find('.stock-qty-control[data-type="wc_stock"]');
+                $targetControl = $nextTr.find('.stock-qty-control[data-type="wc_stock"]');
+            } else {
+                const did = targetCol.replace('did_', '');
+                $sourceControl = $tr.find(`.stock-qty-control[data-type="warehouse"][data-did="${did}"]`);
+                $targetControl = $nextTr.find(`.stock-qty-control[data-type="warehouse"][data-did="${did}"]`);
+            }
+            
+            if ($sourceControl.length && $targetControl.length) {
+                const val = $sourceControl.find('.qty-value').text();
+                saveStock($targetControl, val);
+            }
+        });
+    };
+
+    // Bulk Mod C: Yukarı Doldur (Fill-Up)
+    window.fillUp = function() {
+        const targetCol = $('#bulk-col-select').val();
+        const selectedRows = $('.hk-row-cb:checked').closest('tr');
+        if (selectedRows.length === 0) return;
+        
+        $($('.hk-row-cb:checked').get().reverse()).each(function() {
+            const $tr = $(this).closest('tr');
+            const $prevTr = $tr.prevAll('tr:visible').first();
+            if ($prevTr.length === 0) return;
+            
+            let $sourceControl, $targetControl;
+            if (targetCol === 'wc_stock') {
+                $sourceControl = $tr.find('.stock-qty-control[data-type="wc_stock"]');
+                $targetControl = $prevTr.find('.stock-qty-control[data-type="wc_stock"]');
+            } else {
+                const did = targetCol.replace('did_', '');
+                $sourceControl = $tr.find(`.stock-qty-control[data-type="warehouse"][data-did="${did}"]`);
+                $targetControl = $prevTr.find(`.stock-qty-control[data-type="warehouse"][data-did="${did}"]`);
+            }
+            
+            if ($sourceControl.length && $targetControl.length) {
+                const val = $sourceControl.find('.qty-value').text();
+                saveStock($targetControl, val);
+            }
+        });
+    };
 
     function renderPagination(totalPages, activePage) {
         const $pag = $('#admin-stock-pagination');

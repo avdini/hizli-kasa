@@ -599,6 +599,7 @@ add_action('wp_ajax_hizli_kasa_repair_db', 'hizli_kasa_ajax_repair_db');
 add_action('wp_ajax_hizli_kasa_debug_db', 'hizli_kasa_ajax_debug_db');
 add_action('wp_ajax_hizli_kasa_get_admin_stock_list', 'hizli_kasa_ajax_get_admin_stock_list');
 add_action('wp_ajax_hizli_kasa_admin_update_stock', 'hizli_kasa_ajax_admin_update_stock');
+add_action('wp_ajax_hizli_kasa_batch_update_stock', 'hizli_kasa_ajax_batch_update_stock');
 
 // İçe / Dışa Aktar AJAX
 add_action('wp_ajax_hizli_kasa_export_stocks', 'hizli_kasa_ajax_export_stocks');
@@ -675,6 +676,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         $depo_table = Hizli_Kasa_Database::get_tables()['depolar'];
         $s = sanitize_text_field($_POST['s'] ?? '');
         $filter_mismatch = (isset($_POST['filter_mismatch']) && $_POST['filter_mismatch'] === 'true');
+        $filter_zero_stock = (isset($_POST['filter_zero_stock']) && $_POST['filter_zero_stock'] === 'true');
         $paged = max(1, intval($_POST['paged'] ?? 1));
         $per_page = 24;
         $offset = ($paged - 1) * $per_page;
@@ -688,27 +690,35 @@ function hizli_kasa_ajax_get_admin_stock_list() {
             $params[] = $like; $params[] = $like;
         }
 
-        if ($filter_mismatch) {
-        // Miktar uyuşmazlığı olanları bulmak için JOIN kullanan performanslı query
-        $base_sql = "
-            SELECT 
-                (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id,
-                COALESCE(CAST(pm_stock.meta_value AS DECIMAL(15,4)), 0) as wc_stock,
-                COALESCE(SUM(sk.quantity), 0) as total_wh_stock
-            FROM {$wpdb->posts} p
-            LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
-            LEFT JOIN {$wpdb->postmeta} pm_stock ON (p.ID = pm_stock.post_id AND pm_stock.meta_key = '_stock')
-            LEFT JOIN $stok_table sk ON (p.ID = sk.variation_id OR (p.post_type = 'product' AND p.ID = sk.product_id AND sk.variation_id = 0))
-            WHERE $where_sql
-            GROUP BY p.ID
-            HAVING total_wh_stock != wc_stock";
-    } else {
-        $base_sql = "
-            SELECT DISTINCT (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id
-            FROM {$wpdb->posts} p
-            LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
-            WHERE $where_sql";
-    }
+        if ($filter_mismatch || $filter_zero_stock) {
+            $having_clauses = [];
+            if ($filter_mismatch) {
+                $having_clauses[] = "total_wh_stock != wc_stock";
+            }
+            if ($filter_zero_stock) {
+                $having_clauses[] = "total_wh_stock = 0";
+            }
+            $having_sql = "HAVING " . implode(" AND ", $having_clauses);
+            
+            $base_sql = "
+                SELECT 
+                    (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id,
+                    COALESCE(CAST(pm_stock.meta_value AS DECIMAL(15,4)), 0) as wc_stock,
+                    COALESCE(SUM(sk.quantity), 0) as total_wh_stock
+                FROM {$wpdb->posts} p
+                LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
+                LEFT JOIN {$wpdb->postmeta} pm_stock ON (p.ID = pm_stock.post_id AND pm_stock.meta_key = '_stock')
+                LEFT JOIN $stok_table sk ON (p.ID = sk.variation_id OR (p.post_type = 'product' AND p.ID = sk.product_id AND sk.variation_id = 0))
+                WHERE $where_sql
+                GROUP BY p.ID
+                $having_sql";
+        } else {
+            $base_sql = "
+                SELECT DISTINCT (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id
+                FROM {$wpdb->posts} p
+                LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
+                WHERE $where_sql";
+        }
 
         // Toplam sayıyı bul
         $total_items = $wpdb->get_var($wpdb->prepare("SELECT COUNT(DISTINCT main_id) FROM ($base_sql) as t", $params));
@@ -905,6 +915,52 @@ function hizli_kasa_ajax_admin_update_stock() {
     );
 
     wp_send_json_success(['new_qty' => $new_qty]);
+}
+
+/**
+ * Toplu (Batch) Stok Güncelleme
+ */
+function hizli_kasa_ajax_batch_update_stock() {
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim!']);
+    
+    $changes = json_decode(stripslashes($_POST['changes']), true);
+    if (!is_array($changes)) wp_send_json_error(['message' => 'Geçersiz veri']);
+    
+    $updated = 0;
+    $errors  = [];
+    
+    foreach ($changes as $c) {
+        $type   = sanitize_text_field($c['type']); // 'warehouse' | 'wc_stock'
+        $pid    = intval($c['pid']);
+        $vid    = intval($c['vid']);
+        $newQty = floatval($c['new_qty']);
+        
+        if ($type === 'wc_stock') {
+            // WooCommerce site stoğunu güncelle — log tutulmaz, WC kendi hook'larını çalıştırır
+            $target_id = $vid > 0 ? $vid : $pid;
+            wc_update_product_stock($target_id, $newQty, 'set');
+            $updated++;
+        } elseif ($type === 'warehouse') {
+            $did = intval($c['did']);
+            // Mevcut stok değerini al, farkı hesapla
+            global $wpdb;
+            $table = Hizli_Kasa_Database::get_tables()['stok_konumlari'];
+            $parent_id = $vid > 0 ? get_post_field('post_parent', $vid) : $pid;
+            $current = (float) $wpdb->get_var($wpdb->prepare(
+                "SELECT quantity FROM $table WHERE location_id=%d AND product_id=%d AND variation_id=%d",
+                $did, $parent_id, $vid
+            ));
+            $change = $newQty - $current;
+            // Depo stok güncellemesi — stok_hareketleri tablosuna log düşer
+            Hizli_Kasa_Stock_Manager::update_warehouse_stock(
+                $parent_id, $vid, $did, $change,
+                "Admin Batch Güncelleme"
+            );
+            $updated++;
+        }
+    }
+    
+    wp_send_json_success(['updated' => $updated, 'errors' => $errors]);
 }
 
 function hizli_kasa_ajax_repair_db() {
