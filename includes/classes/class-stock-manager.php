@@ -497,6 +497,8 @@ class Hizli_Kasa_Stock_Manager {
      */
     public static function process_import($file_path, $format = 'csv') {
         $content = file_get_contents($file_path);
+        // BOM (Byte Order Mark) temizle
+        $content = preg_replace('/^[\xef\xbb\xbf]+/', '', $content);
         $rows = [];
 
         if ($format === 'json') {
@@ -504,6 +506,14 @@ class Hizli_Kasa_Stock_Manager {
         } else {
             $lines = explode("\n", str_replace("\r", "", $content));
             $headers = str_getcsv(array_shift($lines));
+            
+            // CSV başlıklarındaki olası görünmez karakterleri (BOM vs) temizle
+            foreach ($headers as &$h) {
+                $h = trim($h);
+                $h = preg_replace('/^[\xef\xbb\xbf]+/', '', $h);
+            }
+            unset($h);
+
             foreach ($lines as $line) {
                 if (empty($line)) continue;
                 $row_data = str_getcsv($line);
@@ -518,12 +528,30 @@ class Hizli_Kasa_Stock_Manager {
         $stats = ['updated' => 0, 'unmatched' => 0, 'new_warehouses' => 0];
 
         foreach ($rows as $row) {
-            $warehouse_name = $row['Depo Adı'] ?? $row['warehouse'] ?? '';
-            $priority       = intval($row['Öncelik'] ?? $row['priority'] ?? 0);
-            $address        = $row['Depo Adresi'] ?? $row['warehouse_address'] ?? '';
-            $sku            = $row['SKU'] ?? $row['sku'] ?? '';
-            $qty            = floatval($row['Stok Miktarı'] ?? $row['quantity'] ?? 0);
-            $product_name   = $row['Ürün Adı'] ?? $row['product_name'] ?? '';
+            // Güvenli anahtar okuma (farklı klavye, harf büyüklüğü ve boşluk hatalarına karşı)
+            $safe_row = [];
+            foreach ($row as $k => $v) {
+                $safe_k = mb_strtolower(trim((string)$k), 'UTF-8');
+                // Türkçe karakterleri ve boşlukları standardize et
+                $safe_k = str_replace(
+                    ['ı', 'i', 'ğ', 'g', 'ü', 'u', 'ş', 's', 'ö', 'o', 'ç', 'c', ' ', '_', '-'], 
+                    ['i', 'i', 'g', 'g', 'u', 'u', 's', 's', 'o', 'o', 'c', 'c', '', '', ''], 
+                    $safe_k
+                );
+                $safe_row[$safe_k] = $v;
+            }
+
+            $warehouse_name = $safe_row['depoadi'] ?? $safe_row['warehouse'] ?? $row['Depo Adı'] ?? '';
+            $priority       = intval($safe_row['oncelik'] ?? $safe_row['priority'] ?? $row['Öncelik'] ?? 0);
+            $address        = $safe_row['depoadresi'] ?? $safe_row['warehouseaddress'] ?? $row['Depo Adresi'] ?? '';
+            $sku            = $safe_row['sku'] ?? $row['SKU'] ?? '';
+            
+            $raw_qty        = $safe_row['stokmiktari'] ?? $safe_row['quantity'] ?? $safe_row['qty'] ?? $row['Stok Miktarı'] ?? 0;
+            // Sayı formatlarını düzelt (örn: " 5,5 " -> "5.5")
+            $raw_qty        = str_replace(',', '.', trim((string)$raw_qty));
+            $qty            = floatval($raw_qty);
+
+            $product_name   = $safe_row['urunadi'] ?? $safe_row['productname'] ?? $row['Ürün Adı'] ?? '';
 
             if (empty($warehouse_name) || empty($sku)) continue;
 
