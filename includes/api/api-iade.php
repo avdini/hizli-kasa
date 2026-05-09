@@ -26,15 +26,16 @@ function hizli_kasa_process_refund($request)
     }
 
     $data = $request->get_json_params();
-    $original_order_id = sanitize_text_field($data['original_order_id']);
+    $original_order_id = !empty($data['original_order_id']) ? sanitize_text_field($data['original_order_id']) : null;
+    $is_manual = !empty($data['is_manual']) && $data['is_manual'] === true;
     $refund_items = $data['items'];
 
     if (empty($refund_items)) {
         return new WP_Error('no_items', 'İade edilecek ürün seçilmedi.', array('status' => 400));
     }
 
-    // Orijinal siparişi yükle (depo bilgisi için)
-    $original_order = wc_get_order($original_order_id);
+    // Orijinal siparişi yükle (eğer varsa)
+    $original_order = $original_order_id ? wc_get_order($original_order_id) : null;
 
     $refund_order = wc_create_order(array('status' => 'completed', 'customer_id' => 0));
 
@@ -48,7 +49,7 @@ function hizli_kasa_process_refund($request)
     $address = array(
         'first_name' => $display_name,
         'last_name' => 'Kasa ' . $kasa_no,
-        'company' => 'POS İade',
+        'company' => $is_manual ? 'Manuel İade' : 'POS İade',
         'address_1' => 'POS Terminali',
         'city' => 'Mağaza',
         'country' => 'TR'
@@ -76,7 +77,7 @@ function hizli_kasa_process_refund($request)
             $total_refund += $line_total;
 
             // --- Orijinal Siparişte İade Edilen Adedi Güncelle ---
-            if (!empty($item['item_id'])) {
+            if ($original_order && !empty($item['item_id'])) {
                 $orig_item_id = intval($item['item_id']);
                 $current_refunded = (int) wc_get_order_item_meta($orig_item_id, '_hk_refunded_qty', true);
                 wc_update_order_item_meta($orig_item_id, '_hk_refunded_qty', $current_refunded + $qty);
@@ -108,8 +109,13 @@ function hizli_kasa_process_refund($request)
     // POS Standart Meta Verileri
     $iade_toplam = $total_refund; // Döngüde hesapladığımız toplam (negatif değer)
 
-    $refund_order->update_meta_data('_hizli_kasa_original_order', $original_order_id);
+    if ($original_order_id) {
+        $refund_order->update_meta_data('_hizli_kasa_original_order', $original_order_id);
+    }
     $refund_order->update_meta_data('_hizli_kasa_is_refund', 'yes');
+    if ($is_manual) {
+        $refund_order->update_meta_data('_hizli_kasa_manual_refund', 'yes');
+    }
     $refund_order->update_meta_data('_hizli_kasa_kaynak', 'pos_iade');
     $refund_order->update_meta_data('_hizli_kasa_kasiyer', $display_name); // Yukarıdaki değişkeni kullan
     $refund_order->update_meta_data('_hizli_kasa_kasa_no', $kasa_no); // Yukarıdaki değişkeni kullan
@@ -208,7 +214,7 @@ function hizli_kasa_process_refund($request)
                 $variation_id,
                 $target_depo_id,
                 $qty,
-                "İade İşlemi (Geri Dönüş - #$original_order_id, Depo: $target_depo_id)"
+                $is_manual ? "Manuel İade İşlemi (#{$refund_order->get_id()})" : "İade İşlemi (Geri Dönüş - #$original_order_id, Depo: $target_depo_id)"
             );
 
             // 2. ANA SİTE STOĞUNU ARTIR
@@ -307,10 +313,11 @@ function hizli_kasa_send_custom_refund_email($order)
                         <td style='padding: 10px 0; color: #7f8c8d; font-size: 14px;'>İade Numarası:</td>
                         <td style='padding: 10px 0; font-weight: bold; text-align: right;'>#{$order_id}</td>
                     </tr>
+                    " . ($original_order_id ? "
                     <tr>
                         <td style='padding: 10px 0; color: #7f8c8d; font-size: 14px;'>Asıl Sipariş:</td>
                         <td style='padding: 10px 0; font-weight: bold; text-align: right;'>#{$original_order_id}</td>
-                    </tr>
+                    </tr>" : "") . "
                     <tr>
                         <td style='padding: 10px 0; color: #7f8c8d; font-size: 14px;'>İşlem Tarihi:</td>
                         <td style='padding: 10px 0; text-align: right;'>{$date}</td>

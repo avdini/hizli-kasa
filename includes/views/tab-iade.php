@@ -9,18 +9,32 @@ if (!defined('ABSPATH')) exit;
     <div class="iade-sol-panel">
         <div class="iade-ust-cubuk">
             <div class="iade-baslik-satiri">
-                <h2>Sipariş Sorgula</h2>
-                <button id="iade-detayli-toggle-btn" class="iade-kucuk-btn">🔍 Detaylı Arama</button>
+                <h2 id="iade-sol-baslik">Sipariş Sorgula</h2>
+                <div class="iade-baslik-butonlar">
+                    <button id="iade-manuel-toggle-btn" class="iade-kucuk-btn" style="background: var(--hk-accent); color: white;">➕ Sıfırdan İade</button>
+                    <button id="iade-detayli-toggle-btn" class="iade-kucuk-btn">🔍 Detaylı Arama</button>
+                </div>
             </div>
             
             <div class="iade-arama-formu">
                 <!-- Basit Arama (Varsayılan) -->
-                <div class="arama-satiri basit-arama">
+                <div id="iade-basit-arama-konteyner" class="arama-satiri basit-arama">
                     <div class="input-grup">
                         <label>Sipariş No / Barkod</label>
                         <div class="input-buton-grup">
                             <input type="text" id="iade-siparis-no" placeholder="Barkod okutun veya No yazın..." autocomplete="off">
                             <button id="iade-siparis-bul-btn" class="iade-arama-btn">Getir</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manuel Ürün Arama (Gizli) -->
+                <div id="iade-manuel-arama-konteyner" class="arama-satiri basit-arama" style="display:none;">
+                    <div class="input-grup">
+                        <label>Ürün Ara / Barkod Okut</label>
+                        <div class="input-buton-grup">
+                            <input type="text" id="iade-manuel-urun-ara" placeholder="Ürün adı veya barkod..." autocomplete="off">
+                            <button id="iade-manuel-temizle-btn" class="iade-kucuk-btn">Temizle</button>
                         </div>
                     </div>
                 </div>

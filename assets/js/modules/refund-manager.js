@@ -7,6 +7,8 @@ const RefundManager = (function () {
     let originalOrder = null;
     let refundCart = [];
     let refundSplitData = null;
+    let isManualMode = false;
+    let manualSearchTimeout = null;
 
     function init() {
         // İade sekmesi her yüklendiğinde (lazy load sonrası) elementleri tekrar yakala
@@ -21,8 +23,11 @@ const RefundManager = (function () {
         const bulBtn = document.getElementById('iade-siparis-bul-btn');
         const detayliAraBtn = document.getElementById('iade-detayli-ara-btn');
         const toggleBtn = document.getElementById('iade-detayli-toggle-btn');
+        const manuelToggleBtn = document.getElementById('iade-manuel-toggle-btn');
         const detayliAlanlar = document.getElementById('iade-detayli-alanlar');
         const siparisInput = document.getElementById('iade-siparis-no');
+        const manuelInput = document.getElementById('iade-manuel-urun-ara');
+        const manuelTemizleBtn = document.getElementById('iade-manuel-temizle-btn');
         const onaylaBtn = document.getElementById('iade-onayla-btn');
 
         if (bulBtn) {
@@ -40,6 +45,35 @@ const RefundManager = (function () {
 
         if (detayliAraBtn) {
             detayliAraBtn.onclick = advancedSearchOrders;
+        }
+
+        if (manuelToggleBtn) {
+            manuelToggleBtn.onclick = toggleManualMode;
+        }
+
+        if (manuelInput) {
+            manuelInput.oninput = (e) => {
+                clearTimeout(manualSearchTimeout);
+                manualSearchTimeout = setTimeout(() => {
+                    searchManualProducts(e.target.value);
+                }, 300);
+            };
+            manuelInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    clearTimeout(manualSearchTimeout);
+                    searchManualProducts(manuelInput.value, true);
+                }
+            };
+        }
+
+        if (manuelTemizleBtn) {
+            manuelTemizleBtn.onclick = () => {
+                if (manuelInput) {
+                    manuelInput.value = '';
+                    manuelInput.focus();
+                    searchManualProducts('');
+                }
+            };
         }
 
         if (siparisInput) {
@@ -160,10 +194,144 @@ const RefundManager = (function () {
             originalOrder = null;
             refundCart = [];
             const container = document.getElementById('iade-siparis-detay');
-            if (container) container.innerHTML = '<div class="iade-bos-state">Lütfen iade edilecek siparişi seçin veya okutun.</div>';
+            if (container) {
+                if (isManualMode) {
+                    container.innerHTML = '<div class="iade-bos-state">Ürün arayarak iadeye başlayın.</div>';
+                } else {
+                    container.innerHTML = '<div class="iade-bos-state">Lütfen iade edilecek siparişi seçin veya okutun.</div>';
+                }
+            }
             renderRefundCart();
             closeSearchResults();
         });
+    }
+
+    function toggleManualMode() {
+        isManualMode = !isManualMode;
+        
+        const manuelToggleBtn = document.getElementById('iade-manuel-toggle-btn');
+        const detayliToggleBtn = document.getElementById('iade-detayli-toggle-btn');
+        const basitAramaKonteyner = document.getElementById('iade-basit-arama-konteyner');
+        const manuelAramaKonteyner = document.getElementById('iade-manuel-arama-konteyner');
+        const detayliAlanlar = document.getElementById('iade-detayli-alanlar');
+        const baslik = document.getElementById('iade-sol-baslik');
+        const detayPanel = document.getElementById('iade-siparis-detay');
+
+        if (isManualMode) {
+            manuelToggleBtn.innerHTML = '✕ Sipariş Sorgula';
+            manuelToggleBtn.style.background = 'var(--hk-danger)';
+            detayliToggleBtn.style.display = 'none';
+            basitAramaKonteyner.style.display = 'none';
+            manuelAramaKonteyner.style.display = 'block';
+            detayliAlanlar.style.display = 'none';
+            baslik.innerText = 'Ürün İade Et (Manuel)';
+            detayPanel.innerHTML = '<div class="iade-bos-state">Ürün arayarak iadeye başlayın.</div>';
+            
+            document.getElementById('iade-manuel-urun-ara').focus();
+        } else {
+            manuelToggleBtn.innerHTML = '➕ Sıfırdan İade';
+            manuelToggleBtn.style.background = 'var(--hk-accent)';
+            detayliToggleBtn.style.display = 'inline-block';
+            basitAramaKonteyner.style.display = 'block';
+            manuelAramaKonteyner.style.display = 'none';
+            baslik.innerText = 'Sipariş Sorgula';
+            detayPanel.innerHTML = '<div class="iade-bos-durum"><span class="bos-ikon">🔍</span><p>İşleme başlamak için bir sipariş barkodu okutun.</p></div>';
+            
+            document.getElementById('iade-siparis-no').focus();
+        }
+
+        // Temizle
+        originalOrder = null;
+        refundCart = [];
+        renderRefundCart();
+    }
+
+    async function searchManualProducts(query, isExact = false) {
+        if (!query || query.length < 2) {
+            const container = document.getElementById('iade-siparis-detay');
+            if (container) container.innerHTML = '<div class="iade-bos-state">Ürün arayarak iadeye başlayın.</div>';
+            return;
+        }
+
+        const depo_id = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
+        const apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
+        
+        try {
+            const response = await fetch(`${apiBase}hizli-kasa/v1/search?s=${encodeURIComponent(query)}&depo_id=${depo_id}${isExact ? '&exact=1' : ''}`, {
+                headers: { 'X-WP-Nonce': kasaAyar.nonce }
+            });
+
+            const results = await response.json();
+            renderManualSearchResults(results);
+
+            // Eğer tam eşleşme ise ve tek ürün geldiyse doğrudan ekle
+            if (isExact && results.length === 1) {
+                addManualToRefundCart(results[0]);
+                document.getElementById('iade-manuel-urun-ara').value = '';
+                document.getElementById('iade-manuel-urun-ara').focus();
+            }
+
+        } catch (error) {
+            console.error('Manuel arama hatası:', error);
+        }
+    }
+
+    function renderManualSearchResults(results) {
+        const container = document.getElementById('iade-siparis-detay');
+        if (!container) return;
+
+        if (!results || results.length === 0) {
+            container.innerHTML = '<div class="iade-bos-state">Sonuç bulunamadı.</div>';
+            return;
+        }
+
+        let html = `<div class="urun-listesi-baslik">Arama Sonuçları (${results.length})</div><div class="iade-kaydirilabilir-liste">`;
+        
+        results.forEach(product => {
+            // Eğer varyant ise ve ana ürünse (seçilemez)
+            const isVariable = product.type === 'variable' || product.is_variable;
+            const btnHtml = isVariable 
+                ? `<span class="iade-uyari-text">Varyant Seçin</span>`
+                : `<button class="iade-ekle-btn" onclick="RefundManager.addManualToRefundCart(${JSON.stringify(product).replace(/"/g, '&quot;')})">İadeye Ekle</button>`;
+
+            html += `
+                <div class="iade-urun-satir">
+                    <div class="urun-bilgi">
+                        <span class="urun-ad">${product.name}</span>
+                        <span class="urun-sku">SKU: ${product.sku || '-'} | Stok: ${product.stock_quantity || 0}</span>
+                    </div>
+                    <div class="urun-fiyat-adet">
+                        <span class="birim-fiyat">${product.price} TL</span>
+                    </div>
+                    ${btnHtml}
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        container.innerHTML = html;
+    }
+
+    function addManualToRefundCart(product) {
+        const itemId = 'manual_' + product.id;
+        const cartItem = refundCart.find(i => i.item_id === itemId);
+
+        if (cartItem) {
+            cartItem.qty++;
+        } else {
+            refundCart.push({
+                item_id: itemId,
+                id: product.id,
+                name: product.name,
+                sku: product.sku,
+                price: parseFloat(product.price),
+                qty: 1,
+                variation_id: (product.type === 'variation' || product.parent_id > 0) ? product.id : 0,
+                depo_id: HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0
+            });
+        }
+
+        renderRefundCart();
     }
 
     async function advancedSearchOrders() {
@@ -391,8 +559,29 @@ const RefundManager = (function () {
         // Sipariş özetini modalın soluna kopyala
         const sidebarOzet = document.querySelector('.siparis-ozet-v2');
         const modalOzetKonteynir = document.getElementById('iade-modal-siparis-ozet');
-        if (sidebarOzet && modalOzetKonteynir) {
-            modalOzetKonteynir.innerHTML = sidebarOzet.innerHTML;
+        if (modalOzetKonteynir) {
+            if (isManualMode) {
+                modalOzetKonteynir.innerHTML = `
+                    <div class="siparis-ozet-v2">
+                        <div class="ozet-ust">
+                            <div class="ozet-sol">
+                                <span class="ozet-no">MANUEL İADE</span>
+                                <span class="ozet-tarih">${new Date().toLocaleDateString('tr-TR')}</span>
+                            </div>
+                        </div>
+                        <div class="ozet-govde">
+                            <div class="ozet-kart" style="width:100%">
+                                <div class="kart-baslik">ℹ️ BİLGİ</div>
+                                <div class="kart-icerik">
+                                    <p>Sistem dışı veya eski satışlar için sıfırdan iade oluşturuluyor.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (sidebarOzet) {
+                modalOzetKonteynir.innerHTML = sidebarOzet.innerHTML;
+            }
         }
 
         // Modal içindeki toplamı güncelle
@@ -418,12 +607,12 @@ const RefundManager = (function () {
 
     function renderRefundSettings() {
         const container = document.getElementById('iade-odeme-yontemi-alani');
-        if (!container || !originalOrder) {
+        if (!container || (!originalOrder && !isManualMode)) {
             if (container) container.style.display = 'none';
             return;
         }
 
-        const origMethod = originalOrder.payment_method;
+        const origMethod = originalOrder ? originalOrder.payment_method : 'cod';
         let defaultMethod = 'nakit';
         if (origMethod === 'other') defaultMethod = 'kart';
         else if (origMethod === 'bacs') defaultMethod = 'iban';
@@ -477,7 +666,7 @@ const RefundManager = (function () {
                         ${(() => {
                 let options = '';
                 const total = kasaAyar.toplamKasa || 3;
-                const originalKasaNo = parseInt(originalOrder.kasa_no) || 1;
+                const originalKasaNo = originalOrder ? parseInt(originalOrder.kasa_no) : 1;
                 const defaultKasa = (originalKasaNo > 0 && originalKasaNo <= total) ? originalKasaNo : 1;
 
                 for (let i = 1; i <= total; i++) {
@@ -560,7 +749,11 @@ const RefundManager = (function () {
     }
 
     function addToRefundCart(itemId) {
-        if (!originalOrder) return;
+        if (!originalOrder && !isManualMode) return;
+        
+        // Manuel modda bu fonksiyon yerine addManualToRefundCart kullanılıyor
+        if (isManualMode) return;
+
         const item = originalOrder.items.find(i => i.item_id == itemId);
         if (!item) return;
 
@@ -633,6 +826,11 @@ const RefundManager = (function () {
         const iskontoInput = document.getElementById('iade-iskonto-input');
         const kalanIskontoSpan = document.getElementById('iade-kalan-iskonto');
 
+        if (isManualMode) {
+            if (iskontoKonteyner) iskontoKonteyner.style.display = 'none';
+            return;
+        }
+
         if (!originalOrder || !iskontoKonteyner) return;
 
         const kalanIskonto = (originalOrder.manual_discount || 0) - (originalOrder.refunded_manual_discount || 0);
@@ -675,7 +873,9 @@ const RefundManager = (function () {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    original_order_id: originalOrder.id,
+                    original_order_id: originalOrder ? originalOrder.id : '',
+                    is_manual: isManualMode,
+                    active_depo_id: HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0,
                     kasa_no: selectedKasa,
                     payment_method: paymentMethod,
                     split_data: refundSplitData,
@@ -686,7 +886,7 @@ const RefundManager = (function () {
                         variation_id: item.variation_id || 0,
                         qty: item.qty,
                         price: item.price,
-                        depo_id: item.depo_id || 0  // Orijinal çıkış deposu (backend bu depoya iade eder)
+                        depo_id: item.depo_id || 0
                     }))
                 })
             });
@@ -736,7 +936,8 @@ const RefundManager = (function () {
         addToRefundCart,
         removeFromRefundCart,
         selectOrder,
-        closeSearchResults
+        closeSearchResults,
+        addManualToRefundCart
     };
 })();
 
