@@ -433,7 +433,7 @@
                                 </button>
                             `}
                             <button class="btn-urun-git" title="Ürün sayfasına git" data-url="${p.permalink}">
-                                <span>ℹ️</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                             </button>
                         </div>
                         ${!isVariable ? `
