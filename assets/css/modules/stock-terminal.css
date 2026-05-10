@@ -723,6 +723,16 @@
     color: #3498db;
 }
 
+.other-stock-badge.other-depo {
+    background: rgba(46, 204, 113, 0.1);
+    border-color: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+}
+
+.other-stock-badge.other-depo .os-val {
+    color: #2ecc71;
+}
+
 /* Koyu mod desteği için ince ayar */
 body.dark-mode .other-stock-badge {
     background: rgba(255, 255, 255, 0.03);

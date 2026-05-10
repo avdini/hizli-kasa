@@ -355,20 +355,27 @@
                     </div>
                 `;
 
-                // Diğer Depolar
+                // Diğer Depolar Toplamı
+                var otherTotal = 0;
+                var breakdown = [];
                 if (item.all_stocks && self.state.warehouses) {
                     self.state.warehouses.forEach(w => {
                         if (w.id == depoId) return;
                         var qty = item.all_stocks[w.id] || 0;
-                        if (qty === 0) return; // Sıfır olanları kalabalık etmesin diye gizleyebiliriz veya silik gösterebiliriz
-                        sHtml += `
-                            <div class="other-stock-badge" title="${w.name}">
-                                <span class="os-label">${w.name}:</span>
-                                <span class="os-val">${qty}</span>
-                            </div>
-                        `;
+                        otherTotal += qty;
+                        if (qty > 0) {
+                            breakdown.push(`${w.name}: ${qty}`);
+                        }
                     });
                 }
+
+                sHtml += `
+                    <div class="other-stock-badge other-depo" title="${breakdown.length > 0 ? breakdown.join(' | ') : 'Diğer depolarda stok yok'}">
+                        <span class="os-label">D. Depo:</span>
+                        <span class="os-val">${otherTotal}</span>
+                    </div>
+                `;
+
                 sHtml += '</div>';
                 return sHtml;
             };
