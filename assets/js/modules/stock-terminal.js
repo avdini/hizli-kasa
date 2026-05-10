@@ -141,6 +141,7 @@
             if (listContainer) {
                 listContainer.addEventListener('click', function(e) {
                     var target = e.target;
+                    var barkodTopluBtn = target.closest('.btn-barkod-toplu');
                     var barkodTekliBtn = target.closest('.btn-barkod-tekli');
                     var urunGitBtn = target.closest('.btn-urun-git');
                     var kart = target.closest('.terminal-urun-kart');
