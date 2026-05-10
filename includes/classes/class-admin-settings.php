@@ -682,7 +682,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         $offset = ($paged - 1) * $per_page;
 
         $params = [];
-        $where_sql = "p.post_type IN ('product', 'product_variation') AND p.post_status = 'publish'";
+        $where_sql = "p.post_type IN ('product', 'product_variation') AND p.post_status IN ('publish', 'private')";
 
         if ($s) {
             $like = '%' . $wpdb->esc_like($s) . '%';
@@ -806,7 +806,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
             // Mismatch kontrolü
             $v_total_wh = array_sum(array_column($v_item['warehouse_stocks'], 'qty'));
             $v_item['total_warehouse_stock'] = $v_total_wh;
-            $v_item['has_mismatch'] = ($v_total_wh != $v_item['wc_stock']);
+            $v_item['has_mismatch'] = (round((float)$v_total_wh, 4) != round((float)$v_item['wc_stock'], 4));
 
             $children[] = $v_item;
         }
@@ -833,7 +833,7 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         $item['total_warehouse_stock'] = $total_wh;
         
         if ($item['type'] === 'simple') {
-            $item['has_mismatch'] = ($total_wh != $item['wc_stock']);
+            $item['has_mismatch'] = (round((float)$total_wh, 4) != round((float)$item['wc_stock'], 4));
         } else {
             // Değişken üründe herhangi bir varyasyonda uyuşmazlık varsa true dön
             $item['has_mismatch'] = false;

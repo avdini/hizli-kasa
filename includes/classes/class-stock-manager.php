@@ -173,7 +173,7 @@ class Hizli_Kasa_Stock_Manager {
                    MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock
             FROM {$wpdb->posts} p
             LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
-            WHERE p.post_status = 'publish' 
+            WHERE p.post_status IN ('publish', 'private') 
               AND p.post_type IN ('product', 'product_variation')
               AND pm.meta_key = '_stock'
             GROUP BY p.ID
@@ -644,7 +644,7 @@ class Hizli_Kasa_Stock_Manager {
         if (empty($product_name)) return false;
         global $wpdb;
         
-        $id = $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_title = %s AND post_type IN ('product', 'product_variation') AND post_status = 'publish' LIMIT 1", $product_name));
+        $id = $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_title = %s AND post_type IN ('product', 'product_variation') AND post_status IN ('publish', 'private') LIMIT 1", $product_name));
         
         if (!$id) return false;
 

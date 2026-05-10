@@ -83,7 +83,7 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id)
             $parents_str = implode(',', $parents_to_expand);
 
             // Bu parent'ların TÜM çocuklarını (varyasyonlarını) listeye ekle
-            $sibling_ids = $wpdb->get_col("SELECT ID FROM {$wpdb->posts} WHERE post_parent IN ($parents_str) AND post_type = 'product_variation' AND post_status = 'publish'");
+            $sibling_ids = $wpdb->get_col("SELECT ID FROM {$wpdb->posts} WHERE post_parent IN ($parents_str) AND post_type = 'product_variation' AND post_status IN ('publish', 'private')");
             if ($sibling_ids) {
                 $all_ids = array_merge($all_ids, $parents_to_expand, array_map('intval', $sibling_ids));
             } else {
@@ -437,9 +437,9 @@ function hizli_kasa_get_local_ranked_product_ids($search, $depo_id = 0, $limit =
         FROM {$wpdb->posts} p
         $join_stock
         LEFT JOIN {$wpdb->postmeta} parent_sku ON (parent_sku.post_id = p.ID AND parent_sku.meta_key = '_sku')
-        LEFT JOIN {$wpdb->posts} v ON (v.post_parent = p.ID AND v.post_type = 'product_variation' AND v.post_status = 'publish')
+        LEFT JOIN {$wpdb->posts} v ON (v.post_parent = p.ID AND v.post_type = 'product_variation' AND v.post_status IN ('publish', 'private'))
         LEFT JOIN {$wpdb->postmeta} var_sku ON (var_sku.post_id = v.ID AND var_sku.meta_key = '_sku')
-        WHERE p.post_status = 'publish'
+        WHERE p.post_status IN ('publish', 'private')
           AND p.post_type = 'product'
           AND ($where_or)
         GROUP BY p.ID

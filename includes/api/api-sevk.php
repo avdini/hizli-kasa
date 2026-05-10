@@ -105,7 +105,7 @@ function hizli_kasa_sevk_format($sevk, $with_items = false) {
 
 function hizli_kasa_sevk_find_product_by_sku($sku) {
     global $wpdb;
-    $post_id = $wpdb->get_var($wpdb->prepare("SELECT pm.post_id FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE pm.meta_key = '_sku' AND pm.meta_value = %s AND p.post_status = 'publish' LIMIT 1", $sku));
+    $post_id = $wpdb->get_var($wpdb->prepare("SELECT pm.post_id FROM {$wpdb->postmeta} pm JOIN {$wpdb->posts} p ON p.ID = pm.post_id WHERE pm.meta_key = '_sku' AND pm.meta_value = %s AND p.post_status IN ('publish', 'private') LIMIT 1", $sku));
     if (!$post_id) return false;
     $product = wc_get_product($post_id);
     if (!$product) return false;

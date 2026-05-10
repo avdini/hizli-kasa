@@ -59,7 +59,7 @@ function hizli_kasa_ozel_arama($data)
                 SELECT pm.post_id FROM {$wpdb->postmeta} pm
                 JOIN {$wpdb->posts} p ON pm.post_id = p.ID
                 WHERE pm.meta_key = '_sku' AND pm.meta_value = %s 
-                AND p.post_status = 'publish'
+                AND p.post_status IN ('publish', 'private')
                 LIMIT 10", $s));
         } else {
             // 1. Advanced Woo Search Entegrasyonu
@@ -85,7 +85,7 @@ function hizli_kasa_ozel_arama($data)
                     $where_clause = implode(' AND ', $where_parts);
                     $found_ids = $wpdb->get_col("SELECT p.ID FROM {$wpdb->posts} p 
                         LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_sku'
-                        WHERE p.post_status = 'publish' AND p.post_type IN ('product', 'product_variation') AND ($where_clause) LIMIT 30");
+                        WHERE p.post_status IN ('publish', 'private') AND p.post_type IN ('product', 'product_variation') AND ($where_clause) LIMIT 30");
                 }
             }
         }

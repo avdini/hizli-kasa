@@ -34,7 +34,7 @@ function hizli_kasa_terminal_products($request)
     $threshold = (int) get_option('hizli_kasa_kritik_stok_esigi', 5);
     $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
 
-    $where = "p.post_status = 'publish' AND p.post_type = 'product'";
+    $where = "p.post_status IN ('publish', 'private') AND p.post_type = 'product'";
     $join_extra = "";
     if ($depo_id) {
         $join_extra .= $wpdb->prepare(" INNER JOIN $stok_table sk_filter ON (sk_filter.product_id = p.ID AND sk_filter.location_id = %d)", $depo_id);
@@ -132,7 +132,7 @@ function hizli_kasa_terminal_products($request)
             FROM {$wpdb->posts} p
             LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id
             LEFT JOIN $stok_table sk ON (sk.variation_id = p.ID AND sk.location_id = %d)
-            WHERE p.post_type = 'product_variation' AND p.post_status = 'publish' AND p.post_parent IN ($ids_placeholders)
+            WHERE p.post_type = 'product_variation' AND p.post_status IN ('publish', 'private') AND p.post_parent IN ($ids_placeholders)
             GROUP BY p.ID
         ", array_merge([$depo_id], $parent_ids)));
         if (!empty($v_results)) {
@@ -317,7 +317,7 @@ function hizli_kasa_terminal_products($request)
             $join_extra
             INNER JOIN {$wpdb->posts} p2 ON p.ID = p2.post_parent
             WHERE $where 
-            AND p2.post_status = 'publish' 
+            AND p2.post_status IN ('publish', 'private') 
             AND p2.post_type = 'product_variation'
         ";
         $count_vars = (int) $wpdb->get_var(empty($params) ? $grand_query_vars : $wpdb->prepare($grand_query_vars, ...$params));
@@ -347,7 +347,7 @@ function hizli_kasa_terminal_products($request)
             INNER JOIN {$wpdb->posts} p2 ON p.ID = p2.post_parent
             INNER JOIN $stok_table sk_crit ON (sk_crit.variation_id = p2.ID)
             WHERE $where 
-            AND p2.post_status = 'publish' 
+            AND p2.post_status IN ('publish', 'private') 
             AND p2.post_type = 'product_variation'
             AND sk_crit.location_id = %d 
             AND sk_crit.quantity > 0 AND sk_crit.quantity <= %d

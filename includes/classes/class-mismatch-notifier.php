@@ -104,7 +104,7 @@ class Hizli_Kasa_Mismatch_Notifier {
                 WHERE p.post_type IN ('product', 'product_variation') 
                   AND p.post_status IN ('publish', 'private')
             ) as stock_summary
-            WHERE CAST(total_wh AS DECIMAL(15,4)) != CAST(wc_stock AS DECIMAL(15,4))
+            WHERE ROUND(CAST(total_wh AS DECIMAL(15,4)), 4) != ROUND(CAST(wc_stock AS DECIMAL(15,4)), 4)
             LIMIT 5";
             
         $mismatches = $wpdb->get_results($query);
