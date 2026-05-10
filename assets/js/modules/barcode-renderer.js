@@ -247,6 +247,55 @@
                 return attrMatch;
             });
             
+            // Katmanlı Sıralama Uygula: Renk -> Beden/Numara -> ID
+            filtered.sort(function(a, b) {
+                var attrsA = a.attributes || {};
+                var attrsB = b.attributes || {};
+
+                var colorA = '', sizeA = '';
+                var colorB = '', sizeB = '';
+
+                // Özellikleri tespit et
+                Object.keys(attrsA).forEach(function(k) {
+                    var kLow = k.toLowerCase();
+                    if (kLow.indexOf('renk') !== -1 || kLow.indexOf('color') !== -1) colorA = attrsA[k];
+                    if (kLow.indexOf('beden') !== -1 || kLow.indexOf('size') !== -1 || kLow.indexOf('numara') !== -1) sizeA = attrsA[k];
+                });
+                Object.keys(attrsB).forEach(function(k) {
+                    var kLow = k.toLowerCase();
+                    if (kLow.indexOf('renk') !== -1 || kLow.indexOf('color') !== -1) colorB = attrsB[k];
+                    if (kLow.indexOf('beden') !== -1 || kLow.indexOf('size') !== -1 || kLow.indexOf('numara') !== -1) sizeB = attrsB[k];
+                });
+
+                // 1. Renk Grubu
+                if (colorA !== colorB) {
+                    return colorA.localeCompare(colorB, 'tr');
+                }
+
+                // 2. Beden/Numara Ağırlığı
+                if (sizeA !== sizeB) {
+                    var sizeMap = {
+                        'xs': 1, 's': 2, 'm': 3, 'l': 4, 'xl': 5,
+                        'xxl': 6, '2xl': 6, '3xl': 7, '4xl': 8, '5xl': 9, '6xl': 10
+                    };
+
+                    var getWeight = function(val) {
+                        var v = (val || "").toString().trim().toLowerCase();
+                        if (!isNaN(parseFloat(v))) return parseFloat(v);
+                        return sizeMap[v] || 999;
+                    };
+
+                    var weightA = getWeight(sizeA);
+                    var weightB = getWeight(sizeB);
+
+                    if (weightA !== weightB) return weightA - weightB;
+                    return sizeA.localeCompare(sizeB, 'tr');
+                }
+
+                // 3. Fallback: ID
+                return (a.id || 0) - (b.id || 0);
+            });
+
             this.renderBulkList(filtered);
         },
 

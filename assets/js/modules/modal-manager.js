@@ -281,7 +281,7 @@
                     
                     // Arama sorgusuyla tam eşleşen SKU'yu en başa getir (Orijinal diziyi bozmadan)
                     var query = (els.urunAramaInput.value || "").trim().toLowerCase();
-                    var siraliVaryasyonlar = varyasyonlar.slice().sort(function(a, b) {
+                    var siraliVaryasyonlar = [...varyasyonlar].sort(function(a, b) {
                         var aSku = (a.sku || "").toLowerCase();
                         var bSku = (b.sku || "").toLowerCase();
                         if (aSku === query && bSku !== query) return -1;

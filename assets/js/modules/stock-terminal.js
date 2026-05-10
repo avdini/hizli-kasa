@@ -380,6 +380,7 @@
                 return sHtml;
             };
 
+            var isOnlyProduct = this.state.products.length === 1;
             for (var i = 0; i < this.state.products.length; i++) {
                 var p = this.state.products[i];
                 if (!p) continue;
@@ -423,16 +424,16 @@
                             <span class="stok-etiket">MEVCUT STOK</span>
                         </div>
                         ` : ''}
-                        ${isVariable ? '<div class="expand-icon">▼</div>' : ''}
+                        ${isVariable ? `<div class="expand-icon" style="${isOnlyProduct ? 'transform: rotate(180deg);' : ''}">▼</div>` : ''}
                     </div>
                 `;
 
                 if (isVariable) {
-                    html += `<div class="terminal-variations-container" id="vars-${p.id}" style="display:none;">`;
+                    html += `<div class="terminal-variations-container" id="vars-${p.id}" style="${isOnlyProduct ? 'display:block;' : 'display:none;'}">`;
                     
                     // Arama sorgusuyla tam eşleşen SKU'yu en başa getir (Orijinal diziyi bozmadan)
                     var query = (document.getElementById('terminal-arama-input')?.value || "").trim().toLowerCase();
-                    var sortedVariations = p.variations.slice().sort(function(a, b) {
+                    var sortedVariations = [...p.variations].sort(function(a, b) {
                         var aSku = (a.sku || "").toLowerCase();
                         var bSku = (b.sku || "").toLowerCase();
                         if (aSku === query && bSku !== query) return -1;
