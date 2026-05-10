@@ -128,10 +128,8 @@ const RefundManager = (function () {
         const modalToplamInput = document.getElementById('iade-modal-toplam-input');
         if (modalToplamInput) {
             modalToplamInput.onchange = () => {
-                if (!originalOrder) return;
-                
-                const enteredTotal = HK.CurrencyMask.parse(modalToplamInput.value);
                 const cartTotal = refundCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                const enteredTotal = HK.CurrencyMask.parse(modalToplamInput.value);
                 
                 let requiredDiscount = cartTotal - enteredTotal;
                 let finalTotal = enteredTotal;
@@ -144,13 +142,15 @@ const RefundManager = (function () {
                     hasCorrection = true;
                 }
                 
-                // Doğrulama 2: Maksimum iskonto engeli
-                const maxDusebilir = (originalOrder.manual_discount || 0) - (originalOrder.refunded_manual_discount || 0);
-                if (requiredDiscount > maxDusebilir) {
-                    requiredDiscount = maxDusebilir;
-                    finalTotal = cartTotal - maxDusebilir;
-                    hasCorrection = true;
-                    alert('⚠️ Maksimum iskonto limitini aştınız!\nTutar izin verilen limite (' + finalTotal.toFixed(2) + ' TL) göre düzeltildi.');
+                // Doğrulama 2: Maksimum iskonto engeli (Sadece orijinal sipariş varsa)
+                if (originalOrder) {
+                    const maxDusebilir = (originalOrder.manual_discount || 0) - (originalOrder.refunded_manual_discount || 0);
+                    if (requiredDiscount > maxDusebilir) {
+                        requiredDiscount = maxDusebilir;
+                        finalTotal = cartTotal - maxDusebilir;
+                        hasCorrection = true;
+                        alert('⚠️ Maksimum iskonto limitini aştınız!\nTutar izin verilen limite (' + finalTotal.toFixed(2) + ' TL) göre düzeltildi.');
+                    }
                 }
                 
                 // İskonto alanını güncelle
@@ -319,14 +319,15 @@ const RefundManager = (function () {
         if (cartItem) {
             cartItem.qty++;
         } else {
+            const isVariation = (product.type === 'variation' || product.parent_id > 0);
             refundCart.push({
                 item_id: itemId,
-                id: product.id,
+                id: isVariation ? product.parent_id : product.id,
                 name: product.name,
                 sku: product.sku,
                 price: parseFloat(product.price),
                 qty: 1,
-                variation_id: (product.type === 'variation' || product.parent_id > 0) ? product.id : 0,
+                variation_id: isVariation ? product.id : 0,
                 depo_id: HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0
             });
         }
@@ -826,19 +827,25 @@ const RefundManager = (function () {
         const iskontoInput = document.getElementById('iade-iskonto-input');
         const kalanIskontoSpan = document.getElementById('iade-kalan-iskonto');
 
-        if (isManualMode) {
+        if (isManualMode && HK.CurrencyMask.parse(iskontoInput.value || "0") <= 0) {
             if (iskontoKonteyner) iskontoKonteyner.style.display = 'none';
             return;
         }
 
-        if (!originalOrder || !iskontoKonteyner) return;
+        if (!iskontoKonteyner) return;
+        if (!originalOrder && !isManualMode) return;
 
-        const kalanIskonto = (originalOrder.manual_discount || 0) - (originalOrder.refunded_manual_discount || 0);
+        const kalanIskonto = originalOrder ? ((originalOrder.manual_discount || 0) - (originalOrder.refunded_manual_discount || 0)) : 999999;
+        const currentDiscount = HK.CurrencyMask.parse(iskontoInput.value || "0");
 
-        if (kalanIskonto > 0) {
+        if (kalanIskonto > 0 || currentDiscount > 0) {
             iskontoKonteyner.style.display = 'block';
-            kalanIskontoSpan.innerText = `${kalanIskonto.toFixed(2)} TL`;
-            iskontoInput.max = kalanIskonto;
+            if (originalOrder) {
+                kalanIskontoSpan.innerText = `${kalanIskonto.toFixed(2)} TL`;
+                iskontoInput.max = kalanIskonto;
+            } else {
+                kalanIskontoSpan.innerText = 'Sınırsız (Manuel)';
+            }
         } else {
             iskontoKonteyner.style.display = 'none';
             if (iskontoInput) iskontoInput.value = 0;
