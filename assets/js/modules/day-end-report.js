@@ -510,6 +510,8 @@
             html += '<p style="margin:0;">Bu rapor Hızlı Kasa POS<br>sistemi tarafından üretilmiştir.</p>';
             html += '</div>';
 
+            html += '<div style="height:120px;"></div>'; // Alt kısma boşluk ekle (Yazıcıda kesilmemesi için)
+
             sablon.innerHTML = html;
         },
 
@@ -577,6 +579,18 @@
             
             var netKasa = genelToplam - toplamMasraf;
 
+            // ─── TARİH BAŞLIĞI ───
+            var now = new Date();
+            var year = now.getFullYear();
+            var month = String(now.getMonth() + 1).padStart(2, '0');
+            var day = String(now.getDate()).padStart(2, '0');
+            var hour = String(now.getHours()).padStart(2, '0');
+            var minute = String(now.getMinutes()).padStart(2, '0');
+            var second = String(now.getSeconds()).padStart(2, '0');
+            var fullDate = year + ' ' + month + ' ' + day + ' ' + hour + ':' + minute + ':' + second;
+
+            html += '<div style="text-align:center; font-family:monospace; font-size:14px; border-bottom:1px solid #000; padding-bottom:5px; margin-bottom:10px; font-weight:bold;">' + fullDate + '</div>';
+
             html += '<div style="margin-bottom:10px;">';
             html += '<table style="width:100%; font-size:14px; border-collapse:collapse; font-family:monospace;">';
             
@@ -615,7 +629,7 @@
             // html += '<tr style="border-top:1px solid #000; font-size:16px;"><td style="padding:6px 0; font-weight:bold;">NET KASA TOPLAMI</td><td style="text-align:right; font-weight:bold;">' + netKasa.toFixed(2) + ' TL</td></tr>';
             
             html += '</table>';
-            html += '<div style="height:60px;"></div>'; // Alt kısma boşluk ekle (Yazıcıda kesilmemesi için)
+            html += '<div style="height:120px;"></div>'; // Alt kısma boşluk ekle (Yazıcıda kesilmemesi için)
             html += '</div>';
 
             sablon.innerHTML = html;
