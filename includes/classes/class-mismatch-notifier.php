@@ -101,7 +101,7 @@ class Hizli_Kasa_Mismatch_Notifier {
                      LIMIT 1
                     ) as wc_stock
                 FROM {$wpdb->posts} p
-                WHERE p.post_type IN ('product', 'product_variation') 
+                WHERE (p.post_type = 'product_variation' OR (p.post_type = 'product' AND NOT EXISTS (SELECT 1 FROM {$wpdb->posts} as p_child WHERE p_child.post_parent = p.ID AND p_child.post_type = 'product_variation'))) 
                   AND p.post_status IN ('publish', 'private')
             ) as stock_summary
             WHERE ROUND(CAST(total_wh AS DECIMAL(15,4)), 4) != ROUND(CAST(wc_stock AS DECIMAL(15,4)), 4)

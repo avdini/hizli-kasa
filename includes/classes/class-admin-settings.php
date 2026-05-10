@@ -691,6 +691,8 @@ function hizli_kasa_ajax_get_admin_stock_list() {
         }
 
         if ($filter_mismatch || $filter_zero_stock) {
+            $where_sql .= " AND (p.post_type = 'product_variation' OR (p.post_type = 'product' AND NOT EXISTS (SELECT 1 FROM {$wpdb->posts} as p_child WHERE p_child.post_parent = p.ID AND p_child.post_type = 'product_variation')))";
+            
             $having_clauses = [];
             if ($filter_mismatch) {
                 $having_clauses[] = "total_wh_stock != wc_stock";
