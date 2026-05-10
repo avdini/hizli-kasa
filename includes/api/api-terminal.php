@@ -135,6 +135,25 @@ function hizli_kasa_terminal_products($request)
             WHERE p.post_type = 'product_variation' AND p.post_status IN ('publish', 'private') AND p.post_parent IN ($ids_placeholders)
             GROUP BY p.ID
         ", array_merge([$depo_id], $parent_ids)));
+
+        // --- Multi-Warehouse Stock Fetch ---
+        $all_warehouses = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar ORDER BY priority DESC");
+        $all_item_ids = array_merge($parent_ids, !empty($v_results) ? wp_list_pluck($v_results, 'ID') : []);
+        $all_stocks = [];
+        if (!empty($all_item_ids)) {
+            $ids_ph_all = implode(',', array_fill(0, count($all_item_ids), '%d'));
+            $stocks_raw = $wpdb->get_results($wpdb->prepare("
+                SELECT location_id, product_id, variation_id, quantity 
+                FROM $stok_table 
+                WHERE (product_id IN ($ids_ph_all) OR variation_id IN ($ids_ph_all))
+            ", array_merge($all_item_ids, $all_item_ids)));
+
+            foreach ($stocks_raw as $sr) {
+                $item_id = ($sr->variation_id > 0) ? (int)$sr->variation_id : (int)$sr->product_id;
+                $all_stocks[$item_id][$sr->location_id] = (float)$sr->quantity;
+            }
+        }
+
         if (!empty($v_results)) {
             // --- Özellikleri Toplu Çek ve İsimlerini Çöz ---
             $v_ids = wp_list_pluck($v_results, 'ID');
@@ -173,6 +192,7 @@ function hizli_kasa_terminal_products($request)
                     $clean_attrs[$clean_k] = isset($term_names[$tax][$av]) ? $term_names[$tax][$av] : $av;
                 }
                 $v->attributes = $clean_attrs;
+                $v->all_stocks = $all_stocks[$v->ID] ?? [];
                 $variations_by_parent[$v->post_parent][] = $v;
             }
 
@@ -259,6 +279,7 @@ function hizli_kasa_terminal_products($request)
 
     $formatted = [];
     foreach ($results as $row) {
+        $row->all_stocks = $all_stocks[$row->ID] ?? [];
         $item = hizli_kasa_format_urun_row($row, $depo_id, $variations_by_parent);
         if ($item)
             $formatted[] = $item;
@@ -359,6 +380,7 @@ function hizli_kasa_terminal_products($request)
 
     return [
         'products' => $formatted,
+        'warehouses' => $all_warehouses ?? [],
         'total' => (int) $total,
         'has_more' => ($offset + $limit) < $total,
         'simple_count' => $simple_count,

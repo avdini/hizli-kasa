@@ -184,6 +184,7 @@ function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent
                     'sku' => $v->sku ?: '',
                     'warehouse_stock' => (float) $v->warehouse_stock,
                     'stock_quantity' => (float) $v->stock_quantity,
+                    'all_stocks' => $v->all_stocks ?? [],
                     'images' => $var_img ? [['src' => $var_img]] : [],
                     'attributes' => $v->attributes ?? []
                 ];
@@ -207,6 +208,7 @@ function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent
             'manage_stock' => $row->manage_stock === 'yes',
             'stock_quantity' => (float) $row->stock_quantity,
             'warehouse_stock' => (float) $row->warehouse_stock,
+            'all_stocks' => $row->all_stocks ?? [],
             'images' => $image_url ? [['src' => $image_url]] : [],
             'is_variable' => $is_variable,
             'variations' => $active_children_data

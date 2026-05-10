@@ -674,3 +674,48 @@
     font-style: italic;
     font-size: 12px;
 }
+
+/* --- Diğer Depolar ve Site Stoğu Badgeleri --- */
+.other-stocks-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.other-stock-badge {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--hk-border);
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--hk-text-muted);
+}
+
+.other-stock-badge .os-label {
+    opacity: 0.6;
+    font-weight: 500;
+}
+
+.other-stock-badge .os-val {
+    font-weight: 700;
+    color: var(--hk-text-main);
+}
+
+.other-stock-badge.site-stock {
+    background: rgba(52, 152, 219, 0.1);
+    border-color: rgba(52, 152, 219, 0.2);
+    color: #3498db;
+}
+
+.other-stock-badge.site-stock .os-val {
+    color: #3498db;
+}
+
+/* Koyu mod desteği için ince ayar */
+body.dark-mode .other-stock-badge {
+    background: rgba(255, 255, 255, 0.03);
+}

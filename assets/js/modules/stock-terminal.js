@@ -22,7 +22,8 @@
             isLoading: false,
             orderby: 'date',
             order: 'desc',
-            total: 0
+            total: 0,
+            warehouses: []
         },
 
         init: function() {
@@ -263,6 +264,7 @@
                 }
 
                 this.state.products = data.products || [];
+                this.state.warehouses = data.warehouses || [];
                 this.state.total = data.total || 0;
 
                 // UI Güncelleme
@@ -328,14 +330,48 @@
          * Ürün listesini HTML olarak basar.
          */
         renderProducts: function() {
+            var self = this;
             var container = document.getElementById('terminal-urun-listesi');
             if (this.state.products.length === 0) {
                 container.innerHTML = '<div class="terminal-uyari"><p>Ürün bulunamadı.</p></div>';
                 return;
             }
 
+            var depoId = (window.HizliKasa && HizliKasa.DepoManager)
+                ? HizliKasa.DepoManager.getActiveDepo()
+                : null;
+
             var html = '';
             var threshold = (typeof kasaAyar !== 'undefined' && kasaAyar.kritikStokEsigi) ? parseInt(kasaAyar.kritikStokEsigi) : 5;
+
+            var getOtherStocksHtml = function(item) {
+                var sHtml = '<div class="other-stocks-wrapper">';
+                
+                // Site Stoğu
+                sHtml += `
+                    <div class="other-stock-badge site-stock" title="WooCommerce Site Stoğu">
+                        <span class="os-label">Site:</span>
+                        <span class="os-val">${item.stock_quantity || 0}</span>
+                    </div>
+                `;
+
+                // Diğer Depolar
+                if (item.all_stocks && self.state.warehouses) {
+                    self.state.warehouses.forEach(w => {
+                        if (w.id == depoId) return;
+                        var qty = item.all_stocks[w.id] || 0;
+                        if (qty === 0) return; // Sıfır olanları kalabalık etmesin diye gizleyebiliriz veya silik gösterebiliriz
+                        sHtml += `
+                            <div class="other-stock-badge" title="${w.name}">
+                                <span class="os-label">${w.name}:</span>
+                                <span class="os-val">${qty}</span>
+                            </div>
+                        `;
+                    });
+                }
+                sHtml += '</div>';
+                return sHtml;
+            };
 
             for (var i = 0; i < this.state.products.length; i++) {
                 var p = this.state.products[i];
@@ -359,6 +395,7 @@
                         <div class="urun-detay">
                             <div class="urun-ad">${p.name} ${isVariable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
                             <div class="urun-sku">${p.sku || 'SKU YOK'} | Toplam: ${totalGroupStock}</div>
+                            ${!isVariable ? getOtherStocksHtml(p) : ''}
                         </div>
                         <div class="urun-aksiyonlar">
                             ${isVariable ? `
@@ -394,6 +431,7 @@
                                 <div class="urun-detay">
                                     <div class="urun-ad">${v.name}</div>
                                     <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${v.warehouse_stock}</div>
+                                    ${getOtherStocksHtml(v)}
                                 </div>
                                 <div class="urun-aksiyonlar">
                                     <button class="btn-barkod-tekli" title="Barkod çıkart">
