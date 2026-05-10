@@ -395,6 +395,8 @@
                         <div class="urun-detay">
                             <div class="urun-ad">${p.name} ${isVariable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
                             <div class="urun-sku">${p.sku || 'SKU YOK'} | Toplam: ${totalGroupStock}</div>
+                        </div>
+                        <div class="urun-ek-bilgi">
                             ${!isVariable ? getOtherStocksHtml(p) : ''}
                         </div>
                         <div class="urun-aksiyonlar">
@@ -431,6 +433,8 @@
                                 <div class="urun-detay">
                                     <div class="urun-ad">${v.name}</div>
                                     <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${v.warehouse_stock}</div>
+                                </div>
+                                <div class="urun-ek-bilgi">
                                     ${getOtherStocksHtml(v)}
                                 </div>
                                 <div class="urun-aksiyonlar">

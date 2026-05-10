@@ -199,7 +199,7 @@
 }
 
 .terminal-urun-kart .urun-detay {
-    flex: 1;
+    flex: 1.5;
 }
 
 .terminal-urun-kart .urun-ad {
@@ -676,11 +676,19 @@
 }
 
 /* --- Diğer Depolar ve Site Stoğu Badgeleri --- */
+.urun-ek-bilgi {
+    flex: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
 .other-stocks-wrapper {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: 8px;
+    justify-content: center;
 }
 
 .other-stock-badge {
