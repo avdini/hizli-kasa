@@ -267,9 +267,9 @@
 }
 
 .btn-urun-git {
-    background: rgba(142, 68, 173, 0.1);
-    color: #8e44ad;
-    border: 1px solid rgba(142, 68, 173, 0.2);
+    background: #8e44ad;
+    color: #ffffff;
+    border: 1px solid #7d3c98;
     width: 32px;
     height: 32px;
     border-radius: 8px;
@@ -278,6 +278,7 @@
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .btn-urun-git:hover {
