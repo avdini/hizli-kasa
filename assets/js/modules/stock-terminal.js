@@ -429,7 +429,18 @@
 
                 if (isVariable) {
                     html += `<div class="terminal-variations-container" id="vars-${p.id}" style="display:none;">`;
-                    p.variations.forEach(v => {
+                    
+                    // Arama sorgusuyla tam eşleşen SKU'yu en başa getir (Orijinal diziyi bozmadan)
+                    var query = (document.getElementById('terminal-arama-input')?.value || "").trim().toLowerCase();
+                    var sortedVariations = p.variations.slice().sort(function(a, b) {
+                        var aSku = (a.sku || "").toLowerCase();
+                        var bSku = (b.sku || "").toLowerCase();
+                        if (aSku === query && bSku !== query) return -1;
+                        if (bSku === query && aSku !== query) return 1;
+                        return 0;
+                    });
+
+                    sortedVariations.forEach(v => {
                         var vCritical = v.warehouse_stock > 0 && v.warehouse_stock <= threshold;
                         var vImg = (v.images && v.images[0]) ? v.images[0].src : '';
                         

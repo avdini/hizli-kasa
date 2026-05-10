@@ -279,7 +279,17 @@
                     var vContainer = document.createElement("div");
                     vContainer.className = "variation-container";
                     
-                    varyasyonlar.forEach(function(v) {
+                    // Arama sorgusuyla tam eşleşen SKU'yu en başa getir (Orijinal diziyi bozmadan)
+                    var query = (els.urunAramaInput.value || "").trim().toLowerCase();
+                    var siraliVaryasyonlar = varyasyonlar.slice().sort(function(a, b) {
+                        var aSku = (a.sku || "").toLowerCase();
+                        var bSku = (b.sku || "").toLowerCase();
+                        if (aSku === query && bSku !== query) return -1;
+                        if (bSku === query && aSku !== query) return 1;
+                        return 0;
+                    });
+
+                    siraliVaryasyonlar.forEach(function(v) {
                         var vLi = self._urunSatiriOlustur(v, false, true);
                         vLi.classList.add("variation-row");
                         vContainer.appendChild(vLi);
