@@ -266,6 +266,31 @@
     font-size: 14px;
 }
 
+.btn-urun-git {
+    background: rgba(142, 68, 173, 0.1);
+    color: #8e44ad;
+    border: 1px solid rgba(142, 68, 173, 0.2);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-urun-git:hover {
+    background: #8e44ad;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(142, 68, 173, 0.3);
+}
+
+.btn-urun-git span {
+    font-size: 16px;
+}
+
 .terminal-uyari {
     text-align: center;
     padding: 100px 40px;

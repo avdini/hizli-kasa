@@ -210,6 +210,7 @@ function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent
             'warehouse_stock' => (float) $row->warehouse_stock,
             'all_stocks' => $row->all_stocks ?? [],
             'images' => $image_url ? [['src' => $image_url]] : [],
+            'permalink' => get_permalink($parent_id),
             'is_variable' => $is_variable,
             'variations' => $active_children_data
         ];

@@ -141,8 +141,8 @@
             if (listContainer) {
                 listContainer.addEventListener('click', function(e) {
                     var target = e.target;
-                    var barkodTopluBtn = target.closest('.btn-barkod-toplu');
                     var barkodTekliBtn = target.closest('.btn-barkod-tekli');
+                    var urunGitBtn = target.closest('.btn-urun-git');
                     var kart = target.closest('.terminal-urun-kart');
                     
                     if (!kart) return;
@@ -186,6 +186,17 @@
                         return;
                     }
 
+                    // Ürün Sayfasına Git Tıklama
+                    if (urunGitBtn) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        var url = urunGitBtn.dataset.url;
+                        if (url) {
+                            window.open(url, '_blank');
+                        }
+                        return;
+                    }
+
                     // Kartın kendisine tıklanması (Stok Düzenleme veya Expand)
                     if (isParent) {
                         var childContainer = document.getElementById('vars-' + id);
@@ -198,6 +209,8 @@
                             }
                         }
                     } else {
+                        // Stok hareket modalı yarım kaldığı için geçici olarak devre dışı bırakıldı
+                        /*
                         var product = self.state.products.find(p => p.id === id);
                         if (vid > 0 && product && product.variations) {
                             var variation = product.variations.find(v => v.id === vid);
@@ -205,6 +218,7 @@
                         } else if (product) {
                             self.openEditModal(product);
                         }
+                        */
                     }
                 });
             }
@@ -417,6 +431,9 @@
                                     <span>🏷️</span> Barkod
                                 </button>
                             `}
+                            <button class="btn-urun-git" title="Ürün sayfasına git" data-url="${p.permalink}">
+                                <span>ℹ️</span>
+                            </button>
                         </div>
                         ${!isVariable ? `
                         <div class="urun-stok ${isStockOut ? 'stok-bitti' : (isCritical ? 'stok-kritik' : 'stok-tamam')}">
