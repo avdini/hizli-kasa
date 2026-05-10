@@ -309,8 +309,8 @@
         _urunSatiriOlustur: function(urun, isMain, showVariationHint) {
             var regularPrice = parseFloat(urun.regular_price || 0);
             var salePrice = parseFloat(urun.price || 0);
-            var outOfStock = urun.stock_status === 'outofstock' || (urun.manage_stock && urun.stock_quantity !== null && urun.stock_quantity <= 0);
-            var isVariableParent = urun.is_variable;
+            var isVariableParent = !!urun.is_variable;
+            var outOfStock = !isVariableParent && (urun.stock_status === 'outofstock' || (urun.manage_stock && urun.stock_quantity !== null && urun.stock_quantity <= 0));
 
             var li = document.createElement("li");
             
@@ -328,7 +328,7 @@
 
             var warehouseStock = urun.warehouse_stock;
             var warehouseHtml = '';
-            if (warehouseStock !== undefined && warehouseStock !== null) {
+            if (!isVariableParent && warehouseStock !== undefined && warehouseStock !== null) {
                 if (warehouseStock <= 0) {
                     warehouseHtml = '<div style="background:#e74c3c; color:#fff; font-size:10px; padding:2px 5px; border-radius:3px; font-weight:bold; display:inline-block; margin-top:2px;">DEPODA YOK</div>';
                 } else if (warehouseStock <= 3) {
@@ -338,7 +338,7 @@
                 }
             }
 
-            var stockHtml = (urun.manage_stock) ? 'Site: ' + (urun.stock_quantity || 0) : '';
+            var stockHtml = (!isVariableParent && urun.manage_stock) ? 'Site: ' + (urun.stock_quantity || 0) : '';
             if (warehouseHtml) stockHtml += '<br>' + warehouseHtml;
             
             var priceHtml = '';
