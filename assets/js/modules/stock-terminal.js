@@ -433,7 +433,7 @@
                                 </button>
                             `}
                             <button class="btn-urun-git" title="Ürün sayfasına git" data-url="${p.permalink}">
-                                <span style="font-family: 'Times New Roman', serif; font-weight: bold; font-style: italic; font-size: 18px; line-height: 1; pointer-events: none;">i</span>
+                                <span>i</span>
                             </button>
                         </div>
                         ${!isVariable ? `
