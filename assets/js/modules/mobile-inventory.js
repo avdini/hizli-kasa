@@ -24,8 +24,8 @@
         updateDepoDisplay: function() {
             const currentDepo = this.state.depolar.find(d => d.id == this.state.aktifDepoId);
             const nameEl = document.getElementById('current-depo-name');
-            if (nameEl && currentDepo) {
-                nameEl.innerText = currentDepo.name;
+            if (nameEl) {
+                nameEl.innerText = currentDepo ? currentDepo.name : 'Depo Seçin';
             }
         },
 

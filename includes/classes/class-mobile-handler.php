@@ -84,7 +84,7 @@ class Hizli_Kasa_Mobile_Handler {
                 $view_depos = get_user_meta($user->ID, '_hizli_kasa_depo_ids_view', true);
                 
                 // Meta veri JSON string veya array olabilir, normalize et
-                if (is_string($view_depos)) {
+                if (is_string($view_depos) && !empty($view_depos)) {
                     $all_allowed_ids = json_decode($view_depos, true) ?: [];
                 } else {
                     $all_allowed_ids = (array)$view_depos;
@@ -92,7 +92,13 @@ class Hizli_Kasa_Mobile_Handler {
 
                 global $wpdb;
                 $depolar = [];
-                if (!empty($all_allowed_ids)) {
+                
+                // Eğer Admin ise ve özel liste boşsa TÜM depoları getir
+                if (current_user_can('manage_options') && empty($all_allowed_ids)) {
+                    $depolar = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar ORDER BY priority DESC");
+                } 
+                // Yoksa sadece yetkili olduğu listeyi getir
+                elseif (!empty($all_allowed_ids)) {
                     $ids_ph = implode(',', array_map('intval', $all_allowed_ids));
                     $depolar = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar WHERE id IN ($ids_ph) ORDER BY priority DESC");
                 }
