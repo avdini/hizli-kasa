@@ -80,13 +80,32 @@ class Hizli_Kasa_Mobile_Handler {
                 // Mobil JS
                 wp_enqueue_script('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/js/modules/mobile-inventory.js', array('html5-qrcode'), $pos_version, true);
 
+                // Kullanıcının yetkili olduğu depoları çek
+                $view_depos = get_user_meta($user->ID, '_hizli_kasa_view_depos', true) ?: [];
+                $manage_depos = get_user_meta($user->ID, '_hizli_kasa_manage_depos', true) ?: [];
+                $all_allowed_ids = array_unique(array_merge((array)$view_depos, (array)$manage_depos));
+
+                global $wpdb;
+                $depolar = [];
+                if (!empty($all_allowed_ids)) {
+                    $ids_ph = implode(',', array_map('intval', $all_allowed_ids));
+                    $depolar = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar WHERE id IN ($ids_ph) ORDER BY priority DESC");
+                }
+
+                $aktif_depo_id = get_user_meta($user->ID, '_hizli_kasa_aktif_depo', true);
+                if (!$aktif_depo_id && !empty($depolar)) {
+                    $aktif_depo_id = $depolar[0]->id;
+                }
+
                 wp_localize_script('kasa-mobile-inventory', 'kasaAyar', array(
                     'rootApiUrl' => rest_url(),
                     'nonce'      => wp_create_nonce('wp_rest'),
                     'userName'   => $display_name,
                     'userId'     => $user->ID,
                     'version'    => HIZLI_KASA_VERSION,
-                    'tema'       => $tema
+                    'tema'       => $tema,
+                    'depolar'    => $depolar,
+                    'aktifDepo'  => (int)$aktif_depo_id
                 ));
             });
 

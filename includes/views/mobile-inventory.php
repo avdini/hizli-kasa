@@ -29,6 +29,15 @@ if (!defined('ABSPATH')) exit;
                 <div class="logo">🚀 <span>HIZLI KASA</span></div>
                 <div class="user-badge"><?php echo esc_html($display_name); ?></div>
             </div>
+
+            <!-- Depo Seçici -->
+            <div class="depo-selector-container">
+                <div id="active-depo-display" class="active-depo-box">
+                    <span class="label">Aktif Depo:</span>
+                    <span id="current-depo-name" class="name">Yükleniyor...</span>
+                </div>
+                <button id="change-depo-btn" class="change-btn">Değiştir</button>
+            </div>
             
             <!-- Scanner Toggle Area -->
             <div id="scanner-wrapper" class="collapsed">
@@ -65,6 +74,17 @@ if (!defined('ABSPATH')) exit;
             </div>
             <button id="back-to-pos" class="text-btn">Ana Panele Dön</button>
         </footer>
+    </div>
+
+    <!-- Depo Seçim Modalı -->
+    <div id="depo-select-modal" class="mobile-modal-overlay" style="display:none;">
+        <div class="mobile-modal-content glass">
+            <h3>Depo Seçin</h3>
+            <div id="depo-list-wrapper" class="modal-list">
+                <!-- JS ile dolacak -->
+            </div>
+            <button id="close-depo-modal" class="btn-cancel">Kapat</button>
+        </div>
     </div>
 
     <!-- Global Loading -->

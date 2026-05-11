@@ -64,6 +64,107 @@ body.mobile-inventory-app {
     color: var(--text-dim);
 }
 
+/* Depo Selector */
+.depo-selector-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+}
+
+.active-depo-box {
+    display: flex;
+    flex-direction: column;
+}
+
+.active-depo-box .label {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+}
+
+.active-depo-box .name {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 15px;
+}
+
+.change-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--glass-border);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Modal */
+.mobile-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end; /* Alt taraftan açılsın (Action Sheet gibi) */
+    justify-content: center;
+}
+
+.mobile-modal-content {
+    width: 100%;
+    max-width: 500px;
+    background: #1e293b;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    padding: 24px;
+    animation: slideUpModal 0.3s ease-out;
+}
+
+@keyframes slideUpModal {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+.modal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.depo-option {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+}
+
+.depo-option.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn-cancel {
+    width: 100%;
+    padding: 14px;
+    background: none;
+    border: 1px solid var(--glass-border);
+    color: var(--text-dim);
+    border-radius: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
 /* Scanner */
 #scanner-wrapper {
     margin-bottom: 16px;
@@ -245,6 +346,15 @@ body.mobile-inventory-app {
 
 .stock-box.highlight .sb-val {
     color: #818cf8;
+}
+
+.stock-box.full-width {
+    grid-column: span 2;
+    padding: 12px;
+}
+
+.stock-box.full-width .sb-val {
+    font-size: 20px;
 }
 
 .stock-box.critical {

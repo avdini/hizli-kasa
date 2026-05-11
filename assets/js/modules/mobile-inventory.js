@@ -10,12 +10,23 @@
             html5QrCode: null,
             isScanning: false,
             searchTimer: null,
-            isLoading: false
+            isLoading: false,
+            aktifDepoId: kasaAyar.aktifDepo || 0,
+            depolar: kasaAyar.depolar || []
         },
 
         init: function() {
+            this.updateDepoDisplay();
             this.bindEvents();
             console.log('Mobile Inventory initialized');
+        },
+
+        updateDepoDisplay: function() {
+            const currentDepo = this.state.depolar.find(d => d.id == this.state.aktifDepoId);
+            const nameEl = document.getElementById('current-depo-name');
+            if (nameEl && currentDepo) {
+                nameEl.innerText = currentDepo.name;
+            }
         },
 
         bindEvents: function() {
@@ -23,6 +34,12 @@
             const clearBtn = document.getElementById('clear-search');
             const toggleScannerBtn = document.getElementById('toggle-scanner-btn');
             const backBtn = document.getElementById('back-to-pos');
+            
+            const changeDepoBtn = document.getElementById('change-depo-btn');
+            const closeDepoModal = document.getElementById('close-depo-modal');
+
+            changeDepoBtn.addEventListener('click', () => this.openDepoModal());
+            closeDepoModal.addEventListener('click', () => document.getElementById('depo-select-modal').style.display = 'none');
 
             searchInput.addEventListener('input', (e) => {
                 const val = e.target.value.trim();
@@ -69,12 +86,47 @@
             }
         },
 
+        openDepoModal: function() {
+            const modal = document.getElementById('depo-select-modal');
+            const listWrapper = document.getElementById('depo-list-wrapper');
+            
+            let html = '';
+            this.state.depolar.forEach(d => {
+                html += `<div class="depo-option ${d.id == this.state.aktifDepoId ? 'active' : ''}" data-id="${d.id}">${d.name}</div>`;
+            });
+            
+            listWrapper.innerHTML = html;
+            modal.style.display = 'flex';
+
+            // Click listener for options
+            listWrapper.querySelectorAll('.depo-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const id = opt.dataset.id;
+                    this.switchDepo(id);
+                    modal.style.display = 'none';
+                });
+            });
+        },
+
+        switchDepo: function(id) {
+            this.state.aktifDepoId = id;
+            this.updateDepoDisplay();
+            
+            // Eğer arama yapılmışsa sonuçları yenile
+            const searchVal = document.getElementById('mobile-search-input').value.trim();
+            if (searchVal.length >= 2) {
+                this.searchProducts(searchVal);
+            }
+            
+            this.showToast("Depo değiştirildi.");
+        },
+
         startScanner: function() {
             if (!this.state.html5QrCode) {
                 this.state.html5QrCode = new Html5Qrcode("reader");
             }
 
-            const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+            const config = { fps: 15, qrbox: { width: 250, height: 180 } };
 
             this.state.html5QrCode.start(
                 { facingMode: "environment" }, 
@@ -115,8 +167,8 @@
             loader.style.display = 'flex';
 
             try {
-                // Mevcut terminal API'sini kullanıyoruz
-                const url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/terminal/products?s=${encodeURIComponent(query)}&limit=10`;
+                // Mevcut terminal API'sini kullanıyoruz + aktif depo
+                const url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/terminal/products?s=${encodeURIComponent(query)}&limit=15&depo_id=${this.state.aktifDepoId}`;
                 const response = await fetch(url, {
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });
@@ -151,7 +203,6 @@
 
             let html = '';
             products.forEach(p => {
-                // Eğer varyasyonluysa, varyasyonları da listele veya ana ürünü göster
                 html += this.createProductCardHtml(p);
                 
                 if (p.is_variable && p.variations) {
@@ -168,30 +219,38 @@
             const img = (p.images && p.images[0]) ? p.images[0].src : '';
             const allStocks = p.all_stocks || {};
             
-            // Warehouse stock calculation (API standardına göre)
-            // Not: Mobil araçta "Hangi depoda ne var" görmek kritik.
+            let aktifDepoHtml = '';
+            let digerDepolarHtml = '';
+            let otherTotal = 0;
+
+            // Aktif Depoyu en başa al
+            const currentQty = allStocks[this.state.aktifDepoId] || 0;
+            const aktifDepoName = this.state.depolar.find(d => d.id == this.state.aktifDepoId)?.name || "Seçili Depo";
             
-            let stocksHtml = '';
-            
-            // Depo listesini API'den almamız gerekebilir ama şimdilik all_stocks üzerinden gidelim
-            // all_stocks: { "1": 10, "2": 5 } şeklinde
-            
+            aktifDepoHtml = `
+                <div class="stock-box highlight full-width">
+                    <span class="sb-label">${aktifDepoName} (Seçili)</span>
+                    <span class="sb-val">${currentQty}</span>
+                </div>
+            `;
+
+            // Diğer depoları topla
             Object.keys(allStocks).forEach(depoId => {
-                const qty = allStocks[depoId];
-                if (qty > 0) {
-                    stocksHtml += `
-                        <div class="stock-box highlight">
-                            <span class="sb-label">Depo ${depoId}</span>
-                            <span class="sb-val">${qty}</span>
-                        </div>
-                    `;
-                }
+                if (depoId == this.state.aktifDepoId) return;
+                otherTotal += parseFloat(allStocks[depoId] || 0);
             });
 
-            // WooCommerce Site Stoğu
-            stocksHtml += `
+            digerDepolarHtml = `
                 <div class="stock-box">
-                    <span class="sb-label">Site</span>
+                    <span class="sb-label">Diğer Depolar</span>
+                    <span class="sb-val">${otherTotal}</span>
+                </div>
+            `;
+
+            // WooCommerce Site Stoğu
+            const siteStockHtml = `
+                <div class="stock-box">
+                    <span class="sb-label">Site Stoğu</span>
                     <span class="sb-val">${p.stock_quantity || 0}</span>
                 </div>
             `;
@@ -206,7 +265,9 @@
                         </div>
                     </div>
                     <div class="stock-grid">
-                        ${stocksHtml || '<div class="stock-box critical"><span class="sb-label">STOK</span><span class="sb-val">YOK</span></div>'}
+                        ${aktifDepoHtml}
+                        ${digerDepolarHtml}
+                        ${siteStockHtml}
                     </div>
                 </div>
             `;
