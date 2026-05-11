@@ -138,19 +138,27 @@
                 this.state.html5QrCode = new Html5Qrcode("reader");
             }
 
-            const config = { fps: 15, qrbox: { width: 250, height: 180 } };
+            const config = { 
+                fps: 20, // Daha akıcı tarama
+                qrbox: { width: 280, height: 200 }, // Barkodlar için daha geniş alan
+                aspectRatio: 1.0,
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true // Donanım hızlandırma
+                }
+            };
 
             this.state.html5QrCode.start(
                 { facingMode: "environment" }, 
                 config, 
                 (decodedText) => {
                     console.log(`Code scanned: ${decodedText}`);
-                    document.getElementById('mobile-search-input').value = decodedText;
+                    const input = document.getElementById('mobile-search-input');
+                    input.value = decodedText;
                     document.getElementById('clear-search').style.display = 'block';
                     this.searchProducts(decodedText);
-                    this.toggleScanner(); // Başarılı tarama sonrası kapat
+                    this.stopScanner(); // Önce durdur
+                    this.toggleScanner(); // Sonra UI'ı kapat
                     
-                    // Vibrate feedback if supported
                     if (navigator.vibrate) navigator.vibrate(100);
                 },
                 (errorMessage) => {
