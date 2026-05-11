@@ -156,8 +156,11 @@
                     input.value = decodedText;
                     document.getElementById('clear-search').style.display = 'block';
                     this.searchProducts(decodedText);
-                    this.stopScanner(); // Önce durdur
-                    this.toggleScanner(); // Sonra UI'ı kapat
+                    
+                    // Sadece toggle çağırmak yeterli, o zaten durumu kontrol edip kapatır
+                    if (this.state.isScanning) {
+                        this.toggleScanner();
+                    }
                     
                     if (navigator.vibrate) navigator.vibrate(100);
                 },
@@ -173,10 +176,9 @@
         },
 
         stopScanner: function() {
-            if (this.state.html5QrCode) {
-                this.state.html5QrCode.stop().then(() => {
-                    this.state.isScanning = false;
-                });
+            if (this.state.html5QrCode && this.state.isScanning) {
+                this.state.isScanning = false; // Anında durumu güncelle
+                this.state.html5QrCode.stop().catch(err => console.error("Stop error", err));
             }
         },
 
