@@ -33,7 +33,7 @@
             const searchInput = document.getElementById('mobile-search-input');
             const clearBtn = document.getElementById('clear-search');
             const toggleScannerBtn = document.getElementById('toggle-scanner-btn');
-            const backBtn = document.getElementById('back-to-pos');
+            const exitLogo = document.getElementById('app-exit-logo');
             
             const changeDepoBtn = document.getElementById('header-depo-selector');
             const closeDepoModal = document.getElementById('close-depo-modal');
@@ -66,7 +66,7 @@
                 this.toggleScanner();
             });
 
-            backBtn.addEventListener('click', () => {
+            exitLogo.addEventListener('click', () => {
                 window.location.href = window.location.pathname;
             });
 

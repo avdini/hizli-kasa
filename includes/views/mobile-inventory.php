@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) exit;
         <!-- Header -->
         <header class="app-header">
             <div class="header-top">
-                <div class="logo">🚀 <span>HK</span></div>
+                <div id="app-exit-logo" class="logo" style="cursor:pointer;">🚀 <span>HK</span></div>
                 <div id="header-depo-selector" class="header-depo">
                     <span id="current-depo-name" class="name">Yükleniyor...</span>
                     <span class="chevron">▼</span>
@@ -67,7 +67,6 @@ if (!defined('ABSPATH')) exit;
             <div class="footer-info">
                 <span id="result-count">0 Ürün bulundu</span>
             </div>
-            <button id="back-to-pos" class="text-btn">Ana Panele Dön</button>
         </footer>
     </div>
 
