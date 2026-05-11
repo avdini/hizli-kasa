@@ -1,13 +1,28 @@
 /* Hızlı Kasa - Mobil Envanter Tasarımı */
 
-:root {
-    --header-height: 160px;
-    --accent: #6366f1;
+/* Tema Değişkenleri */
+.theme-dark {
     --bg-dark: #0f172a;
+    --header-bg: rgba(15, 23, 42, 0.9);
     --card-bg: rgba(30, 41, 59, 0.7);
     --text-main: #f8fafc;
     --text-dim: #94a3b8;
     --glass-border: rgba(255, 255, 255, 0.1);
+    --accent: #6366f1;
+    --input-bg: rgba(255, 255, 255, 0.05);
+    --modal-bg: #1e293b;
+}
+
+.theme-light {
+    --bg-dark: #f1f5f9;
+    --header-bg: rgba(255, 255, 255, 0.9);
+    --card-bg: rgba(255, 255, 255, 0.8);
+    --text-main: #1e293b;
+    --text-dim: #64748b;
+    --glass-border: rgba(0, 0, 0, 0.08);
+    --accent: #4f46e5;
+    --input-bg: rgba(0, 0, 0, 0.03);
+    --modal-bg: #ffffff;
 }
 
 body.mobile-inventory-app {
@@ -19,6 +34,7 @@ body.mobile-inventory-app {
     height: 100vh;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
 #mobile-app-container {
@@ -33,7 +49,7 @@ body.mobile-inventory-app {
 /* Header */
 .app-header {
     padding: 16px;
-    background: rgba(15, 23, 42, 0.9);
+    background: var(--header-bg);
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--glass-border);
     z-index: 100;
@@ -57,7 +73,7 @@ body.mobile-inventory-app {
 }
 
 .logo span {
-    background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+    background: linear-gradient(135deg, var(--text-main) 0%, var(--accent) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -68,7 +84,7 @@ body.mobile-inventory-app {
     align-items: center;
     justify-content: center;
     gap: 4px;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--input-bg);
     border: 1px solid var(--glass-border);
     padding: 6px 12px;
     border-radius: 12px;
@@ -115,11 +131,12 @@ body.mobile-inventory-app {
 .mobile-modal-content {
     width: 100%;
     max-width: 500px;
-    background: #1e293b;
+    background: var(--modal-bg);
     border-top-left-radius: 24px;
     border-top-right-radius: 24px;
     padding: 24px;
     animation: slideUpModal 0.3s ease-out;
+    color: var(--text-main);
 }
 
 @keyframes slideUpModal {
@@ -208,15 +225,15 @@ body.mobile-inventory-app {
     padding: 14px 44px;
     border-radius: 12px;
     border: 1px solid var(--glass-border);
-    background: rgba(255, 255, 255, 0.05);
-    color: white;
+    background: var(--input-bg);
+    color: var(--text-main);
     font-size: 16px;
     outline: none;
     transition: all 0.2s;
 }
 
 #mobile-search-input:focus {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--card-bg);
     border-color: var(--accent);
     box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
@@ -273,11 +290,20 @@ body.mobile-inventory-app {
 
 /* Parent Card Specific */
 .parent-card {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+    background: var(--card-bg);
     border-left: 4px solid var(--accent);
     cursor: pointer;
     position: relative;
     z-index: 2;
+}
+
+.theme-dark .parent-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+}
+
+.theme-light .parent-card {
+    background: #ffffff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
 }
 
 .parent-card .var-summary {
@@ -535,7 +561,7 @@ body.mobile-inventory-app {
 /* Footer */
 .app-footer {
     padding: 12px 16px;
-    background: rgba(15, 23, 42, 0.9);
+    background: var(--header-bg);
     border-top: 1px solid var(--glass-border);
     display: flex;
     justify-content: space-between;
@@ -560,7 +586,7 @@ body.mobile-inventory-app {
 #app-loader {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.7);
+    background: var(--header-bg);
     backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
@@ -571,7 +597,7 @@ body.mobile-inventory-app {
 .spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
+    border: 3px solid var(--glass-border);
     border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
