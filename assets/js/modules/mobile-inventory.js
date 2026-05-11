@@ -35,7 +35,7 @@
             const toggleScannerBtn = document.getElementById('toggle-scanner-btn');
             const backBtn = document.getElementById('back-to-pos');
             
-            const changeDepoBtn = document.getElementById('change-depo-btn');
+            const changeDepoBtn = document.getElementById('header-depo-selector');
             const closeDepoModal = document.getElementById('close-depo-modal');
 
             changeDepoBtn.addEventListener('click', () => this.openDepoModal());

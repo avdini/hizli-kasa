@@ -81,9 +81,14 @@ class Hizli_Kasa_Mobile_Handler {
                 wp_enqueue_script('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/js/modules/mobile-inventory.js', array('html5-qrcode'), $pos_version, true);
 
                 // Kullanıcının yetkili olduğu depoları çek
-                $view_depos = get_user_meta($user->ID, '_hizli_kasa_view_depos', true) ?: [];
-                $manage_depos = get_user_meta($user->ID, '_hizli_kasa_manage_depos', true) ?: [];
-                $all_allowed_ids = array_unique(array_merge((array)$view_depos, (array)$manage_depos));
+                $view_depos = get_user_meta($user->ID, '_hizli_kasa_depo_ids_view', true);
+                
+                // Meta veri JSON string veya array olabilir, normalize et
+                if (is_string($view_depos)) {
+                    $all_allowed_ids = json_decode($view_depos, true) ?: [];
+                } else {
+                    $all_allowed_ids = (array)$view_depos;
+                }
 
                 global $wpdb;
                 $depolar = [];
@@ -92,7 +97,7 @@ class Hizli_Kasa_Mobile_Handler {
                     $depolar = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar WHERE id IN ($ids_ph) ORDER BY priority DESC");
                 }
 
-                $aktif_depo_id = get_user_meta($user->ID, '_hizli_kasa_aktif_depo', true);
+                $aktif_depo_id = get_user_meta($user->ID, '_hizli_kasa_active_depo', true);
                 if (!$aktif_depo_id && !empty($depolar)) {
                     $aktif_depo_id = $depolar[0]->id;
                 }

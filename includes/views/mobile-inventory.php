@@ -26,17 +26,12 @@ if (!defined('ABSPATH')) exit;
         <!-- Header -->
         <header class="app-header">
             <div class="header-top">
-                <div class="logo">🚀 <span>HIZLI KASA</span></div>
-                <div class="user-badge"><?php echo esc_html($display_name); ?></div>
-            </div>
-
-            <!-- Depo Seçici -->
-            <div class="depo-selector-container">
-                <div id="active-depo-display" class="active-depo-box">
-                    <span class="label">Aktif Depo:</span>
+                <div class="logo">🚀 <span>HK</span></div>
+                <div id="header-depo-selector" class="header-depo">
                     <span id="current-depo-name" class="name">Yükleniyor...</span>
+                    <span class="chevron">▼</span>
                 </div>
-                <button id="change-depo-btn" class="change-btn">Değiştir</button>
+                <div class="user-badge"><?php echo esc_html($display_name); ?></div>
             </div>
             
             <!-- Scanner Toggle Area -->
