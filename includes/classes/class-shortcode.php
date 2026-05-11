@@ -65,12 +65,40 @@ function hizli_kasa_uygulamasi()
         return '<div style="padding:20px; color:red; font-weight:bold;">Bu sayfayı görüntülemek için yetkiniz bulunmamaktadır.</div>';
     }
 
+    // Mobil Modu Kontrolü
+    $is_mobile_mode = isset($_GET['mode']) && $_GET['mode'] === 'mobile';
+
     // POS Sayfasını Önbelleğe Almayı Engelle
     if (!defined('DONOTCACHEPAGE')) define('DONOTCACHEPAGE', true);
     nocache_headers(); // Cloudflare ve Tarayıcı Cache Engelleme
 
 
     $pos_version = HIZLI_KASA_VERSION;
+
+    if ($is_mobile_mode) {
+        // Mobil Envanter Modu İçin Gerekli Assetler
+        wp_enqueue_style('kasa-theme-vars', HIZLI_KASA_URL . 'assets/css/modules/theme-vars.css', array(), $pos_version);
+        wp_enqueue_style('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/css/modules/mobile-inventory.css', array(), $pos_version);
+        
+        // Html5-QRCode Kütüphanesi
+        wp_enqueue_script('html5-qrcode', 'https://unpkg.com/html5-qrcode', array(), '2.3.8', true);
+        
+        wp_enqueue_script('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/js/modules/mobile-inventory.js', array('html5-qrcode'), $pos_version, true);
+
+        // JavaScript'e veri aktarımı
+        wp_localize_script('kasa-mobile-inventory', 'kasaAyar', array(
+            'rootApiUrl' => rest_url(),
+            'nonce'      => wp_create_nonce('wp_rest'),
+            'userName'   => $display_name,
+            'userId'     => get_current_user_id(),
+            'version'    => HIZLI_KASA_VERSION,
+            'tema'       => get_user_meta(get_current_user_id(), '_hizli_kasa_tema', true) ?: 'light'
+        ));
+
+        ob_start();
+        include HIZLI_KASA_PATH . 'includes/views/mobile-inventory.php';
+        return ob_get_clean();
+    }
 
     // CSS Modüllerini Yükle
     $css_modules = [

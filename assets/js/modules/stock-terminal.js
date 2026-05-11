@@ -125,6 +125,31 @@
                 self.saveStockChange();
             });
 
+            // --- MOBİL ARAÇ QR MODALI ---
+            const mobilAracBtn = document.getElementById('btn-mobil-arac-ac');
+            const qrModal = document.getElementById('mobil-qr-modal');
+            const closeQrBtn = document.getElementById('close-qr-modal');
+
+            if (mobilAracBtn) {
+                mobilAracBtn.addEventListener('click', () => {
+                    const baseUrl = window.location.origin + window.location.pathname;
+                    const mobileUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'mode=mobile';
+                    
+                    // QR Kod API (QRServer)
+                    const qrImg = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mobileUrl)}" alt="QR Code" style="display:block;">`;
+                    document.getElementById('qr-code-display').innerHTML = qrImg;
+                    document.getElementById('mobile-tool-url-text').innerText = mobileUrl;
+                    
+                    qrModal.style.display = 'flex';
+                });
+            }
+
+            if (closeQrBtn) {
+                closeQrBtn.addEventListener('click', () => {
+                    qrModal.style.display = 'none';
+                });
+            }
+
             // Artırma/Eksiltme Butonları
             document.querySelector('.btn-artir').addEventListener('click', () => {
                 var input = document.getElementById('modal-degisim-input');

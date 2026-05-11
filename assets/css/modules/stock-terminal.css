@@ -767,3 +767,30 @@
 body.dark-mode .other-stock-badge {
     background: rgba(255, 255, 255, 0.03);
 }
+
+/* --- Mobil Araç Butonu --- */
+.btn-mobil-arac {
+    background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+    color: white !important;
+    border: none !important;
+    padding: 10px 20px !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer;
+}
+
+.btn-mobil-arac:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4) !important;
+}
+
+.btn-mobil-arac .ikon {
+    font-size: 18px;
+}
+
+.text-center { text-align: center; }

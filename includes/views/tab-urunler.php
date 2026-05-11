@@ -25,6 +25,13 @@ if (!defined('ABSPATH')) exit;
         </div>
 
         <div class="arama-kutusu-wrapper">
+            <!-- Mobil Araç Erişimi -->
+            <div class="mobil-arac-trigger-wrapper">
+                <button id="btn-mobil-arac-ac" class="terminal-btn btn-mobil-arac" title="Mobil Envanter Aracını Aç (QR Kod)">
+                    <span class="ikon">📱</span> Mobil Araç
+                </button>
+            </div>
+
             <!-- Sıralama Seçici -->
             <div class="siralama-kutusu">
                 <select id="terminal-siralama-select" class="terminal-select">
@@ -153,6 +160,26 @@ if (!defined('ABSPATH')) exit;
             <button id="barkod-onay-yazdir" class="btn-primary">
                 <span class="ikon">🖨️</span> Yazıcıya Gönder
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Mobil Araç QR Kod Modalı -->
+<div id="mobil-qr-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10009; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+    <div class="modal-icerik glass text-center" style="max-width: 400px; padding: 30px; text-align: center;">
+        <h3 style="margin-bottom: 15px;">Mobil Envanter Aracı</h3>
+        <p style="color: #94a3b8; font-size: 14px;">Aşağıdaki kodu telefonunuzun kamerasından okutarak mobil araca hızlıca erişebilirsiniz.</p>
+        
+        <div id="qr-code-display" style="background: white; padding: 15px; border-radius: 12px; margin: 20px auto; display: inline-block;">
+            <!-- QR Kod Buraya Gelecek -->
+        </div>
+
+        <div style="margin-top: 15px; font-size: 13px; color: #6366f1;">
+            Link: <span id="mobile-tool-url-text">...</span>
+        </div>
+
+        <div class="modal-butonlar" style="margin-top: 25px; justify-content: center;">
+            <button id="close-qr-modal" class="btn-secondary">Kapat</button>
         </div>
     </div>
 </div>
