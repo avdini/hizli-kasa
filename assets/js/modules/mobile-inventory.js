@@ -372,7 +372,11 @@
             const modal = document.getElementById('image-preview-modal');
             const img = document.getElementById('preview-img');
             if (modal && img) {
-                img.src = src;
+                // WordPress'in thumbnail eklerini temizleyip orijinal resme ulaşmaya çalışalım
+                // Örn: image-150x150.jpg -> image.jpg
+                const fullSrc = src.replace(/-(\d+)x(\d+)\.(jpg|jpeg|png|webp|gif)$/, '.$3');
+                
+                img.src = fullSrc;
                 modal.style.display = 'flex';
             }
         },
