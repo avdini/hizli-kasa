@@ -11,6 +11,43 @@ class Hizli_Kasa_Mobile_Handler {
 
     public static function init() {
         add_action('template_redirect', [__CLASS__, 'handle_mobile_mode']);
+        add_action('template_redirect', [__CLASS__, 'serve_dynamic_manifest']);
+    }
+
+    public static function serve_dynamic_manifest() {
+        if (isset($_GET['hizli-kasa-manifest'])) {
+            header('Content-Type: application/json; charset=utf-8');
+            
+            $site_url = home_url('/hizli-kasa/'); // Varsayılan olarak bu sayfaya döner
+            // Eğer sayfa adı farklıysa bunu otomatik bulmaya çalışabiliriz veya ayarlardan alabiliriz
+            
+            $manifest = [
+                "name" => "Hızlı Kasa Envanter",
+                "short_name" => "Envanter",
+                "description" => "Hızlı Kasa Mobil Envanter ve Barkod Tarayıcı",
+                "start_url" => $site_url . "?mode=mobile",
+                "display" => "standalone",
+                "background_color" => "#0f172a",
+                "theme_color" => "#6366f1",
+                "icons" => [
+                    [
+                        "src" => HIZLI_KASA_URL . "assets/img/icon-192.png",
+                        "sizes" => "192x192",
+                        "type" => "image/png",
+                        "purpose" => "any maskable"
+                    ],
+                    [
+                        "src" => HIZLI_KASA_URL . "assets/img/icon-512.png",
+                        "sizes" => "512x512",
+                        "type" => "image/png",
+                        "purpose" => "any maskable"
+                    ]
+                ]
+            ];
+
+            echo json_encode($manifest, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+            exit;
+        }
     }
 
     public static function handle_mobile_mode() {

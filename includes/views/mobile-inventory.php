@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) exit;
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0f172a">
     
-    <link rel="manifest" href="<?php echo HIZLI_KASA_URL; ?>manifest.json">
+    <link rel="manifest" href="<?php echo home_url('/?hizli-kasa-manifest=1'); ?>">
     <link rel="apple-touch-icon" href="<?php echo HIZLI_KASA_URL; ?>assets/img/icon-192.png">
     
     <?php wp_head(); ?>
