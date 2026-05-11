@@ -90,6 +90,14 @@ if (!defined('ABSPATH')) exit;
     <!-- Toast Notifications -->
     <div id="mobile-toast-container"></div>
 
+    <!-- Image Preview Modal -->
+    <div id="image-preview-modal" class="image-preview-overlay" style="display: none;">
+        <div class="preview-content">
+            <img id="preview-img" src="" alt="">
+            <div class="preview-close">✕ Kapatmak için dokunun</div>
+        </div>
+    </div>
+
     <?php wp_footer(); ?>
 </body>
 </html>

@@ -69,6 +69,18 @@
             backBtn.addEventListener('click', () => {
                 window.location.href = window.location.pathname;
             });
+
+            // Resim Önizleme Olayları (Event Delegation)
+            document.getElementById('results-container').addEventListener('click', (e) => {
+                if (e.target.classList.contains('card-img') || e.target.classList.contains('card-img-mini')) {
+                    e.stopPropagation(); // Parent accordion tetiklenmesin
+                    this.openImagePreview(e.target.src);
+                }
+            });
+
+            document.getElementById('image-preview-modal').addEventListener('click', () => {
+                this.closeImagePreview();
+            });
         },
 
         toggleScanner: function() {
@@ -354,6 +366,22 @@
                 toast.classList.add('fade-out');
                 setTimeout(() => toast.remove(), 500);
             }, 3000);
+        },
+
+        openImagePreview: function(src) {
+            const modal = document.getElementById('image-preview-modal');
+            const img = document.getElementById('preview-img');
+            if (modal && img) {
+                img.src = src;
+                modal.style.display = 'flex';
+            }
+        },
+
+        closeImagePreview: function() {
+            const modal = document.getElementById('image-preview-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
     };
 
