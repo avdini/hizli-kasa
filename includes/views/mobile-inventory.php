@@ -15,6 +15,9 @@ if (!defined('ABSPATH')) exit;
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0f172a">
     
+    <link rel="manifest" href="<?php echo HIZLI_KASA_URL; ?>manifest.json">
+    <link rel="apple-touch-icon" href="<?php echo HIZLI_KASA_URL; ?>assets/img/icon-192.png">
+    
     <?php wp_head(); ?>
 </head>
 <body class="mobile-inventory-app theme-<?php echo esc_attr($tema ?? 'dark'); ?>">

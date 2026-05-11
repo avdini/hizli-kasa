@@ -1,0 +1,21 @@
+{
+  "name": "Hızlı Kasa Envanter",
+  "short_name": "Envanter",
+  "description": "Hızlı Kasa Mobil Envanter ve Barkod Tarayıcı",
+  "start_url": "./?mode=mobile",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "assets/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "assets/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
