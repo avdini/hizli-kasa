@@ -16,7 +16,13 @@ class Hizli_Kasa_Mobile_Handler {
     public static function handle_mobile_mode() {
         if (isset($_GET['mode']) && $_GET['mode'] === 'mobile') {
             
-            // Yetki kontrolü (Shortcode sınıfındaki fonksiyonu kullanır)
+            // Giriş yapmamışsa login sayfasına yönlendir (Giriş sonrası bu sayfaya geri döner)
+            if (!is_user_logged_in()) {
+                auth_redirect();
+            }
+
+            // Giriş yapmış ama yetkisi yoksa hata ver
+            require_once HIZLI_KASA_PATH . 'includes/classes/class-shortcode.php';
             if (!hizli_kasa_can_access_app()) {
                 wp_die('Bu sayfaya erişim yetkiniz yok.');
             }
