@@ -317,13 +317,82 @@ body.mobile-inventory-app {
 
 .mobile-urun-kart.variation {
     background: rgba(255, 255, 255, 0.03);
-    padding: 10px;
+    padding: 8px 12px;
     border-radius: 12px;
-    font-size: 0.9em;
+}
+
+.card-flex-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.card-img-mini {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #1e293b;
+    border: 1px solid var(--glass-border);
+}
+
+.mobile-urun-kart.variation .card-info {
+    flex: 1;
+    min-width: 0;
 }
 
 .mobile-urun-kart.variation .card-name {
+    font-size: 13px;
     color: #cbd5e1;
+}
+
+.card-side-stocks {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-left: 10px;
+    border-left: 1px solid var(--glass-border);
+}
+
+.side-stock-item {
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2px 6px;
+    border-radius: 6px;
+    min-width: 60px;
+}
+
+.side-stock-item.highlight {
+    background: rgba(99, 102, 241, 0.2);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.ss-label {
+    font-size: 8px;
+    color: var(--text-dim);
+    font-weight: 800;
+}
+
+.ss-val {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+.side-stock-item.highlight .ss-val {
+    color: #818cf8;
+}
+
+.side-stock-item.site {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.side-stock-item.site .ss-val {
+    color: #34d399;
 }
 
 @keyframes slideUp {

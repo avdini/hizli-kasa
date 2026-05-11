@@ -251,52 +251,67 @@
             const img = (p.images && p.images[0]) ? p.images[0].src : '';
             const allStocks = p.all_stocks || {};
             
-            let aktifDepoHtml = '';
-            let digerDepolarHtml = '';
-            let otherTotal = 0;
-
             const currentQty = allStocks[this.state.aktifDepoId] || 0;
-            const aktifDepoName = this.state.depolar.find(d => d.id == this.state.aktifDepoId)?.name || "Seçili Depo";
+            const aktifDepoName = this.state.depolar.find(d => d.id == this.state.aktifDepoId)?.name || "Depo";
             
-            aktifDepoHtml = `
-                <div class="stock-box highlight full-width">
-                    <span class="sb-label">${aktifDepoName}</span>
-                    <span class="sb-val">${currentQty}</span>
-                </div>
-            `;
-
+            let otherTotal = 0;
             Object.keys(allStocks).forEach(depoId => {
                 if (depoId == this.state.aktifDepoId) return;
                 otherTotal += parseFloat(allStocks[depoId] || 0);
             });
 
-            digerDepolarHtml = `
-                <div class="stock-box">
-                    <span class="sb-label">Diğer</span>
-                    <span class="sb-val">${otherTotal}</span>
-                </div>
-            `;
+            if (isVariation) {
+                // VARYASYON KARTI (Sağdan Stoklu)
+                return `
+                    <div class="mobile-urun-kart variation">
+                        <div class="card-flex-wrapper">
+                            <img src="${img}" class="card-img-mini" alt="">
+                            <div class="card-info">
+                                <div class="card-name">${p.name.replace(/.* - /, '')}</div>
+                                <div class="card-sku">${p.sku || ''}</div>
+                            </div>
+                            <div class="card-side-stocks">
+                                <div class="side-stock-item highlight" title="${aktifDepoName}">
+                                    <span class="ss-val">${currentQty}</span>
+                                    <span class="ss-label">DEP</span>
+                                </div>
+                                <div class="side-stock-item" title="Diğer Depolar">
+                                    <span class="ss-val">${otherTotal}</span>
+                                    <span class="ss-label">DİĞ</span>
+                                </div>
+                                <div class="side-stock-item site" title="Site Stoğu">
+                                    <span class="ss-val">${p.stock_quantity || 0}</span>
+                                    <span class="ss-label">WEB</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
 
-            const siteStockHtml = `
-                <div class="stock-box">
-                    <span class="sb-label">Site</span>
-                    <span class="sb-val">${p.stock_quantity || 0}</span>
-                </div>
-            `;
-
+            // BASİT ÜRÜN KARTI (Klasik Görünüm)
             return `
-                <div class="mobile-urun-kart ${isVariation ? 'variation' : ''}">
+                <div class="mobile-urun-kart">
                     <div class="card-main">
-                        ${!isVariation ? `<img src="${img}" class="card-img" alt="">` : ''}
+                        <img src="${img}" class="card-img" alt="">
                         <div class="card-info">
-                            <div class="card-name">${isVariation ? p.name.replace(/.* - /, '') : p.name}</div>
+                            <div class="card-name">${p.name} ${p.is_variable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
                             <div class="card-sku">${p.sku || 'SKU YOK'}</div>
                         </div>
                     </div>
                     <div class="stock-grid">
-                        ${aktifDepoHtml}
-                        ${digerDepolarHtml}
-                        ${siteStockHtml}
+                        <div class="stock-box highlight full-width">
+                            <span class="sb-label">${aktifDepoName}</span>
+                            <span class="sb-val">${currentQty}</span>
+                        </div>
+                        <div class="stock-box">
+                            <span class="sb-label">Diğer</span>
+                            <span class="sb-val">${otherTotal}</span>
+                        </div>
+                        <div class="stock-box">
+                            <span class="sb-label">Site</span>
+                            <span class="sb-val">${p.stock_quantity || 0}</span>
+                        </div>
                     </div>
                 </div>
             `;
