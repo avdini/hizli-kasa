@@ -14,14 +14,14 @@
 }
 
 .theme-light {
-    --bg-dark: #f1f5f9;
-    --header-bg: rgba(255, 255, 255, 0.9);
-    --card-bg: rgba(255, 255, 255, 0.8);
-    --text-main: #1e293b;
-    --text-dim: #64748b;
-    --glass-border: rgba(0, 0, 0, 0.08);
+    --bg-dark: #f8fafc;
+    --header-bg: rgba(255, 255, 255, 0.95);
+    --card-bg: #ffffff;
+    --text-main: #020617;
+    --text-dim: #475569;
+    --glass-border: rgba(0, 0, 0, 0.05);
     --accent: #4f46e5;
-    --input-bg: rgba(0, 0, 0, 0.03);
+    --input-bg: #f1f5f9;
     --modal-bg: #ffffff;
 }
 
@@ -375,7 +375,13 @@ body.mobile-inventory-app {
 
 .mobile-urun-kart.variation .card-name {
     font-size: 13px;
-    color: #cbd5e1;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.theme-light .mobile-urun-kart.variation .card-sku {
+    color: var(--text-dim);
+    opacity: 0.8;
 }
 
 .card-side-stocks {
@@ -384,6 +390,10 @@ body.mobile-inventory-app {
     gap: 4px;
     padding-left: 10px;
     border-left: 1px solid var(--glass-border);
+}
+
+.theme-light .card-side-stocks {
+    border-left-color: #f1f5f9;
 }
 
 .side-stock-item {
