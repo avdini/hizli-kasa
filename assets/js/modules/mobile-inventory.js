@@ -201,18 +201,50 @@
                 return;
             }
 
+            // Tek bir ürün mü bulundu? (Auto-expand için)
+            const isSingleResult = products.length === 1;
+
             let html = '';
             products.forEach(p => {
-                html += this.createProductCardHtml(p);
-                
-                if (p.is_variable && p.variations) {
-                    p.variations.forEach(v => {
-                        html += this.createProductCardHtml(v, true);
-                    });
+                if (p.is_variable) {
+                    // Parent Kartı
+                    html += this.createParentCardHtml(p, isSingleResult);
+                    
+                    // Varyasyon Grubu
+                    if (p.variations && p.variations.length > 0) {
+                        html += `<div id="vars-of-${p.id}" class="variation-group" style="display: ${isSingleResult ? 'block' : 'none'}">`;
+                        p.variations.forEach(v => {
+                            html += this.createProductCardHtml(v, true);
+                        });
+                        html += `</div>`;
+                    }
+                } else {
+                    // Basit Ürün
+                    html += this.createProductCardHtml(p);
                 }
             });
 
             container.innerHTML = html;
+            this.bindVariationToggles();
+        },
+
+        createParentCardHtml: function(p, isOpen) {
+            const img = (p.images && p.images[0]) ? p.images[0].src : '';
+            const varCount = p.variations ? p.variations.length : 0;
+
+            return `
+                <div class="mobile-urun-kart parent-card ${isOpen ? 'is-open' : ''}" data-target="vars-of-${p.id}">
+                    <div class="card-main">
+                        <img src="${img}" class="card-img" alt="">
+                        <div class="card-info">
+                            <div class="card-name">${p.name}</div>
+                            <div class="card-sku">${p.sku || 'KARIŞIK SKU'}</div>
+                            <div class="var-summary">${varCount} Varyasyon Mevcut</div>
+                        </div>
+                        <div class="expand-chevron">▼</div>
+                    </div>
+                </div>
+            `;
         },
 
         createProductCardHtml: function(p, isVariation = false) {
@@ -223,18 +255,16 @@
             let digerDepolarHtml = '';
             let otherTotal = 0;
 
-            // Aktif Depoyu en başa al
             const currentQty = allStocks[this.state.aktifDepoId] || 0;
             const aktifDepoName = this.state.depolar.find(d => d.id == this.state.aktifDepoId)?.name || "Seçili Depo";
             
             aktifDepoHtml = `
                 <div class="stock-box highlight full-width">
-                    <span class="sb-label">${aktifDepoName} (Seçili)</span>
+                    <span class="sb-label">${aktifDepoName}</span>
                     <span class="sb-val">${currentQty}</span>
                 </div>
             `;
 
-            // Diğer depoları topla
             Object.keys(allStocks).forEach(depoId => {
                 if (depoId == this.state.aktifDepoId) return;
                 otherTotal += parseFloat(allStocks[depoId] || 0);
@@ -242,15 +272,14 @@
 
             digerDepolarHtml = `
                 <div class="stock-box">
-                    <span class="sb-label">Diğer Depolar</span>
+                    <span class="sb-label">Diğer</span>
                     <span class="sb-val">${otherTotal}</span>
                 </div>
             `;
 
-            // WooCommerce Site Stoğu
             const siteStockHtml = `
                 <div class="stock-box">
-                    <span class="sb-label">Site Stoğu</span>
+                    <span class="sb-label">Site</span>
                     <span class="sb-val">${p.stock_quantity || 0}</span>
                 </div>
             `;
@@ -258,9 +287,9 @@
             return `
                 <div class="mobile-urun-kart ${isVariation ? 'variation' : ''}">
                     <div class="card-main">
-                        <img src="${img}" class="card-img" alt="">
+                        ${!isVariation ? `<img src="${img}" class="card-img" alt="">` : ''}
                         <div class="card-info">
-                            <div class="card-name">${p.name} ${isVariation ? '' : (p.is_variable ? '<span class="var-badge">VARYASYONLU</span>' : '')}</div>
+                            <div class="card-name">${isVariation ? p.name.replace(/.* - /, '') : p.name}</div>
                             <div class="card-sku">${p.sku || 'SKU YOK'}</div>
                         </div>
                     </div>
@@ -271,6 +300,20 @@
                     </div>
                 </div>
             `;
+        },
+
+        bindVariationToggles: function() {
+            document.querySelectorAll('.parent-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const targetId = card.dataset.target;
+                    const group = document.getElementById(targetId);
+                    if (group) {
+                        const isHidden = group.style.display === 'none';
+                        group.style.display = isHidden ? 'block' : 'none';
+                        card.classList.toggle('is-open', isHidden);
+                    }
+                });
+            });
         },
 
         renderInitialState: function() {
