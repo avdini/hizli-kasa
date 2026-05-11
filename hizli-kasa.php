@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 6.1
+ * Version: 6.2
  * Author: Seyfullah Kurt
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH'))
     exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '6.1');
+define('HIZLI_KASA_VERSION', '6.2');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -51,11 +51,13 @@ require_once HIZLI_KASA_PATH . 'includes/classes/class-rest-api.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-shortcode.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-barcode-helper.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-menu-filter.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-mobile-handler.php';
 
 // Başlatıcılar
 Hizli_Kasa_Database::init();
 Hizli_Kasa_Stock_Manager::listen();
 Hizli_Kasa_Mismatch_Notifier::init();
+Hizli_Kasa_Mobile_Handler::init();
 
 // Canary Log: Sadece WP hazır olduğunda çalıştır
 add_action('init', function () {
@@ -117,42 +119,3 @@ function hizli_kasa_invalidate_user_perms_cache($user_id) {
 }
 add_action('profile_update', 'hizli_kasa_invalidate_user_perms_cache');
 add_action('user_register', 'hizli_kasa_invalidate_user_perms_cache');
-
-/**
- * Mobil Envanter Modu - Temayı Bypass Et (Standalone Page)
- */
-add_action('template_redirect', function() {
-    if (isset($_GET['mode']) && $_GET['mode'] === 'mobile') {
-        // Yetki kontrolü
-        require_once HIZLI_KASA_PATH . 'includes/classes/class-shortcode.php';
-        if (!hizli_kasa_can_access_app()) {
-            wp_die('Bu sayfaya erişim yetkiniz yok.');
-        }
-
-        $user = wp_get_current_user();
-        $display_name = $user->display_name;
-        $tema = get_user_meta($user->ID, '_hizli_kasa_tema', true) ?: 'dark';
-        $pos_version = HIZLI_KASA_VERSION;
-
-        // Assets Enqueue
-        add_action('wp_enqueue_scripts', function() use ($pos_version, $display_name, $user, $tema) {
-            wp_enqueue_style('kasa-theme-vars', HIZLI_KASA_URL . 'assets/css/modules/theme-vars.css', array(), $pos_version);
-            wp_enqueue_style('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/css/modules/mobile-inventory.css', array(), $pos_version);
-            wp_enqueue_script('html5-qrcode', 'https://unpkg.com/html5-qrcode', array(), '2.3.8', true);
-            wp_enqueue_script('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/js/modules/mobile-inventory.js', array('html5-qrcode'), $pos_version, true);
-
-            wp_localize_script('kasa-mobile-inventory', 'kasaAyar', array(
-                'rootApiUrl' => rest_url(),
-                'nonce'      => wp_create_nonce('wp_rest'),
-                'userName'   => $display_name,
-                'userId'     => $user->ID,
-                'version'    => HIZLI_KASA_VERSION,
-                'tema'       => $tema
-            ));
-        });
-
-        // Header ve Footer'ı tamamen iptal etmek için HTML şablonunu direkt yüklüyoruz
-        include HIZLI_KASA_PATH . 'includes/views/mobile-inventory.php';
-        exit;
-    }
-});
