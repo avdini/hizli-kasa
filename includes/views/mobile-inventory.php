@@ -91,6 +91,7 @@ if (!defined('ABSPATH')) exit;
 
     <!-- Image Preview Modal -->
     <div id="image-preview-modal" class="image-preview-overlay" style="display: none;">
+        <div id="preview-loader" class="spinner"></div>
         <div class="preview-content">
             <img id="preview-img" src="" alt="">
             <div class="preview-close">✕ Kapatmak için dokunun</div>

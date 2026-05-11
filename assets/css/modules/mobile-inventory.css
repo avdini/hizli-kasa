@@ -467,7 +467,13 @@ body.mobile-inventory-app {
     border-radius: 8px;
     object-fit: contain;
     box-shadow: 0 10px 50px rgba(0,0,0,0.8);
+    transition: opacity 0.3s ease-in-out;
     animation: zoomIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#preview-loader {
+    position: absolute;
+    z-index: 3001;
 }
 
 @keyframes zoomIn {

@@ -371,11 +371,22 @@
         openImagePreview: function(src) {
             const modal = document.getElementById('image-preview-modal');
             const img = document.getElementById('preview-img');
+            const loader = document.getElementById('preview-loader');
+            
             if (modal && img) {
-                // WordPress'in thumbnail eklerini temizleyip orijinal resme ulaşmaya çalışalım
-                // Örn: image-150x150.jpg -> image.jpg
+                // Hazırlık: Eski resmi ve durumları tamamen sıfırla
+                img.style.opacity = '0';
+                img.src = ''; // Önceki resmin hayaletini yok et
+                loader.style.display = 'block';
+                
+                // Yüksek çözünürlüklü URL
                 const fullSrc = src.replace(/-(\d+)x(\d+)\.(jpg|jpeg|png|webp|gif)$/, '.$3');
                 
+                img.onload = function() {
+                    loader.style.display = 'none';
+                    img.style.opacity = '1';
+                };
+
                 img.src = fullSrc;
                 modal.style.display = 'flex';
             }
