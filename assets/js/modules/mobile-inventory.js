@@ -193,6 +193,7 @@
                 this.state.torchOn = false;
                 this.state.decodedInProgress = false;
 
+                const config = this.getScannerConfig();
                 await this.startWithFallbacks(cameraConfigs, config);
 
                 this.state.isScanning = true;
