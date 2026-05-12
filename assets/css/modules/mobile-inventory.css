@@ -266,9 +266,56 @@ body.mobile-inventory-app {
     border: 2px solid var(--accent);
 }
 
-.camera-slider.quality {
-    background: linear-gradient(to right, #34d399, #fbbf24, #ef4444);
-    opacity: 0.7;
+.quality-selector {
+    position: relative;
+    pointer-events: auto;
+}
+
+.quality-menu {
+    position: absolute;
+    bottom: 50px;
+    right: 0;
+    width: 140px;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    z-index: 100;
+}
+
+.quality-menu.show {
+    display: flex;
+}
+
+.quality-option {
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s;
+}
+
+.quality-option:last-child {
+    border-bottom: none;
+}
+
+.quality-option:active {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.quality-option.active {
+    color: var(--accent);
+    background: rgba(var(--accent-rgb), 0.1);
 }
 
 .camera-tool-btn {

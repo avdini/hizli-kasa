@@ -46,15 +46,6 @@ if (!defined('ABSPATH')) exit;
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
                         </div>
                     </div>
-                    
-                    <!-- Quality Slider -->
-                    <div class="slider-container">
-                        <div class="slider-row">
-                            <span class="slider-label">LQ</span>
-                            <input type="range" id="quality-slider" min="0" max="2" step="1" value="1" class="camera-slider quality">
-                            <span class="slider-label">HQ</span>
-                        </div>
-                    </div>
 
                     <div class="controls-row">
                         <button type="button" id="switch-camera-btn" class="camera-tool-btn" title="Kamera Değiştir">
@@ -66,6 +57,18 @@ if (!defined('ABSPATH')) exit;
                         <button type="button" id="torch-camera-btn" class="camera-tool-btn" disabled title="Flaş">
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                         </button>
+                        
+                        <!-- Quality Selector -->
+                        <div class="quality-selector">
+                            <button type="button" id="quality-menu-btn" class="camera-tool-btn" title="Kalite">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V4"/></svg>
+                            </button>
+                            <div id="quality-menu" class="quality-menu">
+                                <button type="button" class="quality-option" data-quality="low">Hafif (LQ)</button>
+                                <button type="button" class="quality-option" data-quality="medium">Dengeli (MQ)</button>
+                                <button type="button" class="quality-option" data-quality="high">Hızlı (HQ)</button>
+                            </div>
+                        </div>
                     </div>
                     <span id="camera-status" class="camera-status">Kamera kapalı</span>
                 </div>

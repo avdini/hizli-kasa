@@ -84,7 +84,7 @@
             const refocusCameraBtn = document.getElementById('refocus-camera-btn');
             const switchCameraBtn = document.getElementById('switch-camera-btn');
             const zoomSlider = document.getElementById('zoom-slider');
-            const qualitySlider = document.getElementById('quality-slider');
+            const qualityMenuBtn = document.getElementById('quality-menu-btn');
             const torchCameraBtn = document.getElementById('torch-camera-btn');
             const exitLogo = document.getElementById('app-exit-logo');
             
@@ -137,9 +137,21 @@
                 this.adjustZoomTo(val);
             });
 
-            qualitySlider?.addEventListener('change', (e) => {
-                const val = parseInt(e.target.value);
-                this.changeQualityByIndex(val);
+            qualityMenuBtn?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('quality-menu').classList.toggle('show');
+            });
+
+            document.querySelectorAll('.quality-option').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const quality = e.target.dataset.quality;
+                    this.changeQualityTo(quality);
+                    document.getElementById('quality-menu').classList.remove('show');
+                });
+            });
+
+            document.addEventListener('click', () => {
+                document.getElementById('quality-menu')?.classList.remove('show');
             });
 
             torchCameraBtn?.addEventListener('click', async () => this.toggleTorch());
@@ -762,12 +774,9 @@
             }
         },
 
-        changeQualityByIndex: async function(index) {
+        changeQualityTo: async function(level) {
             if (this.state.isTransitioning) return;
-            
-            const levels = ['low', 'medium', 'high'];
-            const nextLevel = levels[index];
-            if (this.state.cameraQualityProfile?.level === nextLevel) return;
+            if (this.state.cameraQualityProfile?.level === level) return;
 
             const profiles = {
                 high: { label: 'Hızlı', width: 1920, height: 1080, fps: 18, qrboxScale: 0.9, qrboxMaxWidth: 460, qrboxMinHeight: 130, zoom: 1.35 },
@@ -775,9 +784,9 @@
                 low: { label: 'Hafif', width: 960, height: 540, fps: 8, qrboxScale: 0.84, qrboxMaxWidth: 360, qrboxMinHeight: 110, zoom: 1.65 }
             };
 
-            this.state.cameraQualityProfile = { ...profiles[nextLevel], level: nextLevel };
+            this.state.cameraQualityProfile = { ...profiles[level], level: level };
             this.saveSettings();
-            this.showToast(`Kalite Değişiyor: ${nextLevel.toUpperCase()}`);
+            this.showToast(`Kalite Değişiyor: ${level.toUpperCase()}`);
 
             this.state.isTransitioning = true;
             try {
@@ -818,10 +827,11 @@
                 zoomSlider.disabled = true;
             }
 
-            if (qualitySlider) {
-                const levels = ['low', 'medium', 'high'];
+            if (qualityMenuBtn) {
                 const current = this.state.cameraQualityProfile?.level || 'medium';
-                qualitySlider.value = levels.indexOf(current);
+                document.querySelectorAll('.quality-option').forEach(opt => {
+                    opt.classList.toggle('active', opt.dataset.quality === current);
+                });
             }
 
             if (!statusEl) return;
