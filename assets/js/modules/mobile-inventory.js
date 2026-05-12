@@ -114,23 +114,29 @@
             const wrapper = document.getElementById('scanner-wrapper');
             const btn = document.getElementById('toggle-scanner-btn');
 
-            if (this.state.isStartingScanner) return;
+            if (this.state.isStartingScanner || this.state.isClosingScanner) return;
 
             if (this.state.isScanning) {
                 await this.stopScanner();
                 wrapper.classList.add('collapsed');
                 btn.innerHTML = '<span class="icon">📷</span> Barkod Tara';
             } else {
+                this.state.isStartingScanner = true; // Hemen kilitle
                 wrapper.classList.remove('collapsed');
                 btn.innerHTML = '<span class="icon">⌛</span> Kamera Açılıyor';
-                // DOM'un yerleşmesi için kısa bir gecikme
-                await new Promise(r => setTimeout(r, 300));
-                const started = await this.startScanner();
-                if (started) {
-                    btn.innerHTML = '<span class="icon">✕</span> Taramayı Kapat';
-                } else {
-                    wrapper.classList.add('collapsed');
-                    btn.innerHTML = '<span class="icon">📷</span> Barkod Tara';
+                
+                try {
+                    // DOM'un yerleşmesi için kısa bir gecikme
+                    await new Promise(r => setTimeout(r, 400));
+                    const started = await this.startScanner();
+                    if (started) {
+                        btn.innerHTML = '<span class="icon">✕</span> Taramayı Kapat';
+                    } else {
+                        wrapper.classList.add('collapsed');
+                        btn.innerHTML = '<span class="icon">📷</span> Barkod Tara';
+                    }
+                } finally {
+                    this.state.isStartingScanner = false;
                 }
             }
         },
@@ -171,22 +177,14 @@
         },
 
         startScanner: async function() {
-            this.state.isStartingScanner = true;
-
             try {
                 // Her denemede temiz bir başlangıç için video track'leri durdur
                 this.stopVideoTracks();
                 
-                // Eğer önceki bir instance varsa temizlemeyi dene
-                if (this.state.html5QrCode) {
-                    try {
-                        if (this.state.isScanning) await this.state.html5QrCode.stop();
-                        await this.state.html5QrCode.clear();
-                    } catch (e) {}
-                    this.state.html5QrCode = null;
+                if (!this.state.html5QrCode) {
+                    this.state.html5QrCode = new Html5Qrcode("reader");
                 }
 
-                this.state.html5QrCode = new Html5Qrcode("reader");
                 const cameraConfigs = await this.getCameraStartCandidates();
                 this.state.preferredZoom = null;
                 this.state.canTorch = false;
@@ -404,6 +402,9 @@
                     if (this.isConstraintError(err)) {
                         this.downgradeCameraProfile();
                     }
+                    
+                    // Geçiş hatasını (transition error) önlemek için denemeler arası bekleme
+                    await new Promise(r => setTimeout(r, 250));
                 }
             }
 
