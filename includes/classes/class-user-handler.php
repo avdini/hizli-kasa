@@ -21,8 +21,8 @@ class Hizli_Kasa_User_Handler {
         // Admin barı gizle
         add_filter('show_admin_bar', [__CLASS__, 'hide_admin_bar']);
 
-        // WooCommerce REST API yetki kontrolüne müdahale
-        add_filter('user_has_cap', [__CLASS__, 'bypass_woo_rest_permissions'], 10, 4);
+        // WooCommerce REST API yetki kontrolüne müdahale (Öncelik artırıldı: 20)
+        add_filter('user_has_cap', [__CLASS__, 'bypass_woo_rest_permissions'], 20, 4);
     }
 
     /**
@@ -96,7 +96,13 @@ class Hizli_Kasa_User_Handler {
      */
     public static function bypass_woo_rest_permissions($allcaps, $caps, $args, $user) {
         // Eğer bir REST API isteği değilse veya kullanıcı kasiyer değilse dokunma
-        if (!defined('REST_REQUEST') || !REST_REQUEST || !in_array('hizli_kasa', (array) $user->roles)) {
+        $is_rest = defined('REST_REQUEST') && REST_REQUEST;
+        
+        // Bazı durumlarda REST_REQUEST henüz tanımlanmamış olabilir, URI kontrolü de yapalım
+        $uri = $_SERVER['REQUEST_URI'] ?? '';
+        $is_api_path = (strpos($uri, '/wp-json/') !== false || strpos($uri, 'rest_route=') !== false);
+
+        if ((!$is_rest && !$is_api_path) || !in_array('hizli_kasa', (array) $user->roles)) {
             return $allcaps;
         }
 
@@ -107,12 +113,19 @@ class Hizli_Kasa_User_Handler {
             'publish_shop_orders', 
             'edit_others_shop_orders', 
             'read_private_shop_orders',
-            'edit_published_shop_orders'
+            'edit_published_shop_orders',
+            'edit_private_shop_orders',
+            'edit_shop_order',
+            'publish_shop_order',
+            'read_shop_order',
+            'manage_woocommerce', // Bazı versiyonlarda controller seviyesinde gerekebilir
+            'assign_shop_order_terms'
         ];
 
         if (in_array($requested_cap, $allowed_caps)) {
             // EK GÜVENLİK: Sadece WooCommerce sipariş API yolu üzerindeysek bu yetkiyi havada oluştur
-            if (strpos($_SERVER['REQUEST_URI'], '/wc/v3/orders') !== false) {
+            // /wc/v3/orders veya /wc/v2/orders veya query param olarak rest_route=/wc/v3/orders
+            if (stripos($uri, 'wc/v') !== false && stripos($uri, 'orders') !== false) {
                 $allcaps[$requested_cap] = true;
             }
         }
