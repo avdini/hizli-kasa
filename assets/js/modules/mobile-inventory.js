@@ -27,9 +27,46 @@
         },
 
         init: function() {
+            this.loadSettings();
             this.updateDepoDisplay();
             this.bindEvents();
             console.log('Mobile Inventory initialized');
+        },
+
+        loadSettings: function() {
+            try {
+                const saved = localStorage.getItem('hk_mobile_camera_settings');
+                if (saved) {
+                    const settings = JSON.parse(saved);
+                    this.state.selectedCameraId = settings.cameraId || null;
+                    this.state.preferredZoom = settings.zoom || null;
+                    
+                    if (settings.quality) {
+                        const profiles = {
+                            high: { label: 'Hızlı', width: 1920, height: 1080, fps: 18, qrboxScale: 0.9, qrboxMaxWidth: 460, qrboxMinHeight: 130, zoom: 1.35 },
+                            medium: { label: 'Dengeli', width: 1280, height: 720, fps: 12, qrboxScale: 0.88, qrboxMaxWidth: 420, qrboxMinHeight: 120, zoom: 1.5 },
+                            low: { label: 'Hafif', width: 960, height: 540, fps: 8, qrboxScale: 0.84, qrboxMaxWidth: 360, qrboxMinHeight: 110, zoom: 1.65 }
+                        };
+                        this.state.cameraQualityProfile = { ...profiles[settings.quality], level: settings.quality };
+                    }
+                    console.log("Loaded camera settings:", settings);
+                }
+            } catch (err) {
+                console.warn("Failed to load settings", err);
+            }
+        },
+
+        saveSettings: function() {
+            try {
+                const settings = {
+                    cameraId: this.state.selectedCameraId,
+                    zoom: this.state.preferredZoom,
+                    quality: this.state.cameraQualityProfile?.level || 'medium'
+                };
+                localStorage.setItem('hk_mobile_camera_settings', JSON.stringify(settings));
+            } catch (err) {
+                console.warn("Failed to save settings", err);
+            }
         },
 
         updateDepoDisplay: function() {
@@ -46,9 +83,8 @@
             const toggleScannerBtn = document.getElementById('toggle-scanner-btn');
             const refocusCameraBtn = document.getElementById('refocus-camera-btn');
             const switchCameraBtn = document.getElementById('switch-camera-btn');
-            const zoomInBtn = document.getElementById('zoom-in-btn');
-            const zoomOutBtn = document.getElementById('zoom-out-btn');
-            const qualityToggleBtn = document.getElementById('quality-toggle-btn');
+            const zoomSlider = document.getElementById('zoom-slider');
+            const qualitySlider = document.getElementById('quality-slider');
             const torchCameraBtn = document.getElementById('torch-camera-btn');
             const exitLogo = document.getElementById('app-exit-logo');
             
@@ -95,9 +131,17 @@
 
             refocusCameraBtn?.addEventListener('click', async () => this.refocusCamera());
             switchCameraBtn?.addEventListener('click', async () => this.switchCamera());
-            zoomInBtn?.addEventListener('click', () => this.adjustZoom(0.5));
-            zoomOutBtn?.addEventListener('click', () => this.adjustZoom(-0.5));
-            qualityToggleBtn?.addEventListener('click', () => this.toggleQuality());
+            
+            zoomSlider?.addEventListener('input', (e) => {
+                const val = parseFloat(e.target.value);
+                this.adjustZoomTo(val);
+            });
+
+            qualitySlider?.addEventListener('change', (e) => {
+                const val = parseInt(e.target.value);
+                this.changeQualityByIndex(val);
+            });
+
             torchCameraBtn?.addEventListener('click', async () => this.toggleTorch());
 
             exitLogo.addEventListener('click', () => {
@@ -690,6 +734,7 @@
             const currentIndex = rankedCameras.findIndex(camera => camera.id === this.state.selectedCameraId);
             const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % rankedCameras.length : 0;
             this.state.selectedCameraId = rankedCameras[nextIndex].id;
+            this.saveSettings();
 
             this.state.isTransitioning = true;
             try {
@@ -701,45 +746,29 @@
             }
         },
 
-        adjustZoom: async function(delta) {
+        adjustZoomTo: async function(value) {
             if (!this.state.isScanning) return;
             
             const track = this.getRunningVideoTrack();
-            if (!track || !track.getCapabilities) return;
+            if (!track || !track.applyConstraints) return;
             
-            const capabilities = track.getCapabilities();
-            if (!capabilities.zoom) {
-                this.showToast("Bu kamera zoom desteklemiyor.", "error");
-                return;
-            }
-
-            const min = capabilities.zoom.min || 1;
-            const max = capabilities.zoom.max || 1;
-            
-            let current = this.state.preferredZoom || min;
-            let next = Math.min(max, Math.max(min, current + delta));
-            
-            if (next === current) return;
-
-            this.state.preferredZoom = next;
+            this.state.preferredZoom = value;
             try {
-                await track.applyConstraints({ advanced: [{ zoom: next }] });
+                await track.applyConstraints({ advanced: [{ zoom: value }] });
+                this.saveSettings();
                 this.updateCameraStatus();
             } catch (err) {
                 console.warn("Zoom adjustment failed", err);
             }
         },
 
-        toggleQuality: async function() {
+        changeQualityByIndex: async function(index) {
             if (this.state.isTransitioning) return;
             
             const levels = ['low', 'medium', 'high'];
-            const currentLevel = this.state.cameraQualityProfile?.level || 'medium';
-            const currentIndex = levels.indexOf(currentLevel);
-            const nextIndex = (currentIndex + 1) % levels.length;
-            const nextLevel = levels[nextIndex];
+            const nextLevel = levels[index];
+            if (this.state.cameraQualityProfile?.level === nextLevel) return;
 
-            // Profili manuel güncelle (getDeviceCameraProfile yerine)
             const profiles = {
                 high: { label: 'Hızlı', width: 1920, height: 1080, fps: 18, qrboxScale: 0.9, qrboxMaxWidth: 460, qrboxMinHeight: 130, zoom: 1.35 },
                 medium: { label: 'Dengeli', width: 1280, height: 720, fps: 12, qrboxScale: 0.88, qrboxMaxWidth: 420, qrboxMinHeight: 120, zoom: 1.5 },
@@ -747,7 +776,8 @@
             };
 
             this.state.cameraQualityProfile = { ...profiles[nextLevel], level: nextLevel };
-            this.showToast(`Kalite: ${nextLevel.toUpperCase()}`);
+            this.saveSettings();
+            this.showToast(`Kalite Değişiyor: ${nextLevel.toUpperCase()}`);
 
             this.state.isTransitioning = true;
             try {
@@ -762,9 +792,36 @@
         updateCameraStatus: function() {
             const statusEl = document.getElementById('camera-status');
             const torchBtn = document.getElementById('torch-camera-btn');
+            const zoomSlider = document.getElementById('zoom-slider');
+            const qualitySlider = document.getElementById('quality-slider');
+
             if (torchBtn) {
                 torchBtn.disabled = !this.state.canTorch || !this.state.isScanning;
                 torchBtn.classList.toggle('active', this.state.torchOn);
+            }
+
+            // Sliderları güncelle
+            if (zoomSlider && this.state.isScanning) {
+                const track = this.getRunningVideoTrack();
+                if (track?.getCapabilities) {
+                    const cap = track.getCapabilities();
+                    if (cap.zoom) {
+                        zoomSlider.disabled = false;
+                        zoomSlider.min = cap.zoom.min || 1;
+                        zoomSlider.max = cap.zoom.max || 5;
+                        zoomSlider.value = this.state.preferredZoom || cap.zoom.min || 1;
+                    } else {
+                        zoomSlider.disabled = true;
+                    }
+                }
+            } else if (zoomSlider) {
+                zoomSlider.disabled = true;
+            }
+
+            if (qualitySlider) {
+                const levels = ['low', 'medium', 'high'];
+                const current = this.state.cameraQualityProfile?.level || 'medium';
+                qualitySlider.value = levels.indexOf(current);
             }
 
             if (!statusEl) return;
