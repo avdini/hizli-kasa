@@ -15,6 +15,10 @@
             torchOn: false,
             canTorch: false,
             preferredZoom: null,
+            cameraQualityProfile: null,
+            isClosingScanner: false,
+            decodedInProgress: false,
+            lastSearchQuery: '',
             searchTimer: null,
             isLoading: false,
             aktifDepoId: kasaAyar.aktifDepo || 0,
@@ -53,20 +57,30 @@
             searchInput.addEventListener('input', (e) => {
                 const val = e.target.value.trim();
                 clearBtn.style.display = val.length > 0 ? 'block' : 'none';
-                
-                clearTimeout(this.state.searchTimer);
-                this.state.searchTimer = setTimeout(() => {
-                    if (val.length >= 2) {
-                        this.searchProducts(val);
-                    } else if (val.length === 0) {
-                        this.renderInitialState();
-                    }
-                }, 400);
+
+                if (val.length === 0) {
+                    this.state.lastSearchQuery = '';
+                    this.renderInitialState();
+                }
+            });
+
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key !== 'Enter') return;
+
+                e.preventDefault();
+                const val = e.target.value.trim();
+                if (val.length < 2) {
+                    this.showToast("Aramak için en az 2 karakter girin.", "error");
+                    return;
+                }
+
+                this.searchProducts(val);
             });
 
             clearBtn.addEventListener('click', () => {
                 searchInput.value = '';
                 clearBtn.style.display = 'none';
+                this.state.lastSearchQuery = '';
                 this.renderInitialState();
                 searchInput.focus();
             });
@@ -146,7 +160,7 @@
             this.updateDepoDisplay();
             
             // Eğer arama yapılmışsa sonuçları yenile
-            const searchVal = document.getElementById('mobile-search-input').value.trim();
+            const searchVal = this.state.lastSearchQuery;
             if (searchVal.length >= 2) {
                 this.searchProducts(searchVal);
             }
@@ -161,41 +175,31 @@
                 this.state.html5QrCode = new Html5Qrcode("reader");
             }
 
-            const config = {
-                fps: 12,
-                qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    const width = Math.min(420, Math.floor(viewfinderWidth * 0.88));
-                    const height = Math.min(190, Math.max(120, Math.floor(width * 0.45)));
-                    return {
-                        width: Math.min(width, viewfinderWidth - 20),
-                        height: Math.min(height, viewfinderHeight - 20)
-                    };
-                },
-                aspectRatio: 1.7777778,
-                disableFlip: true,
-                experimentalFeatures: {
-                    useBarCodeDetectorIfSupported: true
-                }
-            };
+            const config = this.getScannerConfig();
 
             try {
                 const cameraConfig = await this.getPreferredCameraConfig();
                 this.state.preferredZoom = null;
                 this.state.canTorch = false;
                 this.state.torchOn = false;
+                this.state.decodedInProgress = false;
                 await this.state.html5QrCode.start(
                     cameraConfig,
                     config,
                     (decodedText) => {
-                    console.log(`Code scanned: ${decodedText}`);
-                    const input = document.getElementById('mobile-search-input');
-                    input.value = decodedText;
-                    document.getElementById('clear-search').style.display = 'block';
-                    this.searchProducts(decodedText);
+                        if (this.state.decodedInProgress) return;
+                        this.state.decodedInProgress = true;
 
-                    this.closeScannerAfterScan();
+                        console.log(`Code scanned: ${decodedText}`);
+                        const input = document.getElementById('mobile-search-input');
+                        input.value = decodedText;
+                        this.state.lastSearchQuery = decodedText;
+                        document.getElementById('clear-search').style.display = 'block';
+                        this.searchProducts(decodedText);
 
-                    if (navigator.vibrate) navigator.vibrate(100);
+                        this.closeScannerAfterScan();
+
+                        if (navigator.vibrate) navigator.vibrate(100);
                     },
                     (errorMessage) => {
                         // console.log(errorMessage);
@@ -217,13 +221,24 @@
         },
 
         stopScanner: async function() {
-            if (this.state.html5QrCode && this.state.isScanning) {
+            if (!this.state.html5QrCode || this.state.isClosingScanner) return;
+
+            this.state.isClosingScanner = true;
+            const runningTrack = this.getRunningVideoTrack();
+
+            try {
+                if (this.state.isScanning) {
+                    await this.state.html5QrCode.stop().catch(err => console.error("Stop error", err));
+                }
+            } finally {
+                this.stopVideoTracks(runningTrack);
                 this.state.isScanning = false;
+                this.state.isClosingScanner = false;
                 this.state.torchOn = false;
                 this.state.canTorch = false;
                 this.state.preferredZoom = null;
+                this.state.decodedInProgress = false;
                 this.updateCameraStatus();
-                await this.state.html5QrCode.stop().catch(err => console.error("Stop error", err));
             }
         },
 
@@ -238,12 +253,98 @@
             }
         },
 
-        getPreferredCameraConfig: async function() {
-            const fallbackConfig = {
-                facingMode: { ideal: "environment" },
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
+        getDeviceCameraProfile: function() {
+            if (this.state.cameraQualityProfile) {
+                return this.state.cameraQualityProfile;
+            }
+
+            const memory = navigator.deviceMemory || 4;
+            const cores = navigator.hardwareConcurrency || 4;
+            const screenMax = Math.max(window.screen?.width || 0, window.screen?.height || 0) * (window.devicePixelRatio || 1);
+            let level = 'medium';
+
+            if (memory >= 6 && cores >= 6 && screenMax >= 1600) {
+                level = 'high';
+            } else if (memory <= 2 || cores <= 2 || screenMax < 900) {
+                level = 'low';
+            }
+
+            const profiles = {
+                high: {
+                    label: 'Hızlı',
+                    width: 1920,
+                    height: 1080,
+                    fps: 18,
+                    qrboxScale: 0.9,
+                    qrboxMaxWidth: 460,
+                    qrboxMinHeight: 130,
+                    zoom: 1.35
+                },
+                medium: {
+                    label: 'Dengeli',
+                    width: 1280,
+                    height: 720,
+                    fps: 12,
+                    qrboxScale: 0.88,
+                    qrboxMaxWidth: 420,
+                    qrboxMinHeight: 120,
+                    zoom: 1.5
+                },
+                low: {
+                    label: 'Hafif',
+                    width: 960,
+                    height: 540,
+                    fps: 8,
+                    qrboxScale: 0.84,
+                    qrboxMaxWidth: 360,
+                    qrboxMinHeight: 110,
+                    zoom: 1.65
+                }
             };
+
+            this.state.cameraQualityProfile = profiles[level];
+            return this.state.cameraQualityProfile;
+        },
+
+        getScannerConfig: function() {
+            const profile = this.getDeviceCameraProfile();
+
+            return {
+                fps: profile.fps,
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    const width = Math.min(profile.qrboxMaxWidth, Math.floor(viewfinderWidth * profile.qrboxScale));
+                    const height = Math.min(190, Math.max(profile.qrboxMinHeight, Math.floor(width * 0.45)));
+                    return {
+                        width: Math.min(width, viewfinderWidth - 20),
+                        height: Math.min(height, viewfinderHeight - 20)
+                    };
+                },
+                aspectRatio: 1.7777778,
+                disableFlip: true,
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true
+                }
+            };
+        },
+
+        getVideoConstraints: function(deviceId = null) {
+            const profile = this.getDeviceCameraProfile();
+            const constraints = {
+                facingMode: { ideal: "environment" },
+                width: { ideal: profile.width },
+                height: { ideal: profile.height },
+                frameRate: { ideal: profile.fps, max: Math.max(profile.fps, 15) }
+            };
+
+            if (deviceId) {
+                constraints.deviceId = { exact: deviceId };
+            }
+
+            return constraints;
+        },
+
+        getPreferredCameraConfig: async function() {
+            const fallbackConfig = this.getVideoConstraints();
 
             try {
                 const cameras = await Html5Qrcode.getCameras();
@@ -265,10 +366,7 @@
                 }
 
                 return {
-                    deviceId: { exact: this.state.selectedCameraId },
-                    facingMode: { ideal: "environment" },
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
+                    ...this.getVideoConstraints(this.state.selectedCameraId)
                 };
             } catch (err) {
                 console.warn("Camera list unavailable, using environment camera.", err);
@@ -304,10 +402,34 @@
             return video?.srcObject?.getVideoTracks?.()[0] || null;
         },
 
+        stopVideoTracks: function(extraTrack = null) {
+            const tracks = [];
+            if (extraTrack) tracks.push(extraTrack);
+
+            document.querySelectorAll('#reader video').forEach(video => {
+                const stream = video.srcObject;
+                stream?.getTracks?.().forEach(track => tracks.push(track));
+                video.pause?.();
+                video.srcObject = null;
+                video.removeAttribute('src');
+            });
+
+            tracks.forEach(track => {
+                try {
+                    if (track.readyState !== 'ended') {
+                        track.stop();
+                    }
+                } catch (err) {
+                    console.warn("Camera track could not be stopped.", err);
+                }
+            });
+        },
+
         applyCameraTuning: async function(showToastOnSuccess = false) {
             const track = this.getRunningVideoTrack();
             if (!track || !track.getCapabilities || !track.applyConstraints) return;
 
+            const profile = this.getDeviceCameraProfile();
             const capabilities = track.getCapabilities();
             const advanced = [];
             this.state.preferredZoom = null;
@@ -317,7 +439,7 @@
             }
 
             if (capabilities.zoom && Number.isFinite(capabilities.zoom.min) && Number.isFinite(capabilities.zoom.max)) {
-                const targetZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, 1.5));
+                const targetZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, profile.zoom));
                 this.state.preferredZoom = targetZoom;
                 advanced.push({ zoom: targetZoom });
             }
@@ -394,12 +516,17 @@
             }
 
             const selected = this.state.cameraDevices.find(camera => camera.id === this.state.selectedCameraId);
+            const profile = this.getDeviceCameraProfile();
             const label = selected?.label ? selected.label.replace(/\s*\([^)]+\)\s*$/, '') : 'Arka kamera';
             const zoomLabel = this.state.preferredZoom ? ` · ${this.state.preferredZoom.toFixed(1)}x` : '';
-            statusEl.innerText = `${label}${zoomLabel}`;
+            statusEl.innerText = `${label} · ${profile.label}${zoomLabel}`;
         },
 
         searchProducts: async function(query) {
+            const cleanQuery = String(query || '').trim();
+            if (cleanQuery.length < 2) return;
+
+            this.state.lastSearchQuery = cleanQuery;
             const container = document.getElementById('results-container');
             const loader = document.getElementById('app-loader');
             
@@ -407,7 +534,7 @@
 
             try {
                 // Mevcut terminal API'sini kullanıyoruz + aktif depo
-                const url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/terminal/products?s=${encodeURIComponent(query)}&limit=15&depo_id=${this.state.aktifDepoId}`;
+                const url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/terminal/products?s=${encodeURIComponent(cleanQuery)}&limit=15&depo_id=${this.state.aktifDepoId}`;
                 const response = await fetch(url, {
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });

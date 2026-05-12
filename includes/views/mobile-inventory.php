@@ -51,7 +51,7 @@ if (!defined('ABSPATH')) exit;
             <!-- Search Area -->
             <div class="search-container">
                 <div class="search-input-wrapper">
-                    <input type="text" id="mobile-search-input" placeholder="Ürün adı, SKU veya Barkod..." autocomplete="off">
+                    <input type="text" id="mobile-search-input" placeholder="Ürün adı, SKU veya Barkod..." autocomplete="off" enterkeyhint="search">
                     <span class="search-icon">🔍</span>
                     <button id="clear-search" style="display:none;">✕</button>
                 </div>
