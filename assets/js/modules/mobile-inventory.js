@@ -171,13 +171,20 @@
         startScanner: async function() {
             this.state.isStartingScanner = true;
 
-            if (!this.state.html5QrCode) {
-                this.state.html5QrCode = new Html5Qrcode("reader");
-            }
-
-            const config = this.getScannerConfig();
-
             try {
+                // Her denemede temiz bir başlangıç için video track'leri durdur
+                this.stopVideoTracks();
+                
+                // Eğer önceki bir instance varsa temizlemeyi dene
+                if (this.state.html5QrCode) {
+                    try {
+                        if (this.state.isScanning) await this.state.html5QrCode.stop();
+                        await this.state.html5QrCode.clear();
+                    } catch (e) {}
+                    this.state.html5QrCode = null;
+                }
+
+                this.state.html5QrCode = new Html5Qrcode("reader");
                 const cameraConfigs = await this.getCameraStartCandidates();
                 this.state.preferredZoom = null;
                 this.state.canTorch = false;
@@ -302,23 +309,26 @@
                 aspectRatio: 1.7777778,
                 disableFlip: true,
                 experimentalFeatures: {
-                    useBarCodeDetectorIfSupported: true
+                    useBarCodeDetectorIfSupported: false // Bazı cihazlarda çakışmaya neden olabiliyor
                 }
             };
         },
 
         getVideoConstraints: function(deviceId = null) {
             const profile = this.getDeviceCameraProfile();
+            
+            // Temel kısıtlar (Ideal değerler tarayıcının esnek davranmasını sağlar)
             const constraints = {
                 facingMode: { ideal: "environment" },
                 width: { ideal: profile.width },
                 height: { ideal: profile.height },
-                frameRate: { ideal: profile.fps, max: Math.max(profile.fps, 15) }
+                frameRate: { ideal: profile.fps }
             };
 
             if (deviceId) {
+                // DeviceId varsa facingMode'u kaldırıp tam eşleşme deneyelim
                 delete constraints.facingMode;
-                constraints.deviceId = { exact: deviceId };
+                constraints.deviceId = deviceId; 
             }
 
             return constraints;
@@ -373,25 +383,38 @@
         startWithFallbacks: async function(cameraConfigs, scannerConfig) {
             let lastError = null;
 
+            // 1. Aşamada aday konfigürasyonları dene
             for (const cameraConfig of cameraConfigs) {
                 try {
                     await this.state.html5QrCode.start(
                         cameraConfig,
                         scannerConfig,
                         (decodedText) => this.handleDecodedBarcode(decodedText),
-                        (errorMessage) => {
-                            // console.log(errorMessage);
-                        }
+                        () => {} // Hata loglamayı burada yapmıyoruz
                     );
                     return;
                 } catch (err) {
                     lastError = err;
-                    console.warn("Camera start attempt failed.", cameraConfig, err);
+                    console.warn("Camera start attempt failed:", cameraConfig, err);
+                    
                     if (this.isConstraintError(err)) {
                         this.downgradeCameraProfile();
                     }
-                    this.stopVideoTracks();
                 }
+            }
+
+            // 2. Aşamada (Hepsi başarısız olursa) en temel konfigürasyonu dene
+            try {
+                console.log("Attempting ultimate fallback...");
+                await this.state.html5QrCode.start(
+                    { facingMode: "environment" },
+                    { fps: 10, qrbox: scannerConfig.qrbox },
+                    (decodedText) => this.handleDecodedBarcode(decodedText),
+                    () => {}
+                );
+                return;
+            } catch (err) {
+                lastError = err;
             }
 
             throw lastError || new Error("Camera start failed");
@@ -432,6 +455,14 @@
 
             if (combined.includes('overconstrained') || combined.includes('constraint')) {
                 return "Kamera bu ayarları desteklemedi. Daha uyumlu ayarlarla tekrar deneyin.";
+            }
+
+            if (combined.includes('abort') || combined.includes('interrupted')) {
+                return "Kamera başlatma işlemi kesildi. Lütfen tekrar deneyin.";
+            }
+
+            if (combined.includes('typeerror')) {
+                return "Kamera sürücüsü veya tarayıcı hatası (TypeError). Cihazınızı yeniden başlatmayı deneyebilirsiniz.";
             }
 
             return "Kamera başlatılamadı. Sayfayı yenileyip tekrar deneyin.";
