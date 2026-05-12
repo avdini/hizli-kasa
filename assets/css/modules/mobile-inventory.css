@@ -216,18 +216,27 @@ body.mobile-inventory-app {
 
 .camera-tool-btn {
     pointer-events: auto;
-    min-height: 38px;
-    min-width: 90px;
+    min-height: 42px;
+    min-width: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
+    border-radius: 12px;
     background: rgba(15, 23, 42, 0.6);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     color: white;
-    font-size: 12px;
-    font-weight: 700;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+    padding: 0;
+}
+
+.camera-tool-btn svg {
+    display: block;
+    width: 20px;
+    height: 20px;
 }
 
 .camera-tool-btn.active {

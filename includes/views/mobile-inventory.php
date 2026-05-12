@@ -38,8 +38,17 @@ if (!defined('ABSPATH')) exit;
             <div id="scanner-wrapper" class="collapsed">
                 <div id="reader"></div>
                 <div id="scanner-camera-controls" class="scanner-camera-controls">
-                    <button type="button" id="refocus-camera-btn" class="camera-tool-btn">Netleştir</button>
-                    <button type="button" id="torch-camera-btn" class="camera-tool-btn" disabled>Flaş</button>
+                    <button type="button" id="refocus-camera-btn" class="camera-tool-btn" title="Netleştir">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+                            <circle cx="12" cy="12" r="3"/><line x1="12" y1="12" x2="12" y2="12"/>
+                        </svg>
+                    </button>
+                    <button type="button" id="torch-camera-btn" class="camera-tool-btn" disabled title="Flaş">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </button>
                     <span id="camera-status" class="camera-status">Kamera kapalı</span>
                 </div>
                 <button id="toggle-scanner-btn" class="scanner-btn">
