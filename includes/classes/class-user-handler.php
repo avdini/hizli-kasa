@@ -33,9 +33,10 @@ class Hizli_Kasa_User_Handler {
         // Rol zaten varsa yetkileri güncelle, yoksa oluştur
         $capabilities = [
             'read'                       => true,
+            'view_admin_dashboard'       => true, // API yetkilendirme katmanı için gerekli olabilir
             'edit_shop_orders'           => true,
             'publish_shop_orders'        => true,
-            'edit_others_shop_orders'    => true, // Bazı iade/güncelleme işlemleri için gerekebilir
+            'edit_others_shop_orders'    => true,
             'read_private_shop_orders'   => true,
             'edit_products'              => false,
             'manage_woocommerce'         => false,

@@ -19,6 +19,7 @@ function hizli_kasa_can_access_app($user_id = null)
     $user = $user_id ? get_userdata($user_id) : wp_get_current_user();
 
     if (!$user || empty($user->ID)) {
+        hizli_kasa_log("Yetki Hatası: Kullanıcı bulunamadı veya oturum kapalı.");
         return false;
     }
 
@@ -28,14 +29,20 @@ function hizli_kasa_can_access_app($user_id = null)
 
     $user_roles = (array) $user->roles;
     $yetkili_roller = get_option('hizli_kasa_yetkili_roller', array('administrator', 'shop_manager'));
-
+    
+    $has_access = false;
     foreach ($user_roles as $role) {
         if (in_array($role, (array) $yetkili_roller, true) || $role === 'hizli_kasa') {
-            return true;
+            $has_access = true;
+            break;
         }
     }
 
-    return false;
+    if (!$has_access) {
+        hizli_kasa_log("Yetki Reddedildi: User ID: " . $user->ID . " | Roller: " . implode(', ', $user_roles));
+    }
+
+    return $has_access;
 }
 
 /**
