@@ -192,7 +192,7 @@ body.mobile-inventory-app {
 
 #reader {
     width: 100% !important;
-    min-height: 250px;
+    min-height: 320px; /* Butonlar için daha geniş alan */
     background: #000;
     border-radius: 12px;
     overflow: hidden;
@@ -202,16 +202,21 @@ body.mobile-inventory-app {
 
 .scanner-camera-controls {
     position: absolute;
-    bottom: 64px; /* Barkod tara butonunun hemen üstünde */
+    bottom: 60px;
     left: 0;
     right: 0;
     display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
     z-index: 10;
     pointer-events: none;
+}
+
+.controls-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
 }
 
 .camera-tool-btn {
@@ -252,7 +257,7 @@ body.mobile-inventory-app {
 
 .camera-status {
     position: absolute;
-    bottom: 50px; /* Butonların hemen üstünde */
+    top: -280px; /* Reader alanının üst kısmına doğru (daha yüksek reader için) */
     left: 0;
     right: 0;
     text-align: center;
