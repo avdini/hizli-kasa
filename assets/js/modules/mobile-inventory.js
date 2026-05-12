@@ -802,7 +802,7 @@
             const statusEl = document.getElementById('camera-status');
             const torchBtn = document.getElementById('torch-camera-btn');
             const zoomSlider = document.getElementById('zoom-slider');
-            const qualitySlider = document.getElementById('quality-slider');
+            const qualityMenuBtn = document.getElementById('quality-menu-btn');
 
             if (torchBtn) {
                 torchBtn.disabled = !this.state.canTorch || !this.state.isScanning;
