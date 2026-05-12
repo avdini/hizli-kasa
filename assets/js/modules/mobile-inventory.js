@@ -9,6 +9,12 @@
         state: {
             html5QrCode: null,
             isScanning: false,
+            isStartingScanner: false,
+            cameraDevices: [],
+            selectedCameraId: null,
+            torchOn: false,
+            canTorch: false,
+            preferredZoom: null,
             searchTimer: null,
             isLoading: false,
             aktifDepoId: kasaAyar.aktifDepo || 0,
@@ -33,6 +39,9 @@
             const searchInput = document.getElementById('mobile-search-input');
             const clearBtn = document.getElementById('clear-search');
             const toggleScannerBtn = document.getElementById('toggle-scanner-btn');
+            const switchCameraBtn = document.getElementById('switch-camera-btn');
+            const refocusCameraBtn = document.getElementById('refocus-camera-btn');
+            const torchCameraBtn = document.getElementById('torch-camera-btn');
             const exitLogo = document.getElementById('app-exit-logo');
             
             const changeDepoBtn = document.getElementById('header-depo-selector');
@@ -62,9 +71,13 @@
                 searchInput.focus();
             });
 
-            toggleScannerBtn.addEventListener('click', () => {
-                this.toggleScanner();
+            toggleScannerBtn.addEventListener('click', async () => {
+                await this.toggleScanner();
             });
+
+            switchCameraBtn?.addEventListener('click', async () => this.switchCamera());
+            refocusCameraBtn?.addEventListener('click', async () => this.refocusCamera());
+            torchCameraBtn?.addEventListener('click', async () => this.toggleTorch());
 
             exitLogo.addEventListener('click', () => {
                 window.location.href = window.location.pathname;
@@ -83,18 +96,26 @@
             });
         },
 
-        toggleScanner: function() {
+        toggleScanner: async function() {
             const wrapper = document.getElementById('scanner-wrapper');
             const btn = document.getElementById('toggle-scanner-btn');
 
+            if (this.state.isStartingScanner) return;
+
             if (this.state.isScanning) {
-                this.stopScanner();
+                await this.stopScanner();
                 wrapper.classList.add('collapsed');
                 btn.innerHTML = '<span class="icon">📷</span> Barkod Tara';
             } else {
-                this.startScanner();
                 wrapper.classList.remove('collapsed');
-                btn.innerHTML = '<span class="icon">✕</span> Taramayı Kapat';
+                btn.innerHTML = '<span class="icon">⌛</span> Kamera Açılıyor';
+                const started = await this.startScanner();
+                if (started) {
+                    btn.innerHTML = '<span class="icon">✕</span> Taramayı Kapat';
+                } else {
+                    wrapper.classList.add('collapsed');
+                    btn.innerHTML = '<span class="icon">📷</span> Barkod Tara';
+                }
             }
         },
 
@@ -133,53 +154,249 @@
             this.showToast("Depo değiştirildi.");
         },
 
-        startScanner: function() {
+        startScanner: async function() {
+            this.state.isStartingScanner = true;
+
             if (!this.state.html5QrCode) {
                 this.state.html5QrCode = new Html5Qrcode("reader");
             }
 
-            const config = { 
-                fps: 20, // Daha akıcı tarama
-                qrbox: { width: 280, height: 200 }, // Barkodlar için daha geniş alan
-                aspectRatio: 1.0,
+            const config = {
+                fps: 12,
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    const width = Math.min(420, Math.floor(viewfinderWidth * 0.88));
+                    const height = Math.min(190, Math.max(120, Math.floor(width * 0.45)));
+                    return {
+                        width: Math.min(width, viewfinderWidth - 20),
+                        height: Math.min(height, viewfinderHeight - 20)
+                    };
+                },
+                aspectRatio: 1.7777778,
+                disableFlip: true,
                 experimentalFeatures: {
-                    useBarCodeDetectorIfSupported: true // Donanım hızlandırma
+                    useBarCodeDetectorIfSupported: true
                 }
             };
 
-            this.state.html5QrCode.start(
-                { facingMode: "environment" }, 
-                config, 
-                (decodedText) => {
+            try {
+                const cameraConfig = await this.getPreferredCameraConfig();
+                this.state.preferredZoom = null;
+                this.state.canTorch = false;
+                this.state.torchOn = false;
+                await this.state.html5QrCode.start(
+                    cameraConfig,
+                    config,
+                    (decodedText) => {
                     console.log(`Code scanned: ${decodedText}`);
                     const input = document.getElementById('mobile-search-input');
                     input.value = decodedText;
                     document.getElementById('clear-search').style.display = 'block';
                     this.searchProducts(decodedText);
-                    
-                    // Sadece toggle çağırmak yeterli, o zaten durumu kontrol edip kapatır
-                    if (this.state.isScanning) {
-                        this.toggleScanner();
-                    }
-                    
+
+                    this.closeScannerAfterScan();
+
                     if (navigator.vibrate) navigator.vibrate(100);
-                },
-                (errorMessage) => {
-                    // console.log(errorMessage);
-                }
-            ).catch((err) => {
+                    },
+                    (errorMessage) => {
+                        // console.log(errorMessage);
+                    }
+                );
+
+                this.state.isScanning = true;
+                await this.applyCameraTuning();
+                this.updateCameraStatus();
+                return true;
+            } catch (err) {
                 console.error("Camera error", err);
                 alert("Kamera başlatılamadı. İzinleri kontrol edin.");
-            });
-
-            this.state.isScanning = true;
+                this.state.isScanning = false;
+                return false;
+            } finally {
+                this.state.isStartingScanner = false;
+            }
         },
 
-        stopScanner: function() {
+        stopScanner: async function() {
             if (this.state.html5QrCode && this.state.isScanning) {
-                this.state.isScanning = false; // Anında durumu güncelle
-                this.state.html5QrCode.stop().catch(err => console.error("Stop error", err));
+                this.state.isScanning = false;
+                this.state.torchOn = false;
+                this.state.canTorch = false;
+                this.state.preferredZoom = null;
+                this.updateCameraStatus();
+                await this.state.html5QrCode.stop().catch(err => console.error("Stop error", err));
             }
+        },
+
+        closeScannerAfterScan: async function() {
+            if (!this.state.isScanning) return;
+
+            await this.stopScanner();
+            document.getElementById('scanner-wrapper')?.classList.add('collapsed');
+            const btn = document.getElementById('toggle-scanner-btn');
+            if (btn) {
+                btn.innerHTML = '<span class="icon">📷</span> Barkod Tara';
+            }
+        },
+
+        getPreferredCameraConfig: async function() {
+            const fallbackConfig = {
+                facingMode: { ideal: "environment" },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            };
+
+            try {
+                const cameras = await Html5Qrcode.getCameras();
+                this.state.cameraDevices = Array.isArray(cameras) ? cameras : [];
+
+                if (!this.state.cameraDevices.length) {
+                    return fallbackConfig;
+                }
+
+                const selectedStillExists = this.state.selectedCameraId &&
+                    this.state.cameraDevices.some(camera => camera.id === this.state.selectedCameraId);
+
+                if (!selectedStillExists) {
+                    this.state.selectedCameraId = this.getRankedCameras()[0]?.id || null;
+                }
+
+                if (!this.state.selectedCameraId) {
+                    return fallbackConfig;
+                }
+
+                return {
+                    deviceId: { exact: this.state.selectedCameraId },
+                    facingMode: { ideal: "environment" },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                };
+            } catch (err) {
+                console.warn("Camera list unavailable, using environment camera.", err);
+                return fallbackConfig;
+            }
+        },
+
+        getRankedCameras: function() {
+            return [...this.state.cameraDevices].sort((a, b) => {
+                return this.scoreCamera(b) - this.scoreCamera(a);
+            });
+        },
+
+        scoreCamera: function(camera) {
+            const label = (camera.label || '').toLocaleLowerCase('tr-TR');
+            let score = 0;
+
+            if (/back|rear|environment|arka|dış/.test(label)) score += 100;
+            if (/front|user|ön|selfie/.test(label)) score -= 120;
+            if (/ultra|0\.5|0,5|wide|geniş|genis/.test(label)) score -= 80;
+            if (/main|standard|normal|1x|1\.0|1,0/.test(label)) score += 45;
+            if (/tele|macro/.test(label)) score -= 20;
+
+            return score;
+        },
+
+        getRunningVideoTrack: function() {
+            if (this.state.html5QrCode?.getRunningTrack) {
+                return this.state.html5QrCode.getRunningTrack();
+            }
+
+            const video = document.querySelector('#reader video');
+            return video?.srcObject?.getVideoTracks?.()[0] || null;
+        },
+
+        applyCameraTuning: async function(showToastOnSuccess = false) {
+            const track = this.getRunningVideoTrack();
+            if (!track || !track.getCapabilities || !track.applyConstraints) return;
+
+            const capabilities = track.getCapabilities();
+            const advanced = [];
+            this.state.preferredZoom = null;
+
+            if (Array.isArray(capabilities.focusMode) && capabilities.focusMode.includes('continuous')) {
+                advanced.push({ focusMode: 'continuous' });
+            }
+
+            if (capabilities.zoom && Number.isFinite(capabilities.zoom.min) && Number.isFinite(capabilities.zoom.max)) {
+                const targetZoom = Math.min(capabilities.zoom.max, Math.max(capabilities.zoom.min, 1.5));
+                this.state.preferredZoom = targetZoom;
+                advanced.push({ zoom: targetZoom });
+            }
+
+            this.state.canTorch = !!capabilities.torch;
+            if (capabilities.torch) {
+                advanced.push({ torch: this.state.torchOn });
+            }
+
+            if (advanced.length) {
+                try {
+                    await track.applyConstraints({ advanced });
+                    if (showToastOnSuccess) {
+                        this.showToast("Kamera netlik ayarı yenilendi.");
+                    }
+                } catch (err) {
+                    console.warn("Camera tuning not supported on this device.", err);
+                }
+            }
+
+            this.updateCameraStatus();
+        },
+
+        refocusCamera: async function() {
+            if (!this.state.isScanning) return;
+            await this.applyCameraTuning(true);
+        },
+
+        toggleTorch: async function() {
+            if (!this.state.isScanning || !this.state.canTorch) {
+                this.showToast("Bu cihazda flaş kontrolü desteklenmiyor.", "error");
+                return;
+            }
+
+            this.state.torchOn = !this.state.torchOn;
+            await this.applyCameraTuning();
+            this.updateCameraStatus();
+        },
+
+        switchCamera: async function() {
+            const rankedCameras = this.getRankedCameras();
+            if (rankedCameras.length < 2 || !this.state.isScanning) {
+                this.showToast("Başka kamera bulunamadı.", "error");
+                return;
+            }
+
+            const currentIndex = rankedCameras.findIndex(camera => camera.id === this.state.selectedCameraId);
+            const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % rankedCameras.length : 0;
+            this.state.selectedCameraId = rankedCameras[nextIndex].id;
+
+            await this.stopScanner();
+            await this.startScanner();
+        },
+
+        updateCameraStatus: function() {
+            const statusEl = document.getElementById('camera-status');
+            const torchBtn = document.getElementById('torch-camera-btn');
+            const switchBtn = document.getElementById('switch-camera-btn');
+
+            if (torchBtn) {
+                torchBtn.disabled = !this.state.canTorch || !this.state.isScanning;
+                torchBtn.classList.toggle('active', this.state.torchOn);
+            }
+
+            if (switchBtn) {
+                switchBtn.disabled = this.state.cameraDevices.length < 2 || !this.state.isScanning;
+            }
+
+            if (!statusEl) return;
+
+            if (!this.state.isScanning) {
+                statusEl.innerText = "Kamera kapalı";
+                return;
+            }
+
+            const selected = this.state.cameraDevices.find(camera => camera.id === this.state.selectedCameraId);
+            const label = selected?.label ? selected.label.replace(/\s*\([^)]+\)\s*$/, '') : 'Arka kamera';
+            const zoomLabel = this.state.preferredZoom ? ` · ${this.state.preferredZoom.toFixed(1)}x` : '';
+            statusEl.innerText = `${label}${zoomLabel}`;
         },
 
         searchProducts: async function(query) {

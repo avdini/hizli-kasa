@@ -197,6 +197,47 @@ body.mobile-inventory-app {
     border: 2px solid var(--accent) !important;
 }
 
+.scanner-camera-controls {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.camera-tool-btn {
+    min-height: 36px;
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    background: var(--input-bg);
+    color: var(--text-main);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.camera-tool-btn.active {
+    background: rgba(250, 204, 21, 0.22);
+    border-color: rgba(250, 204, 21, 0.55);
+    color: #fde68a;
+}
+
+.camera-tool-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.camera-status {
+    grid-column: 1 / -1;
+    min-height: 18px;
+    color: var(--text-dim);
+    font-size: 11px;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .scanner-btn {
     width: 100%;
     padding: 12px;

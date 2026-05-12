@@ -37,6 +37,12 @@ if (!defined('ABSPATH')) exit;
             <!-- Scanner Toggle Area -->
             <div id="scanner-wrapper" class="collapsed">
                 <div id="reader"></div>
+                <div id="scanner-camera-controls" class="scanner-camera-controls">
+                    <button type="button" id="switch-camera-btn" class="camera-tool-btn">Kamera</button>
+                    <button type="button" id="refocus-camera-btn" class="camera-tool-btn">Netleştir</button>
+                    <button type="button" id="torch-camera-btn" class="camera-tool-btn" disabled>Flaş</button>
+                    <span id="camera-status" class="camera-status">Kamera kapalı</span>
+                </div>
                 <button id="toggle-scanner-btn" class="scanner-btn">
                     <span class="icon">📷</span> Barkod Tara
                 </button>
