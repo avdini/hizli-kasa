@@ -28,11 +28,11 @@ function hizli_kasa_can_access_app($user_id = null)
     }
 
     $user_roles = (array) $user->roles;
-    $yetkili_roller = get_option('hizli_kasa_yetkili_roller', array('administrator', 'shop_manager'));
+    $yetkili_roller = get_option('hizli_kasa_yetkili_roller', array('administrator', 'shop_manager', 'hizli_kasa'));
     
     $has_access = false;
     foreach ($user_roles as $role) {
-        if (in_array($role, (array) $yetkili_roller, true) || $role === 'hizli_kasa') {
+        if (in_array($role, (array) $yetkili_roller, true)) {
             $has_access = true;
             break;
         }
@@ -58,7 +58,7 @@ function hizli_kasa_uygulamasi()
     // Yetki Kontrolü
     $user = wp_get_current_user();
     $user_roles = (array) $user->roles;
-    $yetkili_roller = get_option('hizli_kasa_yetkili_roller', array('administrator', 'shop_manager'));
+    $yetkili_roller = get_option('hizli_kasa_yetkili_roller', array('administrator', 'shop_manager', 'hizli_kasa'));
 
     $yetkili_mi = hizli_kasa_can_access_app();
     foreach ($user_roles as $role) {

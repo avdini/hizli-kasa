@@ -1171,7 +1171,7 @@ function hizli_kasa_ayarlar_sayfasi()
                             <th scope="row">Erişim Yetkisi Olan Roller</th>
                             <td>
                                 <?php
-                                $secili_roller = get_option('hizli_kasa_yetkili_roller', array('administrator', 'shop_manager'));
+                                 $secili_roller = get_option('hizli_kasa_yetkili_roller', array('administrator', 'shop_manager', 'hizli_kasa'));
                                 $tum_roller = wp_roles()->get_names();
 
                                 foreach ($tum_roller as $rol_slug => $rol_adi):
@@ -1182,8 +1182,12 @@ function hizli_kasa_ayarlar_sayfasi()
                                             value="<?php echo esc_attr($rol_slug); ?>" <?php echo $checked; ?>>
                                         <?php echo translate_user_role($rol_adi); ?>
                                     </label>
-                                <?php endforeach; ?>
-                            </td>
+                                 <?php endforeach; ?>
+                                 <p class="description" style="margin-top:10px;">
+                                     <strong>Öneri:</strong> Kasiyerleriniz için eklentinin özel olarak oluşturduğu <strong>Hızlı Kasa Kasiyer</strong> rolünü kullanmanız tavsiye edilir. 
+                                     Bu rol sadece POS terminaline erişebilir, admin paneline giremez.
+                                 </p>
+                             </td>
                         </tr>
                         <tr valign="top">
                             <th scope="row">Online Satış Deposu (Öncelikli)</th>
