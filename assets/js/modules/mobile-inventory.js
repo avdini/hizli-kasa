@@ -178,33 +178,13 @@
             const config = this.getScannerConfig();
 
             try {
-                const cameraConfig = await this.getPreferredCameraConfig();
+                const cameraConfigs = await this.getCameraStartCandidates();
                 this.state.preferredZoom = null;
                 this.state.canTorch = false;
                 this.state.torchOn = false;
                 this.state.decodedInProgress = false;
-                await this.state.html5QrCode.start(
-                    cameraConfig,
-                    config,
-                    (decodedText) => {
-                        if (this.state.decodedInProgress) return;
-                        this.state.decodedInProgress = true;
 
-                        console.log(`Code scanned: ${decodedText}`);
-                        const input = document.getElementById('mobile-search-input');
-                        input.value = decodedText;
-                        this.state.lastSearchQuery = decodedText;
-                        document.getElementById('clear-search').style.display = 'block';
-                        this.searchProducts(decodedText);
-
-                        this.closeScannerAfterScan();
-
-                        if (navigator.vibrate) navigator.vibrate(100);
-                    },
-                    (errorMessage) => {
-                        // console.log(errorMessage);
-                    }
-                );
+                await this.startWithFallbacks(cameraConfigs, config);
 
                 this.state.isScanning = true;
                 await this.applyCameraTuning();
@@ -212,7 +192,7 @@
                 return true;
             } catch (err) {
                 console.error("Camera error", err);
-                alert("Kamera başlatılamadı. İzinleri kontrol edin.");
+                alert(this.getCameraErrorMessage(err));
                 this.state.isScanning = false;
                 return false;
             } finally {
@@ -302,7 +282,7 @@
                 }
             };
 
-            this.state.cameraQualityProfile = profiles[level];
+            this.state.cameraQualityProfile = { ...profiles[level], level };
             return this.state.cameraQualityProfile;
         },
 
@@ -337,21 +317,24 @@
             };
 
             if (deviceId) {
+                delete constraints.facingMode;
                 constraints.deviceId = { exact: deviceId };
             }
 
             return constraints;
         },
 
-        getPreferredCameraConfig: async function() {
-            const fallbackConfig = this.getVideoConstraints();
-
+        getCameraStartCandidates: async function() {
             try {
                 const cameras = await Html5Qrcode.getCameras();
                 this.state.cameraDevices = Array.isArray(cameras) ? cameras : [];
 
                 if (!this.state.cameraDevices.length) {
-                    return fallbackConfig;
+                    return [
+                        this.getVideoConstraints(),
+                        { facingMode: "environment" },
+                        { facingMode: { ideal: "environment" } }
+                    ];
                 }
 
                 const selectedStillExists = this.state.selectedCameraId &&
@@ -362,16 +345,120 @@
                 }
 
                 if (!this.state.selectedCameraId) {
-                    return fallbackConfig;
+                    return [
+                        this.getVideoConstraints(),
+                        { facingMode: "environment" },
+                        { facingMode: { ideal: "environment" } }
+                    ];
                 }
 
-                return {
-                    ...this.getVideoConstraints(this.state.selectedCameraId)
-                };
+                return [
+                    this.getVideoConstraints(this.state.selectedCameraId),
+                    this.state.selectedCameraId,
+                    { deviceId: { exact: this.state.selectedCameraId } },
+                    this.getVideoConstraints(),
+                    { facingMode: "environment" },
+                    { facingMode: { ideal: "environment" } }
+                ];
             } catch (err) {
                 console.warn("Camera list unavailable, using environment camera.", err);
-                return fallbackConfig;
+                return [
+                    this.getVideoConstraints(),
+                    { facingMode: "environment" },
+                    { facingMode: { ideal: "environment" } }
+                ];
             }
+        },
+
+        startWithFallbacks: async function(cameraConfigs, scannerConfig) {
+            let lastError = null;
+
+            for (const cameraConfig of cameraConfigs) {
+                try {
+                    await this.state.html5QrCode.start(
+                        cameraConfig,
+                        scannerConfig,
+                        (decodedText) => this.handleDecodedBarcode(decodedText),
+                        (errorMessage) => {
+                            // console.log(errorMessage);
+                        }
+                    );
+                    return;
+                } catch (err) {
+                    lastError = err;
+                    console.warn("Camera start attempt failed.", cameraConfig, err);
+                    if (this.isConstraintError(err)) {
+                        this.downgradeCameraProfile();
+                    }
+                    this.stopVideoTracks();
+                }
+            }
+
+            throw lastError || new Error("Camera start failed");
+        },
+
+        handleDecodedBarcode: function(decodedText) {
+            if (this.state.decodedInProgress) return;
+            this.state.decodedInProgress = true;
+
+            console.log(`Code scanned: ${decodedText}`);
+            const input = document.getElementById('mobile-search-input');
+            input.value = decodedText;
+            this.state.lastSearchQuery = decodedText;
+            document.getElementById('clear-search').style.display = 'block';
+            this.searchProducts(decodedText);
+
+            this.closeScannerAfterScan();
+
+            if (navigator.vibrate) navigator.vibrate(100);
+        },
+
+        getCameraErrorMessage: function(err) {
+            const name = err?.name || '';
+            const message = String(err?.message || err || '');
+            const combined = `${name} ${message}`.toLowerCase();
+
+            if (combined.includes('notallowed') || combined.includes('permission') || combined.includes('denied')) {
+                return "Kamera izni verilmemiş görünüyor. Tarayıcı izinlerini kontrol edin.";
+            }
+
+            if (combined.includes('notfound') || combined.includes('devicesnotfound')) {
+                return "Bu cihazda kullanılabilir kamera bulunamadı.";
+            }
+
+            if (combined.includes('notreadable') || combined.includes('trackstarterror')) {
+                return "Kamera başka bir uygulama veya sekme tarafından kullanılıyor olabilir.";
+            }
+
+            if (combined.includes('overconstrained') || combined.includes('constraint')) {
+                return "Kamera bu ayarları desteklemedi. Daha uyumlu ayarlarla tekrar deneyin.";
+            }
+
+            return "Kamera başlatılamadı. Sayfayı yenileyip tekrar deneyin.";
+        },
+
+        isConstraintError: function(err) {
+            const name = err?.name || '';
+            const message = String(err?.message || err || '');
+            const combined = `${name} ${message}`.toLowerCase();
+            return combined.includes('overconstrained') || combined.includes('constraint');
+        },
+
+        downgradeCameraProfile: function() {
+            const current = this.getDeviceCameraProfile();
+            if (current.level === 'low') return;
+
+            this.state.cameraQualityProfile = {
+                level: 'low',
+                label: 'Hafif',
+                width: 960,
+                height: 540,
+                fps: 8,
+                qrboxScale: 0.84,
+                qrboxMaxWidth: 360,
+                qrboxMinHeight: 110,
+                zoom: 1.65
+            };
         },
 
         getRankedCameras: function() {
