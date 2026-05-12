@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 6.9.7
+ * Version: 6.9.8
  * Author: Seyfullah Kurt
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH'))
     exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '6.9.7');
+define('HIZLI_KASA_VERSION', '6.9.8');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -97,7 +97,7 @@ $hizli_kasa_update_checker->setBranch('main');
 // Laragon gibi yerel ortamlarda DNS çözümleme gecikmelerini (cURL error 28) önlemek için zaman aşımını artırıyoruz.
 add_filter('http_request_args', function ($args, $url) {
     if (strpos($url, 'api.github.com') !== false || strpos($url, 'github.com') !== false) {
-        $args['timeout'] = 30; // 30 saniyeye çıkarıyoruz
+        $args['timeout'] = 60; // 60 saniyeye çıkarıyoruz
     }
     return $args;
 }, 10, 2);
