@@ -123,6 +123,8 @@
             } else {
                 wrapper.classList.remove('collapsed');
                 btn.innerHTML = '<span class="icon">⌛</span> Kamera Açılıyor';
+                // DOM'un yerleşmesi için kısa bir gecikme
+                await new Promise(r => setTimeout(r, 300));
                 const started = await this.startScanner();
                 if (started) {
                     btn.innerHTML = '<span class="icon">✕</span> Taramayı Kapat';
@@ -198,8 +200,9 @@
                 this.updateCameraStatus();
                 return true;
             } catch (err) {
-                console.error("Camera error", err);
-                alert(this.getCameraErrorMessage(err));
+                console.error("Camera error details:", err);
+                const errorMsg = this.getCameraErrorMessage(err);
+                alert(errorMsg);
                 this.state.isScanning = false;
                 return false;
             } finally {
@@ -465,7 +468,7 @@
                 return "Kamera sürücüsü veya tarayıcı hatası (TypeError). Cihazınızı yeniden başlatmayı deneyebilirsiniz.";
             }
 
-            return "Kamera başlatılamadı. Sayfayı yenileyip tekrar deneyin.";
+            return `Kamera başlatılamadı (${name}: ${message}). Sayfayı yenileyip tekrar deneyin.`;
         },
 
         isConstraintError: function(err) {

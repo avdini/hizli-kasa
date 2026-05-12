@@ -191,6 +191,8 @@ body.mobile-inventory-app {
 
 #reader {
     width: 100% !important;
+    min-height: 250px;
+    background: #000;
     border-radius: 12px;
     overflow: hidden;
     margin-bottom: 10px;

@@ -75,7 +75,7 @@ class Hizli_Kasa_Mobile_Handler {
                 wp_enqueue_style('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/css/modules/mobile-inventory.css', array(), $pos_version);
                 
                 // Kütüphaneler
-                wp_enqueue_script('html5-qrcode', 'https://unpkg.com/html5-qrcode', array(), '2.3.8', true);
+                wp_enqueue_script('html5-qrcode', 'https://cdn.jsdelivr.net/npm/html5-qrcode/html5-qrcode.min.js', array(), '2.3.8', true);
                 
                 // Mobil JS
                 wp_enqueue_script('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/js/modules/mobile-inventory.js', array('html5-qrcode'), $pos_version, true);
