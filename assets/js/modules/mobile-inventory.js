@@ -44,7 +44,6 @@
             const searchInput = document.getElementById('mobile-search-input');
             const clearBtn = document.getElementById('clear-search');
             const toggleScannerBtn = document.getElementById('toggle-scanner-btn');
-            const switchCameraBtn = document.getElementById('switch-camera-btn');
             const refocusCameraBtn = document.getElementById('refocus-camera-btn');
             const torchCameraBtn = document.getElementById('torch-camera-btn');
             const exitLogo = document.getElementById('app-exit-logo');
@@ -90,7 +89,6 @@
                 await this.toggleScanner();
             });
 
-            switchCameraBtn?.addEventListener('click', async () => this.switchCamera());
             refocusCameraBtn?.addEventListener('click', async () => this.refocusCamera());
             torchCameraBtn?.addEventListener('click', async () => this.toggleTorch());
 
@@ -672,33 +670,14 @@
             this.updateCameraStatus();
         },
 
-        switchCamera: async function() {
-            const rankedCameras = this.getRankedCameras();
-            if (rankedCameras.length < 2 || !this.state.isScanning) {
-                this.showToast("Başka kamera bulunamadı.", "error");
-                return;
-            }
 
-            const currentIndex = rankedCameras.findIndex(camera => camera.id === this.state.selectedCameraId);
-            const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % rankedCameras.length : 0;
-            this.state.selectedCameraId = rankedCameras[nextIndex].id;
-
-            await this.stopScanner();
-            await this.startScanner();
-        },
 
         updateCameraStatus: function() {
             const statusEl = document.getElementById('camera-status');
             const torchBtn = document.getElementById('torch-camera-btn');
-            const switchBtn = document.getElementById('switch-camera-btn');
-
             if (torchBtn) {
                 torchBtn.disabled = !this.state.canTorch || !this.state.isScanning;
                 torchBtn.classList.toggle('active', this.state.torchOn);
-            }
-
-            if (switchBtn) {
-                switchBtn.disabled = this.state.cameraDevices.length < 2 || !this.state.isScanning;
             }
 
             if (!statusEl) return;
