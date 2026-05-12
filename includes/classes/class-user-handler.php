@@ -34,13 +34,14 @@ class Hizli_Kasa_User_Handler {
         $role_name = 'Hızlı Kasa Kasiyer';
         
         // Rol zaten varsa yetkileri güncelle, yoksa oluştur
+        // KALICI YETKİLERİ MİNİMAL TUTUYORUZ (GÜVENLİK İÇİN)
         $capabilities = [
             'read'                       => true,
-            'view_admin_dashboard'       => true, // API yetkilendirme katmanı için gerekli olabilir
-            'edit_shop_orders'           => true,
-            'publish_shop_orders'        => true,
-            'edit_others_shop_orders'    => true,
-            'read_private_shop_orders'   => true,
+            'view_admin_dashboard'       => false, // Dinamik olarak halledilecek
+            'edit_shop_orders'           => false, // Dinamik olarak halledilecek
+            'publish_shop_orders'        => false, // Dinamik olarak halledilecek
+            'edit_others_shop_orders'    => false,
+            'read_private_shop_orders'   => false,
             'edit_products'              => false,
             'manage_woocommerce'         => false,
             'manage_options'             => false
@@ -91,17 +92,31 @@ class Hizli_Kasa_User_Handler {
     /**
      * WooCommerce REST API üzerinden sipariş oluştururken yetki kontrolünü zorla geçer.
      * Bu sayede kasiyer rolü tam WooCommerce yönetici yetkisi olmadan da sipariş yazabilir.
+     * GÜVENLİK NOTU: Bu izinler veritabanına yazılmaz, sadece o saniyelik API isteği için geçerlidir.
      */
     public static function bypass_woo_rest_permissions($allcaps, $caps, $args, $user) {
-        // Eğer kullanıcı kasiyerse ve bir REST API isteği yapılıyorsa
-        if (defined('REST_REQUEST') && REST_REQUEST && in_array('hizli_kasa', (array) $user->roles)) {
-            // Sipariş oluşturma ve düzenleme yetkilerini zorla ekle
-            $allcaps['edit_shop_orders'] = true;
-            $allcaps['publish_shop_orders'] = true;
-            $allcaps['edit_others_shop_orders'] = true;
-            $allcaps['read_private_shop_orders'] = true;
-            $allcaps['edit_published_shop_orders'] = true;
+        // Eğer bir REST API isteği değilse veya kullanıcı kasiyer değilse dokunma
+        if (!defined('REST_REQUEST') || !REST_REQUEST || !in_array('hizli_kasa', (array) $user->roles)) {
+            return $allcaps;
         }
+
+        // Sadece belirli WooCommerce sipariş yetkilerini hedefle
+        $requested_cap = $args[0] ?? '';
+        $allowed_caps = [
+            'edit_shop_orders', 
+            'publish_shop_orders', 
+            'edit_others_shop_orders', 
+            'read_private_shop_orders',
+            'edit_published_shop_orders'
+        ];
+
+        if (in_array($requested_cap, $allowed_caps)) {
+            // EK GÜVENLİK: Sadece WooCommerce sipariş API yolu üzerindeysek bu yetkiyi havada oluştur
+            if (strpos($_SERVER['REQUEST_URI'], '/wc/v3/orders') !== false) {
+                $allcaps[$requested_cap] = true;
+            }
+        }
+
         return $allcaps;
     }
 }
