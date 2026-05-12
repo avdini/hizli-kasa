@@ -52,12 +52,16 @@ require_once HIZLI_KASA_PATH . 'includes/classes/class-shortcode.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-barcode-helper.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-menu-filter.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-mobile-handler.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-user-handler.php';
+
 
 // Başlatıcılar
 Hizli_Kasa_Database::init();
 Hizli_Kasa_Stock_Manager::listen();
 Hizli_Kasa_Mismatch_Notifier::init();
 Hizli_Kasa_Mobile_Handler::init();
+Hizli_Kasa_User_Handler::init();
+
 
 // Canary Log: Sadece WP hazır olduğunda çalıştır
 add_action('init', function () {
