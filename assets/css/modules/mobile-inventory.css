@@ -228,6 +228,7 @@ body.mobile-inventory-app {
     border-radius: 14px;
     padding: 8px 12px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    pointer-events: auto; /* Tıklama ve kaydırmayı etkinleştir */
 }
 
 .slider-row {
@@ -251,6 +252,7 @@ body.mobile-inventory-app {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 2px;
     outline: none;
+    pointer-events: auto; /* Kaydırmayı etkinleştir */
 }
 
 .camera-slider::-webkit-slider-thumb {
