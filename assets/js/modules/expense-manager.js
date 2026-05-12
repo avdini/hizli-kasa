@@ -84,9 +84,12 @@
 
             try {
                 const depo_id = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
-                const apiUrl = kasaAyar.rootApiUrl + 'hizli-kasa/v1/masraflar?depo_id=' + depo_id;
+                const cacheBuster = new Date().getTime();
+                const apiUrl = kasaAyar.rootApiUrl + 'hizli-kasa/v1/masraflar?depo_id=' + depo_id + '&_t=' + cacheBuster;
                 
                 const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    cache: 'no-store',
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });
 
