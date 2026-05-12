@@ -32,12 +32,14 @@ class Hizli_Kasa_User_Handler {
         
         // Rol zaten varsa yetkileri güncelle, yoksa oluştur
         $capabilities = [
-            'read'                 => true, // Temiz bir giriş için gerekli
-            'edit_shop_orders'     => true, // WooCommerce API için gerekli
-            'publish_shop_orders'  => true, // Sipariş oluşturabilmek için gerekli
-            'edit_products'        => false,
-            'manage_woocommerce'   => false,
-            'manage_options'       => false
+            'read'                       => true,
+            'edit_shop_orders'           => true,
+            'publish_shop_orders'        => true,
+            'edit_others_shop_orders'    => true, // Bazı iade/güncelleme işlemleri için gerekebilir
+            'read_private_shop_orders'   => true,
+            'edit_products'              => false,
+            'manage_woocommerce'         => false,
+            'manage_options'             => false
         ];
 
         $role = get_role($role_id);

@@ -30,7 +30,7 @@ function hizli_kasa_can_access_app($user_id = null)
     $yetkili_roller = get_option('hizli_kasa_yetkili_roller', array('administrator', 'shop_manager'));
 
     foreach ($user_roles as $role) {
-        if (in_array($role, (array) $yetkili_roller, true)) {
+        if (in_array($role, (array) $yetkili_roller, true) || $role === 'hizli_kasa') {
             return true;
         }
     }
