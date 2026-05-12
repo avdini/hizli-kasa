@@ -18,6 +18,14 @@ add_action('rest_api_init', function () {
         }
     ));
 
+    register_rest_route('hizli-kasa/v1', '/masraflar/(?P<id>\d+)', array(
+        'methods' => 'DELETE',
+        'callback' => 'hizli_kasa_delete_masraf',
+        'permission_callback' => function () {
+            return hizli_kasa_can_access_app();
+        }
+    ));
+
 });
 
 /**
