@@ -17,6 +17,7 @@
             preferredZoom: null,
             cameraQualityProfile: null,
             isClosingScanner: false,
+            isTransitioning: false,
             decodedInProgress: false,
             lastSearchQuery: '',
             searchTimer: null,
@@ -114,20 +115,28 @@
             const wrapper = document.getElementById('scanner-wrapper');
             const btn = document.getElementById('toggle-scanner-btn');
 
-            if (this.state.isStartingScanner || this.state.isClosingScanner) return;
+            if (this.state.isTransitioning) {
+                console.log("Scanner is busy, ignoring toggle request");
+                return;
+            }
 
             if (this.state.isScanning) {
-                await this.stopScanner();
-                wrapper.classList.add('collapsed');
-                btn.innerHTML = '<span class="icon">📷</span> Barkod Tara';
+                this.state.isTransitioning = true;
+                try {
+                    await this.stopScanner();
+                    wrapper.classList.add('collapsed');
+                    btn.innerHTML = '<span class="icon">📷</span> Barkod Tara';
+                } finally {
+                    this.state.isTransitioning = false;
+                }
             } else {
-                this.state.isStartingScanner = true; // Hemen kilitle
+                this.state.isTransitioning = true;
                 wrapper.classList.remove('collapsed');
                 btn.innerHTML = '<span class="icon">⌛</span> Kamera Açılıyor';
                 
                 try {
-                    // DOM'un yerleşmesi için kısa bir gecikme
-                    await new Promise(r => setTimeout(r, 400));
+                    // Wait for DOM transition (collapsed -> expanded)
+                    await new Promise(r => setTimeout(r, 450));
                     const started = await this.startScanner();
                     if (started) {
                         btn.innerHTML = '<span class="icon">✕</span> Taramayı Kapat';
@@ -135,8 +144,12 @@
                         wrapper.classList.add('collapsed');
                         btn.innerHTML = '<span class="icon">📷</span> Barkod Tara';
                     }
+                } catch (err) {
+                    console.error("Toggle Scanner Error:", err);
+                    wrapper.classList.add('collapsed');
+                    btn.innerHTML = '<span class="icon">📷</span> Barkod Tara';
                 } finally {
-                    this.state.isStartingScanner = false;
+                    this.state.isTransitioning = false;
                 }
             }
         },
@@ -177,19 +190,12 @@
         },
 
         startScanner: async function() {
+            console.log("Starting scanner...");
             try {
                 // 1. Her şeyi durdur ve temizle
-                this.stopVideoTracks();
+                await this.cleanupExistingScanner();
                 
-                const reader = document.getElementById('reader');
-                if (reader) {
-                    reader.innerHTML = ''; // İçini boşalt (Nükleer reset)
-                }
-
-                // 2. Yeni instance oluştur
-                this.state.html5QrCode = new Html5Qrcode("reader");
-                
-                // 3. Cihazları tara
+                // 2. Cihazları tara
                 const cameraConfigs = await this.getCameraStartCandidates();
                 
                 this.state.preferredZoom = null;
@@ -199,7 +205,7 @@
 
                 const config = this.getScannerConfig();
                 
-                // 4. Başlatmayı dene
+                // 3. Başlatmayı dene (Fallbacks içinde instance oluşturulacak)
                 await this.startWithFallbacks(cameraConfigs, config);
 
                 this.state.isScanning = true;
@@ -207,35 +213,67 @@
                 this.updateCameraStatus();
                 return true;
             } catch (err) {
-                console.error("Camera error details:", err);
+                console.error("Camera start failed definitively:", err);
                 const errorMsg = this.getCameraErrorMessage(err);
                 alert(errorMsg);
                 this.state.isScanning = false;
                 return false;
-            } finally {
-                this.state.isStartingScanner = false;
             }
         },
 
-        stopScanner: async function() {
-            if (!this.state.html5QrCode || this.state.isClosingScanner) return;
+        cleanupExistingScanner: async function() {
+            console.log("Cleaning up existing scanner instance...");
+            if (this.state.html5QrCode) {
+                try {
+                    const state = this.state.html5QrCode.getState();
+                    if (state > 1) { // NOT_STARTED, SCANNING or PAUSED
+                        await this.state.html5QrCode.stop().catch(() => {});
+                    }
+                    this.state.html5QrCode.clear();
+                } catch (err) {
+                    console.warn("Scanner cleanup warning:", err);
+                }
+                this.state.html5QrCode = null;
+            }
 
-            this.state.isClosingScanner = true;
+            this.stopVideoTracks();
+            
+            const reader = document.getElementById('reader');
+            if (reader) {
+                reader.innerHTML = ''; 
+            }
+            
+            await new Promise(r => setTimeout(r, 200));
+        },
+
+        stopScanner: async function() {
+            if (!this.state.html5QrCode) {
+                this.state.isScanning = false;
+                this.stopVideoTracks();
+                return;
+            }
+
+            console.log("Stopping scanner...");
             const runningTrack = this.getRunningVideoTrack();
 
             try {
-                if (this.state.isScanning) {
-                    await this.state.html5QrCode.stop().catch(err => console.error("Stop error", err));
+                const state = this.state.html5QrCode.getState();
+                if (state > 1) { // State 2, 3, 4 implies it might be running or attached
+                    await this.state.html5QrCode.stop().catch(err => console.warn("Stop promise rejected:", err));
                 }
+                this.state.html5QrCode.clear();
+            } catch (err) {
+                console.error("Error during stopScanner:", err);
             } finally {
+                this.state.html5QrCode = null;
                 this.stopVideoTracks(runningTrack);
                 this.state.isScanning = false;
-                this.state.isClosingScanner = false;
                 this.state.torchOn = false;
                 this.state.canTorch = false;
                 this.state.preferredZoom = null;
                 this.state.decodedInProgress = false;
                 this.updateCameraStatus();
+                console.log("Scanner stopped and cleared.");
             }
         },
 
@@ -396,30 +434,53 @@
             // 1. Aşamada aday konfigürasyonları dene
             for (const cameraConfig of cameraConfigs) {
                 try {
+                    // Her denemede yeni instance oluşturmak 'already under transition' hatasını en aza indirir
+                    if (this.state.html5QrCode) {
+                        try { this.state.html5QrCode.clear(); } catch(e){}
+                    }
+                    this.state.html5QrCode = new Html5Qrcode("reader");
+
+                    console.log("Attempting camera start with config:", cameraConfig);
                     await this.state.html5QrCode.start(
                         cameraConfig,
                         scannerConfig,
                         (decodedText) => this.handleDecodedBarcode(decodedText),
-                        () => {} // Hata loglamayı burada yapmıyoruz
+                        () => {} 
                     );
+                    console.log("Camera started successfully.");
                     return;
                 } catch (err) {
                     lastError = err;
-                    console.warn("Camera start attempt failed:", cameraConfig, err);
+                    const errorStr = String(err);
+                    console.warn("Camera start attempt failed:", errorStr);
                     
                     if (this.isConstraintError(err)) {
                         this.downgradeCameraProfile();
                     }
                     
-                    // Transition hatasını önlemek için daha uzun bekleme
-                    await new Promise(r => setTimeout(r, 450));
+                    // Eğer 'already under transition' hatası alırsak, instance'ı öldürüp daha uzun bekle
+                    if (errorStr.includes("transition")) {
+                        console.warn("Transition error detected, performing hard reset...");
+                        if (this.state.html5QrCode) {
+                            try { this.state.html5QrCode.clear(); } catch(e){}
+                            this.state.html5QrCode = null;
+                        }
+                        await new Promise(r => setTimeout(r, 800));
+                    } else {
+                        await new Promise(r => setTimeout(r, 300));
+                    }
                 }
             }
 
             // 2. Aşamada (Hepsi başarısız olursa) en temel konfigürasyonu dene
             try {
                 console.log("Attempting ultimate fallback...");
-                await new Promise(r => setTimeout(r, 500)); // Ekstra güvenlik beklemesi
+                if (this.state.html5QrCode) {
+                    try { this.state.html5QrCode.clear(); } catch(e){}
+                }
+                this.state.html5QrCode = new Html5Qrcode("reader");
+
+                await new Promise(r => setTimeout(r, 500)); 
                 await this.state.html5QrCode.start(
                     { facingMode: "environment" },
                     { fps: 10, qrbox: scannerConfig.qrbox },
@@ -431,7 +492,7 @@
                 lastError = err;
             }
 
-            throw lastError || new Error("Camera start failed");
+            throw lastError || new Error("Camera start failed after fallbacks");
         },
 
         handleDecodedBarcode: function(decodedText) {
