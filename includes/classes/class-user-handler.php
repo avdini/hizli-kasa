@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) exit;
 class Hizli_Kasa_User_Handler {
 
     public static function init() {
-        // Rol oluşturma (Eklenti her yüklendiğinde/güncellendiğinde çalışır)
+        // Rol oluşturma
         add_action('init', [__CLASS__, 'ensure_kasa_role']);
         
         // Admin paneli erişim kısıtlaması
@@ -20,6 +20,9 @@ class Hizli_Kasa_User_Handler {
         
         // Admin barı gizle
         add_filter('show_admin_bar', [__CLASS__, 'hide_admin_bar']);
+
+        // WooCommerce REST API yetki kontrolüne müdahale
+        add_filter('user_has_cap', [__CLASS__, 'bypass_woo_rest_permissions'], 10, 4);
     }
 
     /**
@@ -83,5 +86,22 @@ class Hizli_Kasa_User_Handler {
             return false;
         }
         return $show;
+    }
+
+    /**
+     * WooCommerce REST API üzerinden sipariş oluştururken yetki kontrolünü zorla geçer.
+     * Bu sayede kasiyer rolü tam WooCommerce yönetici yetkisi olmadan da sipariş yazabilir.
+     */
+    public static function bypass_woo_rest_permissions($allcaps, $caps, $args, $user) {
+        // Eğer kullanıcı kasiyerse ve bir REST API isteği yapılıyorsa
+        if (defined('REST_REQUEST') && REST_REQUEST && in_array('hizli_kasa', (array) $user->roles)) {
+            // Sipariş oluşturma ve düzenleme yetkilerini zorla ekle
+            $allcaps['edit_shop_orders'] = true;
+            $allcaps['publish_shop_orders'] = true;
+            $allcaps['edit_others_shop_orders'] = true;
+            $allcaps['read_private_shop_orders'] = true;
+            $allcaps['edit_published_shop_orders'] = true;
+        }
+        return $allcaps;
     }
 }
