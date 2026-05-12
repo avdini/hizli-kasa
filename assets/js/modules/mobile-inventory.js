@@ -178,20 +178,28 @@
 
         startScanner: async function() {
             try {
-                // Her denemede temiz bir başlangıç için video track'leri durdur
+                // 1. Her şeyi durdur ve temizle
                 this.stopVideoTracks();
                 
-                if (!this.state.html5QrCode) {
-                    this.state.html5QrCode = new Html5Qrcode("reader");
+                const reader = document.getElementById('reader');
+                if (reader) {
+                    reader.innerHTML = ''; // İçini boşalt (Nükleer reset)
                 }
 
+                // 2. Yeni instance oluştur
+                this.state.html5QrCode = new Html5Qrcode("reader");
+                
+                // 3. Cihazları tara
                 const cameraConfigs = await this.getCameraStartCandidates();
+                
                 this.state.preferredZoom = null;
                 this.state.canTorch = false;
                 this.state.torchOn = false;
                 this.state.decodedInProgress = false;
 
                 const config = this.getScannerConfig();
+                
+                // 4. Başlatmayı dene
                 await this.startWithFallbacks(cameraConfigs, config);
 
                 this.state.isScanning = true;
@@ -403,14 +411,15 @@
                         this.downgradeCameraProfile();
                     }
                     
-                    // Geçiş hatasını (transition error) önlemek için denemeler arası bekleme
-                    await new Promise(r => setTimeout(r, 250));
+                    // Transition hatasını önlemek için daha uzun bekleme
+                    await new Promise(r => setTimeout(r, 450));
                 }
             }
 
             // 2. Aşamada (Hepsi başarısız olursa) en temel konfigürasyonu dene
             try {
                 console.log("Attempting ultimate fallback...");
+                await new Promise(r => setTimeout(r, 500)); // Ekstra güvenlik beklemesi
                 await this.state.html5QrCode.start(
                     { facingMode: "environment" },
                     { fps: 10, qrbox: scannerConfig.qrbox },
