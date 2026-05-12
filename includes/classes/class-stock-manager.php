@@ -24,6 +24,8 @@ class Hizli_Kasa_Stock_Manager {
         
         // Sipariş iptal edildiğinde (Online ise rezervasyonu bırak, POS ise stoğu geri koy)
         add_action('woocommerce_order_status_cancelled', [self::class, 'handle_cancelled_order_stock'], 10, 2);
+        add_action('woocommerce_order_status_refunded', [self::class, 'handle_cancelled_order_stock'], 10, 2);
+        add_action('woocommerce_order_status_failed', [self::class, 'handle_cancelled_order_stock'], 10, 2);
         
         // POS Siparişi: Yeni sipariş oluşturulduğunda direkt fiziksel stoktan düş
         add_action('woocommerce_new_order', [self::class, 'handle_pos_order_stock'], 10, 2);
@@ -46,21 +48,25 @@ class Hizli_Kasa_Stock_Manager {
 
         if (!$kasiyer_name) return; // POS siparişi değilse çık
 
-        // Kasiyerin kullanıcı ID'sini bul (veya şu anki kullanıcıyı kullan)
-        $user_id = get_current_user_id();
-        
-        // REST API çağrılarında bazen user_id 0 gelebilir, bu durumda meta'dan bulmaya çalışabiliriz
-        if (!$user_id) {
-             // Opsiyonel: Kasiyer isminden user bulma mantığı eklenebilir
-             hizli_kasa_log("Uyarı: current_user_id 0 döndü. REST API auth kontrol edilmeli.");
-        }
+        // Öncelikle sipariş üzerindeki depoyu kontrol et (REST API ile gelmiş olabilir)
+        $depo_id = $order->get_meta('_hk_cikis_depo_id');
 
-        // Yeni çoklu depo sisteminden aktif depoyu al
-        $depo_id = get_user_meta($user_id, '_hizli_kasa_active_depo', true);
-
-        // Fallback: Eski sisteme bak
         if (!$depo_id) {
-            $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
+            // Kasiyerin kullanıcı ID'sini bul (veya şu anki kullanıcıyı kullan)
+            $user_id = get_current_user_id();
+            
+            // REST API çağrılarında bazen user_id 0 gelebilir, bu durumda meta'dan bulmaya çalışabiliriz
+            if (!$user_id) {
+                 hizli_kasa_log("Uyarı: current_user_id 0 döndü. REST API auth kontrol edilmeli.");
+            }
+
+            // Yeni çoklu depo sisteminden aktif depoyu al
+            $depo_id = get_user_meta($user_id, '_hizli_kasa_active_depo', true);
+
+            // Fallback: Eski sisteme bak
+            if (!$depo_id) {
+                $depo_id = get_user_meta($user_id, '_hizli_kasa_depo_id', true);
+            }
         }
 
         hizli_kasa_log("Kasiyer User ID: $user_id, Tespit Edilen Depo ID: " . ($depo_id ?: 'Yok'));
@@ -734,6 +740,9 @@ class Hizli_Kasa_Stock_Manager {
             $product_id = $item->get_product_id();
             $variation_id = $item->get_variation_id();
 
+            // Zaten iade edilmiş mi kontrolü (Mükerrer stok iadesini önle)
+            if ($item->get_meta('_hk_restocked_on_cancel')) continue;
+
             // 1. Online Sipariş Rezervasyonları (_hk_reservations)
             $reservations = wc_get_order_item_meta($item_id, '_hk_reservations', true);
             
@@ -747,17 +756,27 @@ class Hizli_Kasa_Stock_Manager {
                         hizli_kasa_log("İptal: Online rezervasyon bırakıldı. Depo: $depo_id, Ürün: $product_id, Adet: $qty");
                     }
                 }
+                wc_update_order_item_meta($item_id, '_hk_restocked_on_cancel', 'yes');
             } else {
                 // 2. POS Siparişi Düşümü (_hk_cikis_depo_id)
                 $depo_id = (int) wc_get_order_item_meta($item_id, '_hk_cikis_depo_id', true);
+                
+                // Fallback: Sipariş seviyesindeki depoya bak
+                if (!$depo_id) {
+                    $depo_id = (int) $order->get_meta('_hk_cikis_depo_id');
+                }
+
                 $qty = (float) wc_get_order_item_meta($item_id, '_hk_cikis_depo_adet', true);
                 
                 // Eğer adet meta'sı yoksa item adetini kullan
                 if (!$qty) $qty = $item->get_quantity();
 
                 if ($depo_id && $qty > 0) {
-                    self::update_warehouse_stock($product_id, $variation_id, $depo_id, $qty, "Sipariş İptali (#$order_id)");
+                    self::update_warehouse_stock($product_id, $variation_id, $depo_id, $qty, "Sipariş İptali/İade (#$order_id)");
                     hizli_kasa_log("İptal: POS stok iade edildi. Depo: $depo_id, Ürün: $product_id, Adet: $qty");
+                    
+                    // İşlendi olarak işaretle
+                    wc_update_order_item_meta($item_id, '_hk_restocked_on_cancel', 'yes');
                 }
             }
         }
