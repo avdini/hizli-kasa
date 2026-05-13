@@ -35,11 +35,19 @@
             var input = document.getElementById('terminal-arama-input');
             
             if (!input) {
-                document.addEventListener('hkTabLoaded', function(e) {
-                    if (e.detail.tab === 'urunler') {
-                        self.init();
-                    }
-                });
+                if (!this._tabListenerAdded) {
+                    this._tabListenerAdded = true;
+                    document.addEventListener('hkTabLoaded', function(e) {
+                        if (e.detail.tab === 'urunler') {
+                            if (!self.initialized) {
+                                self.init();
+                            } else {
+                                // Sekme tekrar açıldığında en güncel stokları çek
+                                self.loadProducts();
+                            }
+                        }
+                    });
+                }
                 return;
             }
 
@@ -295,7 +303,7 @@
 
             try {
                 var offset = (this.state.currentPage - 1) * this.state.perPage;
-                var url = kasaAyar.rootApiUrl + 'hizli-kasa/v1/terminal/products?limit=' + this.state.perPage + '&offset=' + offset + '&depo_id=' + depoId;
+                var url = kasaAyar.rootApiUrl + 'hizli-kasa/v1/terminal/products?limit=' + this.state.perPage + '&offset=' + offset + '&depo_id=' + depoId + '&_=' + Date.now();
                 if (s) url += '&s=' + encodeURIComponent(s);
                 if (this.state.orderby) url += '&orderby=' + this.state.orderby;
                 if (this.state.order)   url += '&order=' + this.state.order;

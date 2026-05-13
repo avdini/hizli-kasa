@@ -860,7 +860,7 @@
 
             try {
                 // Mevcut terminal API'sini kullanıyoruz + aktif depo
-                const url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/terminal/products?s=${encodeURIComponent(cleanQuery)}&limit=15&depo_id=${this.state.aktifDepoId}`;
+                const url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/terminal/products?s=${encodeURIComponent(cleanQuery)}&limit=15&depo_id=${this.state.aktifDepoId}&_=${Date.now()}`;
                 const response = await fetch(url, {
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });

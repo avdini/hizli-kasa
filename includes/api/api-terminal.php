@@ -25,6 +25,13 @@ add_action('rest_api_init', function () {
  */
 function hizli_kasa_terminal_products($request)
 {
+    // Önbelleği kesin olarak engelle (Tarayıcı ve Sunucu tarafı)
+    if (!headers_sent()) {
+        nocache_headers();
+        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+        header("Pragma: no-cache");
+    }
+
     global $wpdb;
     $limit = intval($request->get_param('limit') ?: 24);
     $offset = intval($request->get_param('offset') ?: 0);

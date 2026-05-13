@@ -41,6 +41,10 @@ add_action('rest_api_init', function () {
  */
 function hizli_kasa_api_user_depolar($request)
 {
+    if (!headers_sent()) {
+        nocache_headers();
+        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    }
     $user_id = get_current_user_id();
 
     $cache_aktif = get_option('hizli_kasa_cache_aktif', '1') === '1';
@@ -148,6 +152,10 @@ function hizli_kasa_api_set_user_theme($request)
 
 function hizli_kasa_load_tab_content($request)
 {
+    if (!headers_sent()) {
+        nocache_headers();
+        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    }
     $tab = sanitize_text_field($request->get_param('tab'));
     $allowed_tabs = ['kasa', 'urunler', 'raporlar', 'ayarlar', 'iade', 'masraf', 'sevk'];
     if (!in_array($tab, $allowed_tabs)) {
