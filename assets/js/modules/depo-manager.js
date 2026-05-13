@@ -229,6 +229,14 @@
 
             if (!trigger || !dropdown) return;
 
+            // Zaten başlatılmışsa eventleri tekrar bağlama, sadece render et
+            if (trigger.dataset.initialized) {
+                this._renderDropdownItems();
+                this._updateDropdownUI();
+                return;
+            }
+            trigger.dataset.initialized = "true";
+
             // Dropdown listesini doldur
             this._renderDropdownItems();
             this._updateDropdownUI();
@@ -297,7 +305,7 @@
             }
 
             // Dropdown aktif item'ı işaretle
-            document.querySelectorAll('.depo-dropdown-item').forEach(function(el) {
+            document.querySelectorAll('#depo-dropdown .depo-dropdown-item').forEach(function(el) {
                 el.classList.toggle('active', parseInt(el.dataset.depoId) === self.state.viewDepoId);
             });
 
