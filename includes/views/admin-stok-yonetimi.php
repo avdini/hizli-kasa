@@ -596,6 +596,9 @@ jQuery(document).ready(function($) {
             return;
         }
 
+        const queryStr = $('#admin-product-search').val().trim();
+        const autoExpand = (products.length === 1 && queryStr !== '');
+
         let mainRowCounter = 0;
 
         products.forEach(p => {
@@ -605,8 +608,11 @@ jQuery(document).ready(function($) {
             const badgeText = isVariable ? 'Varyantlı' : 'Basit';
             const stripeClass = (mainRowCounter % 2 === 0) ? 'stripe-even' : 'stripe-odd';
             const mismatchIcon = p.has_mismatch ? '<span class="dashicons dashicons-warning" style="color:#d63638; font-size:18px; margin-left:8px;" title="Depo stok toplamı site stoğu ile uyuşmuyor!"></span>' : '';
+            
+            // Eğer arama yapılmış ve tek sonuç dönmüşse parent row 'expanded' gelsin
+            const isExpanded = isVariable && autoExpand ? 'expanded' : '';
 
-            let row = `<tr class="${isVariable ? 'row-variable' : ''} ${stripeClass}" data-id="${p.id}">
+            let row = `<tr class="${isVariable ? 'row-variable' : ''} ${stripeClass} ${isExpanded}" data-id="${p.id}">
                 <td style="text-align:center;"><input type="checkbox" class="hk-row-cb" value="${p.id}"></td>
                 <td><img src="${p.thumbnail}" style="width:40px; height:40px; border-radius:4px; object-fit:cover;"></td>
                 <td style="vertical-align:middle;">
@@ -644,7 +650,8 @@ jQuery(document).ready(function($) {
             // Varyasyonları Ekle
             if(isVariable && p.variations) {
                 p.variations.forEach(v => {
-                    let vRow = `<tr class="row-variation child-of-${p.id} hidden-variation" data-id="${p.id}" data-vid="${v.variation_id}">
+                    const hiddenClass = autoExpand ? '' : 'hidden-variation';
+                    let vRow = `<tr class="row-variation child-of-${p.id} ${hiddenClass}" data-id="${p.id}" data-vid="${v.variation_id}">
                         <td style="text-align:center;"><input type="checkbox" class="hk-row-cb" value="${v.variation_id}"></td>
                         <td style="text-align:right;"><img src="${v.thumbnail}" style="width:30px; height:30px; border-radius:4px; object-fit:cover;"></td>
                         <td class="variation-indent" style="vertical-align:middle;">
