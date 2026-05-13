@@ -694,13 +694,12 @@ function hizli_kasa_ajax_get_admin_stock_list() {
             $where_sql .= " AND (p.post_type = 'product_variation' OR (p.post_type = 'product' AND NOT EXISTS (SELECT 1 FROM {$wpdb->posts} as p_child WHERE p_child.post_parent = p.ID AND p_child.post_type = 'product_variation')))";
             
             if ($filter_zero_stock) {
-                $where_sql .= " AND NOT EXISTS (
-                    SELECT 1
+                $where_sql .= " AND IF(p.post_type = 'product_variation', p.post_parent, p.ID) NOT IN (
+                    SELECT IF(p2.post_type = 'product_variation', p2.post_parent, p2.ID)
                     FROM {$wpdb->posts} p2
-                    LEFT JOIN {$wpdb->postmeta} pm2 ON (p2.ID = pm2.post_id AND pm2.meta_key = '_stock')
-                    WHERE IF(p2.post_type = 'product_variation', p2.post_parent, p2.ID) = IF(p.post_type = 'product_variation', p.post_parent, p.ID)
-                    AND p2.post_type IN ('product', 'product_variation') AND p2.post_status IN ('publish', 'private')
-                    AND COALESCE(CAST(pm2.meta_value AS DECIMAL(15,4)), 0) > 0
+                    INNER JOIN {$wpdb->postmeta} pm2 ON (p2.ID = pm2.post_id AND pm2.meta_key = '_stock')
+                    WHERE p2.post_type IN ('product', 'product_variation') AND p2.post_status IN ('publish', 'private')
+                    AND CAST(pm2.meta_value AS DECIMAL(15,4)) > 0
                 )";
             }
 
