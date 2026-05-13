@@ -95,6 +95,11 @@ class Hizli_Kasa_Mismatch_Notifier {
                      WHERE (p.post_type = 'product_variation' AND sk.variation_id = p.ID) 
                         OR (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0)
                     ) as total_wh,
+                    (SELECT COALESCE(MIN(sk.quantity), 0) 
+                     FROM $stok_table sk 
+                     WHERE (p.post_type = 'product_variation' AND sk.variation_id = p.ID) 
+                        OR (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0)
+                    ) as min_wh,
                     (SELECT COALESCE(meta_value, 0) 
                      FROM {$wpdb->postmeta} 
                      WHERE post_id = p.ID AND meta_key = '_stock' 
@@ -104,7 +109,7 @@ class Hizli_Kasa_Mismatch_Notifier {
                 WHERE (p.post_type = 'product_variation' OR (p.post_type = 'product' AND NOT EXISTS (SELECT 1 FROM {$wpdb->posts} as p_child WHERE p_child.post_parent = p.ID AND p_child.post_type = 'product_variation'))) 
                   AND p.post_status IN ('publish', 'private')
             ) as stock_summary
-            WHERE ROUND(CAST(total_wh AS DECIMAL(15,4)), 4) != ROUND(CAST(wc_stock AS DECIMAL(15,4)), 4)
+            WHERE ROUND(CAST(total_wh AS DECIMAL(15,4)), 4) != ROUND(CAST(wc_stock AS DECIMAL(15,4)), 4) OR min_wh < 0
             LIMIT 5";
             
         $mismatches = $wpdb->get_results($query);
