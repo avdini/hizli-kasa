@@ -49,7 +49,10 @@
         setActiveDepo: function(depoId, silent) {
             var self = this;
             depoId = parseInt(depoId);
-            if (!depoId || !this.canManageDepo(depoId)) {
+            if (!depoId) return;
+
+            // canManageDepo kontrolü sadece liste yüklendikten sonra anlamlıdır
+            if (this.state.isLoaded && !this.canManageDepo(depoId)) {
                 console.warn('HK DepoManager: Yönetim yetkisi olmayan veya geçersiz depo ID:', depoId);
                 return;
             }
@@ -173,6 +176,10 @@
                 self.state.viewDepoId = resolved; // Başlangıçta ikisi aynı
                 self.state.isLoaded = true;
 
+                // UI'ları zorla güncelle
+                self._updateDropdownUI();
+                self._updateTopDropdownUI();
+
                 // Sunucu cache'i ile localStorage'ı uyumlu tut
                 if (resolved) {
                     try { localStorage.setItem(self._cacheKey(), resolved); } catch(e) {}
@@ -182,6 +189,10 @@
 
                     // Aktif depo belirlendiğinde diğer modülleri haberdar et (sepet yüklemesi vb için)
                     document.dispatchEvent(new CustomEvent('hkActiveDepoChanged', {
+                        detail: { depoId: resolved, prevDepoId: null }
+                    }));
+                    // Görüntüleme deposu için de tetikle
+                    document.dispatchEvent(new CustomEvent('hkViewDepoChanged', {
                         detail: { depoId: resolved, prevDepoId: null }
                     }));
                 }
@@ -268,7 +279,7 @@
             this.state.view.forEach(function(d) {
                 var canManage = self.canManageDepo(d.id);
                 var item = document.createElement('div');
-                item.className = 'depo-dropdown-item' + (d.id === self.state.activeDepoId ? ' active' : '');
+                item.className = 'depo-dropdown-item' + (d.id === self.state.viewDepoId ? ' active' : '');
                 item.dataset.depoId = d.id;
                 item.innerHTML =
                     '<span class="depo-item-name">' + d.name + '</span>' +
