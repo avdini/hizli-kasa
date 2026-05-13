@@ -395,26 +395,35 @@
                     </div>
                 `;
 
-                // Diğer Depolar Toplamı
-                var otherTotal = 0;
-                var breakdown = [];
+                // Diğer Depolar (Ayrı ayrı göster)
+                var hasOtherStock = false;
                 if (item.all_stocks && self.state.warehouses) {
                     self.state.warehouses.forEach(w => {
                         if (w.id == depoId) return;
                         var qty = item.all_stocks[w.id] || 0;
-                        otherTotal += qty;
                         if (qty > 0) {
-                            breakdown.push(`${w.name}: ${qty}`);
+                            hasOtherStock = true;
+                            // İsim uzunsa kısalt
+                            var shortName = w.name.length > 12 ? w.name.substring(0, 10) + '..' : w.name;
+                            sHtml += `
+                                <div class="other-stock-badge other-depo" title="${w.name} Stoğu">
+                                    <span class="os-label">${shortName}:</span>
+                                    <span class="os-val">${qty}</span>
+                                </div>
+                            `;
                         }
                     });
                 }
 
-                sHtml += `
-                    <div class="other-stock-badge other-depo" title="${breakdown.length > 0 ? breakdown.join(' | ') : 'Diğer depolarda stok yok'}">
-                        <span class="os-label">D. Depo:</span>
-                        <span class="os-val">${otherTotal}</span>
-                    </div>
-                `;
+                // Hiçbir diğer depoda stok yoksa "Diğer: 0" göster
+                if (!hasOtherStock) {
+                    sHtml += `
+                        <div class="other-stock-badge other-depo" title="Diğer depolarda stok yok">
+                            <span class="os-label">Diğer:</span>
+                            <span class="os-val">0</span>
+                        </div>
+                    `;
+                }
 
                 sHtml += '</div>';
                 return sHtml;
@@ -444,10 +453,7 @@
                             <div class="urun-ad">${p.name} ${isVariable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
                             <div class="urun-sku">${p.sku || 'SKU YOK'} | Toplam: ${totalGroupStock}</div>
                         </div>
-                        <div class="urun-ek-bilgi">
-                            ${!isVariable ? getOtherStocksHtml(p) : ''}
-                        </div>
-                        <div class="urun-aksiyonlar">
+                        <div class="urun-aksiyonlar" style="margin-left: auto; margin-right: 15px;">
                             ${isVariable ? `
                                 <button class="btn-barkod-toplu" title="Tüm varyasyonlar için barkod çıkart">
                                     <span>🏷️</span> Toplu Barkod
@@ -461,12 +467,18 @@
                                 <span>i</span>
                             </button>
                         </div>
-                        ${!isVariable ? `
-                        <div class="urun-stok ${isStockOut ? 'stok-bitti' : (isCritical ? 'stok-kritik' : 'stok-tamam')}">
-                            <span class="stok-sayi">${p.warehouse_stock}</span>
-                            <span class="stok-etiket">MEVCUT STOK</span>
+                        <div class="urun-stok-grup" style="display: flex; align-items: center; gap: 15px;">
+                            ${!isVariable ? `
+                            <div class="urun-ek-bilgi" style="flex: unset;">
+                                ${getOtherStocksHtml(p)}
+                            </div>
+                            <div class="stok-ayirici" style="width: 2px; height: 35px; background: var(--hk-border); opacity: 0.4; border-radius: 2px;"></div>
+                            <div class="urun-stok ${isStockOut ? 'stok-bitti' : (isCritical ? 'stok-kritik' : 'stok-tamam')}" style="min-width: 85px; text-align: right;">
+                                <span class="stok-sayi">${p.warehouse_stock}</span>
+                                <span class="stok-etiket">MEVCUT STOK</span>
+                            </div>
+                            ` : ''}
                         </div>
-                        ` : ''}
                         ${isVariable ? `<div class="expand-icon" style="${isOnlyProduct ? 'transform: rotate(180deg);' : ''}">▼</div>` : ''}
                     </div>
                 `;
@@ -496,17 +508,20 @@
                                     <div class="urun-ad">${v.name}</div>
                                     <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${v.warehouse_stock}</div>
                                 </div>
-                                <div class="urun-ek-bilgi">
-                                    ${getOtherStocksHtml(v)}
-                                </div>
-                                <div class="urun-aksiyonlar">
+                                <div class="urun-aksiyonlar" style="margin-left: auto; margin-right: 15px;">
                                     <button class="btn-barkod-tekli" title="Barkod çıkart">
                                         <span>🏷️</span> Barkod
                                     </button>
                                 </div>
-                                <div class="urun-stok ${v.warehouse_stock <= 0 ? 'stok-bitti' : (vCritical ? 'stok-kritik' : 'stok-tamam')}">
-                                    <span class="stok-sayi">${v.warehouse_stock}</span>
-                                    <span class="stok-etiket">STOK</span>
+                                <div class="urun-stok-grup" style="display: flex; align-items: center; gap: 15px;">
+                                    <div class="urun-ek-bilgi" style="flex: unset;">
+                                        ${getOtherStocksHtml(v)}
+                                    </div>
+                                    <div class="stok-ayirici" style="width: 2px; height: 35px; background: var(--hk-border); opacity: 0.4; border-radius: 2px;"></div>
+                                    <div class="urun-stok ${v.warehouse_stock <= 0 ? 'stok-bitti' : (vCritical ? 'stok-kritik' : 'stok-tamam')}" style="min-width: 85px; text-align: right;">
+                                        <span class="stok-sayi">${v.warehouse_stock}</span>
+                                        <span class="stok-etiket">STOK</span>
+                                    </div>
                                 </div>
                             </div>
                         `;
