@@ -169,9 +169,18 @@
                     var barkodTopluBtn = target.closest('.btn-barkod-toplu');
                     var barkodTekliBtn = target.closest('.btn-barkod-tekli');
                     var urunGitBtn = target.closest('.btn-urun-git');
+                    var imgTarget = target.closest('.urun-img') || target.closest('.variation-img');
                     var kart = target.closest('.terminal-urun-kart');
                     
                     if (!kart) return;
+
+                    // Resme Tıklama (Önizleme)
+                    if (imgTarget) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        self.openImagePreview(imgTarget.src);
+                        return;
+                    }
 
                     var id = parseInt(kart.dataset.id);
                     var vid = parseInt(kart.dataset.vid || 0);
@@ -618,6 +627,68 @@
                 btn.disabled = false;
                 btn.innerText = 'Hareketi Kaydet';
             }
+        },
+
+        /**
+         * Ürün resmine tıklanınca yüksek çözünürlüklü halini gösterir
+         */
+        openImagePreview: function(src) {
+            if (!src || src.includes('placeholder')) return;
+
+            let modal = document.getElementById('terminal-image-preview-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'terminal-image-preview-modal';
+                modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:999999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);cursor:zoom-out;';
+                
+                const loader = document.createElement('div');
+                loader.id = 'terminal-preview-loader';
+                loader.style.cssText = 'position:absolute;width:40px;height:40px;border:4px solid #fff;border-top:4px solid transparent;border-radius:50%;animation:hk-spin 1s linear infinite;';
+                
+                if (!document.getElementById('hk-spin-keyframes')) {
+                    const style = document.createElement('style');
+                    style.id = 'hk-spin-keyframes';
+                    style.innerHTML = '@keyframes hk-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+                    document.head.appendChild(style);
+                }
+
+                const img = document.createElement('img');
+                img.id = 'terminal-preview-img';
+                img.style.cssText = 'max-width:90%;max-height:90%;object-fit:contain;border-radius:12px;opacity:0;transition:opacity 0.3s;box-shadow:0 10px 40px rgba(0,0,0,0.5);';
+                
+                modal.appendChild(loader);
+                modal.appendChild(img);
+                document.body.appendChild(modal);
+
+                modal.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                });
+            }
+
+            const img = document.getElementById('terminal-preview-img');
+            const loader = document.getElementById('terminal-preview-loader');
+            
+            img.style.opacity = '0';
+            img.src = ''; 
+            loader.style.display = 'block';
+            modal.style.display = 'flex';
+            
+            // Thumbnail suffix temizle (-150x150 gibi)
+            const fullSrc = src.replace(/-\d+x\d+(\.[a-zA-Z]+)$/i, '$1');
+            
+            img.onload = function() {
+                loader.style.display = 'none';
+                img.style.opacity = '1';
+            };
+            img.onerror = function() {
+                loader.style.display = 'none';
+                img.style.opacity = '1';
+                if (img.src !== src) {
+                    img.src = src;
+                }
+            };
+            
+            img.src = fullSrc;
         }
     };
 
