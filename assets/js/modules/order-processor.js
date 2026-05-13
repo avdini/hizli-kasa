@@ -58,6 +58,11 @@
                         phoneInput.focus();
                         return;
                     }
+                // Yetki Kontrolü: Yönetme yetkisi olmayan depodan satış yapılamaz
+                var currentDepoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
+                if (!HK.DepoManager.canManageDepo(currentDepoId)) {
+                    HK.UIRenderer.showToast("Bu depodan satış yapma (yönetme) yetkiniz bulunmamaktadır!", "error", true);
+                    return;
                 }
 
                 self.toggleLoading(true);

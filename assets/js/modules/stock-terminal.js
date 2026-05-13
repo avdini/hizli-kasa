@@ -46,7 +46,7 @@
             this.initialized = true;
 
             // Depo değişince listeyi yenile
-            document.addEventListener('hkActiveDepoChanged', function() {
+            document.addEventListener('hkViewDepoChanged', function() {
                 self.state.currentPage = 1;
                 self.loadProducts();
             });
@@ -267,7 +267,7 @@
             if (!container) return;
 
             var depoId = (window.HizliKasa && HizliKasa.DepoManager)
-                ? HizliKasa.DepoManager.getActiveDepo()
+                ? HizliKasa.DepoManager.getViewDepo()
                 : null;
 
             if (!depoId) {
@@ -387,7 +387,7 @@
             }
 
             var depoId = (window.HizliKasa && HizliKasa.DepoManager)
-                ? HizliKasa.DepoManager.getActiveDepo()
+                ? HizliKasa.DepoManager.getViewDepo()
                 : null;
 
             var html = '';

@@ -17,7 +17,8 @@
         state: {
             view: [],          // [{id, name}] — görüntüleyebildiği depolar
             manageIds: [],     // [id, ...] — yönetebileceği depo ID'leri
-            activeDepoId: null,
+            activeDepoId: null, // Yönetim/Kasa deposu
+            viewDepoId: null,   // Ürünler sekmesi görüntüleme deposu
             isLoaded: false,
         },
 
@@ -33,23 +34,31 @@
             return this.state.activeDepoId;
         },
 
+        getViewDepo: function() {
+            return this.state.viewDepoId;
+        },
+
         /**
-         * Aktif depoyu günceller:
+         * Aktif depoyu (Yönetim/Kasa) günceller:
          * 1. state'e yazar
          * 2. localStorage'a yazar
          * 3. Sunucuya (user_meta) async olarak yazar
-         * 4. hkActiveDepoChanged event'ini tetikler
+         * 4. Görüntüleme deposunu da buna eşitler (Yönetim yetkisi görüntülemeyi kapsar)
+         * 5. hkActiveDepoChanged event'ini tetikler
          */
         setActiveDepo: function(depoId, silent) {
             var self = this;
             depoId = parseInt(depoId);
-            if (!depoId || !this.canViewDepo(depoId)) {
-                console.warn('HK DepoManager: Geçersiz veya yetkisiz depo ID:', depoId);
+            if (!depoId || !this.canManageDepo(depoId)) {
+                console.warn('HK DepoManager: Yönetim yetkisi olmayan veya geçersiz depo ID:', depoId);
                 return;
             }
 
             var prev = this.state.activeDepoId;
             this.state.activeDepoId = depoId;
+
+            // Yönetim deposu değişince görüntüleme deposunu da güncelle
+            this.setViewDepo(depoId, true);
 
             // 1. localStorage
             try {
@@ -73,6 +82,29 @@
             }
         },
 
+        /**
+         * Görüntüleme deposunu günceller (Sadece ürünler sekmesi için)
+         */
+        setViewDepo: function(depoId, silent) {
+            depoId = parseInt(depoId);
+            if (!depoId || !this.canViewDepo(depoId)) {
+                console.warn('HK DepoManager: Görüntüleme yetkisi olmayan veya geçersiz depo ID:', depoId);
+                return;
+            }
+
+            var prev = this.state.viewDepoId;
+            this.state.viewDepoId = depoId;
+
+            // UI güncelle
+            this._updateDropdownUI();
+
+            if (!silent && prev !== depoId) {
+                document.dispatchEvent(new CustomEvent('hkViewDepoChanged', {
+                    detail: { depoId: depoId, prevDepoId: prev }
+                }));
+            }
+        },
+
         canViewDepo: function(depoId) {
             if (!depoId) return false;
             // Admin tüm depoları görebilir (view listesi boş değilse)
@@ -86,6 +118,12 @@
 
         getActiveDepoName: function() {
             var id = this.state.activeDepoId;
+            var found = this.state.view.find(function(d) { return d.id === id; });
+            return found ? found.name : '---';
+        },
+
+        getViewDepoName: function() {
+            var id = this.state.viewDepoId;
             var found = this.state.view.find(function(d) { return d.id === id; });
             return found ? found.name : '---';
         },
@@ -132,6 +170,7 @@
                 }
 
                 self.state.activeDepoId = resolved;
+                self.state.viewDepoId = resolved; // Başlangıçta ikisi aynı
                 self.state.isLoaded = true;
 
                 // Sunucu cache'i ile localStorage'ı uyumlu tut
@@ -210,7 +249,7 @@
 
             // Yönetim rozeti
             if (readonlyBadge) {
-                readonlyBadge.style.display = self.canManageDepo(self.state.activeDepoId) ? 'none' : 'flex';
+                readonlyBadge.style.display = self.canManageDepo(self.state.viewDepoId) ? 'none' : 'flex';
             }
         },
 
@@ -238,7 +277,7 @@
                         : '<span class="depo-view-badge" title="Sadece görüntüleme">👁</span>');
                 item.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    self.setActiveDepo(d.id);
+                    self.setViewDepo(d.id);
                     var dropdown2 = document.getElementById('depo-dropdown');
                     var trigger2  = document.getElementById('depo-switcher-trigger');
                     if (dropdown2) dropdown2.style.display = 'none';
@@ -254,16 +293,16 @@
             var readonlyBadge = document.getElementById('depo-readonly-badge');
 
             if (nameEl) {
-                nameEl.textContent = this.getActiveDepoName();
+                nameEl.textContent = this.getViewDepoName();
             }
 
             // Dropdown aktif item'ı işaretle
             document.querySelectorAll('.depo-dropdown-item').forEach(function(el) {
-                el.classList.toggle('active', parseInt(el.dataset.depoId) === self.state.activeDepoId);
+                el.classList.toggle('active', parseInt(el.dataset.depoId) === self.state.viewDepoId);
             });
 
             // Yönetim rozeti
-            var isManage = this.canManageDepo(this.state.activeDepoId);
+            var isManage = this.canManageDepo(this.state.viewDepoId);
             if (readonlyBadge) {
                 readonlyBadge.style.display = isManage ? 'none' : 'flex';
             }
