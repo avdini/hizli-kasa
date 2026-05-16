@@ -76,9 +76,12 @@ class Hizli_Kasa_Mobile_Handler {
                 
                 // Kütüphaneler
                 wp_enqueue_script('html5-qrcode', 'https://cdn.jsdelivr.net/npm/html5-qrcode/html5-qrcode.min.js', array(), '2.3.8', true);
-                
+
+                // Önbellek Yıkıcı — Mobile fetch isteklerini de kapsar
+                wp_enqueue_script('kasa-cache-buster', HIZLI_KASA_URL . 'assets/js/modules/cache-buster.js', array(), $pos_version, true);
+
                 // Mobil JS
-                wp_enqueue_script('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/js/modules/mobile-inventory.js', array('html5-qrcode'), $pos_version, true);
+                wp_enqueue_script('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/js/modules/mobile-inventory.js', array('html5-qrcode', 'kasa-cache-buster'), $pos_version, true);
 
                 // Kullanıcının yetkili olduğu depoları çek
                 $view_depos = get_user_meta($user->ID, '_hizli_kasa_depo_ids_view', true);

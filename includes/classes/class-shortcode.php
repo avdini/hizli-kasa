@@ -104,6 +104,10 @@ function hizli_kasa_uygulamasi()
     // Chart.js Kütüphanesi (İstatistik Dashboardu)
     wp_enqueue_script('chartjs', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js', array(), '4.4.3', true);
 
+    // Önbellek Yıkıcı (Cache Buster) — HER ŞEYDEN ÖNCE yüklenmeli
+    // window.fetch'i wrap ederek tüm GET isteklerine ?_=timestamp ekler.
+    wp_enqueue_script('kasa-cache-buster', $js_base . 'modules/cache-buster.js', array(), $pos_version, true);
+
     wp_enqueue_script('kasa-print-manager', $js_base . 'modules/print-manager.js', array(), $pos_version, true);
     wp_enqueue_script('kasa-currency-mask', $js_base . 'modules/currency-mask.js', array(), $pos_version, true);
     wp_enqueue_script('kasa-cart-manager', $js_base . 'modules/cart-manager.js', array(), $pos_version, true);

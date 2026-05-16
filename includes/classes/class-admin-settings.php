@@ -1467,7 +1467,36 @@ function hizli_kasa_ayarlar_sayfasi()
                     <div class="card" style="max-width: 100%; padding: 20px;">
                         <h2 style="margin-top:0;">Önbellek (Cache) Kontrol Merkezi</h2>
                         <p>Sistemin ağır yük çeken kısımları için önbellekleme sürelerini ayarlayabilir ve yönetebilirsiniz.</p>
-                        
+
+                        <!-- Katman Durum Kartları -->
+                        <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px; background: #f0f9eb; border: 1px solid #c2e0b4; border-radius: 6px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px;">
+                                <span style="font-size: 20px; line-height: 1;">✅</span>
+                                <div>
+                                    <strong style="display: block; color: #1d2327; margin-bottom: 3px;">Sunucu Katmanı Koruması: AKTİF</strong>
+                                    <span style="font-size: 12px; color: #646970;">Tüm REST API yanıtlarına <code>no-store</code> ve <code>X-LiteSpeed-Cache-Control: no-cache</code> header'ları otomatik ekleniyor.</span>
+                                </div>
+                            </div>
+                            <div style="flex: 1; min-width: 200px; background: #f0f9eb; border: 1px solid #c2e0b4; border-radius: 6px; padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px;">
+                                <span style="font-size: 20px; line-height: 1;">✅</span>
+                                <div>
+                                    <strong style="display: block; color: #1d2327; margin-bottom: 3px;">Tarayıcı Katmanı Koruması: AKTİF</strong>
+                                    <span style="font-size: 12px; color: #646970;">Frontend'deki tüm GET isteklerine otomatik <code>?_=timestamp</code> parametresi ekleniyor. Tarayıcı hiçbir yanıtı cache'den servis edemez.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LiteSpeed Hosting Rehberi -->
+                        <div style="background: #fff8e1; border: 1px solid #ffe082; border-radius: 6px; padding: 14px 16px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 12px;">
+                            <span style="font-size: 20px; line-height: 1;">⚡</span>
+                            <div style="font-size: 13px; color: #5d4037;">
+                                <strong style="display: block; margin-bottom: 4px;">LiteSpeed Web Sunucusu Kullanıyorsanız</strong>
+                                Eklentimiz artık tüm API yanıtlarına <code>X-LiteSpeed-Cache-Control: no-cache</code> header'ı gönderiyor.
+                                Ancak LiteSpeed'in <strong>sayfa (HTML) önbelleği</strong> hosting panelinizden (cPanel / CyberPanel → LiteSpeed Cache Manager) ayrıca kontrol edilmelidir.
+                                Eklentinin kendi önbellek toggle'ı yalnızca eklentinin iç transient sistemini (arama, raporlar, depo, yetki) etkiler.
+                            </div>
+                        </div>
+
                         <form method="post" action="options.php">
                             <?php settings_fields('hizli_kasa_cache_grubu'); ?>
                             

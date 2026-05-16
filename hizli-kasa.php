@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 6.11.12
+ * Version: 6.11.13
  * Author: Seyfullah Kurt
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH'))
     exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '6.11.12');
+define('HIZLI_KASA_VERSION', '6.11.13');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -123,3 +123,28 @@ function hizli_kasa_invalidate_user_perms_cache($user_id) {
 }
 add_action('profile_update', 'hizli_kasa_invalidate_user_perms_cache');
 add_action('user_register', 'hizli_kasa_invalidate_user_perms_cache');
+
+/**
+ * ==========================================================================
+ * GLOBAL REST API ÖNBELLEK ENGELLEYİCİ
+ * ==========================================================================
+ * Tüm hizli-kasa/v1/* endpoint yanıtlarına otomatik no-cache header'ları
+ * ekler. LiteSpeed, Cloudflare ve tarayıcı önbelleğini devre dışı bırakır.
+ * Yeni eklenen endpoint'ler de otomatik olarak bu koruma kapsamına girer.
+ */
+add_filter('rest_pre_serve_request', function ($served, $result, $request, $server) {
+    $route = $request->get_route();
+
+    if (strpos($route, '/hizli-kasa/v1/') === 0) {
+        if (!headers_sent()) {
+            // Tarayıcı ve proxy önbelleğini engelle
+            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+            header('Pragma: no-cache');
+            header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+            // LiteSpeed Web Sunucusu özel direktifi
+            header('X-LiteSpeed-Cache-Control: no-cache');
+        }
+    }
+
+    return $served;
+}, 10, 4);
