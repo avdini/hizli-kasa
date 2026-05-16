@@ -22,7 +22,16 @@ class Hizli_Kasa_Barcode_Helper {
         $parent = ($product->is_type('variation')) ? wc_get_product($parent_id) : $product;
 
         // 1. Barkod No (SKU yoksa ID)
-        $barcode_no = $product->get_sku() ?: (string)$id;
+        // WooCommerce varyasyonlarda SKU boşsa otomatik olarak parent SKU'yu miras alır.
+        // Varyasyonun kendi SKU'su yoksa parent SKU yerine varyasyonun kendi ID'sini (child ID) kullanıyoruz.
+        $sku = '';
+        if ($product->is_type('variation')) {
+            $sku = get_post_meta($id, '_sku', true);
+        } else {
+            $sku = $product->get_sku();
+        }
+
+        $barcode_no = $sku ?: (string)$id;
 
         // 2. Model (Ana SKU)
         $model_no = $parent->get_sku() ?: (string)$parent_id;
