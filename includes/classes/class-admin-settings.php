@@ -140,6 +140,9 @@ function hizli_kasa_ayarlari_kaydet()
 {
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_siparis_durumu');
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_yetkili_roller');
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_fallback_sku_to_id', array(
+        'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
+    ));
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_yuvarlama_aktif', array(
         'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
     ));
@@ -1418,6 +1421,17 @@ function hizli_kasa_ayarlar_sayfasi()
                                     <option value="5" <?php selected($yuvarlama_modu, '5'); ?>>5 TL'nin katına yuvarla</option>
                                     <option value="10" <?php selected($yuvarlama_modu, '10'); ?>>10 TL'nin katına yuvarla</option>
                                 </select>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">SKU Eksikse Ürün ID Kullan</th>
+                            <td>
+                                <?php $fallback_sku = get_option('hizli_kasa_fallback_sku_to_id', '0'); ?>
+                                <label>
+                                    <input type="checkbox" name="hizli_kasa_fallback_sku_to_id" value="1" <?php checked($fallback_sku, '1'); ?>>
+                                    SKU'su olmayan ürünlerde ürün ID'sini SKU olarak kabul et
+                                </label>
+                                <p class="description">Barkod yazdırma ekranında ürünün SKU'su yoksa uyarı vermek yerine ürün ID'si barkod numarası olarak kullanılır.</p>
                             </td>
                         </tr>
                     </table>

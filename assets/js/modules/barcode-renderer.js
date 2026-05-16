@@ -58,13 +58,16 @@
 
             document.getElementById('barkod-modal-baslik').innerText = 'Barkod Yazdır';
             
-            var hasSku = product.sku && product.sku.trim() !== '';
+            var actualSku = product.sku && product.sku.trim() !== '';
+            var fallbackEnabled = typeof kasaAyar !== 'undefined' && kasaAyar.fallbackSkuToId === '1';
+            var hasSku = actualSku || fallbackEnabled;
+            var displaySku = actualSku ? product.sku : (fallbackEnabled ? (product.variation_id || product.id) : 'SKU TANIMLANMAMIŞ');
             
             container.innerHTML = `
                 <div class="barkod-item-row ${!hasSku ? 'missing-sku' : ''}" data-id="${product.id}" data-vid="${product.variation_id || 0}">
                     <div class="item-info">
                         <span class="item-name">${product.name} ${!hasSku ? '<span class="sku-warning-badge">SKU EKSİK</span>' : ''}</span>
-                        <span class="item-sku">${product.sku || 'SKU TANIMLANMAMIŞ'}</span>
+                        <span class="item-sku">${displaySku}</span>
                     </div>
                     <div class="item-qty-input">
                         <label>Adet:</label>
@@ -313,14 +316,17 @@
             
             var html = '';
             variations.forEach(v => {
-                var hasSku = v.sku && v.sku.trim() !== '';
+                var actualSku = v.sku && v.sku.trim() !== '';
+                var fallbackEnabled = typeof kasaAyar !== 'undefined' && kasaAyar.fallbackSkuToId === '1';
+                var hasSku = actualSku || fallbackEnabled;
+                var displaySku = actualSku ? v.sku : (fallbackEnabled ? v.id : 'SKU TANIMLANMAMIŞ');
                 var defaultQty = hasSku ? Math.max(0, Math.ceil(v.warehouse_stock)) : 0;
 
                 html += `
                     <div class="barkod-item-row ${!hasSku ? 'missing-sku' : ''}" data-id="${parentProduct.id}" data-vid="${v.id}">
                         <div class="item-info">
                             <span class="item-name">${v.name} ${!hasSku ? '<span class="sku-warning-badge">SKU EKSİK</span>' : ''}</span>
-                            <span class="item-sku">${v.sku || 'SKU TANIMLANMAMIŞ'} | Stok: ${v.warehouse_stock}</span>
+                            <span class="item-sku">${displaySku} | Stok: ${v.warehouse_stock}</span>
                         </div>
                         <div class="item-qty-input">
                             <label>Adet:</label>
