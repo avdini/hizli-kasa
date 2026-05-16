@@ -389,7 +389,8 @@
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'Yazıcıya Gönder';
-                document.getElementById('barkod-yazdir-modal').style.display = 'none';
+                // Kullanıcı isteği üzerine: Yazdırma işleminden sonra modal otomatik KAPANMASIN, açık kalsın.
+                // document.getElementById('barkod-yazdir-modal').style.display = 'none';
             }
         },
 
