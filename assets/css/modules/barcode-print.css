@@ -105,27 +105,35 @@
 
 /* YAZDIRMA MEDYASI */
 @media print {
-    body.print-mode-barcode * {
-        visibility: hidden;
+    body.print-mode-barcode {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        background: #fff !important;
     }
 
-    body.print-mode-barcode #hk-barcode-print-area,
-    body.print-mode-barcode #hk-barcode-print-area * {
-        visibility: visible;
+    /* Sayfadaki diğer tüm ana elemanları DOM akışından tamamen çıkar (sadece gizlemekle kalma, yer kaplamasınlar) */
+    body.print-mode-barcode > * {
+        display: none !important;
     }
 
-    body.print-mode-barcode #hk-barcode-print-area {
+    /* Sadece yazdırma alanını görünür ve aktif kıl */
+    body.print-mode-barcode > #hk-barcode-print-area {
         display: block !important;
         position: absolute;
         left: 0;
         top: 0;
         width: 50mm;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     /* Etiket Tasarımı (50x35mm) */
     .barcode-label {
         width: 50mm;
         height: 35mm;
+        max-height: 35mm;
         padding: 2mm;
         box-sizing: border-box;
         background: #fff;
@@ -133,8 +141,15 @@
         display: flex;
         flex-direction: column;
         page-break-after: always;
+        break-after: page;
         overflow: hidden;
         font-family: 'Inter', sans-serif;
+    }
+
+    /* KANONİK ÇÖZÜM: Son etiketten sonra sayfa kesmesi (page-break) yapılmasını engeller, ekstra boş sayfayı yok eder */
+    .barcode-label:last-child {
+        page-break-after: avoid !important;
+        break-after: auto !important;
     }
 
     .label-header {
