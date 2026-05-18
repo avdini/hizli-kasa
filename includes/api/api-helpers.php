@@ -314,26 +314,7 @@ function hizli_kasa_get_aws_ranked_product_ids($search, $depo_id = 0)
         }
     }
 
-    if (empty($ranked_ids) || !$depo_id) {
-        return $ranked_ids;
-    }
-
-    $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
-    $allowed_ids = $wpdb->get_col(
-        $wpdb->prepare(
-            "SELECT DISTINCT product_id FROM $stok_table WHERE location_id = %d AND product_id IN (" . implode(',', array_map('intval', $ranked_ids)) . ")",
-            $depo_id
-        )
-    );
-
-    if (empty($allowed_ids)) {
-        return [];
-    }
-
-    $allowed_map = array_fill_keys(array_map('intval', $allowed_ids), true);
-    return array_values(array_filter($ranked_ids, function ($id) use ($allowed_map) {
-        return isset($allowed_map[(int) $id]);
-    }));
+    return $ranked_ids;
 }
 
 /**
@@ -349,14 +330,8 @@ function hizli_kasa_get_local_ranked_product_ids($search, $depo_id = 0, $limit =
     }
 
     $terms = hizli_kasa_prepare_search_terms($search);
-    $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
-
     $join_stock = '';
     $stock_params = [];
-    if ($depo_id > 0) {
-        $join_stock = " INNER JOIN $stok_table sk_search ON (sk_search.product_id = p.ID AND sk_search.location_id = %d)";
-        $stock_params[] = $depo_id;
-    }
 
     $or_parts = [];
     $score_parts = [];

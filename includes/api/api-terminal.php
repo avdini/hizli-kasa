@@ -44,7 +44,8 @@ function hizli_kasa_terminal_products($request)
     $where = "p.post_status IN ('publish', 'private') AND p.post_type = 'product'";
     $join_extra = "";
     if ($depo_id) {
-        $join_extra .= $wpdb->prepare(" INNER JOIN $stok_table sk_filter ON (sk_filter.product_id = p.ID AND sk_filter.location_id = %d)", $depo_id);
+        $stock_join_type = !empty($s) ? 'LEFT JOIN' : 'INNER JOIN';
+        $join_extra .= $wpdb->prepare(" $stock_join_type $stok_table sk_filter ON (sk_filter.product_id = p.ID AND sk_filter.location_id = %d)", $depo_id);
     }
 
     $params = [];
