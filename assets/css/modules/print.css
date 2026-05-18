@@ -31,6 +31,34 @@
     padding: 2px 0;
 }
 
+/* --- Fiş ve Rapor Fişi Kalem Stilleri --- */
+.fis-item-td-left {
+    padding: 1px 0;
+    line-height: 1.1;
+}
+
+.fis-item-name {
+    font-weight: bold;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.fis-item-sku-qty {
+    font-size: 10px;
+}
+
+.fis-item-td-right {
+    text-align: right;
+    padding: 1px 0 1px 10px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.fis-item-price {
+    font-weight: bold;
+    font-size: 13px;
+}
+
 @media print {
     /* 1. Sayfa Marjlarını ve Konumu Sıfırla */
     @page {

@@ -166,3 +166,72 @@
     border-left: 4px solid var(--hk-accent);
     color: var(--hk-text-main);
 }
+
+/* --- Masraf Yönetimi Ek Stiller --- */
+.masraf-form-group {
+    margin-bottom: 20px;
+}
+
+#masraf-tutar {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--hk-success);
+}
+
+.masraf-payment-methods {
+    display: flex;
+    gap: 10px;
+}
+
+#masraf-aciklama {
+    resize: none;
+}
+
+.masraf-table-wrapper {
+    overflow-x: auto;
+}
+
+.masraf-empty-row {
+    padding: 40px;
+    text-align: center;
+    color: var(--hk-text-muted);
+}
+
+#gunluk-toplam-masraf {
+    color: var(--hk-danger);
+}
+
+.payment-method-row {
+    flex: 1; 
+    border: 2px solid var(--hk-border); 
+    padding: 12px; 
+    border-radius: 10px; 
+    cursor: pointer; 
+    text-align: center; 
+    font-weight: 800; 
+    transition: all 0.2s;
+    background: var(--hk-bg-card);
+    color: var(--hk-text-main);
+}
+
+.payment-method-row:has(input:checked) {
+    background: var(--hk-accent) !important;
+    color: white !important;
+    border-color: var(--hk-accent) !important;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+}
+
+.masraf-sil-btn {
+    background: var(--hk-danger);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.masraf-sil-btn:hover {
+    opacity: 0.8;
+}

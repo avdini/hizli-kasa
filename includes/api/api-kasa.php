@@ -44,7 +44,7 @@ function hizli_kasa_ozel_arama($data)
     $found_ids = [];
     $cache_aktif = get_option('hizli_kasa_cache_aktif', '1') === '1';
     $cache_version = get_option('hizli_kasa_search_cache_version', '1');
-    $cache_key = 'hk_search_' . $cache_version . '_' . md5($s . '_' . $exact);
+    $cache_key = 'hk_search_' . $cache_version . '_' . md5($s . '_' . $exact . '_' . (int) $depo_id);
     
     if ($cache_aktif) {
         $found_ids = get_transient($cache_key);
@@ -62,32 +62,8 @@ function hizli_kasa_ozel_arama($data)
                 AND p.post_status IN ('publish', 'private')
                 LIMIT 10", $s));
         } else {
-            // 1. Advanced Woo Search Entegrasyonu
-            if (class_exists('AWS_Search')) {
-                $aws_search = new AWS_Search();
-                $aws_results = $aws_search->search($s);
-                if (!empty($aws_results['products'])) {
-                    foreach ($aws_results['products'] as $p_item) {
-                        $found_ids[] = (int) $p_item['id'];
-                    }
-                }
-            } else {
-                // 2. Fallback Arama (Post Title ve SKU)
-                $words = explode(' ', $s);
-                $where_parts = [];
-                foreach ($words as $word) {
-                    if (empty($word) || mb_strlen($word) < 2)
-                        continue;
-                    $like = '%' . $wpdb->esc_like($word) . '%';
-                    $where_parts[] = $wpdb->prepare("(p.post_title LIKE %s OR pm.meta_value LIKE %s)", $like, $like);
-                }
-                if (!empty($where_parts)) {
-                    $where_clause = implode(' AND ', $where_parts);
-                    $found_ids = $wpdb->get_col("SELECT p.ID FROM {$wpdb->posts} p 
-                        LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_sku'
-                        WHERE p.post_status IN ('publish', 'private') AND p.post_type IN ('product', 'product_variation') AND ($where_clause) LIMIT 30");
-                }
-            }
+            // AWS public indeksinden gelenleri, Hızlı Kasa'ya özel private-aware yerel aramayla birleştir.
+            $found_ids = hizli_kasa_get_terminal_search_product_ids($s, (int) $depo_id);
         }
 
         // Sadece ID listesini önbelleğe al (Stoklar hariç)

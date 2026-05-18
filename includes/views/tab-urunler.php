@@ -111,7 +111,7 @@ if (!defined('ABSPATH')) exit;
 </div>
 
 <!-- Stok Düzenleme Modalı -->
-<div id="stok-duzenle-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10007; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+<div id="stok-duzenle-modal" class="modal-cerceve" style="display:none;">
     <div class="modal-icerik glass">
         <h3 id="modal-urun-adi">Ürün Adı</h3>
         <p id="modal-urun-detay">SKU: ---</p>
@@ -132,7 +132,7 @@ if (!defined('ABSPATH')) exit;
         </div>
 
         <div class="modal-butonlar">
-            <p id="modal-readonly-msg" style="display:none; color:#f59e0b; font-size:12px; margin:0 0 8px; text-align:center;">👁 Bu depoda sadece görüntüleme yetkiniz var. Stok değiştiremezsiniz.</p>
+            <p id="modal-readonly-msg" style="display:none;">👁 Bu depoda sadece görüntüleme yetkiniz var. Stok değiştiremezsiniz.</p>
             <button id="stok-kaydet-iptal" class="btn-secondary">İptal</button>
             <button id="stok-kaydet-onay" class="btn-primary">Hareketi Kaydet</button>
         </div>
@@ -140,7 +140,7 @@ if (!defined('ABSPATH')) exit;
 </div>
 
 <!-- Barkod Yazdırma Modalı -->
-<div id="barkod-yazdir-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10008; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
+<div id="barkod-yazdir-modal" class="modal-cerceve" style="display:none;">
     <div class="modal-icerik glass barkod-modal-genis">
         <div class="modal-baslik-alan">
             <h3 id="barkod-modal-baslik">Barkod Yazdır</h3>
@@ -165,20 +165,20 @@ if (!defined('ABSPATH')) exit;
 </div>
 
 <!-- Mobil Araç QR Kod Modalı -->
-<div id="mobil-qr-modal" class="modal-cerceve" style="display:none; position:fixed; z-index:10009; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center;">
-    <div class="modal-icerik glass text-center" style="max-width: 400px; padding: 30px; text-align: center;">
-        <h3 style="margin-bottom: 15px;">Mobil Envanter Aracı</h3>
-        <p style="color: #94a3b8; font-size: 14px;">Aşağıdaki kodu telefonunuzun kamerasından okutarak mobil araca hızlıca erişebilirsiniz.</p>
+<div id="mobil-qr-modal" class="modal-cerceve" style="display:none;">
+    <div class="modal-icerik glass mobil-qr-icerik">
+        <h3>Mobil Envanter Aracı</h3>
+        <p>Aşağıdaki kodu telefonunuzun kamerasından okutarak mobil araca hızlıca erişebilirsiniz.</p>
         
-        <div id="qr-code-display" style="background: white; padding: 15px; border-radius: 12px; margin: 20px auto; display: inline-block;">
+        <div id="qr-code-display">
             <!-- QR Kod Buraya Gelecek -->
         </div>
 
-        <div style="margin-top: 15px; font-size: 13px; color: #6366f1;">
+        <div class="mobile-tool-url-wrapper">
             Link: <span id="mobile-tool-url-text">...</span>
         </div>
 
-        <div class="modal-butonlar" style="margin-top: 25px; justify-content: center;">
+        <div class="modal-butonlar modal-butonlar-center">
             <button id="close-qr-modal" class="btn-secondary">Kapat</button>
         </div>
     </div>

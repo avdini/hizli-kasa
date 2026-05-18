@@ -559,3 +559,80 @@
     margin-bottom: 0 !important;
     cursor: pointer;
 }
+
+/* --- Global Modal Çerçeve ve Özel Z-Index Tanımları --- */
+.modal-cerceve {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    align-items: center;
+    justify-content: center;
+}
+
+#stok-uyari-modal { z-index: 10000; }
+#iskonto-modal { z-index: 10001; }
+#fis-onay-modal { z-index: 10001; background: rgba(0,0,0,0.9); }
+#gun-sonu-modal { z-index: 10002; }
+#odeme-bol-modal { z-index: 10005; }
+#manuel-urun-modal, #anlik-kasa-modal, #urun-arama-modal { z-index: 10006; }
+#stok-duzenle-modal { z-index: 10007; }
+#order-edit-modal, #barkod-yazdir-modal { z-index: 10008; }
+#mobil-qr-modal { z-index: 10009; }
+
+.modal-header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* --- Modal İçerik ve Özel Alan Stilleri --- */
+.stok-uyari-icerik { max-width: 500px; width: 90%; }
+.stok-uyari-icerik h3 { color: var(--hk-warning); }
+.stok-uyari-not { font-size: 13px; color: var(--hk-text-muted); background: var(--hk-bg-hover); padding: 10px; border-radius: 8px; border-left: 4px solid var(--hk-warning); }
+.stok-uyari-btn-cancel { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: var(--hk-border); color: var(--hk-text-main); }
+.stok-uyari-btn-confirm { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background: var(--hk-warning); color: white; }
+
+.iskonto-input-lg { font-size: 24px; text-align: center; font-weight: 800; color: var(--hk-text-main); }
+.iskonto-input-danger { font-size: 24px; text-align: center; font-weight: 800; color: var(--hk-danger); }
+.modal-btn-cancel { background: var(--hk-bg-hover); color: var(--hk-text-main); border: 1px solid var(--hk-border); }
+
+.modal-icerik-sm { width: 450px !important; }
+.modal-icerik-md { width: 500px !important; }
+.modal-icerik-lg { width: 90% !important; max-width: 800px !important; }
+.modal-icerik-xl { width: 900px !important; max-height: 85vh; display: flex; flex-direction: column; }
+.modal-icerik-flex { width: 800px !important; max-height: 90vh; overflow-y: auto; }
+.modal-icerik-mini { width: 400px !important; }
+
+.manuel-fiyat-input { font-size: 20px; font-weight: 800; color: var(--hk-success); }
+.urun-arama-input { padding-left: 45px; }
+
+.fis-onay-icerik { text-align: center; padding: 50px; }
+.fis-onay-ikon { font-size: 80px; color: var(--hk-success); margin-bottom: 30px; }
+.fis-onay-baslik { color: var(--hk-text-main); margin-bottom: 15px; font-weight: 800; }
+.fis-onay-sub { font-size: 20px; color: var(--hk-text-muted); }
+.fis-yazdir-btn { margin-bottom: 10px; padding: 18px; }
+.fis-kapat-btn { width: 100%; padding: 15px; background: var(--hk-bg-hover); color: var(--hk-text-main); border: 1px solid var(--hk-border); border-radius: 10px; cursor: pointer; font-weight: 700; }
+
+.gun-sonu-yukleniyor { text-align: center; padding: 40px; }
+#gun-sonu-icerik { overflow-y: auto; flex: 1; color: var(--hk-text-main); }
+.gun-sonu-btn-yazdir { padding: 12px; width: auto; min-width: 150px; background: var(--hk-success); border-color: var(--hk-success); }
+
+.modal-icerik-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--hk-border); padding-bottom: 10px; }
+.loading-text { text-align: center; padding: 20px; }
+
+.anlik-kasa-header { margin-bottom: 20px; border-bottom: 1px solid var(--hk-border); padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+.anlik-kasa-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 16px; }
+.anlik-kasa-total { display: flex; justify-content: space-between; margin-top: 20px; padding-top: 15px; border-top: 2px solid var(--hk-border); font-size: 18px; font-weight: bold; color: var(--hk-success); }
+.anlik-kasa-note { font-size: 11px; color: var(--hk-text-muted); margin-top: 15px; text-align: center; font-style: italic; }
+
+#modal-readonly-msg { color: #f59e0b; font-size: 12px; margin: 0 0 8px; text-align: center; }
+.mobil-qr-icerik { max-width: 400px; padding: 30px; text-align: center; }
+.mobil-qr-icerik h3 { margin-bottom: 15px; }
+.mobil-qr-icerik p { color: #94a3b8; font-size: 14px; }
+#qr-code-display { background: white; padding: 15px; border-radius: 12px; margin: 20px auto; display: inline-block; }
+.mobile-tool-url-wrapper { margin-top: 15px; font-size: 13px; color: #6366f1; }
+.modal-butonlar-center { margin-top: 25px; justify-content: center; }

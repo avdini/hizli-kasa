@@ -48,8 +48,8 @@ if (!defined('ABSPATH'))
             <!-- Başlık Alanı -->
             <div class="kasa-baslik">
                 <h2 id="durum">Kasa Hazır</h2>
-                <div class="kasa-baslik-sag" style="display: flex; gap: 10px; align-items: center;">
-                    <button id="anlik-kasa-buton" class="ust-buton-kucuk" style="background: var(--hk-bg-hover); color: var(--hk-text-main); border: 1px solid var(--hk-border); display: flex; align-items: center; gap: 6px;">
+                <div class="kasa-baslik-sag">
+                    <button id="anlik-kasa-buton" class="ust-buton-kucuk">
                         <span>📊</span> <span id="anlik-kasa-etiket"></span> Kasa: <strong id="anlik-kasa-toplam-text">...</strong>
                     </button>
                     <button id="manuel-urun-buton" class="ust-buton-kucuk">El ile Ürün Ekle</button>
@@ -75,12 +75,11 @@ if (!defined('ABSPATH'))
                 <div class="toplam-degerler">
                 <div class="toplam-satir" id="liste-toplami-satiri">
                     <span class="toplam-etiket">ETİKET TOPLAMI:</span>
-                    <span id="liste-toplami-deger" style="font-size: 18px; font-weight: bold; color: #95a5a6;">0.00
-                        TL</span>
+                    <span id="liste-toplami-deger">0.00 TL</span>
                 </div>
                 <div class="toplam-satir" id="ara-toplam-satiri">
                     <span class="toplam-etiket">ARA TOPLAM:</span>
-                    <span id="ara-toplam-deger" style="font-size: 20px; font-weight: bold; color: #7f8c8d;">0.00 TL</span>
+                    <span id="ara-toplam-deger">0.00 TL</span>
                 </div>
                 <div class="toplam-satir" id="nakit-indirim-satiri" style="display:none !important;">
                     <span class="toplam-etiket" id="nakit-indirim-etiket">İNDİRİM (%5):</span>

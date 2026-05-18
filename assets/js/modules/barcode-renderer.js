@@ -310,7 +310,7 @@
             var parentProduct = this.state.currentProduct;
             
             if (variations.length === 0) {
-                container.innerHTML = '<p style="text-align:center; padding:20px; color:var(--hk-text-muted);">Filtrelere uygun varyasyon bulunamadı.</p>';
+                container.innerHTML = '<p class="barkod-empty-msg">Filtrelere uygun varyasyon bulunamadı.</p>';
                 return;
             }
             

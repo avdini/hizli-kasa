@@ -103,6 +103,12 @@
     display: none;
 }
 
+.barkod-empty-msg {
+    text-align: center;
+    padding: 20px;
+    color: var(--hk-text-muted);
+}
+
 /* YAZDIRMA MEDYASI */
 @media print {
     body.print-mode-barcode {

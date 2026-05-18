@@ -1,8 +1,8 @@
 <?php if (!defined('ABSPATH')) exit; ?>
-<div class="hk-tab-container" style="padding: 20px; height: 100%; overflow-y: auto; box-sizing: border-box;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 2px solid var(--hk-border); padding-bottom: 15px;">
-        <h2 style="margin:0;">📊 Detaylı Raporlar</h2>
-        <div class="rapor-filtre-bar" style="display:flex; gap:10px;">
+<div class="hk-tab-container rapor-tab-container">
+    <div class="rapor-baslik-alan">
+        <h2>📊 Detaylı Raporlar</h2>
+        <div class="rapor-filtre-bar">
             <input type="date" id="rapor-tarih-bas" class="hk-input" value="<?php echo date('Y-m-d'); ?>">
             <input type="date" id="rapor-tarih-bit" class="hk-input" value="<?php echo date('Y-m-d'); ?>">
             <button id="rapor-yenile" class="hk-btn-primary">Sorgula</button>
@@ -10,7 +10,7 @@
     </div>
 
     <!-- Alt Sekme Navigasyonu -->
-    <div class="rapor-alt-sekmeler" style="display:flex; gap:10px; margin-bottom:20px;">
+    <div class="rapor-alt-sekmeler">
         <button class="rapor-alt-btn aktif" data-target="rapor-tum-siparisler">🛍️ Tüm Siparişler</button>
         <button class="rapor-alt-btn" data-target="rapor-iade-listesi">🔙 İadeler</button>
         <button class="rapor-alt-btn" data-target="rapor-siparis-duzenleme">✏️ Sipariş Düzenlemeleri</button>
@@ -20,10 +20,10 @@
 
     <!-- Rapor İçerik Alanları -->
     <div id="rapor-tum-siparisler" class="rapor-icerik-paneli aktif">
-        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="margin:0; color:var(--hk-accent);">Tüm Kasa Siparişleri</h3>
-                <input type="text" id="order-search-input" class="hk-input" placeholder="Sipariş ID veya Ürün Ara..." style="width:250px;">
+        <div class="rapor-kart">
+            <div class="rapor-kart-header">
+                <h3 class="rapor-kart-title">Tüm Kasa Siparişleri</h3>
+                <input type="text" id="order-search-input" class="hk-input rapor-arama-input" placeholder="Sipariş ID veya Ürün Ara...">
             </div>
             
             <table class="gs-tablo" id="all-orders-table">
@@ -38,7 +38,7 @@
                     </tr>
                 </thead>
                 <tbody id="all-orders-body">
-                    <tr><td colspan="6" style="text-align:center; padding:40px;">Sorgulama yapın...</td></tr>
+                    <tr><td colspan="6" class="rapor-empty-td">Sorgulama yapın...</td></tr>
                 </tbody>
             </table>
             <div id="all-orders-pagination" class="hk-pagination"></div>
@@ -46,10 +46,10 @@
     </div>
 
     <div id="rapor-iade-listesi" class="rapor-icerik-paneli">
-        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="margin:0; color:var(--hk-accent);">İade Kayıtları</h3>
-                <input type="text" id="refund-search-input" class="hk-input" placeholder="İade Ara..." style="width:250px;">
+        <div class="rapor-kart">
+            <div class="rapor-kart-header">
+                <h3 class="rapor-kart-title">İade Kayıtları</h3>
+                <input type="text" id="refund-search-input" class="hk-input rapor-arama-input" placeholder="İade Ara...">
             </div>
             
             <table class="gs-tablo" id="refund-list-table">
@@ -64,7 +64,7 @@
                     </tr>
                 </thead>
                 <tbody id="refund-list-body">
-                    <tr><td colspan="6" style="text-align:center; padding:40px;">Sorgulama yapın...</td></tr>
+                    <tr><td colspan="6" class="rapor-empty-td">Sorgulama yapın...</td></tr>
                 </tbody>
             </table>
             <div id="refund-list-pagination" class="hk-pagination"></div>
@@ -72,9 +72,9 @@
     </div>
 
     <div id="rapor-siparis-duzenleme" class="rapor-icerik-paneli">
-        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            <h3 style="margin-top:0; color:var(--hk-accent);">Sipariş Müdahaleleri ve Denetim Kayıtları</h3>
-            <p style="color:var(--hk-text-muted); font-size:14px; margin-bottom:20px;">Kasiyerler tarafından yapılan miktar azaltma, ürün silme ve ödeme yöntemi değişiklikleri burada listelenir.</p>
+        <div class="rapor-kart">
+            <h3 class="rapor-kart-title">Sipariş Müdahaleleri ve Denetim Kayıtları</h3>
+            <p class="rapor-kart-desc">Kasiyerler tarafından yapılan miktar azaltma, ürün silme ve ödeme yöntemi değişiklikleri burada listelenir.</p>
             
             <table class="gs-tablo" id="edit-logs-table">
                 <thead>
@@ -87,18 +87,18 @@
                     </tr>
                 </thead>
                 <tbody id="edit-logs-body">
-                    <tr><td colspan="5" style="text-align:center; padding:40px;">Veriler yükleniyor...</td></tr>
+                    <tr><td colspan="5" class="rapor-empty-td">Veriler yükleniyor...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <div id="rapor-gun-sonu-arsivi" class="rapor-icerik-paneli">
-        <div style="background: var(--hk-bg-card); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <div class="rapor-kart">
+            <div class="rapor-kart-header">
                 <div>
-                    <h3 style="margin:0; color:var(--hk-accent);">Gün Sonu Arşivi</h3>
-                    <p style="color:var(--hk-text-muted); font-size:13px; margin:5px 0 0;">Geçmiş tarihlere ait gün sonu raporlarını buradan görüntüleyebilir ve yazdırabilirsiniz.</p>
+                    <h3 class="rapor-kart-title">Gün Sonu Arşivi</h3>
+                    <p class="rapor-kart-sub">Geçmiş tarihlere ait gün sonu raporlarını buradan görüntüleyebilir ve yazdırabilirsiniz.</p>
                 </div>
             </div>
             
@@ -114,7 +114,7 @@
                     </tr>
                 </thead>
                 <tbody id="day-end-history-body">
-                    <tr><td colspan="6" style="text-align:center; padding:40px;">Veriler yükleniyor...</td></tr>
+                    <tr><td colspan="6" class="rapor-empty-td">Veriler yükleniyor...</td></tr>
                 </tbody>
             </table>
         </div>

@@ -535,3 +535,75 @@
 #hizli-kasa-app.theme-dark .meta-value {
     color: #f1f5f9;
 }
+
+/* --- Raporlar Sekmesi Ek Düzen Stilleri --- */
+.rapor-tab-container {
+    padding: 20px;
+    height: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.rapor-baslik-alan {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-bottom: 2px solid var(--hk-border);
+    padding-bottom: 15px;
+}
+
+.rapor-baslik-alan h2 {
+    margin: 0;
+}
+
+.rapor-filtre-bar {
+    display: flex;
+    gap: 10px;
+}
+
+.rapor-alt-sekmeler {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.rapor-kart {
+    background: var(--hk-bg-card);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--hk-shadow-md);
+}
+
+.rapor-kart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.rapor-kart-title {
+    margin: 0;
+    color: var(--hk-accent);
+}
+
+.rapor-arama-input {
+    width: 250px;
+}
+
+.rapor-empty-td {
+    text-align: center;
+    padding: 40px;
+}
+
+.rapor-kart-desc {
+    color: var(--hk-text-muted);
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.rapor-kart-sub {
+    color: var(--hk-text-muted);
+    font-size: 13px;
+    margin: 5px 0 0;
+}

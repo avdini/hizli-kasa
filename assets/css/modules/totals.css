@@ -245,3 +245,31 @@
         max-width: calc(50% - 2.5px) !important;
     }
 }
+
+/* --- Kasa Sekmesi Ek Düzen Stilleri --- */
+.kasa-baslik-sag {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+#anlik-kasa-buton {
+    background: var(--hk-bg-hover);
+    color: var(--hk-text-main);
+    border: 1px solid var(--hk-border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#liste-toplami-deger {
+    font-size: 18px;
+    font-weight: bold;
+    color: #95a5a6;
+}
+
+#ara-toplam-deger {
+    font-size: 20px;
+    font-weight: bold;
+    color: #7f8c8d;
+}

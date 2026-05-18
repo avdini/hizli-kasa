@@ -673,3 +673,72 @@
     display: flex;
     flex-direction: column;
 }
+
+/* --- İade Sekmesi Ek Düzen Stilleri --- */
+.iade-btn-accent {
+    background: var(--hk-accent);
+    color: white;
+}
+
+.iade-arama-submit-row {
+    margin-top: 10px;
+}
+
+.iade-modal-ozet-box {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: var(--hk-bg-body);
+    border-radius: 10px;
+    border: 1px solid var(--hk-border);
+}
+
+.iade-modal-ozet-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.iade-modal-ozet-label {
+    font-weight: bold;
+    color: var(--hk-text-muted);
+}
+
+.iade-modal-toplam-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.iade-modal-toplam-input {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--hk-danger);
+    background: var(--hk-bg-input);
+    border: 1px dashed var(--hk-border);
+    border-radius: 8px;
+    width: 140px;
+    text-align: right;
+    padding: 4px 8px;
+}
+
+.iade-modal-toplam-currency {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--hk-danger);
+}
+
+.iade-modal-section {
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+.iade-btn-cancel {
+    background: var(--hk-bg-body);
+    color: var(--hk-text-main);
+    border: 1px solid var(--hk-border);
+}
+
+.iade-btn-confirm {
+    background: var(--hk-accent);
+    color: white;
+}

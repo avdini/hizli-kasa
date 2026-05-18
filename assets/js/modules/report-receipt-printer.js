@@ -92,12 +92,12 @@
             (data.items || []).forEach(function(item) {
                 var tr = document.createElement('tr');
                 tr.innerHTML =
-                    '<td style="padding:1px 0; line-height:1.1;">' +
-                        '<div style="font-weight:bold; font-size:12px; text-transform:uppercase;">' + (item.name || '-') + '</div>' +
-                        '<div style="font-size:10px;">' + ((item.sku ? item.sku + ' | ' : '') + (item.quantity || 0) + ' Adet') + '</div>' +
+                    '<td class="fis-item-td-left">' +
+                        '<div class="fis-item-name">' + (item.name || '-') + '</div>' +
+                        '<div class="fis-item-sku-qty">' + ((item.sku ? item.sku + ' | ' : '') + (item.quantity || 0) + ' Adet') + '</div>' +
                     '</td>' +
-                    '<td style="text-align:right; padding:1px 0; vertical-align:middle; white-space:nowrap; padding-left:10px;">' +
-                        '<div style="font-weight:bold; font-size:13px;">' + formatRawAmount(item.line_total) + '</div>' +
+                    '<td class="fis-item-td-right">' +
+                        '<div class="fis-item-price">' + formatRawAmount(item.line_total) + '</div>' +
                     '</td>';
                 body.appendChild(tr);
             });

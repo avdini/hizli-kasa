@@ -2,7 +2,7 @@
 /**
  * Hızlı Kasa - Masraf Yönetimi Sekmesi
  *
- * Masraf giriş formu ve günlük masraf listesi.
+ * Masraf giriş formu ve Masraf listesi.
  */
 if (!defined('ABSPATH')) exit;
 ?>
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) exit;
             <h3 class="hk-panel-title">💸 Yeni Masraf Ekle</h3>
             
             <form id="yeni-masraf-form">
-                <div style="margin-bottom: 20px;">
+                <div class="masraf-form-group">
                     <label>Kategori</label>
                     <select id="masraf-kategori" class="hk-input">
                         <option value="Çalışan Giderleri" selected>Çalışan Giderleri</option>
@@ -29,19 +29,19 @@ if (!defined('ABSPATH')) exit;
                     </select>
                 </div>
 
-                <div id="ozel-kategori-alan" style="margin-bottom: 20px; display: none;">
+                <div id="ozel-kategori-alan" class="masraf-form-group" style="display: none;">
                     <label>Özel Kategori Adı</label>
                     <input type="text" id="masraf-kategori-ozel" class="hk-input" placeholder="Kategori ismini yazın">
                 </div>
 
-                <div style="margin-bottom: 20px;">
+                <div class="masraf-form-group">
                     <label>Tutar (TL)</label>
-                    <input type="text" id="masraf-tutar" class="hk-input hk-currency-mask" placeholder="0,00" inputmode="decimal" style="font-size: 20px; font-weight: 800; color: var(--hk-success);">
+                    <input type="text" id="masraf-tutar" class="hk-input hk-currency-mask" placeholder="0,00" inputmode="decimal">
                 </div>
 
-                <div style="margin-bottom: 20px;">
+                <div class="masraf-form-group">
                     <label>Ödeme Yöntemi</label>
-                    <div style="display: flex; gap: 10px;">
+                    <div class="masraf-payment-methods">
                         <label class="payment-method-row">
                             <input type="radio" name="payment_method" value="nakit" checked style="display: none;">
                             💵 Nakit
@@ -57,9 +57,9 @@ if (!defined('ABSPATH')) exit;
                     </div>
                 </div>
 
-                <div style="margin-bottom: 25px;">
+                <div class="masraf-form-group">
                     <label>Açıklama (Opsiyonel)</label>
-                    <textarea id="masraf-aciklama" class="hk-input" rows="3" placeholder="Masraf detayı..." style="resize: none;"></textarea>
+                    <textarea id="masraf-aciklama" class="hk-input" rows="3" placeholder="Masraf detayı..."></textarea>
                 </div>
 
                 <button type="button" id="masraf-kaydet-btn" class="hk-btn-primary">
@@ -77,7 +77,7 @@ if (!defined('ABSPATH')) exit;
                 </div>
             </div>
 
-            <div style="overflow-x: auto;">
+            <div class="masraf-table-wrapper">
                 <table id="masraf-tablosu" class="hk-table">
                     <thead>
                         <tr class="hk-table-head">
@@ -91,7 +91,7 @@ if (!defined('ABSPATH')) exit;
                     <tbody id="masraf-listesi-body">
                         <!-- JS ile doldurulacak -->
                         <tr>
-                            <td colspan="5" style="padding: 40px; text-align: center; color: var(--hk-text-muted);">
+                            <td colspan="5" class="masraf-empty-row">
                                 Henüz masraf girilmedi.
                             </td>
                         </tr>
@@ -99,7 +99,7 @@ if (!defined('ABSPATH')) exit;
                     <tfoot>
                         <tr class="hk-table-foot">
                             <td colspan="3" style="text-align: right;">GÜNLÜK TOPLAM:</td>
-                            <td style="color: var(--hk-danger);" id="gunluk-toplam-masraf">0.00 TL</td>
+                            <td id="gunluk-toplam-masraf">0.00 TL</td>
                             <td></td>
                         </tr>
                     </tfoot>
@@ -112,40 +112,3 @@ if (!defined('ABSPATH')) exit;
         </div>
     </div>
 </div>
-
-<style>
-    .payment-method-row {
-        flex: 1; 
-        border: 2px solid var(--hk-border); 
-        padding: 12px; 
-        border-radius: 10px; 
-        cursor: pointer; 
-        text-align: center; 
-        font-weight: 800; 
-        transition: all 0.2s;
-        background: var(--hk-bg-card);
-        color: var(--hk-text-main);
-    }
-    
-    .payment-method-row:has(input:checked) {
-        background: var(--hk-accent) !important;
-        color: white !important;
-        border-color: var(--hk-accent) !important;
-        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
-    }
-    
-    .masraf-sil-btn {
-        background: var(--hk-danger);
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 12px;
-        font-weight: 700;
-    }
-    
-    .masraf-sil-btn:hover {
-        opacity: 0.8;
-    }
-</style>

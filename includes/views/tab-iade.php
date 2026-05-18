@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) exit;
             <div class="iade-baslik-satiri">
                 <h2 id="iade-sol-baslik">Sipariş Sorgula</h2>
                 <div class="iade-baslik-butonlar">
-                    <button id="iade-manuel-toggle-btn" class="iade-kucuk-btn" style="background: var(--hk-accent); color: white;">➕ Sıfırdan İade</button>
+                    <button id="iade-manuel-toggle-btn" class="iade-kucuk-btn iade-btn-accent">➕ Sıfırdan İade</button>
                     <button id="iade-detayli-toggle-btn" class="iade-kucuk-btn">🔍 Detaylı Arama</button>
                 </div>
             </div>
@@ -67,7 +67,7 @@ if (!defined('ABSPATH')) exit;
                             </div>
                         </div>
                     </div>
-                    <div class="arama-satiri" style="margin-top:10px;">
+                    <div class="arama-satiri iade-arama-submit-row">
                         <button id="iade-detayli-ara-btn" class="iade-arama-btn tam-genislik">🔍 Seçilen Kriterlerle Siparişleri Bul</button>
                     </div>
                 </div>
@@ -124,18 +124,18 @@ if (!defined('ABSPATH')) exit;
             </div>
             
             <div class="iade-modal-sag">
-                <div id="iade-modal-ozet" style="margin-bottom: 20px; padding: 15px; background: var(--hk-bg-body); border-radius: 10px; border: 1px solid var(--hk-border);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: bold; color: var(--hk-text-muted);">İade Edilecek Toplam:</span>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <input type="text" id="iade-modal-toplam-input" class="hk-currency-mask" style="font-size: 24px; font-weight: 900; color: var(--hk-danger); background: var(--hk-bg-input); border: 1px dashed var(--hk-border); border-radius: 8px; width: 140px; text-align: right; padding: 4px 8px;" value="0,00">
-                            <span style="font-size: 24px; font-weight: 900; color: var(--hk-danger);">TL</span>
+                <div id="iade-modal-ozet" class="iade-modal-ozet-box">
+                    <div class="iade-modal-ozet-row">
+                        <span class="iade-modal-ozet-label">İade Edilecek Toplam:</span>
+                        <div class="iade-modal-toplam-wrap">
+                            <input type="text" id="iade-modal-toplam-input" class="hk-currency-mask iade-modal-toplam-input" value="0,00">
+                            <span class="iade-modal-toplam-currency">TL</span>
                         </div>
                     </div>
                 </div>
 
-                <div id="iade-iskonto-konteyner-alani" style="padding: 0; margin-bottom: 20px;">
-                    <div id="iade-iskonto-konteyner" style="display:none; margin-bottom: 0;">
+                <div id="iade-iskonto-konteyner-alani" class="iade-modal-section">
+                    <div id="iade-iskonto-konteyner" style="display:none;">
                         <div class="iskonto-girdi-satiri">
                             <span>Düşülecek İskonto (TL):</span>
                             <input type="text" id="iade-iskonto-input" class="hk-currency-mask" placeholder="0,00" inputmode="decimal" value="0">
@@ -147,11 +147,11 @@ if (!defined('ABSPATH')) exit;
                     </div>
                 </div>
 
-                <div id="iade-odeme-yontemi-alani" style="padding: 0; margin-bottom: 20px;"></div>
+                <div id="iade-odeme-yontemi-alani" class="iade-modal-section"></div>
 
                 <div class="modal-butonlar">
-                    <button id="iade-modal-vazgec" style="background: var(--hk-bg-body); color: var(--hk-text-main); border: 1px solid var(--hk-border);">Vazgeç</button>
-                    <button id="iade-modal-tamamla" style="background: var(--hk-accent); color: white;">İadeyi Onayla ve Bitir</button>
+                    <button id="iade-modal-vazgec" class="iade-btn-cancel">Vazgeç</button>
+                    <button id="iade-modal-tamamla" class="iade-btn-confirm">İadeyi Onayla ve Bitir</button>
                 </div>
             </div>
         </div>
