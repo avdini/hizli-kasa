@@ -314,7 +314,26 @@ function hizli_kasa_get_aws_ranked_product_ids($search, $depo_id = 0)
         }
     }
 
-    return $ranked_ids;
+    if (empty($ranked_ids) || !$depo_id) {
+        return $ranked_ids;
+    }
+
+    $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+    $allowed_ids = $wpdb->get_col(
+        $wpdb->prepare(
+            "SELECT DISTINCT product_id FROM $stok_table WHERE location_id = %d AND product_id IN (" . implode(',', array_map('intval', $ranked_ids)) . ")",
+            $depo_id
+        )
+    );
+
+    if (empty($allowed_ids)) {
+        return [];
+    }
+
+    $allowed_map = array_fill_keys(array_map('intval', $allowed_ids), true);
+    return array_values(array_filter($ranked_ids, function ($id) use ($allowed_map) {
+        return isset($allowed_map[(int) $id]);
+    }));
 }
 
 /**
@@ -330,77 +349,83 @@ function hizli_kasa_get_local_ranked_product_ids($search, $depo_id = 0, $limit =
     }
 
     $terms = hizli_kasa_prepare_search_terms($search);
+    $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
     $join_stock = '';
     $stock_params = [];
+    if ($depo_id > 0) {
+        $join_stock = " INNER JOIN $stok_table sk_search ON (sk_search.product_id = p.ID AND sk_search.location_id = %d)";
+        $stock_params[] = $depo_id;
+    }
 
     $or_parts = [];
     $score_parts = [];
-    $params = $stock_params;
+    $where_params = [];
+    $score_params = [];
     $exact_search = $search;
     $prefix_like = $wpdb->esc_like($search) . '%';
     $contains_like = '%' . $wpdb->esc_like($search) . '%';
 
     $or_parts[] = "parent_sku.meta_value = %s";
-    $params[] = $exact_search;
+    $where_params[] = $exact_search;
     $score_parts[] = "MAX(CASE WHEN parent_sku.meta_value = %s THEN 1000 ELSE 0 END)";
-    $params[] = $exact_search;
+    $score_params[] = $exact_search;
 
     $or_parts[] = "var_sku.meta_value = %s";
-    $params[] = $exact_search;
+    $where_params[] = $exact_search;
     $score_parts[] = "MAX(CASE WHEN var_sku.meta_value = %s THEN 950 ELSE 0 END)";
-    $params[] = $exact_search;
+    $score_params[] = $exact_search;
 
     $or_parts[] = "p.post_title LIKE %s";
-    $params[] = $prefix_like;
+    $where_params[] = $prefix_like;
     $score_parts[] = "MAX(CASE WHEN p.post_title LIKE %s THEN 700 ELSE 0 END)";
-    $params[] = $prefix_like;
+    $score_params[] = $prefix_like;
 
     $or_parts[] = "v.post_title LIKE %s";
-    $params[] = $prefix_like;
+    $where_params[] = $prefix_like;
     $score_parts[] = "MAX(CASE WHEN v.post_title LIKE %s THEN 650 ELSE 0 END)";
-    $params[] = $prefix_like;
+    $score_params[] = $prefix_like;
 
     $or_parts[] = "p.post_title LIKE %s";
-    $params[] = $contains_like;
+    $where_params[] = $contains_like;
     $score_parts[] = "MAX(CASE WHEN p.post_title LIKE %s THEN 400 ELSE 0 END)";
-    $params[] = $contains_like;
+    $score_params[] = $contains_like;
 
     $or_parts[] = "var_sku.meta_value LIKE %s";
-    $params[] = $contains_like;
+    $where_params[] = $contains_like;
     $score_parts[] = "MAX(CASE WHEN var_sku.meta_value LIKE %s THEN 375 ELSE 0 END)";
-    $params[] = $contains_like;
+    $score_params[] = $contains_like;
 
     $or_parts[] = "parent_sku.meta_value LIKE %s";
-    $params[] = $contains_like;
+    $where_params[] = $contains_like;
     $score_parts[] = "MAX(CASE WHEN parent_sku.meta_value LIKE %s THEN 350 ELSE 0 END)";
-    $params[] = $contains_like;
+    $score_params[] = $contains_like;
 
     $or_parts[] = "v.post_title LIKE %s";
-    $params[] = $contains_like;
+    $where_params[] = $contains_like;
     $score_parts[] = "MAX(CASE WHEN v.post_title LIKE %s THEN 325 ELSE 0 END)";
-    $params[] = $contains_like;
+    $score_params[] = $contains_like;
 
     foreach ($terms as $term) {
         $like = '%' . $wpdb->esc_like($term) . '%';
         $or_parts[] = "p.post_title LIKE %s";
-        $params[] = $like;
+        $where_params[] = $like;
         $score_parts[] = "MAX(CASE WHEN p.post_title LIKE %s THEN 80 ELSE 0 END)";
-        $params[] = $like;
+        $score_params[] = $like;
 
         $or_parts[] = "parent_sku.meta_value LIKE %s";
-        $params[] = $like;
+        $where_params[] = $like;
         $score_parts[] = "MAX(CASE WHEN parent_sku.meta_value LIKE %s THEN 75 ELSE 0 END)";
-        $params[] = $like;
+        $score_params[] = $like;
 
         $or_parts[] = "v.post_title LIKE %s";
-        $params[] = $like;
+        $where_params[] = $like;
         $score_parts[] = "MAX(CASE WHEN v.post_title LIKE %s THEN 70 ELSE 0 END)";
-        $params[] = $like;
+        $score_params[] = $like;
 
         $or_parts[] = "var_sku.meta_value LIKE %s";
-        $params[] = $like;
+        $where_params[] = $like;
         $score_parts[] = "MAX(CASE WHEN var_sku.meta_value LIKE %s THEN 65 ELSE 0 END)";
-        $params[] = $like;
+        $score_params[] = $like;
     }
 
     if (empty($or_parts)) {
@@ -425,7 +450,7 @@ function hizli_kasa_get_local_ranked_product_ids($search, $depo_id = 0, $limit =
         LIMIT %d
     ";
 
-    $params[] = (int) $limit;
+    $params = array_merge($score_params, $stock_params, $where_params, [(int) $limit]);
     $rows = $wpdb->get_results($wpdb->prepare($sql, ...$params));
 
     if (empty($rows)) {

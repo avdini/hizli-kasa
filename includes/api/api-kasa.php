@@ -44,7 +44,7 @@ function hizli_kasa_ozel_arama($data)
     $found_ids = [];
     $cache_aktif = get_option('hizli_kasa_cache_aktif', '1') === '1';
     $cache_version = get_option('hizli_kasa_search_cache_version', '1');
-    $cache_key = 'hk_search_' . $cache_version . '_' . md5($s . '_' . $exact . '_' . (int) $depo_id);
+    $cache_key = 'hk_search_v2_' . $cache_version . '_' . md5($s . '_' . $exact . '_' . (int) $depo_id);
     
     if ($cache_aktif) {
         $found_ids = get_transient($cache_key);
