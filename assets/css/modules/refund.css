@@ -723,6 +723,7 @@
     line-height: normal;
     box-sizing: border-box;
     display: block;
+    margin-bottom: 0 !important;
 }
 
 .iade-modal-toplam-currency {
