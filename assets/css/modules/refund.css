@@ -706,7 +706,7 @@
 .iade-modal-toplam-wrap {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .iade-modal-toplam-input {
@@ -718,13 +718,17 @@
     border-radius: 8px;
     width: 140px;
     text-align: right;
-    padding: 4px 8px;
+    padding: 6px 12px;
+    line-height: 1;
+    box-sizing: border-box;
 }
 
 .iade-modal-toplam-currency {
-    font-size: 24px;
-    font-weight: 900;
+    font-size: 18px;
+    font-weight: 800;
     color: var(--hk-danger);
+    line-height: 1;
+    margin-top: 2px;
 }
 
 .iade-modal-section {
