@@ -109,6 +109,7 @@ function hizli_kasa_get_order_details($request)
             'total' => $item->get_total(),
             'depo_id' => $cikis_depo_id,
             'depo_adi' => $cikis_depo_adi ?: '',
+            'item_discount' => (float) wc_get_order_item_meta($item_id, '_hk_item_discount', true),
         ];
     }
 
@@ -137,7 +138,8 @@ function hizli_kasa_get_order_details($request)
         'manual_discount' => hizli_kasa_get_order_manual_discount($order),
         'refunded_manual_discount' => (float) $order->get_meta('_hk_refunded_discount'),
         'total_discount' => hizli_kasa_get_order_total_discount($order),
-        'refunded_discount' => (float) $order->get_meta('_hk_refunded_discount')
+        'refunded_discount' => (float) $order->get_meta('_hk_refunded_discount'),
+        'has_item_discount' => (float) $order->get_meta('_hk_toplam_iskonto') > 0
     ];
 }
 

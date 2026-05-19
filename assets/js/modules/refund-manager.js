@@ -129,6 +129,16 @@ const RefundManager = (function () {
         if (modalToplamInput) {
             modalToplamInput.onchange = () => {
                 const cartTotal = refundCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+                
+                if (originalOrder && originalOrder.has_item_discount) {
+                    modalToplamInput.value = HK.CurrencyMask.format(cartTotal);
+                    alert('Bu siparişte iskonto ürün fiyatlarına yedirilmiştir. Ekstra iskonto düşülemez.');
+                    if (document.querySelector('input[name="iade_payment_method"]:checked')?.value === 'split') {
+                        calculateRefundSplit();
+                    }
+                    return;
+                }
+
                 const enteredTotal = HK.CurrencyMask.parse(modalToplamInput.value);
                 
                 let requiredDiscount = cartTotal - enteredTotal;
@@ -526,6 +536,10 @@ const RefundManager = (function () {
                 ? '<span class="depo-badge" title="Çıkış Deposu">📦 ' + item.depo_adi + '</span>'
                 : '<span class="depo-badge depo-bilinmeyen" title="Depo bilgisi yok">📦 Bilinmeyen</span>';
 
+            var iskontoBadge = (originalOrder.has_item_discount && item.item_discount > 0)
+                ? `<span class="urun-iskonto-badge" style="background:#e74c3c;color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:8px;vertical-align:middle;display:inline-block;">İsk: -${item.item_discount.toFixed(2)} ₺</span>`
+                : '';
+
             html += `
                 <div class="iade-urun-satir">
                     <div class="urun-bilgi">
@@ -533,7 +547,7 @@ const RefundManager = (function () {
                         <span class="urun-sku">SKU: ${item.sku} ${depoBadge}</span>
                     </div>
                     <div class="urun-fiyat-adet">
-                        <span class="birim-fiyat">${item.price} TL</span> x <span class="mevcut-adet">${item.qty}</span>
+                        <span class="birim-fiyat">${item.price} TL</span> ${iskontoBadge} x <span class="mevcut-adet">${item.qty}</span>
                     </div>
                     <button class="iade-ekle-btn" onclick="RefundManager.addToRefundCart('${item.item_id}')">İade Et</button>
                 </div>
@@ -745,7 +759,7 @@ const RefundManager = (function () {
 
     function getRefundFinalTotal() {
         const cartTotal = refundCart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-        const discount = HK.CurrencyMask.parse(document.getElementById('iade-iskonto-input')?.value || "0");
+        const discount = (originalOrder && originalOrder.has_item_discount) ? 0 : HK.CurrencyMask.parse(document.getElementById('iade-iskonto-input')?.value || "0");
         return Math.abs(cartTotal - discount);
     }
 
@@ -827,6 +841,31 @@ const RefundManager = (function () {
         const iskontoInput = document.getElementById('iade-iskonto-input');
         const kalanIskontoSpan = document.getElementById('iade-kalan-iskonto');
 
+        if (originalOrder && originalOrder.has_item_discount) {
+            if (iskontoKonteyner) iskontoKonteyner.style.display = 'none';
+            if (iskontoInput) iskontoInput.value = 0;
+            
+            // Eğer uyarı mesajı yoksa ekle
+            const ozetGovde = document.querySelector('.siparis-ozet-v2 .ozet-govde');
+            if (ozetGovde && !document.getElementById('iade-iskonto-uyari')) {
+                ozetGovde.innerHTML += `
+                    <div id="iade-iskonto-uyari" class="ozet-kart" style="width:100%; border-color:#3498db; background:rgba(52, 152, 219, 0.05);">
+                        <div class="kart-baslik" style="color:#3498db;">ℹ️ YENİ SİSTEM İSKONTO</div>
+                        <div class="kart-icerik" style="font-size:12px; color:#666;">
+                            Bu siparişte iskonto ürün fiyatlarına yedirilmiştir. Ekstra iskonto düşmenize gerek yoktur. İade edilecek ürünün fiyatı zaten iskontoludur.
+                        </div>
+                    </div>
+                `;
+            }
+            
+            const modalToplamInput = document.getElementById('iade-modal-toplam-input');
+            if (modalToplamInput) {
+                const finalTotal = getRefundFinalTotal();
+                modalToplamInput.value = HK.CurrencyMask.format(finalTotal);
+            }
+            return;
+        }
+
         if (isManualMode && HK.CurrencyMask.parse(iskontoInput.value || "0") <= 0) {
             if (iskontoKonteyner) iskontoKonteyner.style.display = 'none';
             return;
@@ -886,7 +925,7 @@ const RefundManager = (function () {
                     kasa_no: selectedKasa,
                     payment_method: paymentMethod,
                     split_data: refundSplitData,
-                    refund_discount: HK.CurrencyMask.parse(document.getElementById('iade-iskonto-input')?.value || "0"),
+                    refund_discount: (originalOrder && originalOrder.has_item_discount) ? 0 : HK.CurrencyMask.parse(document.getElementById('iade-iskonto-input')?.value || "0"),
                     items: refundCart.map(item => ({
                         id: item.id,
                         item_id: item.item_id,
