@@ -718,17 +718,17 @@
     border-radius: 8px;
     width: 180px;
     text-align: right;
-    padding: 6px 36px 6px 12px;
+    padding: 6px 45px 6px 12px !important;
     line-height: 1;
     box-sizing: border-box;
 }
 
 .iade-modal-toplam-currency {
     position: absolute;
-    right: 12px;
-    font-size: 16px;
+    right: 15px;
+    font-size: 18px;
     font-weight: 800;
-    color: var(--hk-text-muted);
+    color: var(--hk-danger);
     line-height: 1;
     pointer-events: none;
     user-select: none;
