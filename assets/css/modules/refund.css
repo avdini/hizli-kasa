@@ -704,31 +704,34 @@
 }
 
 .iade-modal-toplam-wrap {
-    display: flex;
+    position: relative;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
 }
 
 .iade-modal-toplam-input {
     font-size: 24px;
     font-weight: 900;
-    color: var(--hk-danger);
+    color: var(--hk-text-main) !important;
     background: var(--hk-bg-input);
     border: 1px dashed var(--hk-border);
     border-radius: 8px;
-    width: 140px;
+    width: 180px;
     text-align: right;
-    padding: 6px 12px;
+    padding: 6px 36px 6px 12px;
     line-height: 1;
     box-sizing: border-box;
 }
 
 .iade-modal-toplam-currency {
-    font-size: 18px;
+    position: absolute;
+    right: 12px;
+    font-size: 16px;
     font-weight: 800;
-    color: var(--hk-danger);
+    color: var(--hk-text-muted);
     line-height: 1;
-    margin-top: 2px;
+    pointer-events: none;
+    user-select: none;
 }
 
 .iade-modal-section {
