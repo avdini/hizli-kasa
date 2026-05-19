@@ -104,10 +104,7 @@ if (!defined('ABSPATH')) exit;
 <div id="urun-arama-modal" class="modal-cerceve" style="display:none;">
     <div class="modal-icerik modal-icerik-lg">
         <h3>🔍 Ürün Ara</h3>
-        <div style="position:relative; margin-bottom:15px;">
-            <input type="text" id="urun-arama-input" class="hk-input urun-arama-input" placeholder="Ürün adı veya SKU yazın..." autocomplete="off">
-            <span style="position:absolute; left:15px; top:50%; transform:translateY(-50%); opacity:0.5;">🔍</span>
-        </div>
+        <input type="text" id="urun-arama-input" class="hk-input urun-arama-input" placeholder="Ürün adı veya SKU yazın..." autocomplete="off">
         <ul id="arama-sonuclari">
             <!-- Aramalar buraya gelecek -->
         </ul>

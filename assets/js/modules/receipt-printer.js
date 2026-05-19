@@ -63,6 +63,7 @@
                 var etiketFiyat = parseFloat(getMeta(item.meta_data, "_etiket_fiyat") || item.subtotal / item.quantity);
                 var kampanyaFiyat = parseFloat(getMeta(item.meta_data, "_kampanya_fiyat") || item.subtotal / item.quantity);
                 var netFiyat = parseFloat(item.total) / item.quantity;
+                var urunIskonto = getMeta(item.meta_data, "_hk_item_discount");
                 
                 var satirEtiketToplam = etiketFiyat * item.quantity;
                 var satirKampanyaToplam = kampanyaFiyat * item.quantity;
@@ -75,14 +76,21 @@
                 if (satirEtiketToplam > satirKampanyaToplam) {
                     fiyatHTML += '<div style="font-size: 10px; text-decoration: line-through;">' + satirEtiketToplam.toFixed(2) + '</div>';
                 }
-                if (satirKampanyaToplam > satirNetToplam) {
+                if (satirKampanyaToplam > satirNetToplam + 0.01) {
                     fiyatHTML += '<div style="font-size: 10px; text-decoration: line-through;">' + satirKampanyaToplam.toFixed(2) + '</div>';
                 }
                 fiyatHTML += '<div style="font-weight: bold; font-size: 13px;">' + satirNetToplam.toFixed(2) + '</div>';
 
+                // Ürüne düşen iskonto bilgisi
+                var iskontoInfo = '';
+                if (urunIskonto && parseFloat(urunIskonto) > 0) {
+                    iskontoInfo = '<div style="font-size:9px; color:#666;">(İsk: -' + parseFloat(urunIskonto).toFixed(2) + ')</div>';
+                }
+
                 tr.innerHTML = '<td style="padding:1px 0; line-height: 1.1;">' + 
                         '<div style="font-weight:bold; font-size:12px; text-transform:uppercase;">' + item.name + '</div>' +
-                        '<div style="font-size:10px;">' + (item.sku ? item.sku + ' | ' : '') + item.quantity + ' Adet</div>' +
+                        '<div style="font-size:10px;">' + (item.sku ? item.sku + ' | ' : '') + item.quantity + ' Adet' + '</div>' +
+                        iskontoInfo +
                     '</td>' +
                     '<td style="text-align:right; padding:1px 0; vertical-align: middle; white-space:nowrap; padding-left:10px;">' + fiyatHTML + '</td>';
                 els.fisUrunlerBody.appendChild(tr);

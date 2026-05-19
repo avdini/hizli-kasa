@@ -220,15 +220,24 @@
             // Toplamlar için ön çalışma
             var sepetAraToplam = 0;
             var sepetListeToplami = 0;
+            var sepetIskontoluToplam = 0;
             state.sepet.forEach(function (item) {
                 sepetAraToplam += (item.price * item.quantity);
                 sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
+                var birim = item.discounted_price !== null ? item.discounted_price : item.price;
+                sepetIskontoluToplam += (birim * item.quantity);
             });
 
             var temizSepet = state.sepet.map(function (item) {
                 var lineEtiketFiyati = (item.regular_price || item.price);
+                var birimFiyat = item.discounted_price !== null ? item.discounted_price : item.price;
                 var lineSubtotal = item.price * item.quantity;
-                var lineTotal = isAutoDiscount ? (lineSubtotal * 0.95) : lineSubtotal;
+                // %5 önce (orijinal fiyata), iskonto sonra (üstünden düşülür)
+                var lineIskontoluToplam = birimFiyat * item.quantity;
+                var urunIskonto = lineSubtotal - lineIskontoluToplam;
+                var lineTotal = (isAutoDiscount ? (lineSubtotal * 0.95) : lineSubtotal) - urunIskonto;
+
+
 
                 var p = {
                     product_id: item.product_id,
@@ -242,10 +251,18 @@
                         { key: "_kampanya_fiyat", value: item.price.toFixed(2) }
                     ]
                 };
+
+                // Ürün bazlı iskonto meta
+                if (urunIskonto > 0.001) {
+                    p.meta_data.push({ key: "_hk_item_discount", value: urunIskonto.toFixed(2) });
+                    p.meta_data.push({ key: "_iskontolu_birim_fiyat", value: birimFiyat.toFixed(2) });
+                }
+
                 if (item.variation_id) p.variation_id = item.variation_id;
                 return p;
             });
 
+            // Fee line: Bilgi amaçlı tutulur (gün sonu raporu vb. için)
             var feeLines = [];
             if (state.iskontoTutar > 0) {
                 feeLines.push({
@@ -258,7 +275,8 @@
                 });
             }
 
-            var netToplam = sepetAraToplam - state.iskontoTutar - (isAutoDiscount ? (sepetAraToplam * 0.05) : 0);
+            // %5 önce, iskonto sonra
+            var netToplam = sepetAraToplam - (isAutoDiscount ? (sepetAraToplam * 0.05) : 0) - state.iskontoTutar;
 
             // Ödeme Bölünmüşse Tutar Kontrolü Yap (Son Kontrol)
             if (splitData) {
@@ -319,6 +337,7 @@
                     { key: "_odeme_iban", value: oIban.toFixed(2) },
                     { key: "_etiket_toplami", value: sepetListeToplami.toFixed(2) },
                     { key: "_ara_toplam", value: sepetAraToplam.toFixed(2) },
+                    { key: "_hk_toplam_iskonto", value: state.iskontoTutar.toFixed(2) },
                     { key: "Ödeme (Nakit)", value: oNakit.toFixed(2) + " TL" },
                     { key: "Ödeme (Kart)", value: oKart.toFixed(2) + " TL" },
                     { key: "Ödeme (IBAN)", value: oIban.toFixed(2) + " TL" },

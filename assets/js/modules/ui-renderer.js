@@ -77,10 +77,17 @@ window.HizliKasa = window.HizliKasa || {};
 
             state.sepet.forEach(function(item, index) {
                 // Fiyat Katmanları
+                var birimFiyat = item.discounted_price !== null ? item.discounted_price : item.price;
                 var etiketFiyat = (item.regular_price || item.price) * item.quantity;
                 var kampanyaFiyat = item.price * item.quantity;
-                var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
-                var netFiyat = kampanyaFiyat * (hasAutoDiscount ? 0.95 : 1);
+                var iskontoluToplam = birimFiyat * item.quantity;
+                var hasAutoDiscount = !state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+
+                // Ürüne düşen iskonto tutarı
+                var urunIskonto = kampanyaFiyat - iskontoluToplam;
+
+                // %5 önce (orijinal fiyata), iskonto sonra (üstünden düşülür)
+                var netFiyat = (kampanyaFiyat * (hasAutoDiscount ? 0.95 : 1)) - urunIskonto;
 
                 var itemId = item.product_id + '-' + (item.variation_id || 0);
                 var isUpdated = (state.lastUpdatedId === itemId);
@@ -88,9 +95,19 @@ window.HizliKasa = window.HizliKasa || {};
 
                 var li = document.createElement("li");
 
-                var fiyatGosterim = item.price.toFixed(2) + " TL";
+                // Fiyat gösterimi (birim)
+                var gosterilenBirim = birimFiyat;
+                var fiyatGosterim = gosterilenBirim.toFixed(2) + " TL";
                 if (item.regular_price > item.price) {
-                    fiyatGosterim = '<span style="text-decoration: line-through; color: #999; font-size: 0.9em; margin-right: 5px;">' + item.regular_price.toFixed(2) + ' TL</span> ' + item.price.toFixed(2) + ' TL';
+                    fiyatGosterim = '<span style="text-decoration: line-through; color: #999; font-size: 0.9em; margin-right: 5px;">' + item.regular_price.toFixed(2) + ' TL</span> ' + gosterilenBirim.toFixed(2) + ' TL';
+                } else if (item.discounted_price !== null && item.discounted_price < item.price) {
+                    fiyatGosterim = '<span style="text-decoration: line-through; color: #999; font-size: 0.9em; margin-right: 5px;">' + item.price.toFixed(2) + ' TL</span> ' + gosterilenBirim.toFixed(2) + ' TL';
+                }
+
+                // İskonto badge
+                var iskontoBadge = '';
+                if (urunIskonto > 0.001) {
+                    iskontoBadge = '<span class="urun-iskonto-badge">-' + urunIskonto.toFixed(2) + ' ₺</span>';
                 }
 
                 li.innerHTML =
@@ -104,15 +121,43 @@ window.HizliKasa = window.HizliKasa || {};
                     '<div class="urun-orta-detay">' +
                         '<span class="urun-detay-metin" style="font-size:15px; font-weight:bold; color:var(--hk-text-main);">' + 
                             '<span class="' + glowClass + '">' + item.quantity + '</span>' + 
-                            ' Adet x ' + fiyatGosterim + '</span>' +
+                            ' Adet x <span class="urun-birim-fiyat-alan" data-index="' + index + '">' + gosterilenBirim.toFixed(2) + '</span> TL</span>' +
+                        iskontoBadge +
                     '</div>' +
                     '<div class="urun-sag-aksiyonlar">' +
                         '<span class="urun-fiyat-grup" style="text-align:right; flex-shrink:0;">' +
                             (etiketFiyat > kampanyaFiyat ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + etiketFiyat.toFixed(2) + ' TL</div>' : '') +
-                            (kampanyaFiyat > netFiyat ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + kampanyaFiyat.toFixed(2) + ' TL</div>' : '') +
-                            '<div class="ara-toplam" style="font-size: 19px; color: #27ae60; font-weight: 800; line-height: 1.1; margin-top: 2px;">' + netFiyat.toFixed(2) + ' TL</div>' +
+                            (kampanyaFiyat > iskontoluToplam + 0.001 ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + kampanyaFiyat.toFixed(2) + ' TL</div>' : '') +
+                            (iskontoluToplam > netFiyat + 0.001 ? '<div style="font-size: 11px; color: #bbb; text-decoration: line-through; line-height: 1.1;">' + iskontoluToplam.toFixed(2) + ' TL</div>' : '') +
+                            '<div class="ara-toplam urun-satir-toplam-alan" data-index="' + index + '" style="font-size: 19px; color: #27ae60; font-weight: 800; line-height: 1.1; margin-top: 2px;">' + netFiyat.toFixed(2) + ' TL</div>' +
                         '</span>' +
                     '</div>';
+
+                // Click-to-edit: Birim fiyat alanı
+                var birimFiyatSpan = li.querySelector(".urun-birim-fiyat-alan");
+                if (birimFiyatSpan) {
+                    birimFiyatSpan.style.cursor = "pointer";
+                    birimFiyatSpan.title = "Tıkla → Birim fiyatı düzenle";
+                    birimFiyatSpan.addEventListener("click", (function(idx, el) {
+                        return function(e) {
+                            e.stopPropagation();
+                            self._clickToEdit(el, idx, 'birim');
+                        };
+                    })(index, birimFiyatSpan));
+                }
+
+                // Click-to-edit: Satır toplam alanı
+                var satirToplamSpan = li.querySelector(".urun-satir-toplam-alan");
+                if (satirToplamSpan) {
+                    satirToplamSpan.style.cursor = "pointer";
+                    satirToplamSpan.title = "Tıkla → Satır toplamını düzenle";
+                    satirToplamSpan.addEventListener("click", (function(idx, el) {
+                        return function(e) {
+                            e.stopPropagation();
+                            self._clickToEdit(el, idx, 'toplam');
+                        };
+                    })(index, satirToplamSpan));
+                }
 
                 var sagAksiyonlar = li.querySelector(".urun-sag-aksiyonlar");
                 var azaltButon = document.createElement("button");
@@ -126,22 +171,22 @@ window.HizliKasa = window.HizliKasa || {};
                             state.sepet.splice(idx, 1);
                         }
 
-                        // Ürün eksiltildiğinde iskontoyu ve ödeme yöntemini sıfırla (Kasiyerin tekrar değerlendirmesi için)
+                        // Ürün eksiltildiğinde iskonto yeniden dağıt, ödeme yöntemini sıfırla
                         var resetMesajlari = [];
                         
                         if (state.iskontoTutar > 0) {
-                            state.iskontoTutar = 0;
-                            resetMesajlari.push("iskonto");
+                            HK.CartManager.dagitimiHesapla(state.iskontoTutar);
+                            resetMesajlari.push("iskonto yeniden dağıtıldı");
                         }
                         
                         if (state.odemeTipi !== "card" || state.splitData !== null) {
                             state.odemeTipi = "card";
                             state.splitData = null;
-                            resetMesajlari.push("ödeme yöntemi");
+                            resetMesajlari.push("ödeme yöntemi sıfırlandı");
                         }
 
                         if (resetMesajlari.length > 0) {
-                            var mesaj = "Sepet değiştiği için " + resetMesajlari.join(" ve ") + " sıfırlandı.";
+                            var mesaj = "Sepet değişti: " + resetMesajlari.join(", ") + ".";
                             self.showToast(mesaj, "info");
                         }
 
@@ -156,13 +201,16 @@ window.HizliKasa = window.HizliKasa || {};
             // Toplam Hesaplamalar
             var sepetAraToplam = 0;
             var sepetListeToplami = 0;
+            var sepetIskontoluToplam = 0;
             state.sepet.forEach(function(item) {
                 sepetAraToplam += (item.price * item.quantity);
                 sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
+                var birim = item.discounted_price !== null ? item.discounted_price : item.price;
+                sepetIskontoluToplam += (birim * item.quantity);
             });
 
             var nakitIndirimTutar = 0;
-            // Bölünmüş ödeme varsa otomatik indirimleri devre dışı bırak
+            // %5 önce (orijinal fiyata uygulanır), iskonto sonra (üstünden düşülür)
             if (!state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
                 nakitIndirimTutar = sepetAraToplam * 0.05;
                 els.nakitIndirimSatiri.style.setProperty("display", "flex", "important");
@@ -181,6 +229,7 @@ window.HizliKasa = window.HizliKasa || {};
                 if (els.iskontoTemizleBtn) els.iskontoTemizleBtn.style.display = "none";
             }
 
+            // Son Toplam = (AraToplam × autoFactor) - İskonto
             var sonToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
             if (sonToplam < 0) sonToplam = 0;
 
@@ -207,6 +256,76 @@ window.HizliKasa = window.HizliKasa || {};
         },
 
         /**
+         * Click-to-edit: Fiyat alanını tıklayınca input'a çevir
+         * @param {HTMLElement} el Tıklanan span
+         * @param {number} index Sepet indeksi
+         * @param {string} tip 'birim' veya 'toplam'
+         */
+        _clickToEdit: function(el, index, tip) {
+            var state = HK.State;
+            var item = state.sepet[index];
+            if (!item) return;
+            var self = this;
+
+            // Zaten input modundaysa çık
+            if (el.querySelector("input")) return;
+
+            var mevcutBirim = item.discounted_price !== null ? item.discounted_price : item.price;
+            var mevcutDeger = tip === 'birim' ? mevcutBirim : (mevcutBirim * item.quantity);
+
+            var orijinalText = el.textContent;
+            var input = document.createElement("input");
+            input.type = "text";
+            input.className = "urun-fiyat-edit-input";
+            input.value = HK.CurrencyMask ? HK.CurrencyMask.format(mevcutDeger) : mevcutDeger.toFixed(2);
+            input.inputMode = "decimal";
+
+            el.textContent = "";
+            el.appendChild(input);
+
+            // CurrencyMask uygula
+            if (HK.CurrencyMask && HK.CurrencyMask.apply) {
+                HK.CurrencyMask.apply(input);
+            }
+
+            input.focus();
+            input.select();
+
+            var onayFunc = function() {
+                var yeniDeger = HK.CurrencyMask ? HK.CurrencyMask.parse(input.value) : parseFloat(input.value.replace(',', '.'));
+                if (isNaN(yeniDeger) || yeniDeger < 0) {
+                    // Geçersiz → eski değere dön
+                    self.arayuzuGuncelle();
+                    return;
+                }
+                HK.CartManager.urunIskontoGuncelle(index, yeniDeger, tip);
+            };
+
+            var iptalFunc = function() {
+                self.arayuzuGuncelle();
+            };
+
+            input.addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    onayFunc();
+                } else if (e.key === "Escape") {
+                    e.preventDefault();
+                    iptalFunc();
+                }
+            });
+
+            input.addEventListener("blur", function() {
+                // Kısa gecikme: Enter tıklanmışsa blur'dan önce tetiklensin
+                setTimeout(function() {
+                    if (document.activeElement !== input) {
+                        onayFunc();
+                    }
+                }, 150);
+            });
+        },
+
+        /**
          * Bölünmüş ödeme varsa sağ taraftaki özeti güncelle
          */
         _odemeOzetiniGuncelle: function() {
@@ -216,7 +335,7 @@ window.HizliKasa = window.HizliKasa || {};
 
             els.odemeOzetiAlani.innerHTML = "";
 
-            // Toplamı tekrar hesapla (Özet için)
+            // Toplamı tekrar hesapla (Özet için) — %5 önce, iskonto sonra
             var sepetAraToplam = 0;
             state.sepet.forEach(function(item) {
                 sepetAraToplam += (item.price * item.quantity);
@@ -290,7 +409,7 @@ window.HizliKasa = window.HizliKasa || {};
             if (!this.els.iskontoTemizleBtn) return;
 
             this.els.iskontoTemizleBtn.addEventListener("click", function() {
-                HK.State.iskontoTutar = 0;
+                HK.CartManager.iskontoTemizle();
                 self.arayuzuGuncelle();
                 self.showToast("İskonto sıfırlandı.", "info");
             });

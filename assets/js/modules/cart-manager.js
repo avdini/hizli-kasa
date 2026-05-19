@@ -162,6 +162,7 @@ window.HizliKasa = window.HizliKasa || {};
                 sku: urun.sku || "",
                 price: parseFloat(urun.price) || 0,
                 regular_price: parseFloat(urun.regular_price) || 0,
+                discounted_price: null,
                 image: urun.images.length > 0 ? urun.images[0].src : ''
             };
 
@@ -231,12 +232,149 @@ window.HizliKasa = window.HizliKasa || {};
                 state.sepet.unshift(eklenecekUrun);
             }
 
+            // Sepet değişti: Mevcut iskonto varsa yeniden dağıt
+            if (state.iskontoTutar > 0) {
+                this.dagitimiHesapla(state.iskontoTutar);
+            }
+
             if (HK.UIRenderer) {
                 state.lastUpdatedId = eklenecekUrun.product_id + '-' + (eklenecekUrun.variation_id || 0);
                 HK.UIRenderer.arayuzuGuncelle();
             }
             durumMetni.innerText = urun.name + " eklendi.";
             durumMetni.style.color = "#27ae60";
+        },
+
+        /**
+         * İskontoyu fiyat ağırlığına göre ürünlere dağıtır (Largest Remainder Method)
+         * @param {number} toplamIskonto Toplam iskonto tutarı
+         */
+        dagitimiHesapla: function(toplamIskonto) {
+            var state = HK.State;
+            toplamIskonto = parseFloat(toplamIskonto) || 0;
+
+            if (toplamIskonto <= 0 || state.sepet.length === 0) {
+                this.iskontoTemizle();
+                return;
+            }
+
+            // Sepet ara toplamı (orijinal fiyatlarla)
+            var araToplam = 0;
+            state.sepet.forEach(function(item) {
+                araToplam += item.price * item.quantity;
+            });
+
+            // İskonto ara toplamı aşamasın
+            if (toplamIskonto > araToplam) {
+                toplamIskonto = araToplam;
+            }
+
+            state.iskontoTutar = parseFloat(toplamIskonto.toFixed(2));
+
+            // Her ürünün ağırlığına göre iskonto payını hesapla
+            var dagitimlar = [];
+            var dagitilmisKurus = 0;
+
+            state.sepet.forEach(function(item, index) {
+                var satirToplam = item.price * item.quantity;
+                var agirlik = araToplam > 0 ? (satirToplam / araToplam) : 0;
+                var hamPay = toplamIskonto * agirlik;
+                var yuvarlanmisPay = Math.floor(hamPay * 100) / 100; // Kuruşa yuvarla (aşağı)
+                dagitilmisKurus += Math.round(yuvarlanmisPay * 100);
+
+                dagitimlar.push({
+                    index: index,
+                    pay: yuvarlanmisPay,
+                    kalan: (hamPay * 100) - Math.floor(hamPay * 100) // Kesirli kalan (sıralama için)
+                });
+            });
+
+            // Largest Remainder: Kalan kuruşları en büyük kesirden başlayarak dağıt
+            var toplamKurus = Math.round(toplamIskonto * 100);
+            var kalanKurus = toplamKurus - dagitilmisKurus;
+
+            if (kalanKurus > 0) {
+                // Kalan kesire göre azalan sırada sırala
+                var sirali = dagitimlar.slice().sort(function(a, b) { return b.kalan - a.kalan; });
+                for (var i = 0; i < kalanKurus && i < sirali.length; i++) {
+                    sirali[i].pay = parseFloat((sirali[i].pay + 0.01).toFixed(2));
+                }
+            }
+
+            // Dağıtılmış iskontoları ürünlere yaz
+            dagitimlar.forEach(function(d) {
+                var item = state.sepet[d.index];
+                if (d.pay > 0 && item.quantity > 0) {
+                    var birimIskonto = d.pay / item.quantity;
+                    item.discounted_price = parseFloat((item.price - birimIskonto).toFixed(2));
+                    // Negatif olamaz
+                    if (item.discounted_price < 0) item.discounted_price = 0;
+                } else {
+                    item.discounted_price = null;
+                }
+            });
+        },
+
+        /**
+         * Tekil ürünün iskontolu fiyatını günceller, kalan farkı diğer ürünlere dağıtır
+         * @param {number} index Sepet indeksi
+         * @param {number} yeniFiyat Yeni birim fiyat (iskontolu)
+         * @param {string} tip 'birim' veya 'toplam'
+         */
+        urunIskontoGuncelle: function(index, yeniFiyat, tip) {
+            var state = HK.State;
+            var item = state.sepet[index];
+            if (!item) return;
+
+            yeniFiyat = parseFloat(yeniFiyat) || 0;
+
+            if (tip === 'toplam') {
+                // Satır toplamı girildi → birim fiyatı hesapla
+                yeniFiyat = item.quantity > 0 ? yeniFiyat / item.quantity : 0;
+            }
+
+            // Birim fiyat orijinal fiyattan büyük olamaz
+            if (yeniFiyat > item.price) yeniFiyat = item.price;
+            if (yeniFiyat < 0) yeniFiyat = 0;
+
+            // Bu ürüne düşen iskonto
+            var buUrunIskonto = (item.price - yeniFiyat) * item.quantity;
+
+            // Diğer ürünlerdeki mevcut iskonto toplamı
+            var digerIskonto = 0;
+            state.sepet.forEach(function(it, i) {
+                if (i !== index && it.discounted_price !== null) {
+                    digerIskonto += (it.price - it.discounted_price) * it.quantity;
+                }
+            });
+
+            // Yeni toplam iskonto
+            var yeniToplamIskonto = parseFloat((buUrunIskonto + digerIskonto).toFixed(2));
+
+            // Ürünün fiyatını set et
+            item.discounted_price = parseFloat(yeniFiyat.toFixed(2));
+            if (item.discounted_price >= item.price) {
+                item.discounted_price = null;
+                buUrunIskonto = 0;
+                yeniToplamIskonto = parseFloat(digerIskonto.toFixed(2));
+            }
+
+            state.iskontoTutar = yeniToplamIskonto;
+
+            if (HK.UIRenderer) {
+                HK.UIRenderer.arayuzuGuncelle();
+            }
+        },
+
+        /**
+         * Tüm ürünlerdeki iskonto dağıtımını temizler
+         */
+        iskontoTemizle: function() {
+            var state = HK.State;
+            state.iskontoTutar = 0;
+            state.sepet.forEach(function(item) {
+                item.discounted_price = null;
+            });
         }
     };
 

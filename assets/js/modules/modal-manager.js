@@ -101,7 +101,9 @@
                 var bazToplam = self._getBazToplam();
                 var iskonto = self._normalizeIskonto(HK.CurrencyMask.parse(els.iskontoInput.value), araToplam);
 
-                HK.State.iskontoTutar = iskonto;
+                // İskontoyu ürünlere dağıt
+                HK.CartManager.dagitimiHesapla(iskonto);
+
                 els.iskontoInput.value = iskonto > 0 ? HK.CurrencyMask.format(iskonto) : "";
                 els.iskontoHedefInput.value = HK.CurrencyMask.format(bazToplam - iskonto);
                 els.iskontoModal.style.display = "none";
@@ -118,14 +120,14 @@
         },
 
         /**
-         * Otomatik indirimler sonrası (manuel iskonto öncesi) toplamı döner.
+         * %5 otomatik indirim sonrası (manuel iskonto öncesi) toplamı döner.
+         * Pazarcının kafasındaki "baz fiyat" budur — %5 sonrası gördüğü rakam.
          */
         _getBazToplam: function() {
             var state = HK.State;
             var araToplam = this._getSepetAraToplam();
             var nakitIndirim = 0;
             
-            // Eğer bölünmüş ödeme YOKSA ve Nakit/IBAN seçiliyse %5 düş
             if (!state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
                 nakitIndirim = araToplam * 0.05;
             }
@@ -409,6 +411,7 @@
                 var state = HK.State;
                 if (state.sepet.length === 0) return;
 
+                // Toplamı hesapla: %5 önce, iskonto sonra
                 var toplamPara = 0;
                 state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity); });
                 var netHedef = toplamPara - state.iskontoTutar;
@@ -509,14 +512,14 @@
                 // Yuvarlama adımı (ayarlardan)
                 var adim = parseFloat(kasaAyar.yuvarlaModu) || 1;
 
-                // Mevcut toplam hesapla (aynı mantık ui-renderer ile)
+                // Mevcut toplam hesapla (%5 önce, iskonto sonra — ui-renderer ile aynı mantık)
                 var sepetAraToplam = 0;
                 state.sepet.forEach(function(item) {
                     sepetAraToplam += (item.price * item.quantity);
                 });
 
                 var nakitIndirimTutar = 0;
-                if (state.odemeTipi === "cash" || state.odemeTipi === "iban") {
+                if (!state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
                     nakitIndirimTutar = sepetAraToplam * 0.05;
                 }
 
@@ -534,8 +537,9 @@
                     return;
                 }
 
-                // Farkı iskontoya ekle
-                state.iskontoTutar = parseFloat((state.iskontoTutar + fark).toFixed(2));
+                // Farkı iskontoya ekle ve ürünlere yeniden dağıt
+                var yeniIskonto = parseFloat((state.iskontoTutar + fark).toFixed(2));
+                HK.CartManager.dagitimiHesapla(yeniIskonto);
                 HK.UIRenderer.arayuzuGuncelle();
 
                 // Bilgi mesajı
