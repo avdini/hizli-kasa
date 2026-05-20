@@ -263,17 +263,9 @@
             });
 
             // Fee line: Bilgi amaçlı tutulur (gün sonu raporu vb. için)
+            // Artık ürün bazlı iskonto uygulandığı için, mükerrer düşüşü önlemek amacıyla negatif fee eklemiyoruz.
             var feeLines = [];
-            if (state.iskontoTutar > 0) {
-                feeLines.push({
-                    name: "İskonto",
-                    total: "-" + state.iskontoTutar.toFixed(2),
-                    tax_status: "none",
-                    meta_data: [
-                        { key: "_hk_manual_discount", value: "yes" }
-                    ]
-                });
-            }
+
 
             // %5 önce, iskonto sonra
             var netToplam = sepetAraToplam - (isAutoDiscount ? (sepetAraToplam * 0.05) : 0) - state.iskontoTutar;

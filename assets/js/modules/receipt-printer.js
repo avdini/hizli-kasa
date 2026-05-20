@@ -120,8 +120,11 @@
             var autoDiscountLabel = order.payment_method === "cod" ? "Nakit İndirimi (%5):" : (order.payment_method === "bacs" ? "Havale İndirimi (%5):" : "İndirim (%5):");
             
             var indirimFarki = araToplam - parseFloat(order.total);
-            var iskontoFee = order.fee_lines.find(function(f) { return f.name === "İskonto"; });
-            var iskontoTutar = iskontoFee ? Math.abs(parseFloat(iskontoFee.total)) : 0;
+            var iskontoTutar = parseFloat(getMeta(order.meta_data, "_hk_toplam_iskonto") || 0);
+            if (iskontoTutar === 0) {
+                var iskontoFee = order.fee_lines.find(function(f) { return f.name === "İskonto"; });
+                iskontoTutar = iskontoFee ? Math.abs(parseFloat(iskontoFee.total)) : 0;
+            }
             var nakitIndirimTutar = indirimFarki - iskontoTutar;
 
             if (nakitIndirimTutar > 0.01) {

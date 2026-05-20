@@ -406,14 +406,25 @@ function hizli_kasa_update_order($request)
                 $order->remove_item($fee_id);
             }
         }
-        if ($new_discount > 0) {
+        
+        // Ürün bazlı indirimlerin toplamını bul
+        $product_discount_total = 0;
+        foreach ($order->get_items() as $item_id => $item) {
+            $product_discount_total += (float) wc_get_order_item_meta($item_id, '_hk_item_discount', true);
+        }
+        
+        // Ürün bazlı iskonto ile hedeflenen yeni iskonto arasındaki farkı ayarla
+        $fee_amount = $new_discount - $product_discount_total;
+        if (round($fee_amount, 2) != 0.0) {
             $item_fee = new WC_Order_Item_Fee();
             $item_fee->set_name('Düzenlenmiş İskonto');
-            $item_fee->set_amount(-$new_discount);
-            $item_fee->set_total(-$new_discount);
+            $item_fee->set_amount(-$fee_amount);
+            $item_fee->set_total(-$fee_amount);
             $item_fee->add_meta_data('_hk_manual_discount', 'yes', true);
             $order->add_item($item_fee);
         }
+        
+        $order->update_meta_data('_hk_toplam_iskonto', number_format($new_discount, 2, '.', ''));
         $log_details[] = "İskonto: " . $old_data['discount'] . " -> " . $new_discount;
     }
 

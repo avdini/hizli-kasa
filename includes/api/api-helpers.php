@@ -18,6 +18,12 @@ function hizli_kasa_is_manual_discount_fee($fee)
 
 function hizli_kasa_get_order_manual_discount($order)
 {
+    // Try reading order metadata first (product-level discount representation)
+    $meta_discount = $order->get_meta('_hk_toplam_iskonto');
+    if ($meta_discount !== '' && floatval($meta_discount) > 0) {
+        return round(floatval($meta_discount), 2);
+    }
+
     $manual_discount = 0;
 
     foreach ($order->get_fees() as $fee) {
@@ -39,15 +45,34 @@ function hizli_kasa_get_order_total_discount($order)
     // 1. WooCommerce'in standart indirim toplamını al (Kuponlar vb.)
     $total_discount = (float) $order->get_discount_total();
 
-    // 2. Özel 'Fee' (Ek Ücret) olarak eklenen iskontoları da tara
-    foreach ($order->get_fees() as $fee) {
-        $name = $fee->get_name();
-        $total = (float) $fee->get_total();
+    // 2. Try using the meta value for manual discount if available
+    $meta_discount = $order->get_meta('_hk_toplam_iskonto');
+    if ($meta_discount !== '' && floatval($meta_discount) > 0) {
+        $total_discount += floatval($meta_discount);
+        
+        // Also look at other fees (non-manual ones, e.g. shipping discounts or other custom fees)
+        foreach ($order->get_fees() as $fee) {
+            if (hizli_kasa_is_manual_discount_fee($fee)) {
+                continue;
+            }
+            $name = $fee->get_name();
+            $total = (float) $fee->get_total();
+            if (preg_match('/iskonto|indirim/ui', $name) || $total < 0) {
+                $total_discount += abs($total);
+            }
+        }
+    } else {
+        // Fallback for old orders that only have fees
+        foreach ($order->get_fees() as $fee) {
+            $name = $fee->get_name();
+            $total = (float) $fee->get_total();
 
-        if (preg_match('/iskonto|indirim/ui', $name) || $total < 0) {
-            $total_discount += abs($total);
+            if (preg_match('/iskonto|indirim/ui', $name) || $total < 0) {
+                $total_discount += abs($total);
+            }
         }
     }
+
     return $total_discount;
 }
 
