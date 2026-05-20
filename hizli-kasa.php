@@ -56,7 +56,7 @@ require_once HIZLI_KASA_PATH . 'includes/classes/class-user-handler.php';
 
 
 // Başlatıcılar
-Hizli_Kasa_Database::init();
+// Hizli_Kasa_Database::init(); // Performans ve SEO için her istekte çalıştırılması engellendi (aktivasyon kancası kullanılmalıdır).
 Hizli_Kasa_Stock_Manager::listen();
 Hizli_Kasa_Mismatch_Notifier::init();
 Hizli_Kasa_Mobile_Handler::init();

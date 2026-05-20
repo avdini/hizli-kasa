@@ -107,6 +107,23 @@ class Hizli_Kasa_Barcode_Helper {
             }
         }
 
+        // Eğer renk varyasyonda tanımlı değilse parent (ana) üründen çekmeyi dene (Used for variations kapalıysa)
+        if (empty($formatted['color'])) {
+            $parent = wc_get_product($parent_id);
+            if ($parent) {
+                foreach ($parent->get_attributes() as $attr_name => $attribute) {
+                    $label = wc_attribute_label($attr_name, $parent);
+                    if (mb_stripos($label, 'renk') !== false || mb_stripos($label, 'color') !== false) {
+                        $display_value = $parent->get_attribute($attr_name);
+                        if (!empty($display_value)) {
+                            $formatted['color'] = mb_convert_case($display_value, MB_CASE_TITLE, "UTF-8");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         return $formatted;
     }
 
