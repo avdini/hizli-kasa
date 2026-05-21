@@ -30,6 +30,9 @@ if (!defined('ABSPATH')) exit;
                 <button id="btn-mobil-arac-ac" class="terminal-btn btn-mobil-arac" title="Mobil Envanter Aracını Aç (QR Kod)">
                     <span class="ikon">📱</span> Mobil Araç
                 </button>
+                <button id="btn-stok-sayimi-toggle" class="terminal-btn btn-stok-sayimi" title="Stok Sayımı Görünümüne Geç">
+                    <span class="ikon">📋</span> <span class="btn-text">Depo Sayımı</span>
+                </button>
             </div>
 
             <!-- Sıralama Seçici -->
@@ -53,62 +56,182 @@ if (!defined('ABSPATH')) exit;
         </div>
     </div>
 
-    <!-- Ana İçerik: Ürün Listesi -->
-    <div class="terminal-body" id="terminal-urun-listesi">
-        <!-- JS tarafından doldurulur -->
-        <div class="terminal-loading">
-            <div class="spin"></div>
-            <p>Yükleniyor...</p>
+    <div id="terminal-liste-paneli">
+        <!-- Ana İçerik: Ürün Listesi -->
+        <div class="terminal-body" id="terminal-urun-listesi">
+            <!-- JS tarafından doldurulur -->
+            <div class="terminal-loading">
+                <div class="spin"></div>
+                <p>Yükleniyor...</p>
+            </div>
+        </div>
+
+        <!-- Sayfalama ve İstatistik Birleştirilmiş Footer -->
+        <div class="terminal-footer unified-footer">
+            <!-- Sol: Sayfa Başına Seçimi -->
+            <div class="pagination-info">
+                <label>Sayfa Başına:</label>
+                <select id="per-page-select">
+                    <option value="24">24</option>
+                    <option value="48">48</option>
+                    <option value="96">96</option>
+                </select>
+            </div>
+
+            <!-- Orta: İstatistikler (Kompakt) -->
+            <div class="footer-stats-combined">
+                <div class="stat-item">
+                    <span id="basit-urun-sayisi">0</span>
+                    <label>Basit Ürün</label>
+                </div>
+                <div class="stat-item">
+                    <span id="varyasyonlu-urun-sayisi">0</span>
+                    <label>Varyasyonlu (Ana)</label>
+                </div>
+                <div class="stat-item">
+                    <span id="toplam-kalem-sayisi">0</span>
+                    <label>Toplam Kalem</label>
+                </div>
+                <div class="stat-item">
+                    <span id="kritik-stok-sayisi">0</span>
+                    <label>Kritik Stok</label>
+                </div>
+            </div>
+
+            <!-- Sağ: Sayfalama Kontrolleri -->
+            <div class="pagination-controls-wrapper">
+                <div class="pagination-controls">
+                    <button id="prev-page" class="btn-pagination" disabled>❮</button>
+                    <span id="current-page-display">Sayfa 1</span>
+                    <button id="next-page" class="btn-pagination">❯</button>
+                </div>
+                <div class="pagination-stats">
+                    <span id="range-display">Gösterilen: 0-0 / 0</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Sayfalama ve İstatistik Birleştirilmiş Footer -->
-    <div class="terminal-footer unified-footer">
-        <!-- Sol: Sayfa Başına Seçimi -->
-        <div class="pagination-info">
-            <label>Sayfa Başına:</label>
-            <select id="per-page-select">
-                <option value="24">24</option>
-                <option value="48">48</option>
-                <option value="96">96</option>
-            </select>
+    <!-- Depo Sayım Paneli -->
+    <div id="terminal-sayim-paneli" style="display: none;">
+        <!-- Sayım Başlangıç Ekranı -->
+        <div id="sayim-baslangic-ekrani" class="sayim-baslangic-kart glass">
+            <span class="sayim-baslangic-ikon">📦</span>
+            <h3>Depo Sayımı Başlat</h3>
+            <p>Seçili depo için fiziksel sayım oturumu başlatın. Sayım sırasında barkod okuyucu kullanarak veya manuel ürün arayarak envanteri güncelleyebilirsiniz.</p>
+            <button id="btn-sayim-baslat" class="terminal-btn btn-sayim-baslat-action">
+                <span class="ikon">🚀</span> Yeni Sayım Başlat
+            </button>
         </div>
 
-        <!-- Orta: İstatistikler (Kompakt) -->
-        <div class="footer-stats-combined">
-            <div class="stat-item">
-                <span id="basit-urun-sayisi">0</span>
-                <label>Basit Ürün</label>
+        <!-- Aktif Sayım Ekranı -->
+        <div id="sayim-aktif-ekrani" style="display: none;" class="sayim-aktif-layout">
+            <div class="sayim-sol-kolon">
+                <div class="sayim-kart glass">
+                    <h4>Barkod Okutun</h4>
+                    <div class="sayim-barkod-kontrol">
+                        <input type="text" id="sayim-barkod-input" placeholder="Barkodu okutun ve Enter'a basın..." autocomplete="off">
+                        <span class="sayim-barkod-icon">🏷️</span>
+                    </div>
+                    <p class="sayim-yardim-metni">Barkod okutulduğunda ürün listede varsa adeti 1 artar, yoksa listeye 1 adet olarak eklenir.</p>
+                </div>
+                
+                <div class="sayim-kart glass sayim-ayarlar-kart">
+                    <h4>Ayarlar & Bilgi</h4>
+                    <div class="sayim-info-item">
+                        <label>Başlatan:</label>
+                        <span id="sayim-personel-adi">-</span>
+                    </div>
+                    <div class="sayim-info-item">
+                        <label>Başlangıç:</label>
+                        <span id="sayim-tarihi">-</span>
+                    </div>
+                    <div class="sayim-ses-kontrol">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="chk-sayim-ses" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <span>Sesli Geri Bildirim</span>
+                    </div>
+                </div>
             </div>
-            <div class="stat-item">
-                <span id="varyasyonlu-urun-sayisi">0</span>
-                <label>Varyasyonlu (Ana)</label>
-            </div>
-            <div class="stat-item">
-                <span id="toplam-kalem-sayisi">0</span>
-                <label>Toplam Kalem</label>
-            </div>
-            <div class="stat-item">
-                <span id="kritik-stok-sayisi">0</span>
-                <label>Kritik Stok</label>
-            </div>
-        </div>
 
-        <!-- Sağ: Sayfalama Kontrolleri -->
-        <div class="pagination-controls-wrapper">
-            <div class="pagination-controls">
-                <button id="prev-page" class="btn-pagination" disabled>❮</button>
-                <span id="current-page-display">Sayfa 1</span>
-                <button id="next-page" class="btn-pagination">❯</button>
-            </div>
-            <div class="pagination-stats">
-                <span id="range-display">Gösterilen: 0-0 / 0</span>
+            <div class="sayim-sag-kolon">
+                <div class="sayim-kart glass sayim-kalemler-kart">
+                    <div class="sayim-kalemler-header">
+                        <h4>Sayılan Kalemler (<span id="sayim-kalem-sayisi-lbl">0</span>)</h4>
+                        <div class="sayim-arama-kutusu">
+                            <input type="text" id="sayim-urun-ekle-input" placeholder="Manuel ürün ara ve ekle..." autocomplete="off">
+                            <div id="sayim-urun-ekle-results" class="sayim-ekle-arama-sonuclari" style="display:none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="sayim-tablo-wrapper">
+                        <table class="gs-tablo sayim-tablo">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">Görsel</th>
+                                    <th>Ürün Adı / Varyant</th>
+                                    <th>SKU</th>
+                                    <th style="width: 100px; text-align: center;">Sistem Stoğu</th>
+                                    <th style="width: 130px; text-align: center;">Sayılan</th>
+                                    <th style="width: 100px; text-align: center;">Fark</th>
+                                    <th style="width: 50px; text-align: center;">Aksiyon</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sayim-items-body">
+                                <tr>
+                                    <td colspan="7" class="rapor-empty-td">Henüz ürün sayılmadı. Barkod okutun veya manuel ekleyin.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="sayim-aksiyon-bar">
+                        <button id="btn-sayim-iptal" class="terminal-btn btn-sayim-iptal-action">
+                            <span class="ikon">❌</span> Sayımı İptal Et
+                        </button>
+                        <button id="btn-sayim-bitir" class="terminal-btn btn-sayim-bitir-action">
+                            <span class="ikon">💾</span> Sayımı Bitir & Eşitle
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Sayım Bitirme Seçenekleri Modalı -->
+    <div id="sayim-bitir-modal" class="modal-cerceve" style="display:none;">
+        <div class="modal-icerik glass">
+            <h3>Stok Eşitleme Seçenekleri</h3>
+            <p>Sayım işlemini bitirmek üzeresiniz. Lütfen stok güncelleme yöntemini seçin:</p>
+            
+            <div class="sayim-bitir-secenekler">
+                <label class="sayim-secenek-kart">
+                    <input type="radio" name="sayim_update_type" value="partial" checked>
+                    <div class="secenek-detay">
+                        <span class="secenek-baslik">Sadece Sayılanları Güncelle (Kısmi Eşitleme)</span>
+                        <span class="secenek-aciklama">Yalnızca listedeki ürünlerin stokları girdiğiniz sayım adetleriyle güncellenir. Listede olmayan ürünlerin stoklarına dokunulmaz.</span>
+                    </div>
+                </label>
 
+                <label class="sayim-secenek-kart">
+                    <input type="radio" name="sayim_update_type" value="full">
+                    <div class="secenek-detay">
+                        <span class="secenek-baslik">Tüm Envanteri Eşitle (Tam Eşitleme)</span>
+                        <span class="secenek-aciklama">Listelediğiniz ürünler güncellenir. Bu depoda yer alan ancak sayım listesinde **hiç bulunmayan** diğer tüm ürünlerin stokları otomatik olarak <strong>0</strong> yapılır.</span>
+                    </div>
+                </label>
+            </div>
+
+            <div class="modal-butonlar">
+                <button id="sayim-bitir-vazgec" class="btn-secondary">İptal</button>
+                <button id="sayim-bitir-onayla" class="btn-primary">Sayımı Bitir ve Eşitle</button>
+            </div>
+        </div>
+    </div>
 </div>
+
 
 <!-- Stok Düzenleme Modalı -->
 <div id="stok-duzenle-modal" class="modal-cerceve" style="display:none;">

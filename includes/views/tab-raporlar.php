@@ -16,6 +16,7 @@
         <button class="rapor-alt-btn" data-target="rapor-siparis-duzenleme">✏️ Sipariş Düzenlemeleri</button>
         <button class="rapor-alt-btn" data-target="rapor-gun-sonu-arsivi">📂 Gün Sonu Arşivi</button>
         <button class="rapor-alt-btn" data-target="rapor-ozet-istatistik">📈 İstatistik Dashboardu</button>
+        <button class="rapor-alt-btn" data-target="rapor-depo-sayimlari">📋 Depo Sayımları</button>
     </div>
 
     <!-- Rapor İçerik Alanları -->
@@ -122,6 +123,31 @@
 
     <div id="rapor-ozet-istatistik" class="rapor-icerik-paneli" style="display:none;">
         <!-- İçerik HK.StatisticsDashboard tarafından dinamik olarak doldurulur -->
+    </div>
+
+    <div id="rapor-depo-sayimlari" class="rapor-icerik-paneli">
+        <div class="rapor-kart">
+            <h3 class="rapor-kart-title">Depo Sayım Geçmişi</h3>
+            <p class="rapor-kart-desc">Tamamlanan veya iptal edilen depo sayım seanslarının detayları ve envanter farkları burada listelenir.</p>
+            
+            <table class="gs-tablo" id="sayim-history-table">
+                <thead>
+                    <tr>
+                        <th>Tarih/Saat</th>
+                        <th>Depo</th>
+                        <th>Personel</th>
+                        <th>Durum</th>
+                        <th>Güncelleme Türü</th>
+                        <th>Toplam Çeşit</th>
+                        <th>Fark (Net)</th>
+                        <th style="width: 100px; text-align: center;">Detay</th>
+                    </tr>
+                </thead>
+                <tbody id="sayim-history-body">
+                    <tr><td colspan="8" class="rapor-empty-td">Sorgulama yapın...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Raporlar İçin İzole Fiş Şablonu (Sadece Yazdırma İçin) -->

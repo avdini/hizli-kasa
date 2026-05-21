@@ -122,6 +122,7 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-refund-manager', $js_base . 'modules/refund-manager.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-expense-manager', $js_base . 'modules/expense-manager.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-stock-terminal', $js_base . 'modules/stock-terminal.js', array('kasa-ui-renderer'), $pos_version, true);
+    wp_enqueue_script('kasa-sayim-manager', $js_base . 'modules/sayim-manager.js', array('kasa-ui-renderer', 'kasa-depo-manager'), $pos_version, true);
     wp_enqueue_script('kasa-theme-manager', $js_base . 'modules/theme-manager.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-depo-manager',   $js_base . 'modules/depo-manager.js',   array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-barcode-renderer', $js_base . 'modules/barcode-renderer.js', array('kasa-ui-renderer', 'jsbarcode'), $pos_version, true);
@@ -142,6 +143,7 @@ function hizli_kasa_uygulamasi()
         'kasa-app-navigation',
         'kasa-refund-manager',
         'kasa-stock-terminal',
+        'kasa-sayim-manager',
         'kasa-barcode-renderer',
         'kasa-order-editor',
         'kasa-order-edit-reports',

@@ -22,3 +22,5 @@ require_once $api_dir . 'api-masraf.php';
 require_once $api_dir . 'api-raporlar.php';
 require_once $api_dir . 'api-terminal.php';
 require_once $api_dir . 'api-istatistik.php';
+require_once $api_dir . 'api-sayim.php';
+

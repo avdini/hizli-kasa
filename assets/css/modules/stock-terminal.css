@@ -794,3 +794,499 @@ body.dark-mode .other-stock-badge {
 }
 
 .text-center { text-align: center; }
+
+/* =============================================
+   SAYIM TERMİNALİ VE MODÜLLERİ (STOCK COUNTING)
+   ============================================= */
+
+/* Toggle Button */
+.btn-stok-sayimi {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    border: none !important;
+    padding: 10px 20px !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer;
+}
+
+.btn-stok-sayimi:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Sayım Başlangıç Kartı */
+.sayim-baslangic-kart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 40px;
+    border-radius: 15px;
+    border: 1px solid var(--hk-border);
+    background: var(--hk-bg-card);
+    max-width: 600px;
+    margin: 40px auto;
+    gap: 15px;
+}
+
+.sayim-baslangic-ikon {
+    font-size: 64px;
+    margin-bottom: 10px;
+}
+
+.sayim-baslangic-kart h3 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.sayim-baslangic-kart p {
+    margin: 0;
+    color: var(--hk-text-muted);
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+.btn-sayim-baslat-action {
+    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    color: white !important;
+    border: none !important;
+    padding: 14px 28px !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    font-size: 16px !important;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4) !important;
+    transition: all 0.3s !important;
+    margin-top: 10px;
+}
+
+.btn-sayim-baslat-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5) !important;
+}
+
+/* Aktif Sayım Ekranı Layout */
+.sayim-aktif-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 20px;
+    height: calc(100vh - 200px);
+    min-height: 500px;
+}
+
+@media (max-width: 992px) {
+    .sayim-aktif-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+}
+
+.sayim-sol-kolon {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sayim-sag-kolon {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.sayim-kart {
+    background: var(--hk-bg-card);
+    border-radius: 15px;
+    border: 1px solid var(--hk-border);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.sayim-kart h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--hk-border);
+    padding-bottom: 10px;
+}
+
+/* Barkod Giriş Kutusu */
+.sayim-barkod-kontrol {
+    position: relative;
+}
+
+#sayim-barkod-input {
+    width: 100%;
+    background: var(--hk-bg-input);
+    border: 2px solid var(--hk-border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    padding-left: 45px;
+    color: var(--hk-text-main);
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+#sayim-barkod-input:focus {
+    border-color: var(--hk-accent);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+    background: var(--hk-bg-card);
+}
+
+.sayim-barkod-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    opacity: 0.6;
+}
+
+.sayim-yardim-metni {
+    margin: 0;
+    font-size: 12px;
+    color: var(--hk-text-muted);
+    line-height: 1.5;
+}
+
+/* Bilgi Kartı */
+.sayim-info-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+.sayim-info-item label {
+    color: var(--hk-text-muted);
+}
+
+.sayim-info-item span {
+    font-weight: 600;
+}
+
+.sayim-ses-kontrol {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--hk-border);
+    font-size: 14px;
+}
+
+/* Kalemler Kartı */
+.sayim-kalemler-kart {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.sayim-kalemler-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 1px solid var(--hk-border);
+    padding-bottom: 15px;
+}
+
+.sayim-kalemler-header h4 {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.sayim-arama-kutusu {
+    position: relative;
+    width: 280px;
+}
+
+#sayim-urun-ekle-input {
+    width: 100%;
+    background: var(--hk-bg-input);
+    border: 1px solid var(--hk-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--hk-text-main);
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+#sayim-urun-ekle-input:focus {
+    border-color: var(--hk-accent);
+    outline: none;
+}
+
+.sayim-ekle-arama-sonuclari {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    z-index: 1000;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.sayim-arama-row {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--hk-border);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 12px;
+}
+
+.sayim-arama-row:hover {
+    background: var(--hk-bg-hover);
+}
+
+.sayim-arama-row .arama-urun-ad {
+    font-weight: 600;
+}
+
+.sayim-arama-row .arama-urun-detay {
+    color: var(--hk-text-muted);
+    font-size: 11px;
+}
+
+/* Sayım Tablosu */
+.sayim-tablo-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--hk-border);
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+.sayim-tablo {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sayim-tablo th {
+    position: sticky;
+    top: 0;
+    background: var(--hk-bg-input);
+    z-index: 10;
+}
+
+.sayim-tablo td {
+    padding: 10px 15px;
+    vertical-align: middle;
+}
+
+.sayim-tablo .sayim-adet-input {
+    width: 70px;
+    text-align: center;
+    background: var(--hk-bg-input);
+    border: 1px solid var(--hk-border);
+    border-radius: 6px;
+    padding: 6px;
+    color: var(--hk-text-main);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.sayim-tablo .sayim-adet-input:focus {
+    border-color: var(--hk-accent);
+    outline: none;
+}
+
+.sayim-tablo .sayim-adet-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.sayim-tablo .btn-sayim-adet {
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    border: 1px solid var(--hk-border);
+    background: var(--hk-bg-input);
+    color: var(--hk-text-main);
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.sayim-tablo .btn-sayim-adet:hover {
+    background: var(--hk-bg-hover);
+    border-color: var(--hk-accent);
+}
+
+.btn-sayim-kalem-sil {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    margin: 0 auto;
+}
+
+.btn-sayim-kalem-sil:hover {
+    background: #e74c3c;
+    color: white;
+}
+
+/* Fark Değerleri */
+.diff-plus {
+    color: #10b981;
+    font-weight: bold;
+}
+
+.diff-minus {
+    color: #ef4444;
+    font-weight: bold;
+}
+
+.diff-zero {
+    color: var(--hk-text-muted);
+}
+
+/* Flaş Parlama Efekti */
+@keyframes rowHighlight {
+    0% { background-color: rgba(59, 130, 246, 0.35); }
+    100% { background-color: transparent; }
+}
+
+.row-flash {
+    animation: rowHighlight 1.5s ease-out;
+}
+
+/* Alt Aksiyon Barı */
+.sayim-aksiyon-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--hk-border);
+    padding-top: 15px;
+}
+
+.btn-sayim-iptal-action {
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #ef4444 !important;
+    border: 1px solid rgba(239, 68, 68, 0.2) !important;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    cursor: pointer;
+}
+
+.btn-sayim-iptal-action:hover {
+    background: #ef4444 !important;
+    color: white !important;
+}
+
+.btn-sayim-bitir-action {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 24px !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+    cursor: pointer;
+}
+
+.btn-sayim-bitir-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Sayım Bitirme Modalı İnce Ayarlar */
+.sayim-bitir-secenekler {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.sayim-secenek-kart {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+    border: 1px solid var(--hk-border);
+    border-radius: 10px;
+    background: var(--hk-bg-input);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sayim-secenek-kart:hover {
+    border-color: var(--hk-accent);
+    background: var(--hk-bg-hover);
+}
+
+.sayim-secenek-kart input[type="radio"] {
+    margin-top: 4px;
+}
+
+.secenek-detay {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.secenek-baslik {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.secenek-aciklama {
+    font-size: 12px;
+    color: var(--hk-text-muted);
+    line-height: 1.5;
+}
+
+/* Detay Tablosu (Inline) */
+.sayim-detail-inline {
+    background: var(--hk-bg-body);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+    border: 1px solid var(--hk-border);
+}
+
+.sayim-detail-inline h5 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.sayim-detail-inline table {
+    width: 100%;
+    font-size: 12px;
+}
+
+.sayim-detail-inline th {
+    background: var(--hk-bg-input);
+}
+

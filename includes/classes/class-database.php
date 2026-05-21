@@ -26,6 +26,8 @@ class Hizli_Kasa_Database {
             'order_edits'      => $wpdb->prefix . 'hizli_kasa_order_edits',
             'sevkler'          => $wpdb->prefix . 'hizli_kasa_sevkler',
             'sevk_kalemleri'   => $wpdb->prefix . 'hizli_kasa_sevk_kalemleri',
+            'sayim_sessions'   => $wpdb->prefix . 'hizli_kasa_sayim_sessions',
+            'sayim_kalemleri'  => $wpdb->prefix . 'hizli_kasa_sayim_kalemleri',
         ];
     }
 
@@ -189,6 +191,44 @@ class Hizli_Kasa_Database {
         dbDelta($sql8);
         if ($wpdb->last_error) {
             error_log('Hızlı Kasa DB Delta Hatası (Sevk Kalemleri): ' . $wpdb->last_error);
+        }
+
+        $sql9 = "CREATE TABLE {$tables['sayim_sessions']} (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            location_id bigint(20) NOT NULL,
+            status varchar(30) NOT NULL DEFAULT 'aktif',
+            update_type varchar(30) DEFAULT NULL,
+            total_items int(11) DEFAULT 0,
+            total_diff decimal(15,4) DEFAULT 0.0000,
+            report_data longtext DEFAULT NULL,
+            created_by bigint(20) NOT NULL,
+            created_at datetime NOT NULL,
+            completed_at datetime DEFAULT NULL,
+            PRIMARY KEY  (id),
+            KEY location_id (location_id),
+            KEY status (status)
+        ) $charset_collate;";
+        dbDelta($sql9);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Sayım Oturumları): ' . $wpdb->last_error);
+        }
+
+        $sql10 = "CREATE TABLE {$tables['sayim_kalemleri']} (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            session_id bigint(20) NOT NULL,
+            product_id bigint(20) NOT NULL,
+            variation_id bigint(20) DEFAULT 0,
+            counted_qty decimal(15,4) NOT NULL DEFAULT 0.0000,
+            system_qty decimal(15,4) NOT NULL DEFAULT 0.0000,
+            updated_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            KEY session_id (session_id),
+            KEY product_id (product_id),
+            KEY variation_id (variation_id)
+        ) $charset_collate;";
+        dbDelta($sql10);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Sayım Kalemleri): ' . $wpdb->last_error);
         }
     }
 
