@@ -607,3 +607,78 @@
     font-size: 13px;
     margin: 5px 0 0;
 }
+
+/* Ödeme Yöntemi Rozetleri */
+.report-payment-container {
+    margin-top: 6px;
+}
+
+.payment-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    width: fit-content;
+    white-space: nowrap;
+    line-height: 1.2;
+    border: 1px solid transparent;
+}
+
+.payment-badge.payment-nakit {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--hk-success);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.payment-badge.payment-kart {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--hk-accent);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.payment-badge.payment-iban {
+    background-color: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+    border-color: rgba(139, 92, 246, 0.2);
+}
+
+.payment-badge.payment-bolunmus {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--hk-warning);
+    border-color: rgba(245, 158, 11, 0.2);
+    cursor: help;
+}
+
+.payment-badge.payment-belirsiz {
+    background-color: rgba(100, 116, 139, 0.1);
+    color: var(--hk-text-muted);
+    border-color: rgba(100, 116, 139, 0.2);
+}
+
+/* Dark mode theme overrides */
+#hizli-kasa-app.theme-dark .payment-badge.payment-nakit {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: var(--hk-success);
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+#hizli-kasa-app.theme-dark .payment-badge.payment-kart {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: var(--hk-accent);
+    border-color: rgba(59, 130, 246, 0.25);
+}
+
+#hizli-kasa-app.theme-dark .payment-badge.payment-iban {
+    background-color: rgba(139, 92, 246, 0.15);
+    color: #a78bfa;
+    border-color: rgba(139, 92, 246, 0.25);
+}
+
+#hizli-kasa-app.theme-dark .payment-badge.payment-bolunmus {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: var(--hk-warning);
+    border-color: rgba(245, 158, 11, 0.25);
+}

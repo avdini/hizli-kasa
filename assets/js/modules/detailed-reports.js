@@ -157,6 +157,56 @@
             return '₺ ' + amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         },
 
+        getPaymentBadgeHtml: function(order) {
+            var meta = order.meta || {};
+            var nakit = parseFloat(meta._odeme_nakit || 0);
+            var kart = parseFloat(meta._odeme_kart || 0);
+            var iban = parseFloat(meta._odeme_iban || 0);
+            
+            var activeMethods = [];
+            if (Math.abs(nakit) > 0.01) activeMethods.push({ type: 'nakit', name: 'Nakit', amount: nakit });
+            if (Math.abs(kart) > 0.01) activeMethods.push({ type: 'kart', name: 'Kart', amount: kart });
+            if (Math.abs(iban) > 0.01) activeMethods.push({ type: 'iban', name: 'IBAN', amount: iban });
+            
+            var badgeClass = '';
+            var badgeText = '';
+            var tooltipText = '';
+            
+            if (activeMethods.length > 1) {
+                badgeClass = 'payment-bolunmus';
+                badgeText = '🔀 Bölünmüş';
+                tooltipText = activeMethods.map(m => m.name + ': ' + this.formatCurrency(m.amount)).join(' | ');
+            } else if (activeMethods.length === 1) {
+                var method = activeMethods[0];
+                var icons = { nakit: '💵', kart: '💳', iban: '📱' };
+                badgeClass = 'payment-' + method.type;
+                badgeText = (icons[method.type] || '') + ' ' + method.name;
+                tooltipText = method.name + ' Ödeme: ' + this.formatCurrency(method.amount);
+            } else {
+                // Fallback to order.payment
+                var paymentTitle = order.payment || 'Belirsiz';
+                var paymentType = 'belirsiz';
+                var icon = '❓';
+                var normalized = paymentTitle.toLowerCase();
+                if (normalized.indexOf('nakit') !== -1 || normalized.indexOf('cash') !== -1) {
+                    paymentType = 'nakit';
+                    icon = '💵';
+                } else if (normalized.indexOf('kart') !== -1 || normalized.indexOf('card') !== -1 || normalized.indexOf('kredi') !== -1) {
+                    paymentType = 'kart';
+                    icon = '💳';
+                } else if (normalized.indexOf('iban') !== -1 || normalized.indexOf('havale') !== -1 || normalized.indexOf('transfer') !== -1) {
+                    paymentType = 'iban';
+                    icon = '📱';
+                }
+                
+                badgeClass = 'payment-' + paymentType;
+                badgeText = icon + ' ' + paymentTitle;
+                tooltipText = paymentTitle;
+            }
+            
+            return '<div class="payment-badge ' + badgeClass + '" title="' + this.escapeHtml(tooltipText) + '">' + this.escapeHtml(badgeText) + '</div>';
+        },
+
         humanizeKey: function(key) {
             if (!key) return '-';
             return key
@@ -383,6 +433,7 @@
                 var metaDetails = this.renderOrderMetaDetails(order.meta);
                 var orderTotal = this.formatCurrency(order.total || 0);
                 var kasaNoLabel = order.kasa_no ? ('Kasa: ' + this.escapeHtml(order.kasa_no)) : '-';
+                var paymentBadge = this.getPaymentBadgeHtml(order);
 
                 var tr = document.createElement("tr");
                 var actionButtons = '<button class="btn-detail" data-id="' + this.escapeHtml(order.id || '') + '">🔍 Detay</button>';
@@ -391,7 +442,10 @@
                 }
                 tr.innerHTML = `
                     <td>${this.escapeHtml(order.date || '-')}</td>
-                    <td><span class="report-order-id">#${this.escapeHtml(order.id || '-')}</span></td>
+                    <td>
+                        <span class="report-order-id">#${this.escapeHtml(order.id || '-')}</span>
+                        <div class="report-payment-container">${paymentBadge}</div>
+                    </td>
                     <td>${this.escapeHtml(order.cashier || '-')} <br><small class="report-kasa-no">${kasaNoLabel}</small></td>
                     <td>${itemsHtml}</td>
                     <td class="report-total-cell">${orderTotal}</td>
