@@ -1,8 +1,9 @@
 <?php
+
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 6.11.28
+ * Version: 6.11.29
  * Author: Seyfullah Kurt
  */
 
@@ -10,7 +11,7 @@ if (!defined('ABSPATH'))
     exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '6.11.28');
+define('HIZLI_KASA_VERSION', '6.11.29');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -38,7 +39,8 @@ function hizli_kasa_log($message, $filename = 'hizli-kasa-debug.log')
 /**
  * Admin işlemleri için ayrı log
  */
-function hizli_kasa_admin_log($message) {
+function hizli_kasa_admin_log($message)
+{
     hizli_kasa_log($message, 'hizli-kasa-admin.log');
 }
 
@@ -109,7 +111,8 @@ add_filter('http_request_args', function ($args, $url) {
  */
 
 // Sipariş kancaları: Raporlar ve İstatistikler için önbellek temizleme
-function hizli_kasa_invalidate_reports_cache() {
+function hizli_kasa_invalidate_reports_cache()
+{
     update_option('hk_reports_cache_version', time());
 }
 add_action('woocommerce_new_order', 'hizli_kasa_invalidate_reports_cache');
@@ -117,7 +120,8 @@ add_action('woocommerce_update_order', 'hizli_kasa_invalidate_reports_cache');
 add_action('woocommerce_order_refunded', 'hizli_kasa_invalidate_reports_cache');
 
 // Kullanıcı yetki kancaları: Profil güncellendiğinde yetki önbelleği temizleme
-function hizli_kasa_invalidate_user_perms_cache($user_id) {
+function hizli_kasa_invalidate_user_perms_cache($user_id)
+{
     delete_transient("hk_user_view_depos_{$user_id}");
     delete_transient("hk_user_manage_depos_{$user_id}");
 }
