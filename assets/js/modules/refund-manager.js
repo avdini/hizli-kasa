@@ -214,6 +214,18 @@ const RefundManager = (function () {
             renderRefundCart();
             closeSearchResults();
         });
+
+        const detayContainer = document.getElementById('iade-siparis-detay');
+        if (detayContainer) {
+            detayContainer.addEventListener('click', function(e) {
+                const img = e.target.closest('.iade-item-image');
+                if (img && img.src) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    openImagePreview(img.src);
+                }
+            });
+        }
     }
 
     function toggleManualMode() {
@@ -304,8 +316,17 @@ const RefundManager = (function () {
                 ? `<span class="iade-uyari-text">Varyant Seçin</span>`
                 : `<button class="iade-ekle-btn" onclick="RefundManager.addManualToRefundCart(${JSON.stringify(product).replace(/"/g, '&quot;')})">İadeye Ekle</button>`;
 
+            const imageSrc = (product.images && product.images.length > 0)
+                ? product.images[0].src
+                : (product.image ? product.image : null);
+
+            const imgHtml = imageSrc
+                ? `<img src="${imageSrc}" class="iade-item-image" alt="">`
+                : `<div class="iade-item-image-placeholder"></div>`;
+
             html += `
                 <div class="iade-urun-satir">
+                    ${imgHtml}
                     <div class="urun-bilgi">
                         <span class="urun-ad">${product.name}</span>
                         <span class="urun-sku">SKU: ${product.sku || '-'} | Stok: ${product.stock_quantity || 0}</span>
@@ -540,8 +561,13 @@ const RefundManager = (function () {
                 ? `<span class="urun-iskonto-badge" style="background:#e74c3c;color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:8px;vertical-align:middle;display:inline-block;">İsk: -${item.item_discount.toFixed(2)} ₺</span>`
                 : '';
 
+            var imgHtml = item.image
+                ? `<img src="${item.image}" class="iade-item-image" alt="">`
+                : `<div class="iade-item-image-placeholder"></div>`;
+
             html += `
                 <div class="iade-urun-satir">
+                    ${imgHtml}
                     <div class="urun-bilgi">
                         <span class="urun-ad">${item.name}</span>
                         <span class="urun-sku">SKU: ${item.sku} ${depoBadge}</span>
@@ -975,6 +1001,73 @@ const RefundManager = (function () {
     function hideLoading() {
         const overlay = document.getElementById('app-loading');
         if (overlay) overlay.style.display = 'none';
+    }
+
+    function openImagePreview(src) {
+        if (!src || src.includes('placeholder')) return;
+
+        if (window.HizliKasa && window.HizliKasa.StockTerminal && typeof window.HizliKasa.StockTerminal.openImagePreview === 'function') {
+            window.HizliKasa.StockTerminal.openImagePreview(src);
+            return;
+        }
+        if (window.HizliKasa && window.HizliKasa.UIRenderer && typeof window.HizliKasa.UIRenderer.openImagePreview === 'function') {
+            window.HizliKasa.UIRenderer.openImagePreview(src);
+            return;
+        }
+
+        var modal = document.getElementById('terminal-image-preview-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'terminal-image-preview-modal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:999999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);cursor:zoom-out;';
+            
+            var loader = document.createElement('div');
+            loader.id = 'terminal-preview-loader';
+            loader.style.cssText = 'position:absolute;width:40px;height:40px;border:4px solid #fff;border-top:4px solid transparent;border-radius:50%;animation:hk-spin 1s linear infinite;';
+            
+            if (!document.getElementById('hk-spin-keyframes')) {
+                var style = document.createElement('style');
+                style.id = 'hk-spin-keyframes';
+                style.innerHTML = '@keyframes hk-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+                document.head.appendChild(style);
+            }
+
+            var img = document.createElement('img');
+            img.id = 'terminal-preview-img';
+            img.style.cssText = 'max-width:90%;max-height:90%;object-fit:contain;border-radius:12px;opacity:0;transition:opacity 0.3s;box-shadow:0 10px 40px rgba(0,0,0,0.5);';
+            
+            modal.appendChild(loader);
+            modal.appendChild(img);
+            document.body.appendChild(modal);
+
+            modal.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+        }
+
+        var imgEl = document.getElementById('terminal-preview-img');
+        var loaderEl = document.getElementById('terminal-preview-loader');
+        
+        imgEl.style.opacity = '0';
+        imgEl.src = '';
+        loaderEl.style.display = 'block';
+        modal.style.display = 'flex';
+        
+        var fullSrc = src.replace(/-\d+x\d+(\.[a-zA-Z]+)$/i, '$1');
+        
+        imgEl.onload = function() {
+            loaderEl.style.display = 'none';
+            imgEl.style.opacity = '1';
+        };
+        imgEl.onerror = function() {
+            loaderEl.style.display = 'none';
+            imgEl.style.opacity = '1';
+            if (imgEl.src !== src) {
+                imgEl.src = src;
+            }
+        };
+        
+        imgEl.src = fullSrc;
     }
 
     return {

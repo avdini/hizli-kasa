@@ -408,6 +408,23 @@
 
 .iade-urun-satir:last-child { border-bottom: none; }
 
+.iade-item-image {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+    flex-shrink: 0;
+    cursor: zoom-in;
+}
+
+.iade-item-image-placeholder {
+    width: 40px;
+    height: 40px;
+    background: var(--hk-bg-hover, #eee);
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
 .iade-urun-satir .urun-bilgi { flex: 1; min-width: 0; }
 .iade-urun-satir .urun-ad { font-weight: bold; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .iade-urun-satir .urun-sku { font-size: 11px; color: #999; }

@@ -96,6 +96,16 @@ function hizli_kasa_get_order_details($request)
             $cikis_depo_adi = $depo_names_cache[$cikis_depo_id];
         }
 
+        $image = '';
+        if ($product) {
+            $image_id = $product->get_image_id();
+            if (!$image_id && $product->is_type('variation')) {
+                $parent = wc_get_product($product->get_parent_id());
+                $image_id = $parent ? $parent->get_image_id() : 0;
+            }
+            $image = $image_id ? wp_get_attachment_image_url($image_id, 'thumbnail') : '';
+        }
+
         $items[] = [
             'item_id' => $item_id,
             'id' => $item->get_product_id(),
@@ -110,6 +120,7 @@ function hizli_kasa_get_order_details($request)
             'depo_id' => $cikis_depo_id,
             'depo_adi' => $cikis_depo_adi ?: '',
             'item_discount' => (float) wc_get_order_item_meta($item_id, '_hk_item_discount', true),
+            'image' => $image ?: '',
         ];
     }
 

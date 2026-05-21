@@ -367,6 +367,7 @@
     border-radius: 6px;
     object-fit: cover;
     background: var(--hk-bg-hover);
+    cursor: zoom-in;
 }
 
 .sevk-compare-ok {

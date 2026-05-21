@@ -73,6 +73,7 @@
             this.bindKabul();
             this.bindGenel();
             this.bindModal();
+            this.bindImagePreview();
             this.refreshDepoUi();
             this.loadAll();
             this.startPolling();
@@ -525,6 +526,99 @@
             this.updatePendingBadge();
             if (this.pollTimer) clearInterval(this.pollTimer);
             this.pollTimer = setInterval(function() { self.updatePendingBadge(); }, 30000);
+        },
+
+        bindImagePreview: function() {
+            var self = this;
+            var shell = document.querySelector('.sevk-shell');
+            if (shell) {
+                shell.addEventListener('click', function(e) {
+                    var img = e.target.closest('.sevk-product-cell img');
+                    if (img && img.src) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        self.openImagePreview(img.src);
+                    }
+                });
+            }
+            var modal = document.getElementById('sevk-detay-modal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    var img = e.target.closest('.sevk-product-cell img');
+                    if (img && img.src) {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        self.openImagePreview(img.src);
+                    }
+                });
+            }
+        },
+
+        openImagePreview: function(src) {
+            if (!src || src.includes('placeholder')) return;
+
+            if (window.HizliKasa && window.HizliKasa.StockTerminal && typeof window.HizliKasa.StockTerminal.openImagePreview === 'function') {
+                window.HizliKasa.StockTerminal.openImagePreview(src);
+                return;
+            }
+            if (window.HizliKasa && window.HizliKasa.UIRenderer && typeof window.HizliKasa.UIRenderer.openImagePreview === 'function') {
+                window.HizliKasa.UIRenderer.openImagePreview(src);
+                return;
+            }
+
+            var modal = document.getElementById('terminal-image-preview-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'terminal-image-preview-modal';
+                modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:999999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);cursor:zoom-out;';
+                
+                var loader = document.createElement('div');
+                loader.id = 'terminal-preview-loader';
+                loader.style.cssText = 'position:absolute;width:40px;height:40px;border:4px solid #fff;border-top:4px solid transparent;border-radius:50%;animation:hk-spin 1s linear infinite;';
+                
+                if (!document.getElementById('hk-spin-keyframes')) {
+                    var style = document.createElement('style');
+                    style.id = 'hk-spin-keyframes';
+                    style.innerHTML = '@keyframes hk-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+                    document.head.appendChild(style);
+                }
+
+                var img = document.createElement('img');
+                img.id = 'terminal-preview-img';
+                img.style.cssText = 'max-width:90%;max-height:90%;object-fit:contain;border-radius:12px;opacity:0;transition:opacity 0.3s;box-shadow:0 10px 40px rgba(0,0,0,0.5);';
+                
+                modal.appendChild(loader);
+                modal.appendChild(img);
+                document.body.appendChild(modal);
+
+                modal.addEventListener('click', function() {
+                    modal.style.display = 'none';
+                });
+            }
+
+            var imgEl = document.getElementById('terminal-preview-img');
+            var loaderEl = document.getElementById('terminal-preview-loader');
+            
+            imgEl.style.opacity = '0';
+            imgEl.src = '';
+            loaderEl.style.display = 'block';
+            modal.style.display = 'flex';
+            
+            var fullSrc = src.replace(/-\d+x\d+(\.[a-zA-Z]+)$/i, '$1');
+            
+            imgEl.onload = function() {
+                loaderEl.style.display = 'none';
+                imgEl.style.opacity = '1';
+            };
+            imgEl.onerror = function() {
+                loaderEl.style.display = 'none';
+                imgEl.style.opacity = '1';
+                if (imgEl.src !== src) {
+                    imgEl.src = src;
+                }
+            };
+            
+            imgEl.src = fullSrc;
         }
     };
 

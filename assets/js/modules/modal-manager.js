@@ -319,6 +319,7 @@
          * Tekil ürün satırı DOM öğesi oluşturur
          */
         _urunSatiriOlustur: function(urun, isMain, showVariationHint) {
+            var self = this;
             var regularPrice = parseFloat(urun.regular_price || 0);
             var salePrice = parseFloat(urun.price || 0);
             var isVariableParent = !!urun.is_variable;
@@ -328,7 +329,7 @@
             
             // Kolon Yapısı HTML
             var imgHtml = (urun.images && urun.images.length > 0)
-                ? '<img src="' + urun.images[0].src + '" style="width:30px; height:30px; object-fit:cover; border-radius:3px; ' + (outOfStock ? 'filter:grayscale(1); opacity:0.5;' : '') + '">'
+                ? '<img src="' + urun.images[0].src + '" class="arama-urun-resim" style="width:30px; height:30px; object-fit:cover; border-radius:3px; cursor:zoom-in; ' + (outOfStock ? 'filter:grayscale(1); opacity:0.5;' : '') + '">'
                 : '<div style="width:30px; height:30px; background:#f0f0f0; border-radius:3px;"></div>';
 
             var nameHtml = 
@@ -395,6 +396,21 @@
                 HK.CartManager.ekleUrunObjesiyle(urun);
                 document.getElementById("urun-arama-modal").style.display = "none";
             });
+
+            // Resme tıklandığında önizleme
+            var imgEl = li.querySelector(".arama-urun-resim");
+            if (imgEl) {
+                imgEl.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    var src = urun.images[0].src;
+                    if (window.HizliKasa && window.HizliKasa.StockTerminal && typeof window.HizliKasa.StockTerminal.openImagePreview === 'function') {
+                        window.HizliKasa.StockTerminal.openImagePreview(src);
+                    } else {
+                        self.openImagePreview(src);
+                    }
+                });
+            }
 
             return li;
         },
@@ -560,6 +576,69 @@
                 if (event.target == els.urunAramaModal) els.urunAramaModal.style.display = "none";
                 if (event.target == els.bolModal) els.bolModal.style.display = "none";
             });
+        },
+
+        openImagePreview: function(src) {
+            if (!src || src.includes('placeholder')) return;
+
+            if (window.HizliKasa && window.HizliKasa.StockTerminal && typeof window.HizliKasa.StockTerminal.openImagePreview === 'function') {
+                window.HizliKasa.StockTerminal.openImagePreview(src);
+                return;
+            }
+
+            let modal = document.getElementById('terminal-image-preview-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'terminal-image-preview-modal';
+                modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:999999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);cursor:zoom-out;';
+                
+                const loader = document.createElement('div');
+                loader.id = 'terminal-preview-loader';
+                loader.style.cssText = 'position:absolute;width:40px;height:40px;border:4px solid #fff;border-top:4px solid transparent;border-radius:50%;animation:hk-spin 1s linear infinite;';
+                
+                if (!document.getElementById('hk-spin-keyframes')) {
+                    const style = document.createElement('style');
+                    style.id = 'hk-spin-keyframes';
+                    style.innerHTML = '@keyframes hk-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+                    document.head.appendChild(style);
+                }
+
+                const img = document.createElement('img');
+                img.id = 'terminal-preview-img';
+                img.style.cssText = 'max-width:90%;max-height:90%;object-fit:contain;border-radius:12px;opacity:0;transition:opacity 0.3s;box-shadow:0 10px 40px rgba(0,0,0,0.5);';
+                
+                modal.appendChild(loader);
+                modal.appendChild(img);
+                document.body.appendChild(modal);
+
+                modal.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                });
+            }
+
+            const img = document.getElementById('terminal-preview-img');
+            const loader = document.getElementById('terminal-preview-loader');
+            
+            img.style.opacity = '0';
+            img.src = '';
+            loader.style.display = 'block';
+            modal.style.display = 'flex';
+            
+            const fullSrc = src.replace(/-\d+x\d+(\.[a-zA-Z]+)$/i, '$1');
+            
+            img.onload = function() {
+                loader.style.display = 'none';
+                img.style.opacity = '1';
+            };
+            img.onerror = function() {
+                loader.style.display = 'none';
+                img.style.opacity = '1';
+                if (img.src !== src) {
+                    img.src = src;
+                }
+            };
+            
+            img.src = fullSrc;
         }
     };
 
