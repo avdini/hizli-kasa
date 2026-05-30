@@ -353,6 +353,60 @@ jQuery(document).ready(function($) {
         }
     }
 
+    window.openImagePreview = function(src) {
+        if (!src || src.includes('placeholder')) return;
+
+        let modal = document.getElementById('terminal-image-preview-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'terminal-image-preview-modal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:999999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);cursor:zoom-out;';
+            
+            const loader = document.createElement('div');
+            loader.id = 'terminal-preview-loader';
+            loader.style.cssText = 'position:absolute;width:40px;height:40px;border:4px solid #fff;border-top:4px solid transparent;border-radius:50%;animation:hk-spin 1s linear infinite;';
+            
+            if (!document.getElementById('hk-spin-keyframes')) {
+                const style = document.createElement('style');
+                style.id = 'hk-spin-keyframes';
+                style.innerHTML = '@keyframes hk-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+                document.head.appendChild(style);
+            }
+
+            const img = document.createElement('img');
+            img.id = 'terminal-preview-img';
+            img.style.cssText = 'max-width:90%;max-height:90%;object-fit:contain;border-radius:12px;opacity:0;transition:opacity 0.3s;box-shadow:0 10px 40px rgba(0,0,0,0.5);';
+            
+            modal.appendChild(loader);
+            modal.appendChild(img);
+            document.body.appendChild(modal);
+
+            modal.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+        }
+
+        const img = document.getElementById('terminal-preview-img');
+        const loader = document.getElementById('terminal-preview-loader');
+        
+        img.style.opacity = '0';
+        img.src = '';
+        loader.style.display = 'block';
+        modal.style.display = 'flex';
+        
+        const fullSrc = src.replace(/-\d+x\d+(\.[a-zA-Z]+)$/i, '$1');
+        
+        img.onload = function() {
+            loader.style.display = 'none';
+            img.style.opacity = '1';
+        };
+        img.onerror = function() {
+            loader.style.display = 'none';
+            img.style.opacity = '1';
+        };
+        img.src = fullSrc;
+    };
+
     // Select All
     $('#select-all-rows').on('change', function() {
         const isChecked = $(this).is(':checked');
@@ -614,7 +668,7 @@ jQuery(document).ready(function($) {
 
             let row = `<tr class="${isVariable ? 'row-variable' : ''} ${stripeClass} ${isExpanded}" data-id="${p.id}">
                 <td style="text-align:center;"><input type="checkbox" class="hk-row-cb" value="${p.id}"></td>
-                <td><img src="${p.thumbnail}" style="width:40px; height:40px; border-radius:4px; object-fit:cover;"></td>
+                <td><img src="${p.thumbnail}" style="width:40px; height:40px; border-radius:4px; object-fit:cover; cursor:pointer;" onclick="openImagePreview('${p.thumbnail}')"></td>
                 <td style="vertical-align:middle;">
                     <div style="display:flex; align-items:center;">
                         ${isVariable ? '<span class="toggle-icon">▶</span>' : ''}
@@ -653,7 +707,7 @@ jQuery(document).ready(function($) {
                     const hiddenClass = autoExpand ? '' : 'hidden-variation';
                     let vRow = `<tr class="row-variation child-of-${p.id} ${hiddenClass}" data-id="${p.id}" data-vid="${v.variation_id}">
                         <td style="text-align:center;"><input type="checkbox" class="hk-row-cb" value="${v.variation_id}"></td>
-                        <td style="text-align:right;"><img src="${v.thumbnail}" style="width:30px; height:30px; border-radius:4px; object-fit:cover;"></td>
+                        <td style="text-align:right;"><img src="${v.thumbnail}" style="width:30px; height:30px; border-radius:4px; object-fit:cover; cursor:pointer;" onclick="openImagePreview('${v.thumbnail}')"></td>
                         <td class="variation-indent" style="vertical-align:middle;">
                             <div style="display:flex; align-items:center;">
                                 <span style="font-size:13px; color:#334155;">${v.name}</span>
