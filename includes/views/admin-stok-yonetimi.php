@@ -644,7 +644,9 @@ jQuery(document).ready(function($) {
     loadStockList();
 
     // Sayfa değiştirince veya arama yapınca delegasyonlu event listener'ı bir kez kur
-    $(document).off('click', '.row-variable').on('click', '.row-variable', function() {
+    $(document).off('click', '.row-variable').on('click', '.row-variable', function(e) {
+        if ($(e.target).is('input[type="checkbox"]')) return;
+        
         const productID = $(this).data('id');
         $(this).toggleClass('expanded');
         $(`.child-of-${productID}`).toggleClass('hidden-variation');
