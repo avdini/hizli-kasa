@@ -186,12 +186,17 @@ window.HizliKasa = window.HizliKasa || {};
                             state.sepet.splice(idx, 1);
                         }
 
-                        // Ürün eksiltildiğinde iskonto yeniden dağıt, ödeme yöntemini sıfırla
+                        // Ürün eksiltildiğinde iskonto tutarını güncelle (yeniden dağıtmadan), ödeme yöntemini sıfırla
                         var resetMesajlari = [];
                         
                         if (state.iskontoTutar > 0) {
-                            HK.CartManager.dagitimiHesapla(state.iskontoTutar);
-                            resetMesajlari.push("iskonto yeniden dağıtıldı");
+                            if (state.sepet.length === 0) {
+                                HK.CartManager.iskontoTemizle();
+                                resetMesajlari.push("iskonto sıfırlandı");
+                            } else {
+                                HK.CartManager.iskontoTutariniGuncelle();
+                                resetMesajlari.push("iskonto güncellendi");
+                            }
                         }
                         
                         if (state.odemeTipi !== "card" || state.splitData !== null) {

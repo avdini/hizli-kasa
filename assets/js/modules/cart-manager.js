@@ -232,9 +232,9 @@ window.HizliKasa = window.HizliKasa || {};
                 state.sepet.unshift(eklenecekUrun);
             }
 
-            // Sepet değişti: Mevcut iskonto varsa yeniden dağıt
+            // Sepet değişti: Mevcut iskonto varsa toplamı güncelle (yeniden dağıtmadan)
             if (state.iskontoTutar > 0) {
-                this.dagitimiHesapla(state.iskontoTutar);
+                this.iskontoTutariniGuncelle();
             }
 
             if (HK.UIRenderer) {
@@ -375,6 +375,20 @@ window.HizliKasa = window.HizliKasa || {};
             state.sepet.forEach(function(item) {
                 item.discounted_price = null;
             });
+        },
+
+        /**
+         * Sepetteki ürünlerin mevcut indirimlerinden toplam iskonto tutarını hesaplar ve günceller
+         */
+        iskontoTutariniGuncelle: function() {
+            var state = HK.State;
+            var toplam = 0;
+            state.sepet.forEach(function(item) {
+                if (item.discounted_price !== null) {
+                    toplam += (item.price - item.discounted_price) * item.quantity;
+                }
+            });
+            state.iskontoTutar = parseFloat(toplam.toFixed(2));
         }
     };
 
