@@ -143,6 +143,11 @@ function hizli_kasa_ayarlari_kaydet()
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_fallback_sku_to_id', array(
         'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
     ));
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_iskonto_telefon_esigi', array(
+        'type' => 'integer',
+        'default' => 2000,
+        'sanitize_callback' => 'intval'
+    ));
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_yuvarlama_aktif', array(
         'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
     ));
@@ -1432,6 +1437,14 @@ function hizli_kasa_ayarlar_sayfasi()
                                     SKU'su olmayan ürünlerde ürün ID'sini SKU olarak kabul et
                                 </label>
                                 <p class="description">Barkod yazdırma ekranında ürünün SKU'su yoksa uyarı vermek yerine ürün ID'si barkod numarası olarak kullanılır.</p>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">İskonto Telefon Zorunluluğu</th>
+                            <td>
+                                <?php $tel_esik = get_option('hizli_kasa_iskonto_telefon_esigi', 2000); ?>
+                                <input type="number" name="hizli_kasa_iskonto_telefon_esigi" value="<?php echo esc_attr($tel_esik); ?>" min="0" step="10" class="small-text"> TL
+                                <p class="description">Bu tutarın üzerindeki iskontolarda müşteri telefonu zorunlu olur. Devre dışı bırakmak için çok yüksek bir rakam girin.</p>
                             </td>
                         </tr>
                     </table>

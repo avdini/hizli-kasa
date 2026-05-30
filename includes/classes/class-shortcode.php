@@ -173,7 +173,8 @@ function hizli_kasa_uygulamasi()
         'toplamKasa'      => (int)get_option('hizli_kasa_toplam_kasa', 3),
         'anlikKasaKapsam' => get_option('hizli_kasa_anlik_kasa_kapsam', 'secili'),
         'tema'            => get_user_meta(get_current_user_id(), '_hizli_kasa_tema', true) ?: 'light',
-        'fallbackSkuToId' => get_option('hizli_kasa_fallback_sku_to_id', '0')
+        'fallbackSkuToId' => get_option('hizli_kasa_fallback_sku_to_id', '0'),
+        'iskontoTelefonEsigi' => (int)get_option('hizli_kasa_iskonto_telefon_esigi', 2000)
     ));
 
     // HTML Template'i Render Et

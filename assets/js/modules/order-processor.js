@@ -47,15 +47,39 @@
                 var state = HK.State;
                 if (state.sepet.length === 0) return;
 
-                // Müşteri Telefonu Doğrulaması (Eğer girilmişse)
+                // İskonto Telefon Zorunluluğu Kontrolü
+                var sepetListeToplami = 0;
+                var sepetAraToplam = 0;
+                state.sepet.forEach(function(item) {
+                    sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
+                    sepetAraToplam += (item.price * item.quantity);
+                });
+                
+                var isAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+                var netToplam = sepetAraToplam - (isAutoDiscount ? (sepetAraToplam * 0.05) : 0) - (state.iskontoTutar || 0);
+                var toplamIskonto = sepetListeToplami - netToplam;
+
+                var esik = (typeof kasaAyar !== 'undefined' && kasaAyar.iskontoTelefonEsigi) ? kasaAyar.iskontoTelefonEsigi : 2000;
                 var phoneInput = document.getElementById("musteri-telefon");
-                if (phoneInput && phoneInput.value.trim() !== "") {
-                    var rawPhone = phoneInput.value.replace(/\D/g, '');
+                var rawPhone = (state.musteriTelefon || "").replace(/\D/g, '');
+
+                if (toplamIskonto >= esik) {
+                    if (rawPhone.length !== 11 || rawPhone[0] !== '0') {
+                        HK.UIRenderer.showToast(esik + " TL ve üzeri iskontolarda müşteri telefonu zorunludur!", "error", true);
+                        var musteriPanel = document.getElementById("musteri-telefon-panel");
+                        if (musteriPanel) musteriPanel.style.display = "block";
+                        if (phoneInput) phoneInput.focus();
+                        return;
+                    }
+                }
+
+                // Müşteri Telefonu Doğrulaması (Eğer girilmişse ama eşik altında kalmışsa bile formatı kontrol et)
+                if (rawPhone.length > 0) {
                     if (rawPhone.length !== 11 || rawPhone[0] !== '0') {
                         HK.UIRenderer.showToast("Lütfen geçerli bir telefon numarası giriniz (05xx...)", "error", true);
                         var musteriPanel = document.getElementById("musteri-telefon-panel");
                         if (musteriPanel) musteriPanel.style.display = "block";
-                        phoneInput.focus();
+                        if (phoneInput) phoneInput.focus();
                         return;
                     }
                 }
