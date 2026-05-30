@@ -452,8 +452,10 @@
 
             els.bolOnayla.addEventListener("click", async function() {
                 var state = HK.State;
+                var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+                var carpan = hasAutoDiscount ? 0.95 : 1;
                 var toplamPara = 0;
-                state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity); });
+                state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity * carpan); });
                 var netHedef = toplamPara - state.iskontoTutar;
 
                 var nakit = HK.CurrencyMask.parse(els.bolNakitInput.value) || 0;
@@ -487,7 +489,9 @@
             var els = this.els;
 
             var toplamPara = 0;
-            state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity); });
+            var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+            var carpan = hasAutoDiscount ? 0.95 : 1;
+            state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity * carpan); });
             var netHedef = toplamPara - state.iskontoTutar;
 
             var nakit = HK.CurrencyMask.parse(els.bolNakitInput.value) || 0;
