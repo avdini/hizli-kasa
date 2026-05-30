@@ -97,7 +97,11 @@
             if (musteriKapat && musteriPanel) {
                 musteriKapat.addEventListener("click", function () {
                     musteriPanel.style.display = "none";
-                    if (phoneInput) phoneInput.value = ""; // Kapatınca temizle (opsiyonel)
+                    if (phoneInput) {
+                        phoneInput.value = "";
+                        HK.State.musteriTelefon = "";
+                        HK.CartManager.sepetiKaydet();
+                    }
                 });
             }
 
@@ -119,6 +123,10 @@
                     } else {
                         e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + (x[3] ? ') ' + x[3] : '') + (x[4] ? ' ' + x[4] : '') + (x[5] ? ' ' + x[5] : '');
                     }
+
+                    // State'i güncelle ve kaydet
+                    HK.State.musteriTelefon = e.target.value;
+                    HK.CartManager.sepetiKaydet();
 
                     // Görsel doğrulama geri bildirimi
                     var grup = e.target.closest('.musteri-input-grup');
@@ -336,7 +344,7 @@
                     { key: "_hk_cikis_depo_id", value: (HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0).toString() },
                     { key: "_hk_cikis_depo_adi", value: HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '' },
                     { key: "_hizli_kasa_kaynak", value: "pos_satis" },
-                    { key: "_hizli_kasa_musteri_telefon", value: document.getElementById("musteri-telefon") ? document.getElementById("musteri-telefon").value : "" }
+                    { key: "_hizli_kasa_musteri_telefon", value: state.musteriTelefon || "" }
                 ]
             };
 

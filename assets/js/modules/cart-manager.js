@@ -18,6 +18,7 @@ window.HizliKasa = window.HizliKasa || {};
         sepet: [],
         iskontoTutar: 0,
         odemeTipi: "card",
+        musteriTelefon: "",
         splitData: null,
         lastUpdatedId: null,
         CURRENT_VERSION: typeof kasaAyar !== 'undefined' && kasaAyar.version ? kasaAyar.version : "2.8.8",
@@ -46,6 +47,7 @@ window.HizliKasa = window.HizliKasa || {};
                 sepet: state.sepet,
                 iskontoTutar: state.iskontoTutar,
                 odemeTipi: state.odemeTipi,
+                musteriTelefon: state.musteriTelefon,
                 splitData: state.splitData
             };
             localStorage.setItem(this._slotKey(state.aktifKasaId), JSON.stringify(veri));
@@ -70,7 +72,18 @@ window.HizliKasa = window.HizliKasa || {};
                     state.sepet = veri.sepet || [];
                     state.iskontoTutar = veri.iskontoTutar || 0;
                     state.odemeTipi = veri.odemeTipi || "card";
+                    state.musteriTelefon = veri.musteriTelefon || "";
                     state.splitData = veri.splitData || null;
+
+                    // UI Güncelle
+                    var phoneInput = document.getElementById("musteri-telefon");
+                    var musteriPanel = document.getElementById("musteri-telefon-panel");
+                    if (phoneInput) {
+                        phoneInput.value = state.musteriTelefon;
+                    }
+                    if (musteriPanel) {
+                        musteriPanel.style.display = state.musteriTelefon ? "block" : "none";
+                    }
 
                     // Geriye dönük uyumluluk: discounted_price'ı line_discount'a çevir
                     state.sepet.forEach(function(item) {
@@ -110,7 +123,14 @@ window.HizliKasa = window.HizliKasa || {};
             state.sepet = [];
             state.iskontoTutar = 0;
             state.odemeTipi = "card";
+            state.musteriTelefon = "";
             state.splitData = null;
+
+            // UI Güncelle
+            var phoneInput = document.getElementById("musteri-telefon");
+            if (phoneInput) {
+                phoneInput.value = "";
+            }
 
             if (HK.UIRenderer) {
                 HK.UIRenderer.arayuzuGuncelle();
