@@ -435,6 +435,16 @@
                 var netHedef = toplamPara - state.iskontoTutar;
 
                 els.bolNetToplamArea.innerText = netHedef.toFixed(2);
+                
+                var uyariMetniEl = document.getElementById("bol-uyari-metni");
+                if (uyariMetniEl) {
+                    if (hasAutoDiscount) {
+                        uyariMetniEl.innerHTML = "Bölme işlemi arka plandaki <strong style='color:#27ae60;'>Nakit/IBAN (%5 İndirimli)</strong> kuralını baz alarak yapılmaktadır.";
+                    } else {
+                        uyariMetniEl.innerHTML = "Bölme işlemi arka plandaki <strong>Kredi Kartı (İndirimsiz)</strong> kuralını baz alarak yapılmaktadır.";
+                    }
+                }
+
                 els.bolNakitInput.value = "";
                 els.bolKartInput.value = "";
                 els.bolIbanInput.value = "";

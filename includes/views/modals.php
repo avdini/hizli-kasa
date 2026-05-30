@@ -66,7 +66,7 @@ if (!defined('ABSPATH')) exit;
 <div id="odeme-bol-modal" class="modal-cerceve" style="display:none;">
     <div class="modal-icerik modal-icerik-md">
         <h3>Ödemeyi Böl</h3>
-        <p class="modal-not">Ödeme bölünürse otomatik %5 indirimler iptal edilir. <br><strong>Ödenecek Net Tutar:
+        <p class="modal-not"><span id="bol-uyari-metni">Bölme işlemi arka plandaki aktif ödeme kanalının kurallarını baz alır.</span> <br><strong>Ödenecek Net Tutar:
                 <span id="bol-net-toplam">0.00</span> TL</strong></p>
 
         <div class="bol-satir">
