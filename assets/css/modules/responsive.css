@@ -244,6 +244,29 @@
     .hk-tab-scrollable-container {
         padding: 15px;
     }
+
+    /* İade (Refund) Modülü Mobil Düzenleme */
+    #iade-modul-konteyner {
+        flex-direction: column !important;
+        height: auto !important;
+        overflow-y: auto !important;
+    }
+
+    .iade-sol-panel, .iade-sag-panel {
+        flex: none !important;
+        width: 100% !important;
+        height: auto !important;
+        margin-bottom: 15px;
+    }
+
+    #iade-siparis-detay {
+        height: auto !important;
+        min-height: 300px;
+    }
+
+    .iade-kaydirilabilir-liste {
+        max-height: 400px;
+    }
 }
 
 

@@ -144,6 +144,24 @@
     border: 1px solid var(--hk-border);
 }
 
+.terminal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.terminal-body::-webkit-scrollbar-track {
+    background: var(--hk-bg-body);
+    border-radius: 10px;
+}
+
+.terminal-body::-webkit-scrollbar-thumb {
+    background: var(--hk-border);
+    border-radius: 10px;
+}
+
+.terminal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--hk-text-muted);
+}
+
 /* --- Terminal Ürün Kartları --- */
 .terminal-urun-kart {
     background: var(--hk-bg-card);

@@ -235,7 +235,6 @@
 #iade-siparis-detay {
     display: flex;
     flex-direction: column;
-    overflow: hidden !important;
 }
 
 .iade-kaydirilabilir-liste {
