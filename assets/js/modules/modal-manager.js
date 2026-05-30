@@ -128,7 +128,7 @@
             var araToplam = this._getSepetAraToplam();
             var nakitIndirim = 0;
             
-            if (!state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
+            if ((state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
                 nakitIndirim = araToplam * 0.05;
             }
             
@@ -427,9 +427,11 @@
                 var state = HK.State;
                 if (state.sepet.length === 0) return;
 
-                // Bölmede %5 otomatik indirim geçersizdir, sadece sepetteki manuel iskonto geçerlidir
+                // Bölme işleminde de seçili ödeme yönteminin (örneğin Nakit ise %5) otomatik indirimleri geçerlidir.
+                var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+                var carpan = hasAutoDiscount ? 0.95 : 1;
                 var toplamPara = 0;
-                state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity); });
+                state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity * carpan); });
                 var netHedef = toplamPara - state.iskontoTutar;
 
                 els.bolNetToplamArea.innerText = netHedef.toFixed(2);
@@ -535,7 +537,7 @@
                 });
 
                 var nakitIndirimTutar = 0;
-                if (!state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
+                if ((state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
                     nakitIndirimTutar = sepetAraToplam * 0.05;
                 }
 

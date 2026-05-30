@@ -271,7 +271,7 @@ window.HizliKasa = window.HizliKasa || {};
                 return;
             }
 
-            var hasAutoDiscount = !state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+            var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
             var carpan = hasAutoDiscount ? 0.95 : 1;
 
             var toplamIskontoKurus = Math.round(toplamIskonto * 100);
@@ -421,7 +421,7 @@ window.HizliKasa = window.HizliKasa || {};
                 hedeflenenSatirNet = yeniDeger * item.quantity;
             }
 
-            var hasAutoDiscount = !state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+            var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
             
             // Eğer %5 indirimi varsa kullanıcının yazdığı değer net(indirimli) ise, 
             // iskontonun manuel kısmını bulmak için %5'i tersine katıp iskonto miktarını buluyoruz.

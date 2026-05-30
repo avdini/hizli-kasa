@@ -79,7 +79,7 @@ window.HizliKasa = window.HizliKasa || {};
                 // Fiyat Katmanları
                 var etiketFiyat = (item.regular_price || item.price) * item.quantity;
                 var kampanyaFiyat = item.price * item.quantity;
-                var hasAutoDiscount = !state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+                var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
 
                 // Ürüne düşen iskonto tutarı
                 var urunIskonto = item.line_discount || 0;
@@ -231,7 +231,7 @@ window.HizliKasa = window.HizliKasa || {};
 
             var nakitIndirimTutar = 0;
             // %5 önce (orijinal fiyata uygulanır), iskonto sonra (üstünden düşülür)
-            if (!state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
+            if ((state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
                 nakitIndirimTutar = sepetAraToplam * 0.05;
                 els.nakitIndirimSatiri.style.setProperty("display", "flex", "important");
                 els.nakitIndirimDegerArea.innerText = "-" + nakitIndirimTutar.toFixed(2) + " TL";
@@ -290,7 +290,7 @@ window.HizliKasa = window.HizliKasa || {};
             // Zaten input modundaysa çık
             if (el.querySelector("input")) return;
 
-            var hasAutoDiscount = !state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+            var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
             var satirNakitIndirim = hasAutoDiscount ? (item.price * item.quantity * 0.05) : 0;
             var netSatirFiyati = (item.price * item.quantity) - satirNakitIndirim - (item.line_discount || 0);
             if (netSatirFiyati < 0) netSatirFiyati = 0;
@@ -364,7 +364,7 @@ window.HizliKasa = window.HizliKasa || {};
             state.sepet.forEach(function(item) {
                 sepetAraToplam += (item.price * item.quantity);
             });
-            var nakitIndirimTutar = (!state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban")) ? (sepetAraToplam * 0.05) : 0;
+            var nakitIndirimTutar = ((state.odemeTipi === "cash" || state.odemeTipi === "iban")) ? (sepetAraToplam * 0.05) : 0;
             var sonToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
             if (sonToplam < 0) sonToplam = 0;
 

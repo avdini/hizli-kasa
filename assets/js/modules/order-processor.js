@@ -215,7 +215,7 @@
             durumMetni.innerText = "İşlem onaylanıyor...";
 
             // Eğer ödeme bölünmüşse OTOMATİK %5 indirimleri IPTAL et
-            var isAutoDiscount = splitData ? false : (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+            var isAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
 
             // Toplamlar için ön çalışma
             var sepetAraToplam = 0;
