@@ -224,20 +224,18 @@
             state.sepet.forEach(function (item) {
                 sepetAraToplam += (item.price * item.quantity);
                 sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
-                var birim = item.discounted_price !== null ? item.discounted_price : item.price;
-                sepetIskontoluToplam += (birim * item.quantity);
+                sepetIskontoluToplam += ((item.price * item.quantity) - (item.line_discount || 0));
             });
 
             var temizSepet = state.sepet.map(function (item) {
                 var lineEtiketFiyati = (item.regular_price || item.price);
-                var birimFiyat = item.discounted_price !== null ? item.discounted_price : item.price;
                 var lineSubtotal = item.price * item.quantity;
-                // %5 önce (orijinal fiyata), iskonto sonra (üstünden düşülür)
-                var lineIskontoluToplam = birimFiyat * item.quantity;
-                var urunIskonto = lineSubtotal - lineIskontoluToplam;
-                var lineTotal = (isAutoDiscount ? (lineSubtotal * 0.95) : lineSubtotal) - urunIskonto;
-
-
+                
+                var urunIskonto = item.line_discount || 0;
+                
+                var satirNakitIndirim = isAutoDiscount ? (lineSubtotal * 0.05) : 0;
+                var lineTotal = lineSubtotal - satirNakitIndirim - urunIskonto;
+                if (lineTotal < 0) lineTotal = 0;
 
                 var p = {
                     product_id: item.product_id,
@@ -255,7 +253,9 @@
                 // Ürün bazlı iskonto meta
                 if (urunIskonto > 0.001) {
                     p.meta_data.push({ key: "_hk_item_discount", value: urunIskonto.toFixed(2) });
-                    p.meta_data.push({ key: "_iskontolu_birim_fiyat", value: birimFiyat.toFixed(2) });
+                    // Fişler vs. için sanal iskontolu birim fiyat göndermek faydalı olabilir
+                    var sanalBirimFiyat = (lineSubtotal - urunIskonto) / item.quantity;
+                    p.meta_data.push({ key: "_iskontolu_birim_fiyat", value: sanalBirimFiyat.toFixed(2) });
                 }
 
                 if (item.variation_id) p.variation_id = item.variation_id;

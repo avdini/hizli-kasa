@@ -71,6 +71,18 @@ window.HizliKasa = window.HizliKasa || {};
                     state.iskontoTutar = veri.iskontoTutar || 0;
                     state.odemeTipi = veri.odemeTipi || "card";
                     state.splitData = veri.splitData || null;
+
+                    // Geriye dönük uyumluluk: discounted_price'ı line_discount'a çevir
+                    state.sepet.forEach(function(item) {
+                        if (typeof item.line_discount !== 'number') {
+                            if (item.discounted_price !== null && item.discounted_price !== undefined) {
+                                item.line_discount = parseFloat(((item.price - item.discounted_price) * item.quantity).toFixed(2));
+                            } else {
+                                item.line_discount = 0;
+                            }
+                            delete item.discounted_price;
+                        }
+                    });
                 } catch (e) {
                     console.error("Hafıza yükleme hatası", e);
                 }
@@ -162,7 +174,7 @@ window.HizliKasa = window.HizliKasa || {};
                 sku: urun.sku || "",
                 price: parseFloat(urun.price) || 0,
                 regular_price: parseFloat(urun.regular_price) || 0,
-                discounted_price: null,
+                line_discount: 0,
                 image: urun.images.length > 0 ? urun.images[0].src : ''
             };
 
@@ -246,8 +258,8 @@ window.HizliKasa = window.HizliKasa || {};
         },
 
         /**
-         * İskontoyu fiyat ağırlığına göre ürünlere dağıtır (Largest Remainder Method)
-         * @param {number} toplamIskonto Toplam iskonto tutarı
+         * İskontoyu fiyat ağırlığına göre ürünlere dağıtır (Largest Remainder Method - Kuruş Bazlı)
+         * @param {number} toplamIskonto Toplam iskonto tutarı (TL)
          */
         dagitimiHesapla: function(toplamIskonto) {
             var state = HK.State;
@@ -258,113 +270,94 @@ window.HizliKasa = window.HizliKasa || {};
                 return;
             }
 
-            // Sepet ara toplamı (orijinal fiyatlarla)
-            var araToplam = 0;
+            var toplamIskontoKurus = Math.round(toplamIskonto * 100);
+            var toplamKurus = 0;
+
             state.sepet.forEach(function(item) {
-                araToplam += item.price * item.quantity;
+                toplamKurus += Math.round(item.price * item.quantity * 100);
             });
 
-            // İskonto ara toplamı aşamasın
-            if (toplamIskonto > araToplam) {
-                toplamIskonto = araToplam;
+            if (toplamIskontoKurus > toplamKurus) {
+                toplamIskontoKurus = toplamKurus;
             }
 
-            state.iskontoTutar = parseFloat(toplamIskonto.toFixed(2));
+            state.iskontoTutar = parseFloat((toplamIskontoKurus / 100).toFixed(2));
 
-            // Her ürünün ağırlığına göre iskonto payını hesapla
             var dagitimlar = [];
             var dagitilmisKurus = 0;
 
             state.sepet.forEach(function(item, index) {
-                var satirToplam = item.price * item.quantity;
-                var agirlik = araToplam > 0 ? (satirToplam / araToplam) : 0;
-                var hamPay = toplamIskonto * agirlik;
-                var yuvarlanmisPay = Math.floor(hamPay * 100) / 100; // Kuruşa yuvarla (aşağı)
-                dagitilmisKurus += Math.round(yuvarlanmisPay * 100);
+                var satirKurus = Math.round(item.price * item.quantity * 100);
+                var hamPay = toplamKurus > 0 ? (toplamIskontoKurus * satirKurus / toplamKurus) : 0;
+                var pay = Math.floor(hamPay); // Tam kuruşa yuvarla
+                dagitilmisKurus += pay;
 
                 dagitimlar.push({
                     index: index,
-                    pay: yuvarlanmisPay,
-                    kalan: (hamPay * 100) - Math.floor(hamPay * 100) // Kesirli kalan (sıralama için)
+                    pay: pay,
+                    kalan: hamPay - pay
                 });
             });
 
-            // Largest Remainder: Kalan kuruşları en büyük kesirden başlayarak dağıt
-            var toplamKurus = Math.round(toplamIskonto * 100);
-            var kalanKurus = toplamKurus - dagitilmisKurus;
+            // Kalan kuruşları dağıt (her birine 1 kuruş)
+            var kalanKurus = toplamIskontoKurus - dagitilmisKurus;
 
             if (kalanKurus > 0) {
-                // Kalan kesire göre azalan sırada sırala
                 var sirali = dagitimlar.slice().sort(function(a, b) { return b.kalan - a.kalan; });
                 for (var i = 0; i < kalanKurus && i < sirali.length; i++) {
-                    sirali[i].pay = parseFloat((sirali[i].pay + 0.01).toFixed(2));
+                    sirali[i].pay += 1;
                 }
             }
 
-            // Dağıtılmış iskontoları ürünlere yaz
+            // Dağıtılmış iskonto kuruşlarını satıra yaz
             dagitimlar.forEach(function(d) {
                 var item = state.sepet[d.index];
                 if (d.pay > 0 && item.quantity > 0) {
-                    var birimIskonto = d.pay / item.quantity;
-                    item.discounted_price = parseFloat((item.price - birimIskonto).toFixed(2));
-                    // Negatif olamaz
-                    if (item.discounted_price < 0) item.discounted_price = 0;
+                    item.line_discount = parseFloat((d.pay / 100).toFixed(2));
                 } else {
-                    item.discounted_price = null;
+                    item.line_discount = 0;
                 }
             });
         },
 
         /**
-         * Tekil ürünün iskontolu fiyatını günceller, kalan farkı diğer ürünlere dağıtır
+         * Tekil ürünün iskontolu fiyatını günceller, diğer ürünlerin iskontolarıyla toplayıp state'i günceller.
          * @param {number} index Sepet indeksi
-         * @param {number} yeniFiyat Yeni birim fiyat (iskontolu)
+         * @param {number} yeniDeger Yeni girilen tutar (birim veya toplam)
          * @param {string} tip 'birim' veya 'toplam'
          */
-        urunIskontoGuncelle: function(index, yeniFiyat, tip) {
+        urunIskontoGuncelle: function(index, yeniDeger, tip) {
             var state = HK.State;
             var item = state.sepet[index];
             if (!item) return;
 
-            yeniFiyat = parseFloat(yeniFiyat) || 0;
+            yeniDeger = parseFloat(yeniDeger) || 0;
+            var satirToplamFiyat = item.price * item.quantity;
+            var hedeflenenSatirNet;
 
             if (tip === 'toplam') {
-                // Satır toplamı girildi → birim fiyatı hesapla
-                yeniFiyat = item.quantity > 0 ? yeniFiyat / item.quantity : 0;
+                hedeflenenSatirNet = yeniDeger;
+            } else {
+                hedeflenenSatirNet = yeniDeger * item.quantity;
             }
 
             var hasAutoDiscount = !state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban");
             
-            // Eğer %5 nakit/havale otomatik indirimi aktifse, kullanıcının girdiği net fiyatı nihai fiyat
-            // yapabilmek için discounted_price değerini bu formülle geriye doğru hesaplıyoruz.
-            var targetDiscountedPrice = (hasAutoDiscount ? 0.05 * item.price : 0) + yeniFiyat;
+            // Eğer %5 indirimi varsa kullanıcının yazdığı değer net(indirimli) ise, 
+            // iskontonun manuel kısmını bulmak için %5'i tersine katıp iskonto miktarını buluyoruz.
+            // Formül: Satır İskontosu = Satır Brüt - Satır %5 - Hedef Net
+            var satirNakitIndirim = hasAutoDiscount ? (satirToplamFiyat * 0.05) : 0;
+            
+            var buSatirIskonto = satirToplamFiyat - satirNakitIndirim - hedeflenenSatirNet;
 
-            // Birim fiyat orijinal fiyattan büyük olamaz
-            if (targetDiscountedPrice > item.price) targetDiscountedPrice = item.price;
-            if (targetDiscountedPrice < 0) targetDiscountedPrice = 0;
+            if (buSatirIskonto < 0) buSatirIskonto = 0;
+            if (buSatirIskonto > satirToplamFiyat) buSatirIskonto = satirToplamFiyat;
 
-            // Bu ürüne düşen iskonto
-            var buUrunIskonto = 0;
-            var setDiscountedPrice = null;
-            if (targetDiscountedPrice < item.price) {
-                setDiscountedPrice = parseFloat(targetDiscountedPrice.toFixed(2));
-                buUrunIskonto = (item.price - setDiscountedPrice) * item.quantity;
-            }
+            // Kuruş bazlı kaydet (sadece 2 ondalık)
+            item.line_discount = parseFloat(buSatirIskonto.toFixed(2));
 
-            // Diğer ürünlerdeki mevcut iskonto toplamı
-            var digerIskonto = 0;
-            state.sepet.forEach(function(it, i) {
-                if (i !== index && it.discounted_price !== null) {
-                    digerIskonto += (it.price - it.discounted_price) * it.quantity;
-                }
-            });
-
-            // Yeni toplam iskonto
-            var yeniToplamIskonto = parseFloat((buUrunIskonto + digerIskonto).toFixed(2));
-
-            // Ürünün fiyatını set et
-            item.discounted_price = setDiscountedPrice;
-            state.iskontoTutar = yeniToplamIskonto;
+            // Diğer satır iskontolarını topla
+            this.iskontoTutariniGuncelle();
 
             if (HK.UIRenderer) {
                 HK.UIRenderer.arayuzuGuncelle();
@@ -378,7 +371,7 @@ window.HizliKasa = window.HizliKasa || {};
             var state = HK.State;
             state.iskontoTutar = 0;
             state.sepet.forEach(function(item) {
-                item.discounted_price = null;
+                item.line_discount = 0;
             });
         },
 
@@ -389,8 +382,10 @@ window.HizliKasa = window.HizliKasa || {};
             var state = HK.State;
             var toplam = 0;
             state.sepet.forEach(function(item) {
-                if (item.discounted_price !== null) {
-                    toplam += (item.price - item.discounted_price) * item.quantity;
+                if (item.line_discount > 0) {
+                    toplam += item.line_discount;
+                } else {
+                    item.line_discount = 0;
                 }
             });
             state.iskontoTutar = parseFloat(toplam.toFixed(2));

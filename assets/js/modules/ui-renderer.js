@@ -77,17 +77,17 @@ window.HizliKasa = window.HizliKasa || {};
 
             state.sepet.forEach(function(item, index) {
                 // Fiyat Katmanları
-                var birimFiyat = item.discounted_price !== null ? item.discounted_price : item.price;
                 var etiketFiyat = (item.regular_price || item.price) * item.quantity;
                 var kampanyaFiyat = item.price * item.quantity;
-                var iskontoluToplam = birimFiyat * item.quantity;
                 var hasAutoDiscount = !state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban");
 
                 // Ürüne düşen iskonto tutarı
-                var urunIskonto = kampanyaFiyat - iskontoluToplam;
+                var urunIskonto = item.line_discount || 0;
+                var iskontoluToplam = kampanyaFiyat - urunIskonto;
 
                 // %5 önce (orijinal fiyata), iskonto sonra (üstünden düşülür)
                 var netFiyat = (kampanyaFiyat * (hasAutoDiscount ? 0.95 : 1)) - urunIskonto;
+                if (netFiyat < 0) netFiyat = 0;
 
                 var itemId = item.product_id + '-' + (item.variation_id || 0);
                 var isUpdated = (state.lastUpdatedId === itemId);
@@ -95,12 +95,13 @@ window.HizliKasa = window.HizliKasa || {};
 
                 var li = document.createElement("li");
 
-                // Fiyat gösterimi (birim)
-                var gosterilenBirim = hasAutoDiscount ? (birimFiyat - 0.05 * item.price) : birimFiyat;
+                // Ekranda gösterilecek sanal birim fiyat (sadece görsel)
+                var gosterilenBirim = item.quantity > 0 ? (netFiyat / item.quantity) : 0;
+                
                 var fiyatGosterim = gosterilenBirim.toFixed(2) + " TL";
                 if (item.regular_price > item.price) {
                     fiyatGosterim = '<span style="text-decoration: line-through; color: #999; font-size: 0.9em; margin-right: 5px;">' + item.regular_price.toFixed(2) + ' TL</span> ' + gosterilenBirim.toFixed(2) + ' TL';
-                } else if (item.discounted_price !== null && item.discounted_price < item.price) {
+                } else if (urunIskonto > 0 || hasAutoDiscount) {
                     fiyatGosterim = '<span style="text-decoration: line-through; color: #999; font-size: 0.9em; margin-right: 5px;">' + item.price.toFixed(2) + ' TL</span> ' + gosterilenBirim.toFixed(2) + ' TL';
                 }
 
@@ -225,8 +226,7 @@ window.HizliKasa = window.HizliKasa || {};
             state.sepet.forEach(function(item) {
                 sepetAraToplam += (item.price * item.quantity);
                 sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
-                var birim = item.discounted_price !== null ? item.discounted_price : item.price;
-                sepetIskontoluToplam += (birim * item.quantity);
+                sepetIskontoluToplam += ((item.price * item.quantity) - (item.line_discount || 0));
             });
 
             var nakitIndirimTutar = 0;
@@ -291,9 +291,11 @@ window.HizliKasa = window.HizliKasa || {};
             if (el.querySelector("input")) return;
 
             var hasAutoDiscount = !state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban");
-            var birimFiyat = item.discounted_price !== null ? item.discounted_price : item.price;
-            var mevcutBirim = hasAutoDiscount ? (birimFiyat - 0.05 * item.price) : birimFiyat;
-            var mevcutDeger = tip === 'birim' ? mevcutBirim : (mevcutBirim * item.quantity);
+            var satirNakitIndirim = hasAutoDiscount ? (item.price * item.quantity * 0.05) : 0;
+            var netSatirFiyati = (item.price * item.quantity) - satirNakitIndirim - (item.line_discount || 0);
+            if (netSatirFiyati < 0) netSatirFiyati = 0;
+            
+            var mevcutDeger = tip === 'birim' ? (netSatirFiyati / item.quantity) : netSatirFiyati;
 
             var orijinalText = el.textContent;
             var input = document.createElement("input");
