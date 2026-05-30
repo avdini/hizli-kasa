@@ -550,8 +550,10 @@
                                 <div class="variation-indent"></div>
                                 <img src="${vImg || img}" class="variation-img" alt="">
                                 <div class="urun-detay">
-                                    <div class="urun-ad">${v.name}</div>
-                                    <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${v.warehouse_stock}</div>
+                                    <div class="urun-temel-bilgi">
+                                        <div class="urun-ad">${v.name}</div>
+                                        <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${v.warehouse_stock}</div>
+                                    </div>
                                     
                                     <div class="terminal-fiyat-alani">
                                         <div class="fiyat-satiri main-fiyat">
