@@ -135,6 +135,8 @@ function hizli_kasa_terminal_products($request)
         $v_results = $wpdb->get_results($wpdb->prepare("
             SELECT p.ID, p.post_parent, p.post_title, sk.quantity as warehouse_stock,
                    MAX(CASE WHEN pm.meta_key = '_sku' THEN pm.meta_value END) as sku,
+                   MAX(CASE WHEN pm.meta_key = '_price' THEN pm.meta_value END) as price,
+                   MAX(CASE WHEN pm.meta_key = '_regular_price' THEN pm.meta_value END) as regular_price,
                    MAX(CASE WHEN pm.meta_key = '_stock' THEN pm.meta_value END) as stock_quantity,
                    MAX(CASE WHEN pm.meta_key = '_thumbnail_id' THEN pm.meta_value END) as thumbnail_id
             FROM {$wpdb->posts} p

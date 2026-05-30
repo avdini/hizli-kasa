@@ -400,6 +400,7 @@
 
             var html = '';
             var threshold = (typeof kasaAyar !== 'undefined' && kasaAyar.kritikStokEsigi) ? parseInt(kasaAyar.kritikStokEsigi) : 5;
+            var priceFormatter = (window.HizliKasa && HizliKasa.CurrencyMask) ? HizliKasa.CurrencyMask.format : (n) => parseFloat(n).toFixed(2);
 
             var getOtherStocksHtml = function(item) {
                 var sHtml = '<div class="other-stocks-wrapper">';
@@ -461,6 +462,12 @@
                 var isStockOut = totalGroupStock <= 0;
                 var isCritical = !isVariable && p.warehouse_stock > 0 && p.warehouse_stock <= threshold;
                 var img = p.images && p.images[0] ? p.images[0].src : '';
+
+                // Fiyat Hesaplamaları
+                var currentPrice = parseFloat(p.price || 0);
+                var regularPrice = parseFloat(p.regular_price || 0);
+                var hasSale = regularPrice > 0 && regularPrice > currentPrice;
+                var cashPrice = currentPrice * 0.95;
                 
                 html += `
                     <div class="terminal-urun-kart ${isVariable ? 'terminal-parent-card is-variable' : ''} ${isStockOut ? 'stock-out' : ''}" data-id="${p.id}" data-vid="0">
@@ -469,6 +476,19 @@
                         <div class="urun-detay">
                             <div class="urun-ad">${p.name} ${isVariable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
                             <div class="urun-sku">${p.sku || 'SKU YOK'} | Toplam: ${totalGroupStock}</div>
+                            
+                            ${!isVariable ? `
+                            <div class="terminal-fiyat-alani">
+                                <div class="fiyat-satiri main-fiyat">
+                                    ${hasSale ? `<span class="eski-fiyat">${priceFormatter(regularPrice)} TL</span>` : ''}
+                                    <span class="liste-fiyat">${priceFormatter(currentPrice)} TL</span>
+                                </div>
+                                <div class="fiyat-satiri nakit-fiyat">
+                                    <span class="nakit-etiket">%5 Nakit/IBAN:</span>
+                                    <span class="nakit-deger">${priceFormatter(cashPrice)} TL</span>
+                                </div>
+                            </div>
+                            ` : ''}
                         </div>
                         <div class="urun-aksiyonlar" style="margin-left: auto; margin-right: 15px;">
                             ${isVariable ? `
@@ -517,6 +537,12 @@
                         var vCritical = v.warehouse_stock > 0 && v.warehouse_stock <= threshold;
                         var vImg = (v.images && v.images[0]) ? v.images[0].src : '';
                         
+                        // Varyasyon Fiyatları
+                        var vCurrentPrice = parseFloat(v.price || 0);
+                        var vRegularPrice = parseFloat(v.regular_price || 0);
+                        var vHasSale = vRegularPrice > 0 && vRegularPrice > vCurrentPrice;
+                        var vCashPrice = vCurrentPrice * 0.95;
+
                         html += `
                             <div class="terminal-urun-kart variation-item" data-id="${v.parent_id}" data-vid="${v.id}">
                                 <div class="variation-indent"></div>
@@ -524,6 +550,17 @@
                                 <div class="urun-detay">
                                     <div class="urun-ad">${v.name}</div>
                                     <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${v.warehouse_stock}</div>
+                                    
+                                    <div class="terminal-fiyat-alani">
+                                        <div class="fiyat-satiri main-fiyat">
+                                            ${vHasSale ? `<span class="eski-fiyat">${priceFormatter(vRegularPrice)} TL</span>` : ''}
+                                            <span class="liste-fiyat">${priceFormatter(vCurrentPrice)} TL</span>
+                                        </div>
+                                        <div class="fiyat-satiri nakit-fiyat">
+                                            <span class="nakit-etiket">%5 Nakit/IBAN:</span>
+                                            <span class="nakit-deger">${priceFormatter(vCashPrice)} TL</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="urun-aksiyonlar" style="margin-left: auto; margin-right: 15px;">
                                     <button class="btn-barkod-tekli" title="Barkod çıkart">

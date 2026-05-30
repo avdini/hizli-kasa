@@ -213,6 +213,53 @@
     color: #666;
 }
 
+/* Fiyat Alanı */
+.terminal-fiyat-alani {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.terminal-fiyat-alani .fiyat-satiri {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.2;
+}
+
+.terminal-fiyat-alani .main-fiyat .eski-fiyat {
+    font-size: 11px;
+    color: #999;
+    text-decoration: line-through;
+}
+
+.terminal-fiyat-alani .main-fiyat .liste-fiyat {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--hk-text-main);
+}
+
+.terminal-fiyat-alani .nakit-fiyat {
+    background: rgba(46, 204, 113, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    width: fit-content;
+    margin-top: 2px;
+}
+
+.terminal-fiyat-alani .nakit-fiyat .nakit-etiket {
+    font-size: 10px;
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.terminal-fiyat-alani .nakit-fiyat .nakit-deger {
+    font-size: 12px;
+    font-weight: 800;
+    color: #2ecc71;
+}
+
 .terminal-urun-kart .urun-stok {
     text-align: right;
     min-width: 100px;
@@ -1288,5 +1335,132 @@ body.dark-mode .other-stock-badge {
 
 .sayim-detail-inline th {
     background: var(--hk-bg-input);
+}
+
+/* Mobilde Ürün Kartı Düzenleme */
+@media screen and (max-width: 768px) {
+    .terminal-urun-kart {
+        flex-direction: column;
+        align-items: flex-start !important;
+        padding: 15px;
+        gap: 12px;
+        height: auto !important;
+    }
+    
+    .terminal-urun-kart .urun-img {
+        width: 100% !important;
+        height: 180px !important;
+        object-fit: contain !important;
+        background: var(--hk-bg-body);
+    }
+    
+    .terminal-urun-kart .urun-detay {
+        width: 100%;
+    }
+
+    .terminal-urun-kart .urun-ad {
+        font-size: 16px !important;
+    }
+
+    .terminal-fiyat-alani {
+        margin: 12px 0;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        border: 1px solid var(--hk-border);
+    }
+
+    .terminal-fiyat-alani .main-fiyat .liste-fiyat {
+        font-size: 18px !important;
+    }
+
+    .terminal-fiyat-alani .nakit-fiyat {
+        margin-top: 8px;
+        padding: 6px 10px !important;
+    }
+
+    .terminal-fiyat-alani .nakit-fiyat .nakit-deger {
+        font-size: 15px !important;
+    }
+    
+    .terminal-urun-kart .urun-aksiyonlar {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .terminal-urun-kart .btn-barkod-toplu, 
+    .terminal-urun-kart .btn-barkod-tekli {
+        padding: 12px !important;
+        justify-content: center;
+        font-size: 14px !important;
+    }
+
+    .terminal-urun-kart .btn-urun-git {
+        width: 100% !important;
+        height: 45px !important;
+        grid-column: span 2;
+    }
+    
+    .terminal-urun-kart .urun-stok-grup {
+        width: 100%;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        border-top: 1px solid var(--hk-border);
+        padding-top: 15px;
+        margin-top: 5px;
+    }
+
+    .terminal-urun-kart .urun-stok {
+        width: 100%;
+        text-align: left !important;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--hk-bg-input);
+        padding: 10px 15px;
+        border-radius: 8px;
+    }
+
+    .terminal-urun-kart .stok-sayi {
+        font-size: 22px !important;
+    }
+
+    .stok-ayirici {
+        display: none !important;
+    }
+
+    .expand-icon {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        background: rgba(0,0,0,0.5);
+        color: white;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+
+    /* Varyasyonlar için özel mobil ayar */
+    .variation-item {
+        margin-left: 10px !important;
+        border-left: 3px solid var(--hk-accent) !important;
+    }
+
+    .variation-indent {
+        display: none;
+    }
+
+    .variation-img {
+        width: 100% !important;
+        height: 120px !important;
+    }
 }
 
