@@ -94,21 +94,13 @@ function hizli_kasa_admin_menu()
     );
 
     // Alt Menüler
-    add_submenu_page(
-        'hizli-kasa',
-        'Genel Ayarlar',
-        'Genel Ayarlar',
-        'manage_options',
-        'hizli-kasa', // Ana menü ile aynı slug (Landing)
-        'hizli_kasa_ayarlar_sayfasi'
-    );
-
+    // Not: İlk alt menü ana menü ile aynı slug'a sahip olmalı ki varsayılan olarak o gelsin.
     add_submenu_page(
         'hizli-kasa',
         'Stok Yönetimi',
         'Stok Yönetimi',
         'manage_options',
-        'hizli-kasa&tab=stok',
+        'hizli-kasa', // Landing Page
         'hizli_kasa_ayarlar_sayfasi'
     );
 
@@ -118,6 +110,51 @@ function hizli_kasa_admin_menu()
         'Depo Yönetimi',
         'manage_options',
         'hizli-kasa&tab=depolar',
+        'hizli_kasa_ayarlar_sayfasi'
+    );
+
+    add_submenu_page(
+        'hizli-kasa',
+        'Eşleşmeyen Ürünler',
+        'Eşleşmeyen Ürünler',
+        'manage_options',
+        'hizli-kasa&tab=unmatched',
+        'hizli_kasa_ayarlar_sayfasi'
+    );
+
+    add_submenu_page(
+        'hizli-kasa',
+        'Bildirimler',
+        'Bildirimler',
+        'manage_options',
+        'hizli-kasa&tab=bildirimler',
+        'hizli_kasa_ayarlar_sayfasi'
+    );
+
+    add_submenu_page(
+        'hizli-kasa',
+        'Genel Ayarlar',
+        'Genel Ayarlar',
+        'manage_options',
+        'hizli-kasa&tab=genel',
+        'hizli_kasa_ayarlar_sayfasi'
+    );
+
+    add_submenu_page(
+        'hizli-kasa',
+        'Önbellek (Cache)',
+        'Önbellek (Cache)',
+        'manage_options',
+        'hizli-kasa&tab=onbellek',
+        'hizli_kasa_ayarlar_sayfasi'
+    );
+
+    add_submenu_page(
+        'hizli-kasa',
+        'Sistem Araçları',
+        'Sistem Araçları',
+        'manage_options',
+        'hizli-kasa&tab=araclar',
         'hizli_kasa_ayarlar_sayfasi'
     );
 
@@ -1251,7 +1288,7 @@ function hizli_kasa_ajax_clear_all_unmatched() {
 function hizli_kasa_ayarlar_sayfasi()
 {
     if (!defined('DONOTCACHEPAGE')) define('DONOTCACHEPAGE', true);
-    $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'genel';
+    $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'stok';
 
     global $wpdb;
     $depo_table = $wpdb->prefix . 'hizli_kasa_depolar';
@@ -1267,11 +1304,11 @@ function hizli_kasa_ayarlar_sayfasi()
         $badge = $unmatched_count > 0 ? ' <span style="background:#d63638; color:#fff; padding:1px 6px; border-radius:10px; font-size:10px; font-weight:bold; vertical-align:middle; margin-left:4px;">!</span>' : '';
         ?>
         <h2 class="nav-tab-wrapper">
-            <a href="?page=hizli-kasa&tab=genel" class="nav-tab <?php echo $active_tab == 'genel' ? 'nav-tab-active' : ''; ?>">Genel Ayarlar</a>
             <a href="?page=hizli-kasa&tab=stok" class="nav-tab <?php echo $active_tab == 'stok' ? 'nav-tab-active' : ''; ?>">Stok Yönetimi</a>
-            <a href="?page=hizli-kasa&tab=unmatched" class="nav-tab <?php echo $active_tab == 'unmatched' ? 'nav-tab-active' : ''; ?>">Eşleşmeyen Ürünler<?php echo $badge; ?></a>
             <a href="?page=hizli-kasa&tab=depolar" class="nav-tab <?php echo $active_tab == 'depolar' ? 'nav-tab-active' : ''; ?>">Depo Yönetimi</a>
+            <a href="?page=hizli-kasa&tab=unmatched" class="nav-tab <?php echo $active_tab == 'unmatched' ? 'nav-tab-active' : ''; ?>">Eşleşmeyen Ürünler<?php echo $badge; ?></a>
             <a href="?page=hizli-kasa&tab=bildirimler" class="nav-tab <?php echo $active_tab == 'bildirimler' ? 'nav-tab-active' : ''; ?>">Bildirimler</a>
+            <a href="?page=hizli-kasa&tab=genel" class="nav-tab <?php echo $active_tab == 'genel' ? 'nav-tab-active' : ''; ?>">Genel Ayarlar</a>
             <a href="?page=hizli-kasa&tab=onbellek" class="nav-tab <?php echo $active_tab == 'onbellek' ? 'nav-tab-active' : ''; ?>">Önbellek (Cache)</a>
             <a href="?page=hizli-kasa&tab=araclar" class="nav-tab <?php echo $active_tab == 'araclar' ? 'nav-tab-active' : ''; ?>">Sistem Araçları</a>
         </h2>
