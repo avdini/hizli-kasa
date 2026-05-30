@@ -417,6 +417,11 @@ window.HizliKasa = window.HizliKasa || {};
                     var tip = this.dataset.tip;
                     if (tip === "split") return; // ModalManager zaten bol-buton ID'sini dinliyor
 
+                    // Ödeme tipi değişirse veya split iptal olursa iskontoyu sıfırla
+                    if (HK.State.odemeTipi !== tip || HK.State.splitData !== null) {
+                        HK.CartManager.iskontoTemizle();
+                    }
+
                     // Diğer butonlara basıldığında bölünmüş ödemeyi sıfırla
                     HK.State.splitData = null;
                     HK.State.odemeTipi = tip;

@@ -427,7 +427,7 @@
                 var state = HK.State;
                 if (state.sepet.length === 0) return;
 
-                // Toplamı hesapla: %5 önce, iskonto sonra
+                // Bölmede %5 otomatik indirim geçersizdir, sadece sepetteki manuel iskonto geçerlidir
                 var toplamPara = 0;
                 state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity); });
                 var netHedef = toplamPara - state.iskontoTutar;
