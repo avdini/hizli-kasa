@@ -475,20 +475,22 @@
                         <img src="${img}" class="urun-img" alt="">
                         <div class="urun-detay">
                             <div class="urun-ad">${p.name} ${isVariable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
-                            <div class="urun-sku">${p.sku || 'SKU YOK'} | Toplam: ${totalGroupStock}</div>
-                            
-                            ${!isVariable ? `
-                            <div class="terminal-fiyat-alani">
-                                <div class="fiyat-satiri main-fiyat">
-                                    ${hasSale ? `<span class="eski-fiyat">${priceFormatter(regularPrice)} TL</span>` : ''}
-                                    <span class="liste-fiyat">${priceFormatter(currentPrice)} TL</span>
+                            <div class="urun-alt-bilgi">
+                                <div class="urun-sku">${p.sku || 'SKU YOK'} | Toplam: ${totalGroupStock}</div>
+                                
+                                ${!isVariable ? `
+                                <div class="terminal-fiyat-alani">
+                                    <div class="fiyat-satiri main-fiyat">
+                                        ${hasSale ? `<span class="eski-fiyat">${priceFormatter(regularPrice)} TL</span>` : ''}
+                                        <span class="liste-fiyat">${priceFormatter(currentPrice)} TL</span>
+                                    </div>
+                                    <div class="fiyat-satiri nakit-fiyat">
+                                        <span class="nakit-etiket">%5 Nakit/IBAN:</span>
+                                        <span class="nakit-deger">${priceFormatter(cashPrice)} TL</span>
+                                    </div>
                                 </div>
-                                <div class="fiyat-satiri nakit-fiyat">
-                                    <span class="nakit-etiket">%5 Nakit/IBAN:</span>
-                                    <span class="nakit-deger">${priceFormatter(cashPrice)} TL</span>
-                                </div>
+                                ` : ''}
                             </div>
-                            ` : ''}
                         </div>
                         <div class="urun-aksiyonlar" style="margin-left: auto; margin-right: 15px;">
                             ${isVariable ? `
