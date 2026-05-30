@@ -700,7 +700,8 @@ body.mobile-inventory-app {
 .card-price-info {
     display: flex;
     align-items: center;
-    gap: 12px;
+    flex-wrap: wrap;
+    gap: 6px 12px;
     margin-top: 4px;
 }
 
@@ -708,6 +709,7 @@ body.mobile-inventory-app {
     display: flex;
     align-items: center;
     gap: 5px;
+    flex-shrink: 0;
 }
 
 .price-row .old-price {
@@ -730,6 +732,7 @@ body.mobile-inventory-app {
     background: rgba(16, 185, 129, 0.1);
     padding: 1px 6px;
     border-radius: 4px;
+    flex-shrink: 0;
 }
 
 .cash-price-row .cp-label {
