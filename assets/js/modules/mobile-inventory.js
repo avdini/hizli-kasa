@@ -952,6 +952,26 @@
                 otherTotal += parseFloat(allStocks[depoId] || 0);
             });
 
+            // Fiyat Hesaplamaları
+            const currentPrice = parseFloat(p.price || 0);
+            const regularPrice = parseFloat(p.regular_price || 0);
+            const hasSale = regularPrice > 0 && regularPrice > currentPrice;
+            const cashPrice = currentPrice * 0.95;
+            const priceFormatter = (window.HizliKasa && HizliKasa.CurrencyMask) ? HizliKasa.CurrencyMask.format : (n) => parseFloat(n).toFixed(2);
+
+            const priceHtml = `
+                <div class="card-price-info">
+                    <div class="price-row">
+                        ${hasSale ? `<span class="old-price">${priceFormatter(regularPrice)}</span>` : ''}
+                        <span class="main-price">${priceFormatter(currentPrice)}</span>
+                    </div>
+                    <div class="cash-price-row">
+                        <span class="cp-label">%5 Nakit:</span>
+                        <span class="cp-val">${priceFormatter(cashPrice)}</span>
+                    </div>
+                </div>
+            `;
+
             if (isVariation) {
                 // VARYASYON KARTI (Sağdan Stoklu)
                 return `
@@ -961,6 +981,7 @@
                             <div class="card-info">
                                 <div class="card-name">${p.name.replace(/.* - /, '')}</div>
                                 <div class="card-sku">${p.sku || ''}</div>
+                                ${priceHtml}
                             </div>
                             <div class="card-side-stocks">
                                 <div class="side-stock-item highlight" title="${aktifDepoName}">
@@ -989,6 +1010,7 @@
                         <div class="card-info">
                             <div class="card-name">${p.name} ${p.is_variable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
                             <div class="card-sku">${p.sku || 'SKU YOK'}</div>
+                            ${priceHtml}
                         </div>
                     </div>
                     <div class="stock-grid">

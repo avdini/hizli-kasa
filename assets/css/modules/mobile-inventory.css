@@ -696,6 +696,54 @@ body.mobile-inventory-app {
     color: var(--text-dim);
 }
 
+/* Compact Price Info */
+.card-price-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.price-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.price-row .old-price {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+.price-row .main-price {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.cash-price-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(16, 185, 129, 0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
+.cash-price-row .cp-label {
+    font-size: 9px;
+    color: #10b981;
+    font-weight: 600;
+}
+
+.cash-price-row .cp-val {
+    font-size: 11px;
+    font-weight: 800;
+    color: #34d399;
+}
+
 /* Stock Grid */
 .stock-grid {
     display: grid;
