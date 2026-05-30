@@ -258,7 +258,7 @@ window.HizliKasa = window.HizliKasa || {};
         },
 
         /**
-         * İskontoyu fiyat ağırlığına göre ürünlere dağıtır (Largest Remainder Method - Kuruş Bazlı)
+         * İskontoyu fiyat ağırlığına göre ürünlere dağıtır (1 TL Adımlı, En Büyüğe Yığma)
          * @param {number} toplamIskonto Toplam iskonto tutarı (TL)
          */
         dagitimiHesapla: function(toplamIskonto) {
@@ -272,9 +272,16 @@ window.HizliKasa = window.HizliKasa || {};
 
             var toplamIskontoKurus = Math.round(toplamIskonto * 100);
             var toplamKurus = 0;
+            var enPahaliIndex = 0;
+            var enPahaliSatirKurus = 0;
 
-            state.sepet.forEach(function(item) {
-                toplamKurus += Math.round(item.price * item.quantity * 100);
+            state.sepet.forEach(function(item, index) {
+                var satirKurus = Math.round(item.price * item.quantity * 100);
+                toplamKurus += satirKurus;
+                if (satirKurus > enPahaliSatirKurus) {
+                    enPahaliSatirKurus = satirKurus;
+                    enPahaliIndex = index;
+                }
             });
 
             if (toplamIskontoKurus > toplamKurus) {
@@ -283,37 +290,65 @@ window.HizliKasa = window.HizliKasa || {};
 
             state.iskontoTutar = parseFloat((toplamIskontoKurus / 100).toFixed(2));
 
-            var dagitimlar = [];
+            var iskontolar = [];
             var dagitilmisKurus = 0;
+            var adimKurus = 100; // 1 TL (100 Kuruş) adımları
 
+            // Diğer ürünlerin iskontosunu hesapla (en pahalı hariç)
             state.sepet.forEach(function(item, index) {
-                var satirKurus = Math.round(item.price * item.quantity * 100);
-                var hamPay = toplamKurus > 0 ? (toplamIskontoKurus * satirKurus / toplamKurus) : 0;
-                var pay = Math.floor(hamPay); // Tam kuruşa yuvarla
-                dagitilmisKurus += pay;
+                if (index === enPahaliIndex) return;
 
-                dagitimlar.push({
-                    index: index,
-                    pay: pay,
-                    kalan: hamPay - pay
-                });
+                var satirKurus = Math.round(item.price * item.quantity * 100);
+                var hamPayKurus = toplamKurus > 0 ? (toplamIskontoKurus * satirKurus / toplamKurus) : 0;
+                
+                var payKurus = Math.round(hamPayKurus / adimKurus) * adimKurus;
+
+                // Yukarı yuvarlama toplam iskonto hedefini aşıyorsa veya eksiye düşürecekse aşağı yuvarla
+                if (dagitilmisKurus + payKurus > toplamIskontoKurus) {
+                    payKurus = Math.floor(hamPayKurus / adimKurus) * adimKurus;
+                }
+                
+                // Hala aşıyorsa (son limite dayanıldıysa), eldeki son kuruşu ver
+                if (dagitilmisKurus + payKurus > toplamIskontoKurus) {
+                    payKurus = Math.max(0, toplamIskontoKurus - dagitilmisKurus);
+                }
+
+                // Ürünün kendi toplam fiyatından fazla indirim verilemez
+                if (payKurus > satirKurus) {
+                    payKurus = satirKurus;
+                }
+
+                iskontolar[index] = payKurus;
+                dagitilmisKurus += payKurus;
             });
 
-            // Kalan kuruşları dağıt (her birine 1 kuruş)
             var kalanKurus = toplamIskontoKurus - dagitilmisKurus;
 
-            if (kalanKurus > 0) {
-                var sirali = dagitimlar.slice().sort(function(a, b) { return b.kalan - a.kalan; });
-                for (var i = 0; i < kalanKurus && i < sirali.length; i++) {
-                    sirali[i].pay += 1;
+            // Kalan iskontonun en pahalı ürünün fiyatını aşması (ekstrem indirim durumu)
+            if (kalanKurus > enPahaliSatirKurus) {
+                iskontolar[enPahaliIndex] = enPahaliSatirKurus;
+                kalanKurus -= enPahaliSatirKurus;
+
+                // Taşan kısmı diğerlerine paylaştır (dağıtılamayan parayı yakmamak için)
+                for (var i = 0; i < state.sepet.length && kalanKurus > 0; i++) {
+                    if (i === enPahaliIndex) continue;
+                    var itKurus = Math.round(state.sepet[i].price * state.sepet[i].quantity * 100);
+                    var bosluk = itKurus - (iskontolar[i] || 0);
+                    if (bosluk > 0) {
+                        var eklenecek = Math.min(bosluk, kalanKurus);
+                        iskontolar[i] = (iskontolar[i] || 0) + eklenecek;
+                        kalanKurus -= eklenecek;
+                    }
                 }
+            } else {
+                iskontolar[enPahaliIndex] = kalanKurus;
             }
 
-            // Dağıtılmış iskonto kuruşlarını satıra yaz
-            dagitimlar.forEach(function(d) {
-                var item = state.sepet[d.index];
-                if (d.pay > 0 && item.quantity > 0) {
-                    item.line_discount = parseFloat((d.pay / 100).toFixed(2));
+            // Hesaplanan değerleri ürünlere işle
+            state.sepet.forEach(function(item, index) {
+                var isko = iskontolar[index] || 0;
+                if (isko > 0 && item.quantity > 0) {
+                    item.line_discount = parseFloat((isko / 100).toFixed(2));
                 } else {
                     item.line_discount = 0;
                 }
