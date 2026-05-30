@@ -96,7 +96,7 @@ window.HizliKasa = window.HizliKasa || {};
                 var li = document.createElement("li");
 
                 // Fiyat gösterimi (birim)
-                var gosterilenBirim = birimFiyat;
+                var gosterilenBirim = hasAutoDiscount ? (birimFiyat - 0.05 * item.price) : birimFiyat;
                 var fiyatGosterim = gosterilenBirim.toFixed(2) + " TL";
                 if (item.regular_price > item.price) {
                     fiyatGosterim = '<span style="text-decoration: line-through; color: #999; font-size: 0.9em; margin-right: 5px;">' + item.regular_price.toFixed(2) + ' TL</span> ' + gosterilenBirim.toFixed(2) + ' TL';
@@ -290,7 +290,9 @@ window.HizliKasa = window.HizliKasa || {};
             // Zaten input modundaysa çık
             if (el.querySelector("input")) return;
 
-            var mevcutBirim = item.discounted_price !== null ? item.discounted_price : item.price;
+            var hasAutoDiscount = !state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+            var birimFiyat = item.discounted_price !== null ? item.discounted_price : item.price;
+            var mevcutBirim = hasAutoDiscount ? (birimFiyat - 0.05 * item.price) : birimFiyat;
             var mevcutDeger = tip === 'birim' ? mevcutBirim : (mevcutBirim * item.quantity);
 
             var orijinalText = el.textContent;

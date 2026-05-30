@@ -333,12 +333,23 @@ window.HizliKasa = window.HizliKasa || {};
                 yeniFiyat = item.quantity > 0 ? yeniFiyat / item.quantity : 0;
             }
 
+            var hasAutoDiscount = !state.splitData && (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+            
+            // Eğer %5 nakit/havale otomatik indirimi aktifse, kullanıcının girdiği net fiyatı nihai fiyat
+            // yapabilmek için discounted_price değerini bu formülle geriye doğru hesaplıyoruz.
+            var targetDiscountedPrice = (hasAutoDiscount ? 0.05 * item.price : 0) + yeniFiyat;
+
             // Birim fiyat orijinal fiyattan büyük olamaz
-            if (yeniFiyat > item.price) yeniFiyat = item.price;
-            if (yeniFiyat < 0) yeniFiyat = 0;
+            if (targetDiscountedPrice > item.price) targetDiscountedPrice = item.price;
+            if (targetDiscountedPrice < 0) targetDiscountedPrice = 0;
 
             // Bu ürüne düşen iskonto
-            var buUrunIskonto = (item.price - yeniFiyat) * item.quantity;
+            var buUrunIskonto = 0;
+            var setDiscountedPrice = null;
+            if (targetDiscountedPrice < item.price) {
+                setDiscountedPrice = parseFloat(targetDiscountedPrice.toFixed(2));
+                buUrunIskonto = (item.price - setDiscountedPrice) * item.quantity;
+            }
 
             // Diğer ürünlerdeki mevcut iskonto toplamı
             var digerIskonto = 0;
@@ -352,13 +363,7 @@ window.HizliKasa = window.HizliKasa || {};
             var yeniToplamIskonto = parseFloat((buUrunIskonto + digerIskonto).toFixed(2));
 
             // Ürünün fiyatını set et
-            item.discounted_price = parseFloat(yeniFiyat.toFixed(2));
-            if (item.discounted_price >= item.price) {
-                item.discounted_price = null;
-                buUrunIskonto = 0;
-                yeniToplamIskonto = parseFloat(digerIskonto.toFixed(2));
-            }
-
+            item.discounted_price = setDiscountedPrice;
             state.iskontoTutar = yeniToplamIskonto;
 
             if (HK.UIRenderer) {
