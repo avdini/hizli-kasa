@@ -230,6 +230,7 @@
     align-items: center;
     gap: 15px;
     margin-top: 0;
+    margin-left: auto;
 }
 
 .terminal-fiyat-alani .fiyat-satiri {
