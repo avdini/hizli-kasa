@@ -410,7 +410,15 @@ jQuery(document).ready(function($) {
     // Select All
     $('#select-all-rows').on('change', function() {
         const isChecked = $(this).is(':checked');
-        $('.hk-row-cb').filter(':visible').prop('checked', isChecked);
+        $('.hk-row-cb, .hk-parent-cb').filter(':visible').prop('checked', isChecked);
+        updateBulkToolbar();
+    });
+
+    $(document).on('change', '.hk-parent-cb', function(e) {
+        e.stopPropagation();
+        const isChecked = $(this).is(':checked');
+        const pid = $(this).closest('tr').data('id');
+        $(`.child-of-${pid}`).find('.hk-row-cb').prop('checked', isChecked);
         updateBulkToolbar();
     });
 
@@ -424,17 +432,18 @@ jQuery(document).ready(function($) {
         if (selected > 0) {
             $('#hk-selected-count').text(selected);
             $('#hk-bulk-toolbar').css('display', 'flex');
-            $('.hk-row-cb').each(function() {
-                $(this).closest('tr').toggleClass('hk-selected', $(this).is(':checked'));
-            });
         } else {
             $('#hk-bulk-toolbar').hide();
-            $('#admin-stock-list-body tr').removeClass('hk-selected');
         }
+        
+        // Update selection styling for all rows based on their respective checkboxes
+        $('.hk-row-cb, .hk-parent-cb').each(function() {
+            $(this).closest('tr').toggleClass('hk-selected', $(this).is(':checked'));
+        });
     }
 
     window.clearSelection = function() {
-        $('.hk-row-cb').prop('checked', false);
+        $('.hk-row-cb, .hk-parent-cb').prop('checked', false);
         $('#select-all-rows').prop('checked', false);
         updateBulkToolbar();
     };
@@ -667,7 +676,7 @@ jQuery(document).ready(function($) {
             const isExpanded = isVariable && autoExpand ? 'expanded' : '';
 
             let row = `<tr class="${isVariable ? 'row-variable' : ''} ${stripeClass} ${isExpanded}" data-id="${p.id}">
-                <td style="text-align:center;"><input type="checkbox" class="hk-row-cb" value="${p.id}"></td>
+                <td style="text-align:center;"><input type="checkbox" class="${isVariable ? 'hk-parent-cb' : 'hk-row-cb'}" value="${p.id}"></td>
                 <td><img src="${p.thumbnail}" style="width:40px; height:40px; border-radius:4px; object-fit:cover; cursor:pointer;" onclick="openImagePreview('${p.thumbnail}')"></td>
                 <td style="vertical-align:middle;">
                     <div style="display:flex; align-items:center;">
