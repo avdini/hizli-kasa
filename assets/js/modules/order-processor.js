@@ -57,22 +57,32 @@
 
                 var esik = (typeof kasaAyar !== 'undefined' && kasaAyar.iskontoTelefonEsigi) ? kasaAyar.iskontoTelefonEsigi : 2000;
                 var phoneInput = document.getElementById("musteri-telefon");
-                var rawPhone = (state.musteriTelefon || "").replace(/\D/g, '');
+                var phoneInfo = self._getPhoneInfo();
+                var rawPhone = phoneInfo.digits;
 
                 if (toplamIskonto >= esik) {
-                    if (rawPhone.length !== 11 || rawPhone[0] !== '0') {
-                        HK.UIRenderer.showToast(esik + " TL ve üzeri iskontolarda müşteri telefonu zorunludur!", "error", true);
+                    var hasValidPhone = phoneInfo.isValid;
+                    var hasOrderNote = !!(state.siparisNotu && state.siparisNotu.trim());
+
+                    if (!hasValidPhone && !hasOrderNote) {
+                        HK.UIRenderer.showToast(esik + " TL ve üzeri iskontolarda müşteri telefonu veya sipariş notu zorunludur!", "error", true);
                         var musteriPanel = document.getElementById("musteri-telefon-panel");
                         if (musteriPanel) musteriPanel.style.display = "block";
-                        if (phoneInput) phoneInput.focus();
+
+                        var noteButton = document.getElementById("siparis-notu-btn");
+                        if (noteButton) {
+                            noteButton.click();
+                        } else if (phoneInput) {
+                            phoneInput.focus();
+                        }
                         return;
                     }
                 }
 
                 // Müşteri Telefonu Doğrulaması (Eğer girilmişse ama eşik altında kalmışsa bile formatı kontrol et)
                 if (rawPhone.length > 0) {
-                    if (rawPhone.length !== 11 || rawPhone[0] !== '0') {
-                        HK.UIRenderer.showToast("Lütfen geçerli bir telefon numarası giriniz (05xx...)", "error", true);
+                    if (!phoneInfo.isValid) {
+                        HK.UIRenderer.showToast(phoneInfo.countryCode === "+90" ? "Lütfen geçerli bir telefon numarası giriniz (05xx...)" : "Lütfen geçerli bir telefon numarası giriniz.", "error", true);
                         var musteriPanel = document.getElementById("musteri-telefon-panel");
                         if (musteriPanel) musteriPanel.style.display = "block";
                         if (phoneInput) phoneInput.focus();
@@ -104,6 +114,7 @@
             var musteriPanel = document.getElementById("musteri-telefon-panel");
             var musteriKapat = document.getElementById("musteri-telefon-kapat");
             var phoneInput = document.getElementById("musteri-telefon");
+            var phoneCountry = document.getElementById("musteri-telefon-ulke");
 
             if (musterEkleBtn && musteriPanel) {
                 musterEkleBtn.addEventListener("click", function () {
@@ -120,48 +131,112 @@
                     if (phoneInput) {
                         phoneInput.value = "";
                         HK.State.musteriTelefon = "";
-                        HK.CartManager.sepetiKaydet();
+                        HK.State.musteriTelefonUlkeKodu = "+90";
                     }
+                    if (phoneCountry) {
+                        phoneCountry.value = "+90";
+                    }
+                    if (phoneInput) {
+                        phoneInput.placeholder = "0 (5xx) xxx xx xx";
+                    }
+                    HK.CartManager.sepetiKaydet();
+                    self._telefonGrupDurumunuGuncelle();
+                });
+            }
+
+            if (phoneCountry) {
+                phoneCountry.addEventListener("change", function(e) {
+                    HK.State.musteriTelefonUlkeKodu = e.target.value || "+90";
+                    if (phoneInput) {
+                        phoneInput.placeholder = HK.State.musteriTelefonUlkeKodu === "+90" ? "0 (5xx) xxx xx xx" : "Telefon numarası";
+                        phoneInput.value = "";
+                    }
+                    HK.State.musteriTelefon = "";
+                    HK.CartManager.sepetiKaydet();
+                    self._telefonGrupDurumunuGuncelle();
                 });
             }
 
             if (phoneInput) {
                 phoneInput.addEventListener("input", function (e) {
+                    var countryCode = phoneCountry ? (phoneCountry.value || "+90") : (HK.State.musteriTelefonUlkeKodu || "+90");
                     var val = e.target.value.replace(/\D/g, '');
                     
-                    // Eğer kullanıcı doğrudan 5 ile başlıyorsa başına 0 ekle (Türkiye için kolaylık)
-                    if (val.length > 0 && val[0] === '5' && val.length <= 10) {
-                        val = '0' + val;
-                    }
-                    
-                    // Max 11 hane
-                    if (val.length > 11) val = val.substring(0, 11);
+                    if (countryCode === "+90") {
+                        // Eğer kullanıcı doğrudan 5 ile başlıyorsa başına 0 ekle (Türkiye için kolaylık)
+                        if (val.length > 0 && val[0] === '5' && val.length <= 10) {
+                            val = '0' + val;
+                        }
+                        
+                        // Max 11 hane
+                        if (val.length > 11) val = val.substring(0, 11);
 
-                    var x = val.match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
-                    if (!x[1]) {
-                        e.target.value = '';
+                        var x = val.match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+                        if (!x[1]) {
+                            e.target.value = '';
+                        } else {
+                            e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + (x[3] ? ') ' + x[3] : '') + (x[4] ? ' ' + x[4] : '') + (x[5] ? ' ' + x[5] : '');
+                        }
                     } else {
-                        e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + (x[3] ? ') ' + x[3] : '') + (x[4] ? ' ' + x[4] : '') + (x[5] ? ' ' + x[5] : '');
+                        if (val.length > 15) val = val.substring(0, 15);
+                        e.target.value = val.replace(/(\d{3})(?=\d)/g, '$1 ').trim();
                     }
 
                     // State'i güncelle ve kaydet
+                    HK.State.musteriTelefonUlkeKodu = countryCode;
                     HK.State.musteriTelefon = e.target.value;
                     HK.CartManager.sepetiKaydet();
 
-                    // Görsel doğrulama geri bildirimi
-                    var grup = e.target.closest('.musteri-input-grup');
-                    if (grup) {
-                        if (val.length === 0) {
-                            grup.classList.remove('gecerli', 'gecersiz');
-                        } else if (val.length === 11 && val[0] === '0') {
-                            grup.classList.add('gecerli');
-                            grup.classList.remove('gecersiz');
-                        } else {
-                            grup.classList.add('gecersiz');
-                            grup.classList.remove('gecerli');
-                        }
-                    }
+                    self._telefonGrupDurumunuGuncelle();
                 });
+            }
+        },
+
+        _getPhoneInfo: function() {
+            var countryCode = HK.State.musteriTelefonUlkeKodu || "+90";
+            var digits = (HK.State.musteriTelefon || "").replace(/\D/g, '');
+            var isValid = false;
+
+            if (countryCode === "+90") {
+                isValid = digits.length === 11 && digits[0] === '0';
+            } else {
+                isValid = digits.length >= 6 && digits.length <= 15;
+            }
+
+            return {
+                countryCode: countryCode,
+                digits: digits,
+                isValid: isValid,
+                fullPhone: this._formatFullPhone(countryCode, digits)
+            };
+        },
+
+        _formatFullPhone: function(countryCode, digits) {
+            if (!digits) return "";
+
+            if (countryCode === "+90" && digits[0] === '0') {
+                digits = digits.substring(1);
+            }
+
+            return countryCode + " " + digits;
+        },
+
+        _telefonGrupDurumunuGuncelle: function() {
+            var phoneInput = document.getElementById("musteri-telefon");
+            if (!phoneInput) return;
+
+            var grup = phoneInput.closest('.musteri-input-grup');
+            if (!grup) return;
+
+            var info = this._getPhoneInfo();
+            if (info.digits.length === 0) {
+                grup.classList.remove('gecerli', 'gecersiz');
+            } else if (info.isValid) {
+                grup.classList.add('gecerli');
+                grup.classList.remove('gecersiz');
+            } else {
+                grup.classList.add('gecersiz');
+                grup.classList.remove('gecerli');
             }
         },
 
@@ -470,7 +545,8 @@
                     last_name: "Kasa " + state.aktifKasaId,
                     address_1: "POS Satış",
                     city: "Mağaza",
-                    country: "TR"
+                    country: "TR",
+                    phone: this._getPhoneInfo().fullPhone
                 },
                 shipping: {
                     first_name: kasaAyar.userName || "Kasa",
@@ -495,7 +571,8 @@
                     { key: "_hk_cikis_depo_id", value: (HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0).toString() },
                     { key: "_hk_cikis_depo_adi", value: HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '' },
                     { key: "_hizli_kasa_kaynak", value: refundTotal > 0 ? "pos_degisim" : "pos_satis" },
-                    { key: "_hizli_kasa_musteri_telefon", value: state.musteriTelefon || "" },
+                    { key: "_hizli_kasa_musteri_telefon", value: this._getPhoneInfo().fullPhone },
+                    { key: "_hizli_kasa_musteri_telefon_ulke_kodu", value: state.musteriTelefonUlkeKodu || "+90" },
                     { key: "_hizli_kasa_siparis_notu", value: siparisNotu }
                 ]
             };

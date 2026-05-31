@@ -184,6 +184,24 @@
     opacity: 0.6;
 }
 
+.musteri-ulke-kodu {
+    flex: 0 0 auto;
+    min-width: 88px;
+    margin-right: 8px;
+    padding: 7px 8px;
+    border: 1px solid var(--hk-border);
+    border-radius: 6px;
+    background: var(--hk-bg-card);
+    color: var(--hk-text-main);
+    font-size: 13px;
+    font-weight: 700;
+    outline: none;
+}
+
+.musteri-ulke-kodu:focus {
+    border-color: var(--hk-accent);
+}
+
 .musteri-telefon-input {
     flex: 1;
     background: transparent;

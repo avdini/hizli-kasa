@@ -19,6 +19,7 @@ window.HizliKasa = window.HizliKasa || {};
         iskontoTutar: 0,
         odemeTipi: "card",
         musteriTelefon: "",
+        musteriTelefonUlkeKodu: "+90",
         siparisNotu: "",
         splitData: null,
         lastUpdatedId: null,
@@ -49,6 +50,7 @@ window.HizliKasa = window.HizliKasa || {};
                 iskontoTutar: state.iskontoTutar,
                 odemeTipi: state.odemeTipi,
                 musteriTelefon: state.musteriTelefon,
+                musteriTelefonUlkeKodu: state.musteriTelefonUlkeKodu,
                 siparisNotu: state.siparisNotu,
                 splitData: state.splitData
             };
@@ -75,14 +77,22 @@ window.HizliKasa = window.HizliKasa || {};
                     state.iskontoTutar = veri.iskontoTutar || 0;
                     state.odemeTipi = veri.odemeTipi || "card";
                     state.musteriTelefon = veri.musteriTelefon || "";
+                    state.musteriTelefonUlkeKodu = veri.musteriTelefonUlkeKodu || "+90";
                     state.siparisNotu = veri.siparisNotu || "";
                     state.splitData = veri.splitData || null;
 
                     // UI Güncelle
                     var phoneInput = document.getElementById("musteri-telefon");
+                    var phoneCountry = document.getElementById("musteri-telefon-ulke");
                     var musteriPanel = document.getElementById("musteri-telefon-panel");
                     if (phoneInput) {
                         phoneInput.value = state.musteriTelefon;
+                    }
+                    if (phoneCountry) {
+                        phoneCountry.value = state.musteriTelefonUlkeKodu;
+                    }
+                    if (phoneInput) {
+                        phoneInput.placeholder = state.musteriTelefonUlkeKodu === "+90" ? "0 (5xx) xxx xx xx" : "Telefon numarası";
                     }
                     if (musteriPanel) {
                         musteriPanel.style.display = state.musteriTelefon ? "block" : "none";
@@ -106,6 +116,8 @@ window.HizliKasa = window.HizliKasa || {};
                 state.sepet = [];
                 state.iskontoTutar = 0;
                 state.odemeTipi = "card";
+                state.musteriTelefon = "";
+                state.musteriTelefonUlkeKodu = "+90";
                 state.siparisNotu = "";
                 state.splitData = null;
             }
@@ -128,13 +140,22 @@ window.HizliKasa = window.HizliKasa || {};
             state.iskontoTutar = 0;
             state.odemeTipi = "card";
             state.musteriTelefon = "";
+            state.musteriTelefonUlkeKodu = "+90";
             state.siparisNotu = "";
             state.splitData = null;
 
             // UI Güncelle
             var phoneInput = document.getElementById("musteri-telefon");
+            var phoneCountry = document.getElementById("musteri-telefon-ulke");
             if (phoneInput) {
                 phoneInput.value = "";
+            }
+            if (phoneCountry) {
+                phoneCountry.value = "+90";
+            }
+            var phoneGroup = phoneInput ? phoneInput.closest('.musteri-input-grup') : null;
+            if (phoneGroup) {
+                phoneGroup.classList.remove('gecerli', 'gecersiz');
             }
 
             if (HK.UIRenderer) {
