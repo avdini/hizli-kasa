@@ -106,8 +106,10 @@ if (!defined('ABSPATH')) exit;
                 <span>İADE EDİLECEK TOPLAM:</span>
                 <span id="iade-toplam-tutar">0.00 TL</span>
             </div>
-            <button id="iade-onayla-btn" class="iade-islem-btn" disabled>İade Sepetini Onayla</button>
-            <button id="degisim-kasaya-gonder-btn" class="iade-islem-btn degisim-btn" disabled>🔄 Değişim İçin Kasaya Gönder</button>
+            <div class="iade-buton-grubu">
+                <button id="degisim-kasaya-gonder-btn" class="iade-islem-btn degisim-btn" disabled>🔄 Değişim İçin Kasaya Gönder</button>
+                <button id="iade-onayla-btn" class="iade-islem-btn" disabled>İade Sepetini Onayla</button>
+            </div>
         </div>
     </div>
 </div>

@@ -489,8 +489,13 @@
 .iade-toplam-satir span:first-child { font-weight: bold; color: #7f8c8d; }
 #iade-toplam-tutar { font-size: 24px; font-weight: 800; color: #e53e3e; }
 
+.iade-buton-grubu {
+    display: flex;
+    gap: 12px;
+}
+
 .iade-islem-btn {
-    width: 100%;
+    flex: 1;
     padding: 15px;
     background: #2c3e50;
     color: white;
@@ -499,6 +504,7 @@
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .iade-islem-btn:disabled { opacity: 0.3; cursor: not-allowed; }
@@ -506,7 +512,7 @@
 /* Değişim İçin Kasaya Gönder Butonu */
 .iade-islem-btn.degisim-btn {
     background: linear-gradient(135deg, #e67e22, #f39c12);
-    margin-top: 10px;
+    margin-top: 0;
     font-size: 15px;
     transition: all 0.3s ease;
     position: relative;
