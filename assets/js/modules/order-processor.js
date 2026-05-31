@@ -377,22 +377,28 @@
             // %5 önce, iskonto sonra
             var netSatisToplami = sepetAraToplam - (isAutoDiscount ? (sepetAraToplam * 0.05) : 0) - state.iskontoTutar;
             var gercekOdenen = netSatisToplami - refundTotal; // Müşteriden alınacak / kasaya giren net para
-            if (gercekOdenen < 0) gercekOdenen = 0;
             
-            // Fee Lines: Eğer değişim varsa, satış faturasının genel toplamını gerçek ödenen paraya düşürmek için negatif fee ekliyoruz.
             var feeLines = [];
-            if (refundTotal > 0) {
+            var eklenenFark = 0;
+
+            if (gercekOdenen < 0) {
+                // İade edilen tutar yeni satış tutarından büyük.
+                // Müşteriye para üstü vermiyoruz.
+                // Muhasebenin düzgün çıkması (Nakit nötrlenmesi) için satış faturasının genel toplamını
+                // iade tutarına tamamlıyoruz.
+                eklenenFark = Math.abs(gercekOdenen);
                 feeLines.push({
-                    name: "Değişim İadesi",
-                    total: "-" + refundTotal.toFixed(2),
+                    name: "Ekstra Değişim Farkı",
+                    total: eklenenFark.toFixed(2),
                     tax_status: "none"
                 });
+                gercekOdenen = 0;
             }
 
             // Ödeme Bölünmüşse Tutar Kontrolü Yap (Son Kontrol)
             if (splitData) {
                 var girenToplam = splitData.nakit + splitData.kart + splitData.iban;
-                // Bölünmüş ödeme girişi gerçek ödenen ile eşleşmeli
+                // Bölünmüş ödeme girişi gerçek ödenen (kalan tahsilat) ile eşleşmeli
                 var fark = gercekOdenen - girenToplam;
                 if (Math.abs(fark) >= 0.01 && gercekOdenen > 0) { // Sadece pozitif ödemelerde kontrol et
                     this.toggleLoading(false);
@@ -404,33 +410,47 @@
             }
 
             // Ödeme Yöntemleri (Raporlama İçin)
-            // Eğer fark negatifse veya sıfırsa (Müşteri para ödemediyse) ödeme alanları sıfır yazılır.
             var oNakit = 0, oKart = 0, oIban = 0;
+            
+            // Değişim iadesi varsa, bu iade tutarı satış faturasına "Nakit" olarak girer.
+            // Çünkü iade faturası kesilirken nakit çıkışı (-Nakit) yazıldı, burada satışa (+Nakit) yazılarak nötrlenir.
+            if (refundTotal > 0) {
+                oNakit += refundTotal;
+            }
+
             if (gercekOdenen > 0) {
                 if (splitData) {
-                    oNakit = splitData.nakit;
-                    oKart = splitData.kart;
-                    oIban = splitData.iban;
+                    oNakit += splitData.nakit;
+                    oKart += splitData.kart;
+                    oIban += splitData.iban;
                 } else {
-                    if (state.odemeTipi === "cash") oNakit = gercekOdenen;
-                    else if (state.odemeTipi === "iban") oIban = gercekOdenen;
-                    else oKart = gercekOdenen;
+                    if (state.odemeTipi === "cash") oNakit += gercekOdenen;
+                    else if (state.odemeTipi === "iban") oIban += gercekOdenen;
+                    else oKart += gercekOdenen;
                 }
             }
 
-            var paymentMethod = splitData ? "split" : (state.odemeTipi === "card" ? "other" : (state.odemeTipi === "cash" ? "cod" : "bacs"));
-            var paymentTitle = splitData ? "Bölünmüş Ödeme" : (state.odemeTipi === "card" ? "Kredi Kartı" : (state.odemeTipi === "cash" ? "Nakit" : "IBAN / Havale"));
+            var paymentMethod = "cod";
+            var paymentTitle = "Nakit";
+
+            if (gercekOdenen > 0) {
+                paymentMethod = splitData ? "split" : (state.odemeTipi === "card" ? "other" : (state.odemeTipi === "cash" ? "cod" : "bacs"));
+                paymentTitle = splitData ? "Bölünmüş Ödeme" : (state.odemeTipi === "card" ? "Kredi Kartı" : (state.odemeTipi === "cash" ? "Nakit" : "IBAN / Havale"));
+            } else if (refundTotal > 0) {
+                paymentMethod = "cod";
+                paymentTitle = "Nakit (Değişim ile Nötrlendi)";
+            }
 
             var customerNote = "Kasiyer: " + (kasaAyar.userName || "Kasa Personeli") + ", Kasa " + state.aktifKasaId + " | ";
             if (refundTotal > 0) {
-                customerNote += "Değişim İşlemi (İade Tutarı: " + refundTotal.toFixed(2) + " TL) | ";
+                customerNote += "Değişim İşlemi (İade: " + refundTotal.toFixed(2) + " TL Nakit Sayıldı) | ";
             }
             if (gercekOdenen > 0) {
                 customerNote += (splitData
-                    ? "Ödeme Bölündü: Nakit: " + oNakit.toFixed(2) + " TL, Kart: " + oKart.toFixed(2) + " TL, IBAN: " + oIban.toFixed(2) + " TL"
-                    : "Ödeme: " + paymentTitle);
-            } else {
-                customerNote += "Müşteriden tahsilat yapılmadı (Değişim ile karşılandı).";
+                    ? "Kalan Tahsilat: Nakit: " + (oNakit - refundTotal).toFixed(2) + " TL, Kart: " + oKart.toFixed(2) + " TL, IBAN: " + oIban.toFixed(2) + " TL"
+                    : "Kalan Tahsilat: " + paymentTitle);
+            } else if (refundTotal > 0) {
+                customerNote += "Müşteriden ilave tahsilat yapılmadı.";
             }
 
             var siparisVerisi = {
