@@ -230,18 +230,28 @@
 }
 
 /* Ülke Listesi (Dropdown) - Yukarı Doğru Açılma Zorlaması */
-.iti__country-list {
+.iti__dropdown-content {
     bottom: 100% !important;
     top: auto !important;
     margin-bottom: 5px !important;
     background-color: var(--hk-bg-card) !important;
-    color: var(--hk-text-main) !important;
     border: 1px solid var(--hk-border) !important;
     border-radius: 8px !important;
     box-shadow: 0 -4px 20px rgba(0,0,0,0.3) !important;
     z-index: 9999999 !important;
-    max-height: 250px !important;
     width: 300px !important;
+    overflow: hidden !important;
+}
+
+.iti__country-list {
+    max-height: 250px !important;
+    color: var(--hk-text-main) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: inherit !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
 /* Liste içi arama ve öğeler */

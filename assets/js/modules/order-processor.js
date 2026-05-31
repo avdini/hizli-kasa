@@ -124,6 +124,7 @@
                     preferredCountries: ["tr", "de", "nl", "be", "at", "fr", "gb", "us"],
                     utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@24.4.0/build/js/utils.js",
                     autoPlaceholder: "aggressive",
+                    countryNameLocale: "tr",
                     i18n: {
                         searchPlaceholder: "Ülke ara...",
                     }
