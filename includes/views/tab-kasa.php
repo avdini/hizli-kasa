@@ -119,6 +119,7 @@ if (!defined('ABSPATH'))
             <div class="islem-grubu">
                 <div class="islem-sol-grup">
                     <button id="musteri-ekle-btn" title="Müşteri Telefonu Ekle">👤 Müşteri</button>
+                    <button id="siparis-notu-btn" title="Sipariş Notu Ekle">📝 Not</button>
 
                     <button id="yuvarla-buton">Küsürat Yuvarla</button>
                     <button id="iskonto-buton">İskonto</button>

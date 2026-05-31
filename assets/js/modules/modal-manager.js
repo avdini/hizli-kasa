@@ -42,12 +42,20 @@
                 bolIbanInput: document.getElementById("bol-iban"),
                 bolOnayla: document.getElementById("bol-onayla"),
                 bolVazgec: document.getElementById("bol-vazgec"),
-                yuvarlaButon: document.getElementById("yuvarla-buton")
+                yuvarlaButon: document.getElementById("yuvarla-buton"),
+                siparisNotuBtn: document.getElementById("siparis-notu-btn"),
+                siparisNotuModal: document.getElementById("siparis-notu-modal"),
+                siparisNotuInput: document.getElementById("siparis-notu-input"),
+                siparisNotuSayac: document.getElementById("siparis-notu-sayac"),
+                siparisNotuKaydet: document.getElementById("siparis-notu-kaydet"),
+                siparisNotuIptal: document.getElementById("siparis-notu-iptal"),
+                siparisNotuTemizle: document.getElementById("siparis-notu-temizle")
             };
 
             this._bindIskontoModal();
             this._bindUrunAramaModal();
             this._bindOdemeBolModal();
+            this._bindSiparisNotuModal();
             this._bindYuvarlaButon();
             this._bindModalDismiss();
         },
@@ -500,6 +508,73 @@
             });
         },
 
+        // =========================================
+        //  SIPARIS NOTU MODALI
+        // =========================================
+
+        _bindSiparisNotuModal: function() {
+            var self = this;
+            var els = this.els;
+
+            if (!els.siparisNotuBtn || !els.siparisNotuModal || !els.siparisNotuInput) return;
+
+            var sayaciGuncelle = function() {
+                if (els.siparisNotuSayac) {
+                    els.siparisNotuSayac.innerText = (els.siparisNotuInput.value || "").length + "/500";
+                }
+            };
+
+            els.siparisNotuBtn.addEventListener("click", function() {
+                els.siparisNotuInput.value = HK.State.siparisNotu || "";
+                sayaciGuncelle();
+                els.siparisNotuModal.style.display = "flex";
+                els.siparisNotuInput.focus();
+            });
+
+            els.siparisNotuInput.addEventListener("input", sayaciGuncelle);
+
+            els.siparisNotuInput.addEventListener("keydown", function(e) {
+                if (e.key === "Escape") {
+                    e.preventDefault();
+                    els.siparisNotuIptal.click();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                    e.preventDefault();
+                    els.siparisNotuKaydet.click();
+                }
+            });
+
+            els.siparisNotuIptal.addEventListener("click", function() {
+                els.siparisNotuModal.style.display = "none";
+            });
+
+            els.siparisNotuTemizle.addEventListener("click", function() {
+                els.siparisNotuInput.value = "";
+                sayaciGuncelle();
+                els.siparisNotuInput.focus();
+            });
+
+            els.siparisNotuKaydet.addEventListener("click", function() {
+                HK.State.siparisNotu = (els.siparisNotuInput.value || "").trim();
+                HK.CartManager.sepetiKaydet();
+                if (HK.UIRenderer && HK.UIRenderer.notButonunuGuncelle) {
+                    HK.UIRenderer.notButonunuGuncelle();
+                }
+                els.siparisNotuModal.style.display = "none";
+                self._notDurumMesaji();
+            });
+        },
+
+        _notDurumMesaji: function() {
+            if (!HK.UIRenderer || !HK.UIRenderer.showToast) return;
+
+            if (HK.State.siparisNotu) {
+                HK.UIRenderer.showToast("Sipariş notu kaydedildi.", "success");
+            } else {
+                HK.UIRenderer.showToast("Sipariş notu temizlendi.", "info");
+            }
+        },
+
         /**
          * Ödeme bölme kalan tutarını hesapla
          */
@@ -600,6 +675,7 @@
                 if (event.target == els.iskontoModal) els.iskontoModal.style.display = "none";
                 if (event.target == els.urunAramaModal) els.urunAramaModal.style.display = "none";
                 if (event.target == els.bolModal) els.bolModal.style.display = "none";
+                if (event.target == els.siparisNotuModal) els.siparisNotuModal.style.display = "none";
             });
         },
 

@@ -35,6 +35,7 @@ window.HizliKasa = window.HizliKasa || {};
                 sepetIstatistikArea: document.getElementById("sepet-istatistik-watermark"),
                 odemeOzetiAlani: document.getElementById("odeme-ozeti-alani"),
                 bolButon: document.getElementById("bol-buton"),
+                siparisNotuBtn: document.getElementById("siparis-notu-btn"),
                 sidebarButtons: document.querySelectorAll(".sidebar-btn"),
                 iskontoTemizleBtn: document.getElementById("iskonto-temizle-btn")
             };
@@ -345,8 +346,18 @@ window.HizliKasa = window.HizliKasa || {};
             });
 
             HK.CartManager.sepetiKaydet();
+            this.notButonunuGuncelle();
             this._odemeOzetiniGuncelle();
             state.lastUpdatedId = null;
+        },
+
+        notButonunuGuncelle: function() {
+            var btn = this.els.siparisNotuBtn || document.getElementById("siparis-notu-btn");
+            if (!btn) return;
+
+            var hasNote = !!(HK.State.siparisNotu && HK.State.siparisNotu.trim());
+            btn.classList.toggle("not-var", hasNote);
+            btn.title = hasNote ? "Sipariş Notunu Düzenle" : "Sipariş Notu Ekle";
         },
 
         /**

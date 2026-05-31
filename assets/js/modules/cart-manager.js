@@ -19,6 +19,7 @@ window.HizliKasa = window.HizliKasa || {};
         iskontoTutar: 0,
         odemeTipi: "card",
         musteriTelefon: "",
+        siparisNotu: "",
         splitData: null,
         lastUpdatedId: null,
         CURRENT_VERSION: typeof kasaAyar !== 'undefined' && kasaAyar.version ? kasaAyar.version : "2.8.8",
@@ -48,6 +49,7 @@ window.HizliKasa = window.HizliKasa || {};
                 iskontoTutar: state.iskontoTutar,
                 odemeTipi: state.odemeTipi,
                 musteriTelefon: state.musteriTelefon,
+                siparisNotu: state.siparisNotu,
                 splitData: state.splitData
             };
             localStorage.setItem(this._slotKey(state.aktifKasaId), JSON.stringify(veri));
@@ -73,6 +75,7 @@ window.HizliKasa = window.HizliKasa || {};
                     state.iskontoTutar = veri.iskontoTutar || 0;
                     state.odemeTipi = veri.odemeTipi || "card";
                     state.musteriTelefon = veri.musteriTelefon || "";
+                    state.siparisNotu = veri.siparisNotu || "";
                     state.splitData = veri.splitData || null;
 
                     // UI Güncelle
@@ -103,6 +106,7 @@ window.HizliKasa = window.HizliKasa || {};
                 state.sepet = [];
                 state.iskontoTutar = 0;
                 state.odemeTipi = "card";
+                state.siparisNotu = "";
                 state.splitData = null;
             }
 
@@ -124,6 +128,7 @@ window.HizliKasa = window.HizliKasa || {};
             state.iskontoTutar = 0;
             state.odemeTipi = "card";
             state.musteriTelefon = "";
+            state.siparisNotu = "";
             state.splitData = null;
 
             // UI Güncelle

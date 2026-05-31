@@ -102,7 +102,8 @@
         font-size: 12px;
     }
 
-    #musteri-ekle-btn {
+    #musteri-ekle-btn,
+    #siparis-notu-btn {
         padding: 8px;
         font-size: 10px;
     }

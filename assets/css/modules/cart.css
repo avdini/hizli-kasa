@@ -3,7 +3,7 @@
    ============================================= */
 
 #sepet-listesi { 
-    flex-grow: 1;
+    flex: 1;
     list-style-type: none; 
     background: var(--hk-bg-card); 
     overflow-y: auto; 

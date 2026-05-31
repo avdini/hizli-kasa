@@ -4,7 +4,7 @@
 
 .toplam-alani {
     padding: 10px !important;
-    margin-top: auto !important;
+    margin-top: 0 !important;
     border: none !important;
     /* Çizgi çerçeve kaldırıldı */
     border-radius: 12px;
@@ -151,6 +151,7 @@
 }
 
 #iskonto-buton,
+#siparis-notu-btn,
 #yuvarla-buton {
     flex: 1 !important;
     padding: 15px 5px;
@@ -167,7 +168,8 @@
     text-overflow: ellipsis;
 }
 
-#musteri-ekle-btn {
+#musteri-ekle-btn,
+#siparis-notu-btn {
     flex: 0.5 !important;
     /* Bir tık daha dar */
     padding: 10px 5px;
@@ -197,9 +199,24 @@
     background: #7f8c8d;
 }
 
-#musteri-ekle-btn:hover {
+#musteri-ekle-btn:hover,
+#siparis-notu-btn:hover {
     background: #3c526d;
     opacity: 0.9;
+}
+
+#siparis-notu-btn.not-var {
+    background: #16a085;
+    box-shadow: 0 0 0 2px rgba(22, 160, 133, 0.18);
+}
+
+#siparis-notu-btn.not-var:hover {
+    background: #138d75;
+}
+
+#siparis-notu-btn.not-var::after {
+    content: " •";
+    font-weight: 900;
 }
 
 /* --- Ödeme Seçici --- */

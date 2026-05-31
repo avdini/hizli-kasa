@@ -43,6 +43,22 @@ if (!defined('ABSPATH')) exit;
     </div>
 </div>
 
+<!-- Sipariş Notu Modalı -->
+<div id="siparis-notu-modal" class="modal-cerceve" style="display:none;">
+    <div class="modal-icerik modal-icerik-sm siparis-notu-icerik">
+        <h3>📝 Sipariş Notu</h3>
+        <textarea id="siparis-notu-input" class="hk-input siparis-notu-textarea" rows="6" maxlength="500" placeholder="Siparişe eklenecek not..."></textarea>
+        <div class="siparis-notu-alt">
+            <span id="siparis-notu-sayac">0/500</span>
+            <button id="siparis-notu-temizle" type="button">Temizle</button>
+        </div>
+        <div class="modal-butonlar" style="margin-top:18px;">
+            <button id="siparis-notu-iptal" class="modal-btn-cancel">Vazgeç</button>
+            <button id="siparis-notu-kaydet" class="hk-btn-primary" style="padding:12px;">Kaydet</button>
+        </div>
+    </div>
+</div>
+
 <!-- El ile Ürün Ekleme Modalı -->
 <div id="manuel-urun-modal" class="modal-cerceve" style="display:none;">
     <div class="modal-icerik modal-icerik-sm">

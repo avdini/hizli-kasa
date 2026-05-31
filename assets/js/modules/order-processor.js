@@ -454,6 +454,11 @@
                 customerNote += "Müşteriden ilave tahsilat yapılmadı.";
             }
 
+            var siparisNotu = (state.siparisNotu || "").trim();
+            if (siparisNotu) {
+                customerNote += " | Not: " + siparisNotu;
+            }
+
             var siparisVerisi = {
                 status: kasaAyar.siparisDurumu,
                 line_items: temizSepet,
@@ -490,7 +495,8 @@
                     { key: "_hk_cikis_depo_id", value: (HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0).toString() },
                     { key: "_hk_cikis_depo_adi", value: HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '' },
                     { key: "_hizli_kasa_kaynak", value: refundTotal > 0 ? "pos_degisim" : "pos_satis" },
-                    { key: "_hizli_kasa_musteri_telefon", value: state.musteriTelefon || "" }
+                    { key: "_hizli_kasa_musteri_telefon", value: state.musteriTelefon || "" },
+                    { key: "_hizli_kasa_siparis_notu", value: siparisNotu }
                 ]
             };
 
