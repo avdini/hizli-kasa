@@ -32,7 +32,7 @@ window.HizliKasa = window.HizliKasa || {};
                 araToplamArea: document.getElementById("ara-toplam-deger"),
                 listeToplamiSatiri: document.getElementById("liste-toplami-satiri"),
                 listeToplamiArea: document.getElementById("liste-toplami-deger"),
-                sepetIstatistikArea: document.getElementById("sepet-istatistik-deger"),
+                sepetIstatistikArea: document.getElementById("sepet-istatistik-watermark"),
                 odemeOzetiAlani: document.getElementById("odeme-ozeti-alani"),
                 bolButon: document.getElementById("bol-buton"),
                 sidebarButtons: document.querySelectorAll(".sidebar-btn"),
@@ -269,14 +269,24 @@ window.HizliKasa = window.HizliKasa || {};
             var sepetListeToplami = 0;
             var sepetIskontoluToplam = 0;
             var autoDiscountBase = 0;
-            var sepetKalem = state.sepet.length;
+            
+            var sepetKalem = 0;
             var sepetAdet = 0;
+            var iadeAdet = 0;
 
             state.sepet.forEach(function(item) {
                 sepetAraToplam += (item.price * item.quantity);
                 sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
                 sepetIskontoluToplam += ((item.price * item.quantity) - (item.line_discount || 0));
-                sepetAdet += item.quantity;
+
+                if (item.quantity < 0) {
+                    // İade/Değişim ürünü
+                    iadeAdet += Math.abs(item.quantity);
+                } else {
+                    // Normal ürün
+                    sepetKalem++;
+                    sepetAdet += item.quantity;
+                }
 
                 if (!item._is_exchange_return && item.quantity > 0) {
                     autoDiscountBase += (item.price * item.quantity);
@@ -284,7 +294,11 @@ window.HizliKasa = window.HizliKasa || {};
             });
 
             if (els.sepetIstatistikArea) {
-                els.sepetIstatistikArea.innerText = sepetKalem + " Kalem / " + sepetAdet + " Adet";
+                var istatistikMetni = sepetKalem + " Kalem / " + sepetAdet + " Adet";
+                if (iadeAdet > 0) {
+                    istatistikMetni += " <span style='color:#e74c3c; margin-left:5px;'>(+ " + iadeAdet + " İade)</span>";
+                }
+                els.sepetIstatistikArea.innerHTML = istatistikMetni;
             }
 
             var nakitIndirimTutar = 0;
