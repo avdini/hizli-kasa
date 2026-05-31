@@ -162,16 +162,18 @@
     padding: 10px 15px;
     background: var(--hk-bg-card);
     border-top: 1px solid var(--hk-border);
+    overflow: visible !important;
 }
 
 .musteri-input-grup {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     background: var(--hk-bg-hover);
     border: 1px solid var(--hk-border);
     border-radius: 8px;
     padding: 2px 10px;
     transition: border-color 0.2s;
+    overflow: visible !important;
 }
 
 .musteri-input-grup:focus-within {
@@ -179,6 +181,8 @@
 }
 
 .musteri-ikon {
+    display: flex;
+    align-items: center;
     font-size: 16px;
     margin-right: 8px;
     opacity: 0.6;
@@ -188,30 +192,35 @@
 .iti {
     display: flex !important;
     align-items: center;
-    width: 100%;
+    flex: 1 !important;
     position: relative;
     overflow: visible !important;
 }
 
 /* Bayrak Seçim Kutusu */
 .iti__flag-container {
-    position: static !important;
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;
+    padding: 0 !important;
+    z-index: 10 !important;
 }
 
 .iti__selected-flag {
     flex: 0 0 auto !important;
-    min-width: 95px !important;
+    min-width: 80px !important;
     height: 38px !important;
     padding: 0 10px !important;
     border: 1px solid var(--hk-border) !important;
+    border-right: none !important;
     border-radius: 6px 0 0 6px !important;
     background: var(--hk-bg-card) !important;
     transition: all 0.2s !important;
     display: flex !important;
     align-items: center !important;
+    justify-content: center !important;
     cursor: pointer !important;
     pointer-events: auto !important;
-    z-index: 10 !important;
 }
 
 /* Hover Renk Düzeltmesi */
@@ -243,6 +252,7 @@
     color: var(--hk-text-main) !important;
     font-size: 13px !important;
     font-weight: 700 !important;
+    margin-left: 6px !important;
 }
 .iti__search-input {
     background-color: var(--hk-bg-hover) !important;
@@ -259,7 +269,6 @@
     position: static !important;
     background: var(--hk-bg-card) !important;
     border: 1px solid var(--hk-border) !important;
-    border-left: none !important;
     border-radius: 0 6px 6px 0 !important;
     padding: 8px 12px !important;
     height: 38px !important;
