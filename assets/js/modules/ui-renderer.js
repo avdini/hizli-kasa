@@ -76,6 +76,50 @@ window.HizliKasa = window.HizliKasa || {};
             var genelToplam = 0;
 
             state.sepet.forEach(function(item, index) {
+                // --- Negatif satır (Değişim iade ürünü) ---
+                if (item.quantity < 0) {
+                    var absQty = Math.abs(item.quantity);
+                    var lineTotal = item.price * absQty;
+                    var li = document.createElement("li");
+                    li.className = "exchange-return-item";
+
+                    li.innerHTML =
+                        '<div class="urun-sol-kolon">' +
+                            (item.image ? '<img src="' + item.image + '" class="urun-resim" style="width:40px; height:40px; object-fit:cover; border-radius:4px; margin-right:10px; flex-shrink:0; opacity:0.7;">' : '<div style="width:40px; height:40px; background:var(--hk-danger, #e74c3c); border-radius:4px; margin-right:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px;">🔄</div>') +
+                            '<span class="urun-bilgi">' +
+                                '<strong class="urun-ad">' + item.name + '</strong>' +
+                                '<span class="urun-sku" style="color:#e74c3c; font-size:12px; font-weight:bold;">' + (item.sku || '') + ' <span class="exchange-badge">İADE</span></span>' +
+                            '</span>' +
+                        '</div>' +
+                        '<div class="urun-orta-detay">' +
+                            '<span class="urun-detay-metin" style="font-size:15px; font-weight:bold; color:var(--hk-danger, #e74c3c);">' +
+                                absQty + ' Adet x ' + item.price.toFixed(2) + ' TL</span>' +
+                        '</div>' +
+                        '<div class="urun-sag-aksiyonlar">' +
+                            '<span class="urun-fiyat-grup" style="text-align:right; flex-shrink:0;">' +
+                                '<div class="ara-toplam" style="font-size: 19px; color: #e74c3c; font-weight: 800; line-height: 1.1;">-' + lineTotal.toFixed(2) + ' TL</div>' +
+                            '</span>' +
+                        '</div>';
+
+                    // Silme (çıkarma) butonu
+                    var silButon = document.createElement("button");
+                    silButon.innerText = "✕";
+                    silButon.className = "btn-adet exchange-remove-btn";
+                    silButon.title = "Değişim iade ürününü kaldır";
+                    silButon.addEventListener("click", (function(idx) {
+                        return function() {
+                            state.sepet.splice(idx, 1);
+                            self.arayuzuGuncelle();
+                        };
+                    })(index));
+
+                    var sagAksiyonlar = li.querySelector(".urun-sag-aksiyonlar");
+                    sagAksiyonlar.prepend(silButon);
+                    els.sepetListesi.appendChild(li);
+                    return; // forEach'in sonraki iterasyonuna geç
+                }
+
+                // --- Normal ürün satırı ---
                 // Fiyat Katmanları
                 var etiketFiyat = (item.regular_price || item.price) * item.quantity;
                 var kampanyaFiyat = item.price * item.quantity;
@@ -251,7 +295,9 @@ window.HizliKasa = window.HizliKasa || {};
 
             // Son Toplam = (AraToplam × autoFactor) - İskonto
             var sonToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
-            if (sonToplam < 0) sonToplam = 0;
+            // Değişim iade satırları varsa negatif toplam mümkün (müşteriye fark iadesi)
+            var hasExchangeItems = state.sepet.some(function(item) { return item._is_exchange_return; });
+            if (sonToplam < 0 && !hasExchangeItems) sonToplam = 0;
 
             els.listeToplamiSatiri.style.setProperty("display", "flex", "important");
             els.listeToplamiArea.innerText = sepetListeToplami.toFixed(2) + " TL";
@@ -366,7 +412,8 @@ window.HizliKasa = window.HizliKasa || {};
             });
             var nakitIndirimTutar = ((state.odemeTipi === "cash" || state.odemeTipi === "iban")) ? (sepetAraToplam * 0.05) : 0;
             var sonToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
-            if (sonToplam < 0) sonToplam = 0;
+            var hasExchangeItems = state.sepet.some(function(item) { return item._is_exchange_return; });
+            if (sonToplam < 0 && !hasExchangeItems) sonToplam = 0;
 
             if (!state.splitData) {
                 if (els.bolButon) els.bolButon.classList.remove("bol-aktif-glow");

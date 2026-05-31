@@ -201,6 +201,8 @@ window.HizliKasa = window.HizliKasa || {};
             if (isVariation) eklenecekUrun.variation_id = urun.id;
 
             var mevcutUrunIndex = state.sepet.findIndex(function(item) {
+                // Değişim iade satırlarını (negatif) normal ürünlerle birleştirme
+                if (item._is_exchange_return) return false;
                 return item.product_id === eklenecekUrun.product_id &&
                        item.variation_id === eklenecekUrun.variation_id;
             });

@@ -100,6 +100,11 @@ const RefundManager = (function () {
             onaylaBtn.onclick = openRefundModal;
         }
 
+        const degisimBtn = document.getElementById('degisim-kasaya-gonder-btn');
+        if (degisimBtn) {
+            degisimBtn.onclick = sendToRegisterForExchange;
+        }
+
         const modalVazgec = document.getElementById('iade-modal-vazgec');
         if (modalVazgec) {
             modalVazgec.onclick = closeRefundModal;
@@ -827,6 +832,7 @@ const RefundManager = (function () {
         const list = document.getElementById('iade-sepet-listesi');
         const totalSpan = document.getElementById('iade-toplam-tutar');
         const onaylaBtn = document.getElementById('iade-onayla-btn');
+        const degisimBtn = document.getElementById('degisim-kasaya-gonder-btn');
 
         if (!list) return;
 
@@ -853,6 +859,7 @@ const RefundManager = (function () {
         // Yan paneldeki toplamı güncelle (iskonto düşülmeden önceki sepet toplamı)
         totalSpan.innerText = `-${total.toFixed(2)} TL`;
         onaylaBtn.disabled = refundCart.length === 0;
+        if (degisimBtn) degisimBtn.disabled = refundCart.length === 0;
 
         // İskonto Yönetimi (Sadece modal açıkken veya ayarlar render edildiğinde anlamlı ama burada da kalabilir)
         updateDiscountVisibility();
@@ -1070,13 +1077,93 @@ const RefundManager = (function () {
         imgEl.src = fullSrc;
     }
 
+    /**
+     * İade sepetindeki ürünleri kasa sepetine negatif satır olarak gönderir.
+     * Müşteri yeni ürünleri de ekleyip tek sipariş olarak kapatabilir (değişim akışı).
+     */
+    function sendToRegisterForExchange() {
+        if (refundCart.length === 0) return;
+
+        const HK = window.HizliKasa;
+        if (!HK || !HK.CartManager || !HK.State) {
+            alert('Kasa modülü yüklenemedi. Lütfen sayfayı yenileyin.');
+            return;
+        }
+
+        if (!confirm(`${refundCart.length} ürün değişim için kasaya gönderilecek. Devam edilsin mi?`)) return;
+
+        // İade sepetindeki ürünleri kasa sepetine negatif satır olarak ekle
+        refundCart.forEach(item => {
+            const isVariation = (item.variation_id && item.variation_id > 0);
+
+            const exchangeItem = {
+                product_id: item.id,
+                variation_id: item.variation_id || 0,
+                quantity: -(Math.abs(item.qty)),  // Negatif adet
+                name: item.name,
+                sku: item.sku || '',
+                price: parseFloat(item.price),
+                regular_price: parseFloat(item.price),
+                line_discount: 0,
+                image: '',
+                _is_exchange_return: true,
+                _exchange_depo_id: item.depo_id || (HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0),
+                _exchange_original_order: originalOrder ? originalOrder.id : null
+            };
+
+            // Sepete ekle (aynı ürün varsa bile yeni satır olarak — negatif satır birleştirilmemeli)
+            HK.State.sepet.unshift(exchangeItem);
+        });
+
+        // İskonto ve ödeme bilgilerini sıfırla (değişim sepetinde temiz başla)
+        HK.State.iskontoTutar = 0;
+        HK.State.splitData = null;
+        HK.State.odemeTipi = 'card';
+        HK.State.sepet.forEach(item => { item.line_discount = 0; });
+
+        // Kaydet ve UI güncelle
+        HK.CartManager.sepetiKaydet();
+        if (HK.UIRenderer) {
+            HK.UIRenderer.arayuzuGuncelle();
+        }
+
+        // İade sekmesini temizle
+        const addedCount = refundCart.length;
+        refundCart = [];
+        originalOrder = null;
+        renderRefundCart();
+
+        const detayPanel = document.getElementById('iade-siparis-detay');
+        if (detayPanel) {
+            detayPanel.innerHTML = `
+                <div class="iade-basari-mesaj degisim-mesaj">
+                    <span>🔄</span>
+                    <p>${addedCount} ürün değişim için kasaya gönderildi.</p>
+                    <p style="font-size:13px; color:var(--hk-text-muted);">Kasa sekmesine geçip yeni ürünleri ekleyin.</p>
+                </div>
+            `;
+        }
+
+        // Kasa sekmesine geçiş
+        const kasaTab = document.querySelector('.ust-sekme[data-tab="kasa"]');
+        if (kasaTab) {
+            kasaTab.click();
+        }
+
+        // Toast bildirim
+        if (HK.UIRenderer && HK.UIRenderer.showToast) {
+            HK.UIRenderer.showToast(`🔄 ${addedCount} ürün değişim için kasaya eklendi. Yeni ürünleri okutun.`, 'success');
+        }
+    }
+
     return {
         init,
         addToRefundCart,
         removeFromRefundCart,
         selectOrder,
         closeSearchResults,
-        addManualToRefundCart
+        addManualToRefundCart,
+        sendToRegisterForExchange
     };
 })();
 

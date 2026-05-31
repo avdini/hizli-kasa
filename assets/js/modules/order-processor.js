@@ -181,14 +181,19 @@
             var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
 
             try {
-                // Toplu kontrol — tek API çağrısı
-                var checkItems = state.sepet.map(function (item) {
+                // Toplu kontrol — tek API çağrısı (negatif satırlar hariç)
+                var checkItems = state.sepet.filter(function (item) {
+                    return item.quantity > 0; // Değişim iade satırlarını stok kontrolünden hariç tut
+                }).map(function (item) {
                     return {
                         product_id: item.product_id,
                         variation_id: item.variation_id || 0,
                         qty: item.quantity
                     };
                 });
+
+                // Sadece pozitif ürünler varsa stok kontrolü yap
+                if (checkItems.length === 0) return sorunluUrunler;
 
                 var apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
                 var response = await fetch(apiBase + 'hizli-kasa/v1/warehouse-stock-check', {
@@ -245,22 +250,103 @@
             // Eğer ödeme bölünmüşse OTOMATİK %5 indirimleri IPTAL et
             var isAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
 
-            // Toplamlar için ön çalışma
+            // Sepeti İade (negatif) ve Satış (pozitif) olarak ikiye ayır
+            var refundItems = [];
+            var saleItems = [];
+            var refundOriginalOrder = null;
+            var refundTotal = 0; // Toplam iade tutarı (pozitif değer olarak tutacağız)
+
+            state.sepet.forEach(function (item) {
+                if (item._is_exchange_return && item.quantity < 0) {
+                    refundItems.push(item);
+                    if (item._exchange_original_order && !refundOriginalOrder) {
+                        refundOriginalOrder = item._exchange_original_order;
+                    }
+                    refundTotal += Math.abs(item.price * item.quantity);
+                } else {
+                    saleItems.push(item);
+                }
+            });
+
+            var apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
+            var exchangeRefundOrderId = null;
+
+            // 1. ADIM: İADE İŞLEMİ (Refund)
+            if (refundItems.length > 0) {
+                durumMetni.innerText = "İade işlemi arka planda oluşturuluyor...";
+                try {
+                    var refundResponse = await fetch(apiBase + 'hizli-kasa/v1/process-refund', {
+                        method: 'POST',
+                        headers: {
+                            'X-WP-Nonce': kasaAyar.nonce,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            original_order_id: refundOriginalOrder || '',
+                            is_manual: false,
+                            active_depo_id: HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0,
+                            kasa_no: state.aktifKasaId.toString(),
+                            payment_method: 'nakit', // Değişim iadeleri sanal olarak nakit gibi işlenir (kasada durur)
+                            split_data: null,
+                            refund_discount: 0,
+                            items: refundItems.map(function(item) {
+                                return {
+                                    id: item.product_id,
+                                    item_id: 'exchange_' + item.product_id, // Sahte item_id (API tarafı tolere eder veya orjinalini arar)
+                                    variation_id: item.variation_id || 0,
+                                    qty: Math.abs(item.quantity), // Pozitif miktar
+                                    price: item.price,
+                                    depo_id: item._exchange_depo_id || 0
+                                };
+                            })
+                        })
+                    });
+
+                    var refundResult = await refundResponse.json();
+                    if (refundResult.success) {
+                        exchangeRefundOrderId = refundResult.order_id;
+                    } else {
+                        throw new Error(refundResult.message || "İade işlemi başarısız.");
+                    }
+                } catch (error) {
+                    this.toggleLoading(false);
+                    durumMetni.innerText = "HATA: Değişim iadesi oluşturulamadı: " + error.message;
+                    durumMetni.style.color = "red";
+                    console.error("Değişim iade hatası", error);
+                    return; // İade başarısızsa satışı durdur
+                }
+            }
+
+            // Eğer sepette satılacak yeni ürün yoksa (sadece iade okutulup kasa üzerinden bitirilmişse)
+            if (saleItems.length === 0) {
+                this.toggleLoading(false);
+                durumMetni.innerText = "Sadece iade işlemi tamamlandı.";
+                durumMetni.style.color = "#27ae60";
+                HK.CartManager.sepetiTemizle();
+                alert("Sadece iade işlemi yapıldı. İade Sipariş No: #" + exchangeRefundOrderId);
+                if (HK.UIRenderer) {
+                    HK.UIRenderer.arayuzuGuncelle();
+                }
+                return;
+            }
+
+            // 2. ADIM: SATIŞ İŞLEMİ (Sale)
+            durumMetni.innerText = "Satış işlemi tamamlanıyor...";
+
+            // Toplamlar için ön çalışma (sadece pozitif satırlar)
             var sepetAraToplam = 0;
             var sepetListeToplami = 0;
             var sepetIskontoluToplam = 0;
-            state.sepet.forEach(function (item) {
+            saleItems.forEach(function (item) {
                 sepetAraToplam += (item.price * item.quantity);
                 sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
                 sepetIskontoluToplam += ((item.price * item.quantity) - (item.line_discount || 0));
             });
 
-            var temizSepet = state.sepet.map(function (item) {
+            var temizSepet = saleItems.map(function (item) {
                 var lineEtiketFiyati = (item.regular_price || item.price);
                 var lineSubtotal = item.price * item.quantity;
-                
                 var urunIskonto = item.line_discount || 0;
-                
                 var satirNakitIndirim = isAutoDiscount ? (lineSubtotal * 0.05) : 0;
                 var lineTotal = lineSubtotal - satirNakitIndirim - urunIskonto;
                 if (lineTotal < 0) lineTotal = 0;
@@ -278,10 +364,8 @@
                     ]
                 };
 
-                // Ürün bazlı iskonto meta
                 if (urunIskonto > 0.001) {
                     p.meta_data.push({ key: "_hk_item_discount", value: urunIskonto.toFixed(2) });
-                    // Fişler vs. için sanal iskontolu birim fiyat göndermek faydalı olabilir
                     var sanalBirimFiyat = (lineSubtotal - urunIskonto) / item.quantity;
                     p.meta_data.push({ key: "_iskontolu_birim_fiyat", value: sanalBirimFiyat.toFixed(2) });
                 }
@@ -290,19 +374,27 @@
                 return p;
             });
 
-            // Fee line: Bilgi amaçlı tutulur (gün sonu raporu vb. için)
-            // Artık ürün bazlı iskonto uygulandığı için, mükerrer düşüşü önlemek amacıyla negatif fee eklemiyoruz.
-            var feeLines = [];
-
-
             // %5 önce, iskonto sonra
-            var netToplam = sepetAraToplam - (isAutoDiscount ? (sepetAraToplam * 0.05) : 0) - state.iskontoTutar;
+            var netSatisToplami = sepetAraToplam - (isAutoDiscount ? (sepetAraToplam * 0.05) : 0) - state.iskontoTutar;
+            var gercekOdenen = netSatisToplami - refundTotal; // Müşteriden alınacak / kasaya giren net para
+            if (gercekOdenen < 0) gercekOdenen = 0;
+            
+            // Fee Lines: Eğer değişim varsa, satış faturasının genel toplamını gerçek ödenen paraya düşürmek için negatif fee ekliyoruz.
+            var feeLines = [];
+            if (refundTotal > 0) {
+                feeLines.push({
+                    name: "Değişim İadesi",
+                    total: "-" + refundTotal.toFixed(2),
+                    tax_status: "none"
+                });
+            }
 
             // Ödeme Bölünmüşse Tutar Kontrolü Yap (Son Kontrol)
             if (splitData) {
                 var girenToplam = splitData.nakit + splitData.kart + splitData.iban;
-                var fark = netToplam - girenToplam;
-                if (Math.abs(fark) >= 0.01) {
+                // Bölünmüş ödeme girişi gerçek ödenen ile eşleşmeli
+                var fark = gercekOdenen - girenToplam;
+                if (Math.abs(fark) >= 0.01 && gercekOdenen > 0) { // Sadece pozitif ödemelerde kontrol et
                     this.toggleLoading(false);
                     HK.UIRenderer.showToast("Ödenecek tutarla ödeme dağılımı uyuşmuyor! Hesaplarda bir yanlışlık var, ödemeyi tekrar ayarla.", "error", true);
                     durumMetni.innerText = "HATA: Ödeme tutarı uyuşmazlığı!";
@@ -312,24 +404,34 @@
             }
 
             // Ödeme Yöntemleri (Raporlama İçin)
+            // Eğer fark negatifse veya sıfırsa (Müşteri para ödemediyse) ödeme alanları sıfır yazılır.
             var oNakit = 0, oKart = 0, oIban = 0;
-            if (splitData) {
-                oNakit = splitData.nakit;
-                oKart = splitData.kart;
-                oIban = splitData.iban;
-            } else {
-                if (state.odemeTipi === "cash") oNakit = netToplam;
-                else if (state.odemeTipi === "iban") oIban = netToplam;
-                else oKart = netToplam;
+            if (gercekOdenen > 0) {
+                if (splitData) {
+                    oNakit = splitData.nakit;
+                    oKart = splitData.kart;
+                    oIban = splitData.iban;
+                } else {
+                    if (state.odemeTipi === "cash") oNakit = gercekOdenen;
+                    else if (state.odemeTipi === "iban") oIban = gercekOdenen;
+                    else oKart = gercekOdenen;
+                }
             }
 
             var paymentMethod = splitData ? "split" : (state.odemeTipi === "card" ? "other" : (state.odemeTipi === "cash" ? "cod" : "bacs"));
             var paymentTitle = splitData ? "Bölünmüş Ödeme" : (state.odemeTipi === "card" ? "Kredi Kartı" : (state.odemeTipi === "cash" ? "Nakit" : "IBAN / Havale"));
 
-            var customerNote = "Kasiyer: " + (kasaAyar.userName || "Kasa Personeli") + ", Kasa " + state.aktifKasaId + " | " +
-                (splitData
+            var customerNote = "Kasiyer: " + (kasaAyar.userName || "Kasa Personeli") + ", Kasa " + state.aktifKasaId + " | ";
+            if (refundTotal > 0) {
+                customerNote += "Değişim İşlemi (İade Tutarı: " + refundTotal.toFixed(2) + " TL) | ";
+            }
+            if (gercekOdenen > 0) {
+                customerNote += (splitData
                     ? "Ödeme Bölündü: Nakit: " + oNakit.toFixed(2) + " TL, Kart: " + oKart.toFixed(2) + " TL, IBAN: " + oIban.toFixed(2) + " TL"
                     : "Ödeme: " + paymentTitle);
+            } else {
+                customerNote += "Müşteriden tahsilat yapılmadı (Değişim ile karşılandı).";
+            }
 
             var siparisVerisi = {
                 status: kasaAyar.siparisDurumu,
@@ -363,10 +465,15 @@
                     { key: "Ödeme (IBAN)", value: oIban.toFixed(2) + " TL" },
                     { key: "_hk_cikis_depo_id", value: (HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0).toString() },
                     { key: "_hk_cikis_depo_adi", value: HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '' },
-                    { key: "_hizli_kasa_kaynak", value: "pos_satis" },
+                    { key: "_hizli_kasa_kaynak", value: refundTotal > 0 ? "pos_degisim" : "pos_satis" },
                     { key: "_hizli_kasa_musteri_telefon", value: state.musteriTelefon || "" }
                 ]
             };
+
+            // İade ile bağlantı meta verisi
+            if (exchangeRefundOrderId) {
+                siparisVerisi.meta_data.push({ key: "_exchange_refund_order_id", value: exchangeRefundOrderId.toString() });
+            }
 
             try {
                 var response = await fetch(kasaAyar.apiUrl + 'orders', {
