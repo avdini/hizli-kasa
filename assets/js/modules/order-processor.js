@@ -48,16 +48,12 @@
                 if (state.sepet.length === 0) return;
 
                 // İskonto Telefon Zorunluluğu Kontrolü
-                var sepetListeToplami = 0;
-                var sepetAraToplam = 0;
-                state.sepet.forEach(function(item) {
-                    sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
-                    sepetAraToplam += (item.price * item.quantity);
-                });
-                
-                var isAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
-                var netToplam = sepetAraToplam - (isAutoDiscount ? (sepetAraToplam * 0.05) : 0) - (state.iskontoTutar || 0);
-                var toplamIskonto = sepetListeToplami - netToplam;
+                // Mevcut durumda sadece kasada manuel girilen iskonto tutarı (iskontoTutar) baz alınmaktadır.
+                // Ürünlerin liste fiyatı ile indirimli fiyatı arasındaki farklar (sale price) veya ödeme tipine bağlı 
+                // otomatik indirimler bu eşiğe dahil edilmez.
+                // Not: İlerleyen süreçte bu mantık; 1 alana 1 bedava veya sepet bazlı özel kampanyaları da 
+                // kapsayacak şekilde geliştirilerek toplam kazanılan faydayı ölçecek hale getirilebilir.
+                var toplamIskonto = state.iskontoTutar || 0;
 
                 var esik = (typeof kasaAyar !== 'undefined' && kasaAyar.iskontoTelefonEsigi) ? kasaAyar.iskontoTelefonEsigi : 2000;
                 var phoneInput = document.getElementById("musteri-telefon");
