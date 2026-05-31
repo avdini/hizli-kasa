@@ -109,12 +109,33 @@
                 }
             });
 
-            // Müşteri Telefon Paneli Toggle
+            // Müşteri Telefon Paneli Toggle ve intlTelInput Başlatma
             var musterEkleBtn = document.getElementById("musteri-ekle-btn");
             var musteriPanel = document.getElementById("musteri-telefon-panel");
             var musteriKapat = document.getElementById("musteri-telefon-kapat");
             var phoneInput = document.getElementById("musteri-telefon");
-            var phoneCountry = document.getElementById("musteri-telefon-ulke");
+
+            // intlTelInput Başlatma
+            if (phoneInput && window.intlTelInput) {
+                HK.iti = window.intlTelInput(phoneInput, {
+                    initialCountry: "tr",
+                    separateDialCode: true,
+                    strictMode: true,
+                    preferredCountries: ["tr", "de", "nl", "be", "at", "fr", "gb", "us"],
+                    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@24.4.0/build/js/utils.js",
+                    autoPlaceholder: "aggressive",
+                    i18n: {
+                        searchPlaceholder: "Ülke ara...",
+                    }
+                });
+
+                // Ülke değiştiğinde state'i güncelle
+                phoneInput.addEventListener("countrychange", function() {
+                    var countryData = HK.iti.getSelectedCountryData();
+                    HK.State.musteriTelefonUlkeKodu = "+" + countryData.dialCode;
+                    HK.CartManager.sepetiKaydet();
+                });
+            }
 
             if (musterEkleBtn && musteriPanel) {
                 musterEkleBtn.addEventListener("click", function () {
@@ -132,26 +153,8 @@
                         phoneInput.value = "";
                         HK.State.musteriTelefon = "";
                         HK.State.musteriTelefonUlkeKodu = "+90";
+                        if (HK.iti) HK.iti.setCountry("tr");
                     }
-                    if (phoneCountry) {
-                        phoneCountry.value = "+90";
-                    }
-                    if (phoneInput) {
-                        phoneInput.placeholder = "0 (5xx) xxx xx xx";
-                    }
-                    HK.CartManager.sepetiKaydet();
-                    self._telefonGrupDurumunuGuncelle();
-                });
-            }
-
-            if (phoneCountry) {
-                phoneCountry.addEventListener("change", function(e) {
-                    HK.State.musteriTelefonUlkeKodu = e.target.value || "+90";
-                    if (phoneInput) {
-                        phoneInput.placeholder = HK.State.musteriTelefonUlkeKodu === "+90" ? "0 (5xx) xxx xx xx" : "Telefon numarası";
-                        phoneInput.value = "";
-                    }
-                    HK.State.musteriTelefon = "";
                     HK.CartManager.sepetiKaydet();
                     self._telefonGrupDurumunuGuncelle();
                 });
@@ -159,7 +162,7 @@
 
             if (phoneInput) {
                 phoneInput.addEventListener("input", function (e) {
-                    var countryCode = phoneCountry ? (phoneCountry.value || "+90") : (HK.State.musteriTelefonUlkeKodu || "+90");
+                    var countryCode = HK.State.musteriTelefonUlkeKodu || "+90";
                     var val = e.target.value.replace(/\D/g, '');
                     
                     if (countryCode === "+90") {
@@ -183,7 +186,6 @@
                     }
 
                     // State'i güncelle ve kaydet
-                    HK.State.musteriTelefonUlkeKodu = countryCode;
                     HK.State.musteriTelefon = e.target.value;
                     HK.CartManager.sepetiKaydet();
 

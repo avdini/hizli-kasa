@@ -109,17 +109,7 @@ if (!defined('ABSPATH'))
             <div id="musteri-telefon-panel" class="musteri-bilgi-alani" style="display:none;">
                 <div class="musteri-input-grup">
                     <span class="musteri-ikon">👤</span>
-                    <select id="musteri-telefon-ulke" class="musteri-ulke-kodu" title="Ülke kodu">
-                        <option value="+90" selected>TR +90</option>
-                        <option value="+49">DE +49</option>
-                        <option value="+31">NL +31</option>
-                        <option value="+32">BE +32</option>
-                        <option value="+43">AT +43</option>
-                        <option value="+33">FR +33</option>
-                        <option value="+44">GB +44</option>
-                        <option value="+1">US +1</option>
-                    </select>
-                    <input type="text" id="musteri-telefon" class="musteri-telefon-input"
+                    <input type="tel" id="musteri-telefon" class="musteri-telefon-input"
                         placeholder="0 (5xx) xxx xx xx" autocomplete="off">
                     <button id="musteri-telefon-kapat" class="input-temizle-btn">✕</button>
                 </div>

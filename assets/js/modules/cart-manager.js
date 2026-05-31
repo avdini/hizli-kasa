@@ -83,16 +83,13 @@ window.HizliKasa = window.HizliKasa || {};
 
                     // UI Güncelle
                     var phoneInput = document.getElementById("musteri-telefon");
-                    var phoneCountry = document.getElementById("musteri-telefon-ulke");
                     var musteriPanel = document.getElementById("musteri-telefon-panel");
                     if (phoneInput) {
                         phoneInput.value = state.musteriTelefon;
-                    }
-                    if (phoneCountry) {
-                        phoneCountry.value = state.musteriTelefonUlkeKodu;
-                    }
-                    if (phoneInput) {
-                        phoneInput.placeholder = state.musteriTelefonUlkeKodu === "+90" ? "0 (5xx) xxx xx xx" : "Telefon numarası";
+                        if (HK.iti && state.musteriTelefonUlkeKodu) {
+                            // Dial code'u ISO koda çevirmek zor olabilir, ama iti.setCountry genelde yeterlidir.
+                            // Eğer state'de sadece dial code varsa (+90 gibi), iti bunu setNumber ile çözebilir.
+                        }
                     }
                     if (musteriPanel) {
                         musteriPanel.style.display = state.musteriTelefon ? "block" : "none";
@@ -146,12 +143,9 @@ window.HizliKasa = window.HizliKasa || {};
 
             // UI Güncelle
             var phoneInput = document.getElementById("musteri-telefon");
-            var phoneCountry = document.getElementById("musteri-telefon-ulke");
             if (phoneInput) {
                 phoneInput.value = "";
-            }
-            if (phoneCountry) {
-                phoneCountry.value = "+90";
+                if (HK.iti) HK.iti.setCountry("tr");
             }
             var phoneGroup = phoneInput ? phoneInput.closest('.musteri-input-grup') : null;
             if (phoneGroup) {

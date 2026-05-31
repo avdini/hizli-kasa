@@ -184,22 +184,33 @@
     opacity: 0.6;
 }
 
-.musteri-ulke-kodu {
-    flex: 0 0 auto;
-    min-width: 88px;
-    margin-right: 8px;
-    padding: 7px 8px;
-    border: 1px solid var(--hk-border);
-    border-radius: 6px;
-    background: var(--hk-bg-card);
-    color: var(--hk-text-main);
-    font-size: 13px;
-    font-weight: 700;
-    outline: none;
+/* intl-tel-input uyumluluğu */
+.iti {
+    width: 100%;
 }
-
-.musteri-ulke-kodu:focus {
-    border-color: var(--hk-accent);
+.iti__country-list {
+    background-color: var(--hk-bg-card) !important;
+    color: var(--hk-text-main) !important;
+    border: 1px solid var(--hk-border) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+    z-index: 1000 !important;
+}
+.iti__country:hover, .iti__country.iti__highlight {
+    background-color: var(--hk-bg-hover) !important;
+}
+.iti__selected-dial-code {
+    color: var(--hk-text-main) !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+.iti__search-input {
+    background-color: var(--hk-bg-hover) !important;
+    color: var(--hk-text-main) !important;
+    border: 1px solid var(--hk-border) !important;
+    padding: 8px !important;
+    border-radius: 4px !important;
+    margin: 4px !important;
 }
 
 .musteri-telefon-input {
