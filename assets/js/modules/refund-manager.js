@@ -1108,7 +1108,8 @@ const RefundManager = (function () {
                 image: '',
                 _is_exchange_return: true,
                 _exchange_depo_id: item.depo_id || (HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0),
-                _exchange_original_order: originalOrder ? originalOrder.id : null
+                _exchange_original_order: originalOrder ? originalOrder.id : null,
+                _exchange_item_id: item.item_id || null
             };
 
             // Sepete ekle (aynı ürün varsa bile yeni satır olarak — negatif satır birleştirilmemeli)

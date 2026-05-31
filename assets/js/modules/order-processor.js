@@ -292,7 +292,7 @@
                             items: refundItems.map(function(item) {
                                 return {
                                     id: item.product_id,
-                                    item_id: 'exchange_' + item.product_id, // Sahte item_id (API tarafı tolere eder veya orjinalini arar)
+                                    item_id: item._exchange_item_id || ('exchange_' + item.product_id), // Orijinal item_id varsa kullan, yoksa sahte üret
                                     variation_id: item.variation_id || 0,
                                     qty: Math.abs(item.quantity), // Pozitif miktar
                                     price: item.price,
