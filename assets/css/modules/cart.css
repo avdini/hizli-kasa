@@ -198,7 +198,7 @@
 }
 
 /* Bayrak Seçim Kutusu */
-.iti__flag-container {
+.iti__country-container {
     position: relative !important;
     display: flex !important;
     align-items: center !important;
@@ -206,7 +206,7 @@
     z-index: 10 !important;
 }
 
-.iti__selected-flag {
+.iti__selected-country {
     flex: 0 0 auto !important;
     min-width: 80px !important;
     height: 38px !important;
@@ -224,7 +224,7 @@
 }
 
 /* Hover Renk Düzeltmesi */
-.iti__selected-flag:hover {
+.iti__selected-country:hover {
     background-color: var(--hk-bg-hover) !important;
     border-color: var(--hk-accent) !important;
 }
