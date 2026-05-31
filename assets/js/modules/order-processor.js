@@ -283,7 +283,7 @@
                         },
                         body: JSON.stringify({
                             original_order_id: refundOriginalOrder || '',
-                            is_manual: false,
+                            is_manual: !refundOriginalOrder,
                             active_depo_id: HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0,
                             kasa_no: state.aktifKasaId.toString(),
                             payment_method: 'nakit', // Değişim iadeleri sanal olarak nakit gibi işlenir (kasada durur)
