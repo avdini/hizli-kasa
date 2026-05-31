@@ -186,23 +186,52 @@
 
 /* intl-tel-input uyumluluğu */
 .iti {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
     width: 100%;
 }
+
+/* Bayrak Seçim Kutusu (Eski select kutusu gibi bağımsız kutu) */
+.iti__selected-flag {
+    flex: 0 0 auto !important;
+    min-width: 88px !important;
+    height: 38px !important;
+    padding: 0 10px !important;
+    border: 1px solid var(--hk-border) !important;
+    border-radius: 6px !important;
+    background: var(--hk-bg-card) !important;
+    transition: all 0.2s !important;
+}
+
+/* Hover Renk Düzeltmesi (Kararma yerine projenin vurgu rengi) */
+.iti__selected-flag:hover {
+    background-color: var(--hk-bg-hover) !important;
+    border-color: var(--hk-accent) !important;
+}
+
+/* Ülke Listesi (Dropdown) - Yukarı Doğru Açılma Zorlaması */
 .iti__country-list {
+    bottom: 100% !important;
+    top: auto !important;
+    margin-bottom: 8px !important;
     background-color: var(--hk-bg-card) !important;
     color: var(--hk-text-main) !important;
     border: 1px solid var(--hk-border) !important;
     border-radius: 8px !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
-    z-index: 1000 !important;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.15) !important;
+    z-index: 999999 !important;
+    max-height: 300px !important;
 }
+
+/* Liste içi arama ve öğeler */
 .iti__country:hover, .iti__country.iti__highlight {
     background-color: var(--hk-bg-hover) !important;
 }
 .iti__selected-dial-code {
     color: var(--hk-text-main) !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
 }
 .iti__search-input {
     background-color: var(--hk-bg-hover) !important;
@@ -213,14 +242,15 @@
     margin: 4px !important;
 }
 
+/* Telefon Giriş Alanı (Eski Konum ve Tasarım) */
 .musteri-telefon-input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    padding: 8px 0;
-    font-size: 14px;
-    color: var(--hk-text-main);
-    outline: none;
+    flex: 1 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 8px 0 !important;
+    font-size: 14px !important;
+    color: var(--hk-text-main) !important;
+    outline: none !important;
 }
 
 .input-temizle-btn {
