@@ -99,7 +99,7 @@
             els.iskontoOnay.addEventListener("click", function() {
                 var araToplam = self._getSepetAraToplam();
                 var bazToplam = self._getBazToplam();
-                var iskonto = self._normalizeIskonto(HK.CurrencyMask.parse(els.iskontoInput.value), araToplam);
+                var iskonto = self._normalizeIskonto(HK.CurrencyMask.parse(els.iskontoInput.value), bazToplam);
 
                 // İskontoyu ürünlere dağıt
                 HK.CartManager.dagitimiHesapla(iskonto);
@@ -119,6 +119,16 @@
             return parseFloat(toplam.toFixed(2));
         },
 
+        _getAutoDiscountBase: function() {
+            var toplam = 0;
+            HK.State.sepet.forEach(function(item) {
+                if (!item._is_exchange_return && item.quantity > 0) {
+                    toplam += (item.price * item.quantity);
+                }
+            });
+            return parseFloat(toplam.toFixed(2));
+        },
+
         /**
          * %5 otomatik indirim sonrası (manuel iskonto öncesi) toplamı döner.
          * Pazarcının kafasındaki "baz fiyat" budur — %5 sonrası gördüğü rakam.
@@ -129,10 +139,15 @@
             var nakitIndirim = 0;
             
             if ((state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
-                nakitIndirim = araToplam * 0.05;
+                nakitIndirim = this._getAutoDiscountBase() * 0.05;
             }
             
-            return parseFloat((araToplam - nakitIndirim).toFixed(2));
+            return parseFloat(Math.max(araToplam - nakitIndirim, 0).toFixed(2));
+        },
+
+        _getSepetNetToplam: function() {
+            var netToplam = this._getBazToplam() - (HK.State.iskontoTutar || 0);
+            return parseFloat(Math.max(netToplam, 0).toFixed(2));
         },
 
         _normalizeIskonto: function(tutar, sepetToplami) {
@@ -164,7 +179,7 @@
                 return;
             }
 
-            iskonto = this._normalizeIskonto(HK.CurrencyMask.parse(els.iskontoInput.value), araToplam);
+            iskonto = this._normalizeIskonto(HK.CurrencyMask.parse(els.iskontoInput.value), bazToplam);
             // Kendi değerimizi güncellemiyoruz (imleç kaçmasın diye), sadece diğerini güncelliyoruz
             els.iskontoHedefInput.value = HK.CurrencyMask.format(bazToplam - iskonto);
         },
@@ -429,10 +444,7 @@
 
                 // Bölme işleminde de seçili ödeme yönteminin (örneğin Nakit ise %5) otomatik indirimleri geçerlidir.
                 var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
-                var carpan = hasAutoDiscount ? 0.95 : 1;
-                var toplamPara = 0;
-                state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity * carpan); });
-                var netHedef = toplamPara - state.iskontoTutar;
+                var netHedef = self._getSepetNetToplam();
 
                 els.bolNetToplamArea.innerText = netHedef.toFixed(2);
                 
@@ -463,10 +475,7 @@
             els.bolOnayla.addEventListener("click", async function() {
                 var state = HK.State;
                 var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
-                var carpan = hasAutoDiscount ? 0.95 : 1;
-                var toplamPara = 0;
-                state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity * carpan); });
-                var netHedef = toplamPara - state.iskontoTutar;
+                var netHedef = self._getSepetNetToplam();
 
                 var nakit = HK.CurrencyMask.parse(els.bolNakitInput.value) || 0;
                 var kart = HK.CurrencyMask.parse(els.bolKartInput.value) || 0;
@@ -498,11 +507,7 @@
             var state = HK.State;
             var els = this.els;
 
-            var toplamPara = 0;
-            var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
-            var carpan = hasAutoDiscount ? 0.95 : 1;
-            state.sepet.forEach(function(item) { toplamPara += (item.price * item.quantity * carpan); });
-            var netHedef = toplamPara - state.iskontoTutar;
+            var netHedef = this._getSepetNetToplam();
 
             var nakit = HK.CurrencyMask.parse(els.bolNakitInput.value) || 0;
             var kart = HK.CurrencyMask.parse(els.bolKartInput.value) || 0;
@@ -546,13 +551,17 @@
 
                 // Mevcut toplam hesapla (%5 önce, iskonto sonra — ui-renderer ile aynı mantık)
                 var sepetAraToplam = 0;
+                var autoDiscountBase = 0;
                 state.sepet.forEach(function(item) {
                     sepetAraToplam += (item.price * item.quantity);
+                    if (!item._is_exchange_return && item.quantity > 0) {
+                        autoDiscountBase += (item.price * item.quantity);
+                    }
                 });
 
                 var nakitIndirimTutar = 0;
                 if ((state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
-                    nakitIndirimTutar = sepetAraToplam * 0.05;
+                    nakitIndirimTutar = autoDiscountBase * 0.05;
                 }
 
                 var mevcutToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;

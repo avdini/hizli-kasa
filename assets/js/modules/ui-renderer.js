@@ -267,16 +267,20 @@ window.HizliKasa = window.HizliKasa || {};
             var sepetAraToplam = 0;
             var sepetListeToplami = 0;
             var sepetIskontoluToplam = 0;
+            var autoDiscountBase = 0;
             state.sepet.forEach(function(item) {
                 sepetAraToplam += (item.price * item.quantity);
                 sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
                 sepetIskontoluToplam += ((item.price * item.quantity) - (item.line_discount || 0));
+                if (!item._is_exchange_return && item.quantity > 0) {
+                    autoDiscountBase += (item.price * item.quantity);
+                }
             });
 
             var nakitIndirimTutar = 0;
             // %5 önce (orijinal fiyata uygulanır), iskonto sonra (üstünden düşülür)
             if ((state.odemeTipi === "cash" || state.odemeTipi === "iban")) {
-                nakitIndirimTutar = sepetAraToplam * 0.05;
+                nakitIndirimTutar = autoDiscountBase * 0.05;
                 els.nakitIndirimSatiri.style.setProperty("display", "flex", "important");
                 els.nakitIndirimDegerArea.innerText = "-" + nakitIndirimTutar.toFixed(2) + " TL";
                 els.nakitIndirimEtiket.innerText = state.odemeTipi === "cash" ? "NAKİT İNDİRİMİ (%5):" : "HAVALE İNDİRİMİ (%5):";
@@ -407,10 +411,14 @@ window.HizliKasa = window.HizliKasa || {};
 
             // Toplamı tekrar hesapla (Özet için) — %5 önce, iskonto sonra
             var sepetAraToplam = 0;
+            var autoDiscountBase = 0;
             state.sepet.forEach(function(item) {
                 sepetAraToplam += (item.price * item.quantity);
+                if (!item._is_exchange_return && item.quantity > 0) {
+                    autoDiscountBase += (item.price * item.quantity);
+                }
             });
-            var nakitIndirimTutar = ((state.odemeTipi === "cash" || state.odemeTipi === "iban")) ? (sepetAraToplam * 0.05) : 0;
+            var nakitIndirimTutar = ((state.odemeTipi === "cash" || state.odemeTipi === "iban")) ? (autoDiscountBase * 0.05) : 0;
             var sonToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
             var hasExchangeItems = state.sepet.some(function(item) { return item._is_exchange_return; });
             if (sonToplam < 0) sonToplam = 0;

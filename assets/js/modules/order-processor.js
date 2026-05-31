@@ -375,7 +375,8 @@
             });
 
             // %5 önce, iskonto sonra
-            var netSatisToplami = sepetAraToplam - (isAutoDiscount ? (sepetAraToplam * 0.05) : 0) - state.iskontoTutar;
+            var autoDiscountTotal = isAutoDiscount ? (sepetAraToplam * 0.05) : 0;
+            var netSatisToplami = sepetAraToplam - autoDiscountTotal - state.iskontoTutar;
             var gercekOdenen = netSatisToplami - refundTotal; // Müşteriden alınacak / kasaya giren net para
             
             var feeLines = [];
@@ -480,6 +481,9 @@
                     { key: "_etiket_toplami", value: sepetListeToplami.toFixed(2) },
                     { key: "_ara_toplam", value: sepetAraToplam.toFixed(2) },
                     { key: "_hk_toplam_iskonto", value: state.iskontoTutar.toFixed(2) },
+                    { key: "_hk_otomatik_indirim", value: autoDiscountTotal.toFixed(2) },
+                    { key: "_hk_exchange_refund_total", value: refundTotal.toFixed(2) },
+                    { key: "_hk_customer_paid_total", value: gercekOdenen.toFixed(2) },
                     { key: "Ödeme (Nakit)", value: oNakit.toFixed(2) + " TL" },
                     { key: "Ödeme (Kart)", value: oKart.toFixed(2) + " TL" },
                     { key: "Ödeme (IBAN)", value: oIban.toFixed(2) + " TL" },

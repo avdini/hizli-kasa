@@ -127,7 +127,8 @@
                 var iskontoFee = order.fee_lines.find(function(f) { return f.name === "İskonto"; });
                 iskontoTutar = iskontoFee ? Math.abs(parseFloat(iskontoFee.total)) : 0;
             }
-            var nakitIndirimTutar = indirimFarki - iskontoTutar;
+            var otomatikIndirimMeta = getMeta(order.meta_data, "_hk_otomatik_indirim");
+            var nakitIndirimTutar = otomatikIndirimMeta !== null ? parseFloat(otomatikIndirimMeta) : (indirimFarki - iskontoTutar);
 
             if (nakitIndirimTutar > 0.01) {
                 els.fisNakitIndirimSatiri.style.display = "flex";
@@ -146,11 +147,23 @@
                 els.fisIskontoSatiri.style.display = "none";
             }
 
+            var exchangeRefundTotalMeta = getMeta(order.meta_data, "_hk_exchange_refund_total");
+            var customerPaidTotalMeta = getMeta(order.meta_data, "_hk_customer_paid_total");
+            var exchangeRefundTotal = exchangeRefundTotalMeta !== null ? parseFloat(exchangeRefundTotalMeta) : 0;
+            var customerPaidTotal = customerPaidTotalMeta !== null ? parseFloat(customerPaidTotalMeta) : parseFloat(order.total);
             var degisimFarkiFee = (order.fee_lines || []).find(function(f) { return f.name === "Ekstra Değişim Farkı"; });
-            if (degisimFarkiFee && parseFloat(degisimFarkiFee.total) > 0) {
+            if (exchangeRefundTotal > 0.01) {
                 if (els.fisDegisimFarkiSatiri) {
                     els.fisDegisimFarkiSatiri.style.display = "flex";
                     els.fisDegisimFarkiSatiri.style.fontSize = "12px";
+                    els.fisDegisimFarkiSatiri.querySelector("span:first-child").innerText = "Değişim Mahsubu:";
+                    els.fisDegisimFarkiTutar.innerText = "-" + exchangeRefundTotal.toFixed(2) + " TL";
+                }
+            } else if (degisimFarkiFee && parseFloat(degisimFarkiFee.total) > 0) {
+                if (els.fisDegisimFarkiSatiri) {
+                    els.fisDegisimFarkiSatiri.style.display = "flex";
+                    els.fisDegisimFarkiSatiri.style.fontSize = "12px";
+                    els.fisDegisimFarkiSatiri.querySelector("span:first-child").innerText = "Ekstra Değişim Farkı:";
                     els.fisDegisimFarkiTutar.innerText = parseFloat(degisimFarkiFee.total).toFixed(2) + " TL";
                 }
             } else if (els.fisDegisimFarkiSatiri) {
@@ -159,7 +172,7 @@
 
             els.fisGenelToplam.style.borderTop = "1px solid #000";
             els.fisGenelToplam.style.paddingTop = "5px";
-            els.fisGenelToplam.innerText = parseFloat(order.total).toFixed(2) + " TL";
+            els.fisGenelToplam.innerText = customerPaidTotal.toFixed(2) + " TL";
 
             // Barkod Üret (CODE128)
             if (typeof JsBarcode === "function") {
