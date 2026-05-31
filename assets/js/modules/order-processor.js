@@ -167,19 +167,19 @@
                     var val = e.target.value.replace(/\D/g, '');
                     
                     if (countryCode === "+90") {
-                        // Eğer kullanıcı doğrudan 5 ile başlıyorsa başına 0 ekle (Türkiye için kolaylık)
-                        if (val.length > 0 && val[0] === '5' && val.length <= 10) {
-                            val = '0' + val;
+                        // Türkiye için: Eğer sıfırla başlıyorsa sıfırı sil (Ülke kodu zaten var)
+                        if (val.length > 0 && val[0] === '0') {
+                            val = val.substring(1);
                         }
                         
-                        // Max 11 hane
-                        if (val.length > 11) val = val.substring(0, 11);
+                        // Max 10 hane (5xx xxx xx xx)
+                        if (val.length > 10) val = val.substring(0, 10);
 
-                        var x = val.match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+                        var x = val.match(/(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
                         if (!x[1]) {
                             e.target.value = '';
                         } else {
-                            e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + (x[3] ? ') ' + x[3] : '') + (x[4] ? ' ' + x[4] : '') + (x[5] ? ' ' + x[5] : '');
+                            e.target.value = '(' + x[1] + (x[2] ? ') ' + x[2] : '') + (x[3] ? ' ' + x[3] : '') + (x[4] ? ' ' + x[4] : '');
                         }
                     } else {
                         if (val.length > 15) val = val.substring(0, 15);

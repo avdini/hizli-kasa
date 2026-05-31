@@ -188,23 +188,25 @@
 .iti {
     display: flex !important;
     align-items: center;
-    gap: 8px;
+    gap: 0 !important; /* Aradaki boşluğu kapatalım, input iti içinde kalacak */
     width: 100%;
 }
 
-/* Bayrak Seçim Kutusu (Eski select kutusu gibi bağımsız kutu) */
+/* Bayrak Seçim Kutusu */
 .iti__selected-flag {
     flex: 0 0 auto !important;
     min-width: 88px !important;
     height: 38px !important;
     padding: 0 10px !important;
     border: 1px solid var(--hk-border) !important;
-    border-radius: 6px !important;
+    border-radius: 6px 0 0 6px !important; /* Sağ köşeleri düz yapalım input ile birleşsin */
     background: var(--hk-bg-card) !important;
     transition: all 0.2s !important;
+    z-index: 10;
+    pointer-events: auto !important; /* Tıklanabilirliği garantiye alalım */
 }
 
-/* Hover Renk Düzeltmesi (Kararma yerine projenin vurgu rengi) */
+/* Hover Renk Düzeltmesi */
 .iti__selected-flag:hover {
     background-color: var(--hk-bg-hover) !important;
     border-color: var(--hk-accent) !important;
@@ -242,15 +244,23 @@
     margin: 4px !important;
 }
 
-/* Telefon Giriş Alanı (Eski Konum ve Tasarım) */
+/* Telefon Giriş Alanı */
 .musteri-telefon-input {
     flex: 1 !important;
-    background: transparent !important;
-    border: none !important;
-    padding: 8px 0 !important;
+    background: var(--hk-bg-card) !important; /* Arka planı kart rengi yapalım */
+    border: 1px solid var(--hk-border) !important;
+    border-left: none !important; /* Sol kenarlığı kaldıralım bayrak kutusuyla birleşsin */
+    border-radius: 0 6px 6px 0 !important;
+    padding: 8px 12px !important;
+    height: 38px !important;
     font-size: 14px !important;
     color: var(--hk-text-main) !important;
     outline: none !important;
+    box-sizing: border-box !important;
+}
+
+.musteri-telefon-input:focus {
+    border-color: var(--hk-accent) !important;
 }
 
 .input-temizle-btn {
