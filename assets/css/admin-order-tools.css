@@ -1,0 +1,241 @@
+.hk-admin-order-tools {
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: -6px -12px -12px;
+    padding: 14px;
+}
+
+.hk-aot-toolbar,
+.hk-aot-actions {
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #d7dee8;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 14px;
+}
+
+.hk-aot-toolbar div {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+}
+
+.hk-aot-toolbar strong {
+    color: #1d2327;
+    font-size: 16px;
+}
+
+.hk-aot-pill {
+    background: #fff;
+    border: 1px solid #d7dee8;
+    border-radius: 999px;
+    color: #3c434a;
+    display: inline-flex;
+    font-size: 12px;
+    line-height: 1;
+    padding: 6px 9px;
+}
+
+.hk-aot-check {
+    align-items: center;
+    display: flex;
+    gap: 6px;
+}
+
+.hk-aot-tabs {
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    width: fit-content;
+}
+
+.hk-aot-tabs button {
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 7px 12px;
+}
+
+.hk-aot-tabs button.is-active {
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    font-weight: 600;
+}
+
+.hk-aot-panel {
+    display: none;
+}
+
+.hk-aot-panel.is-active {
+    display: block;
+}
+
+.hk-aot-section-head {
+    align-items: center;
+    border-bottom: 1px solid #edf0f2;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+}
+
+.hk-aot-section-head h4,
+.hk-aot-subtitle {
+    color: #1d2327;
+    font-size: 14px;
+    margin: 0;
+}
+
+.hk-aot-section-head p {
+    color: #646970;
+    margin: 4px 0 0;
+}
+
+.hk-aot-table input,
+.hk-aot-table textarea,
+.hk-aot-grid-row input,
+.hk-aot-meta-row input,
+.hk-aot-meta-row textarea,
+.hk-aot-meta-picker select {
+    border-color: #c3c4c7;
+    border-radius: 6px;
+    width: 100%;
+}
+
+.hk-aot-table textarea {
+    font-family: Consolas, Monaco, monospace;
+    min-width: 260px;
+}
+
+.hk-aot-table small {
+    color: #646970;
+    display: block;
+    margin-top: 4px;
+}
+
+.hk-aot-table th {
+    color: #50575e;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.hk-aot-add-row,
+.hk-aot-grid-row,
+.hk-aot-meta-row {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 8px;
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 10px;
+}
+
+.hk-aot-add-row {
+    grid-template-columns: 1fr 120px 160px auto;
+}
+
+.hk-aot-grid-row {
+    grid-template-columns: minmax(180px, 1fr) 160px auto;
+}
+
+.hk-aot-meta-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.hk-aot-meta-row {
+    grid-template-columns: minmax(180px, 260px) 1fr auto;
+}
+
+.hk-aot-actions {
+    position: sticky;
+    bottom: 32px;
+    z-index: 2;
+}
+
+.hk-aot-meta-picker {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: minmax(280px, 1fr) auto;
+    min-width: min(100%, 520px);
+}
+
+.hk-aot-meta-reference {
+    background: #f8fafc;
+    border: 1px solid #d7dee8;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 9px 10px;
+}
+
+.hk-aot-meta-reference summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.hk-aot-meta-reference div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.hk-aot-meta-reference code {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 999px;
+    color: #3c434a;
+    font-size: 12px;
+    padding: 4px 7px;
+}
+
+#hk-aot-message {
+    flex: 1;
+    font-weight: 600;
+    padding: 0 12px;
+}
+
+#hk-aot-message.is-success {
+    color: #008a20;
+}
+
+#hk-aot-message.is-error {
+    color: #b32d2e;
+}
+
+.hk-aot-currency {
+    color: #646970;
+}
+
+@media (max-width: 782px) {
+    .hk-aot-toolbar,
+    .hk-aot-actions,
+    .hk-aot-toolbar div {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .hk-aot-add-row,
+    .hk-aot-grid-row,
+    .hk-aot-meta-row,
+    .hk-aot-meta-picker {
+        grid-template-columns: 1fr;
+    }
+
+    .hk-aot-section-head {
+        align-items: stretch;
+        flex-direction: column;
+    }
+}
