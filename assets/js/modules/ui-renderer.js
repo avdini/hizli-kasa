@@ -32,6 +32,7 @@ window.HizliKasa = window.HizliKasa || {};
                 araToplamArea: document.getElementById("ara-toplam-deger"),
                 listeToplamiSatiri: document.getElementById("liste-toplami-satiri"),
                 listeToplamiArea: document.getElementById("liste-toplami-deger"),
+                sepetIstatistikArea: document.getElementById("sepet-istatistik-deger"),
                 odemeOzetiAlani: document.getElementById("odeme-ozeti-alani"),
                 bolButon: document.getElementById("bol-buton"),
                 sidebarButtons: document.querySelectorAll(".sidebar-btn"),
@@ -268,14 +269,23 @@ window.HizliKasa = window.HizliKasa || {};
             var sepetListeToplami = 0;
             var sepetIskontoluToplam = 0;
             var autoDiscountBase = 0;
+            var sepetKalem = state.sepet.length;
+            var sepetAdet = 0;
+
             state.sepet.forEach(function(item) {
                 sepetAraToplam += (item.price * item.quantity);
                 sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
                 sepetIskontoluToplam += ((item.price * item.quantity) - (item.line_discount || 0));
+                sepetAdet += item.quantity;
+
                 if (!item._is_exchange_return && item.quantity > 0) {
                     autoDiscountBase += (item.price * item.quantity);
                 }
             });
+
+            if (els.sepetIstatistikArea) {
+                els.sepetIstatistikArea.innerText = sepetKalem + " Kalem / " + sepetAdet + " Adet";
+            }
 
             var nakitIndirimTutar = 0;
             // %5 önce (orijinal fiyata uygulanır), iskonto sonra (üstünden düşülür)

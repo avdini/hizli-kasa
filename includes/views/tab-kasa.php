@@ -73,6 +73,10 @@ if (!defined('ABSPATH'))
                     <!-- Ödeme kanalları JS ile buraya gelecek -->
                 </div>
                 <div class="toplam-degerler">
+                <div class="toplam-satir" id="sepet-istatistik-satiri">
+                    <span class="toplam-etiket">SEPET:</span>
+                    <span id="sepet-istatistik-deger">0 Kalem / 0 Adet</span>
+                </div>
                 <div class="toplam-satir" id="liste-toplami-satiri">
                     <span class="toplam-etiket">ETİKET TOPLAMI:</span>
                     <span id="liste-toplami-deger">0.00 TL</span>
