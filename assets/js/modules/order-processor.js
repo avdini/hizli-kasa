@@ -82,7 +82,7 @@
                 // Müşteri Telefonu Doğrulaması (Eğer girilmişse ama eşik altında kalmışsa bile formatı kontrol et)
                 if (rawPhone.length > 0) {
                     if (!phoneInfo.isValid) {
-                        HK.UIRenderer.showToast(phoneInfo.countryCode === "+90" ? "Lütfen geçerli bir telefon numarası giriniz (05xx...)" : "Lütfen geçerli bir telefon numarası giriniz.", "error", true);
+                        HK.UIRenderer.showToast(phoneInfo.countryCode === "+90" ? "Lütfen geçerli bir telefon numarası giriniz (5xx...)" : "Lütfen geçerli bir telefon numarası giriniz.", "error", true);
                         var musteriPanel = document.getElementById("musteri-telefon-panel");
                         if (musteriPanel) musteriPanel.style.display = "block";
                         if (phoneInput) phoneInput.focus();
@@ -122,7 +122,7 @@
                     separateDialCode: true,
                     strictMode: true,
                     preferredCountries: ["tr", "de", "nl", "be", "at", "fr", "gb", "us"],
-                    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@24.4.0/build/js/utils.js",
+                    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@24.8.1/build/js/utils.js",
                     autoPlaceholder: "aggressive",
                     countryNameLocale: "tr",
                     i18n: {
@@ -200,10 +200,14 @@
             var digits = (HK.State.musteriTelefon || "").replace(/\D/g, '');
             var isValid = false;
 
-            if (countryCode === "+90") {
-                isValid = digits.length === 11 && digits[0] === '0';
+            if (HK.iti && typeof HK.iti.isValidNumber === 'function') {
+                isValid = HK.iti.isValidNumber();
             } else {
-                isValid = digits.length >= 6 && digits.length <= 15;
+                if (countryCode === "+90") {
+                    isValid = digits.length === 10 || (digits.length === 11 && digits[0] === '0');
+                } else {
+                    isValid = digits.length >= 6 && digits.length <= 15;
+                }
             }
 
             return {

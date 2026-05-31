@@ -101,9 +101,9 @@ function hizli_kasa_uygulamasi()
     // Barkod Kütüphanesi
     wp_enqueue_script('jsbarcode', 'https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js', array(), '3.11.0', true);
 
-    // intl-tel-input Kütüphanesi
-    wp_enqueue_style('intl-tel-input', 'https://cdn.jsdelivr.net/npm/intl-tel-input@24.4.0/build/css/intlTelInput.css', array(), '24.4.0');
-    wp_enqueue_script('intl-tel-input', 'https://cdn.jsdelivr.net/npm/intl-tel-input@24.4.0/build/js/intlTelInput.min.js', array(), '24.4.0', true);
+    // intl-tel-input Kütüphanesi (v24.8.1 countryNameLocale desteği için)
+    wp_enqueue_style('intl-tel-input', 'https://cdn.jsdelivr.net/npm/intl-tel-input@24.8.1/build/css/intlTelInput.css', array(), '24.8.1');
+    wp_enqueue_script('intl-tel-input', 'https://cdn.jsdelivr.net/npm/intl-tel-input@24.8.1/build/js/intlTelInput.min.js', array(), '24.8.1', true);
 
     // Chart.js Kütüphanesi (İstatistik Dashboardu)
     wp_enqueue_script('chartjs', 'https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js', array(), '4.4.3', true);
