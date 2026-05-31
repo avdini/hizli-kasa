@@ -29,6 +29,8 @@
                 fisIskontoTutar: document.getElementById("fis-iskonto-tutar"),
                 fisNakitIndirimSatiri: document.getElementById("fis-nakit-indirim-satiri"),
                 fisNakitIndirimTutar: document.getElementById("fis-nakit-indirim-tutar"),
+                fisDegisimFarkiSatiri: document.getElementById("fis-degisim-farki-satiri"),
+                fisDegisimFarkiTutar: document.getElementById("fis-degisim-farki-tutar"),
                 fisListeToplamiSatiri: document.getElementById("fis-liste-toplami-satiri"),
                 fisListeToplamiTutar: document.getElementById("fis-liste-toplami-tutar"),
                 fisGenelToplam: document.getElementById("fis-genel-toplam"),
@@ -142,6 +144,17 @@
                 els.fisIskontoTutar.innerText = "-" + iskontoTutar.toFixed(2) + " TL";
             } else {
                 els.fisIskontoSatiri.style.display = "none";
+            }
+
+            var degisimFarkiFee = (order.fee_lines || []).find(function(f) { return f.name === "Ekstra Değişim Farkı"; });
+            if (degisimFarkiFee && parseFloat(degisimFarkiFee.total) > 0) {
+                if (els.fisDegisimFarkiSatiri) {
+                    els.fisDegisimFarkiSatiri.style.display = "flex";
+                    els.fisDegisimFarkiSatiri.style.fontSize = "12px";
+                    els.fisDegisimFarkiTutar.innerText = parseFloat(degisimFarkiFee.total).toFixed(2) + " TL";
+                }
+            } else if (els.fisDegisimFarkiSatiri) {
+                els.fisDegisimFarkiSatiri.style.display = "none";
             }
 
             els.fisGenelToplam.style.borderTop = "1px solid #000";

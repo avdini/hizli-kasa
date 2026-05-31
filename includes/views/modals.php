@@ -164,6 +164,10 @@ if (!defined('ABSPATH')) exit;
             <span>İskonto:</span>
             <span id="fis-iskonto-tutar"></span>
         </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px; display:none;" id="fis-degisim-farki-satiri">
+            <span>Ekstra Değişim Farkı:</span>
+            <span id="fis-degisim-farki-tutar"></span>
+        </div>
         <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:16px; margin-top:5px;">
             <span>TOPLAM:</span>
             <span id="fis-genel-toplam"></span>

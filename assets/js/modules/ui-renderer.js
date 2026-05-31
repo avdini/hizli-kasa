@@ -295,9 +295,9 @@ window.HizliKasa = window.HizliKasa || {};
 
             // Son Toplam = (AraToplam × autoFactor) - İskonto
             var sonToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
-            // Değişim iade satırları varsa negatif toplam mümkün (müşteriye fark iadesi)
+            // Değişim iade satırları olsa bile toplam negatif gözükmesin (Müşteriye para üstü vermiyoruz)
             var hasExchangeItems = state.sepet.some(function(item) { return item._is_exchange_return; });
-            if (sonToplam < 0 && !hasExchangeItems) sonToplam = 0;
+            if (sonToplam < 0) sonToplam = 0;
 
             els.listeToplamiSatiri.style.setProperty("display", "flex", "important");
             els.listeToplamiArea.innerText = sepetListeToplami.toFixed(2) + " TL";
@@ -413,7 +413,7 @@ window.HizliKasa = window.HizliKasa || {};
             var nakitIndirimTutar = ((state.odemeTipi === "cash" || state.odemeTipi === "iban")) ? (sepetAraToplam * 0.05) : 0;
             var sonToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
             var hasExchangeItems = state.sepet.some(function(item) { return item._is_exchange_return; });
-            if (sonToplam < 0 && !hasExchangeItems) sonToplam = 0;
+            if (sonToplam < 0) sonToplam = 0;
 
             if (!state.splitData) {
                 if (els.bolButon) els.bolButon.classList.remove("bol-aktif-glow");

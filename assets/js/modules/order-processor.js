@@ -435,7 +435,7 @@
 
             if (gercekOdenen > 0) {
                 paymentMethod = splitData ? "split" : (state.odemeTipi === "card" ? "other" : (state.odemeTipi === "cash" ? "cod" : "bacs"));
-                paymentTitle = splitData ? "Bölünmüş Ödeme" : (state.odemeTipi === "card" ? "Kredi Kartı" : (state.odemeTipi === "cash" ? "Nakit" : "IBAN / Havale"));
+                paymentTitle = splitData ? (refundTotal > 0 ? "Değişim" : "Bölünmüş Ödeme") : (state.odemeTipi === "card" ? "Kredi Kartı" : (state.odemeTipi === "cash" ? "Nakit" : "IBAN / Havale"));
             } else if (refundTotal > 0) {
                 paymentMethod = "cod";
                 paymentTitle = "Nakit (Değişim ile Nötrlendi)";
