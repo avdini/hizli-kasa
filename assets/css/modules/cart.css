@@ -188,22 +188,30 @@
 .iti {
     display: flex !important;
     align-items: center;
-    gap: 0 !important; /* Aradaki boşluğu kapatalım, input iti içinde kalacak */
     width: 100%;
+    position: relative;
+    overflow: visible !important;
 }
 
 /* Bayrak Seçim Kutusu */
+.iti__flag-container {
+    position: static !important;
+}
+
 .iti__selected-flag {
     flex: 0 0 auto !important;
-    min-width: 88px !important;
+    min-width: 95px !important;
     height: 38px !important;
     padding: 0 10px !important;
     border: 1px solid var(--hk-border) !important;
-    border-radius: 6px 0 0 6px !important; /* Sağ köşeleri düz yapalım input ile birleşsin */
+    border-radius: 6px 0 0 6px !important;
     background: var(--hk-bg-card) !important;
     transition: all 0.2s !important;
-    z-index: 10;
-    pointer-events: auto !important; /* Tıklanabilirliği garantiye alalım */
+    display: flex !important;
+    align-items: center !important;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    z-index: 10 !important;
 }
 
 /* Hover Renk Düzeltmesi */
@@ -216,14 +224,15 @@
 .iti__country-list {
     bottom: 100% !important;
     top: auto !important;
-    margin-bottom: 8px !important;
+    margin-bottom: 5px !important;
     background-color: var(--hk-bg-card) !important;
     color: var(--hk-text-main) !important;
     border: 1px solid var(--hk-border) !important;
     border-radius: 8px !important;
-    box-shadow: 0 -4px 12px rgba(0,0,0,0.15) !important;
-    z-index: 999999 !important;
-    max-height: 300px !important;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.3) !important;
+    z-index: 9999999 !important;
+    max-height: 250px !important;
+    width: 300px !important;
 }
 
 /* Liste içi arama ve öğeler */
@@ -247,9 +256,10 @@
 /* Telefon Giriş Alanı */
 .musteri-telefon-input {
     flex: 1 !important;
-    background: var(--hk-bg-card) !important; /* Arka planı kart rengi yapalım */
+    position: static !important;
+    background: var(--hk-bg-card) !important;
     border: 1px solid var(--hk-border) !important;
-    border-left: none !important; /* Sol kenarlığı kaldıralım bayrak kutusuyla birleşsin */
+    border-left: none !important;
     border-radius: 0 6px 6px 0 !important;
     padding: 8px 12px !important;
     height: 38px !important;
@@ -257,6 +267,15 @@
     color: var(--hk-text-main) !important;
     outline: none !important;
     box-sizing: border-box !important;
+    padding-left: 12px !important;
+}
+
+.iti input, .iti input[type=tel] {
+    padding-left: 12px !important;
+}
+
+.musteri-telefon-input:focus {
+    border-color: var(--hk-accent) !important;
 }
 
 .musteri-telefon-input:focus {
