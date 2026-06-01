@@ -20,6 +20,7 @@ window.HizliKasa = window.HizliKasa || {};
         odemeTipi: "card",
         musteriTelefon: "",
         musteriTelefonUlkeKodu: "+90",
+        musteriTelefonUlkeIso: "tr",
         siparisNotu: "",
         splitData: null,
         lastUpdatedId: null,
@@ -38,6 +39,28 @@ window.HizliKasa = window.HizliKasa || {};
             return 'hizli_kasa_hafiza_slot_' + kasaId + '_depo_' + depoId;
         },
 
+        _telefonAlaniniGuncelle: function() {
+            var state = HK.State;
+            var phoneInput = document.getElementById("musteri-telefon");
+            var musteriPanel = document.getElementById("musteri-telefon-panel");
+
+            if (phoneInput) {
+                HK._telefonProgramatikGuncelleniyor = true;
+                try {
+                    if (HK.iti && state.musteriTelefonUlkeIso) {
+                        HK.iti.setCountry(state.musteriTelefonUlkeIso);
+                    }
+                    phoneInput.value = state.musteriTelefon || "";
+                } finally {
+                    HK._telefonProgramatikGuncelleniyor = false;
+                }
+            }
+
+            if (musteriPanel) {
+                musteriPanel.style.display = state.musteriTelefon ? "block" : "none";
+            }
+        },
+
         /**
          * Mevcut sepeti localStorage'a kaydet
          */
@@ -51,6 +74,7 @@ window.HizliKasa = window.HizliKasa || {};
                 odemeTipi: state.odemeTipi,
                 musteriTelefon: state.musteriTelefon,
                 musteriTelefonUlkeKodu: state.musteriTelefonUlkeKodu,
+                musteriTelefonUlkeIso: state.musteriTelefonUlkeIso,
                 siparisNotu: state.siparisNotu,
                 splitData: state.splitData
             };
@@ -78,22 +102,11 @@ window.HizliKasa = window.HizliKasa || {};
                     state.odemeTipi = veri.odemeTipi || "card";
                     state.musteriTelefon = veri.musteriTelefon || "";
                     state.musteriTelefonUlkeKodu = veri.musteriTelefonUlkeKodu || "+90";
+                    state.musteriTelefonUlkeIso = veri.musteriTelefonUlkeIso || "tr";
                     state.siparisNotu = veri.siparisNotu || "";
                     state.splitData = veri.splitData || null;
 
-                    // UI Güncelle
-                    var phoneInput = document.getElementById("musteri-telefon");
-                    var musteriPanel = document.getElementById("musteri-telefon-panel");
-                    if (phoneInput) {
-                        phoneInput.value = state.musteriTelefon;
-                        if (HK.iti && state.musteriTelefonUlkeKodu) {
-                            // Dial code'u ISO koda çevirmek zor olabilir, ama iti.setCountry genelde yeterlidir.
-                            // Eğer state'de sadece dial code varsa (+90 gibi), iti bunu setNumber ile çözebilir.
-                        }
-                    }
-                    if (musteriPanel) {
-                        musteriPanel.style.display = state.musteriTelefon ? "block" : "none";
-                    }
+                    this._telefonAlaniniGuncelle();
 
                     // Geriye dönük uyumluluk: discounted_price'ı line_discount'a çevir
                     state.sepet.forEach(function(item) {
@@ -115,8 +128,10 @@ window.HizliKasa = window.HizliKasa || {};
                 state.odemeTipi = "card";
                 state.musteriTelefon = "";
                 state.musteriTelefonUlkeKodu = "+90";
+                state.musteriTelefonUlkeIso = "tr";
                 state.siparisNotu = "";
                 state.splitData = null;
+                this._telefonAlaniniGuncelle();
             }
 
             state.lastUpdatedId = null;
@@ -130,22 +145,38 @@ window.HizliKasa = window.HizliKasa || {};
         /**
          * Mevcut kasanın sepetini temizle
          */
-        sepetiTemizle: function() {
+        sepetiTemizle: function(kasaId) {
             var state = HK.State;
-            localStorage.removeItem(this._slotKey(state.aktifKasaId));
+            var temizlenecekKasaId = kasaId ? parseInt(kasaId) : state.aktifKasaId;
+            localStorage.removeItem(this._slotKey(temizlenecekKasaId));
+
+            if (temizlenecekKasaId !== state.aktifKasaId) {
+                return;
+            }
+
             state.sepet = [];
             state.iskontoTutar = 0;
             state.odemeTipi = "card";
             state.musteriTelefon = "";
             state.musteriTelefonUlkeKodu = "+90";
+            state.musteriTelefonUlkeIso = "tr";
             state.siparisNotu = "";
             state.splitData = null;
 
             // UI Güncelle
             var phoneInput = document.getElementById("musteri-telefon");
             if (phoneInput) {
-                phoneInput.value = "";
-                if (HK.iti) HK.iti.setCountry("tr");
+                HK._telefonProgramatikGuncelleniyor = true;
+                try {
+                    phoneInput.value = "";
+                    if (HK.iti) HK.iti.setCountry("tr");
+                } finally {
+                    HK._telefonProgramatikGuncelleniyor = false;
+                }
+            }
+            var musteriPanel = document.getElementById("musteri-telefon-panel");
+            if (musteriPanel) {
+                musteriPanel.style.display = "none";
             }
             var phoneGroup = phoneInput ? phoneInput.closest('.musteri-input-grup') : null;
             if (phoneGroup) {

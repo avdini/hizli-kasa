@@ -139,6 +139,11 @@
                 phoneInput.addEventListener("countrychange", function() {
                     var countryData = HK.iti.getSelectedCountryData();
                     HK.State.musteriTelefonUlkeKodu = "+" + countryData.dialCode;
+                    HK.State.musteriTelefonUlkeIso = countryData.iso2 || "tr";
+
+                    if (HK._telefonProgramatikGuncelleniyor) {
+                        return;
+                    }
                     
                     // Ülke değiştiğinde inputu temizle (farklı maske çakışmalarını önlemek için)
                     phoneInput.value = "";
@@ -165,6 +170,7 @@
                         phoneInput.value = "";
                         HK.State.musteriTelefon = "";
                         HK.State.musteriTelefonUlkeKodu = "+90";
+                        HK.State.musteriTelefonUlkeIso = "tr";
                         if (HK.iti) HK.iti.setCountry("tr");
                     }
                     HK.CartManager.sepetiKaydet();
@@ -174,6 +180,11 @@
 
             if (phoneInput) {
                 phoneInput.addEventListener("input", function (e) {
+                    if (HK.iti) {
+                        var countryData = HK.iti.getSelectedCountryData();
+                        HK.State.musteriTelefonUlkeKodu = "+" + countryData.dialCode;
+                        HK.State.musteriTelefonUlkeIso = countryData.iso2 || "tr";
+                    }
                     HK.State.musteriTelefon = e.target.value;
                     HK.CartManager.sepetiKaydet();
 
@@ -303,6 +314,7 @@
         siparisIsleminiGerceklestir: async function (splitData) {
             splitData = splitData || null;
             var state = HK.State;
+            var siparisKasaId = state.aktifKasaId;
             var durumMetni = document.getElementById("durum");
 
             // Sipariş öncesi sekmeler arası çakışmayı önle
@@ -391,7 +403,7 @@
                 this.toggleLoading(false);
                 durumMetni.innerText = "Sadece iade işlemi tamamlandı.";
                 durumMetni.style.color = "#27ae60";
-                HK.CartManager.sepetiTemizle();
+                HK.CartManager.sepetiTemizle(siparisKasaId);
                 alert("Sadece iade işlemi yapıldı. İade Sipariş No: #" + exchangeRefundOrderId);
                 if (HK.UIRenderer) {
                     HK.UIRenderer.arayuzuGuncelle();
@@ -592,7 +604,7 @@
                     }
                     durumMetni.innerText = "Sipariş oluşturuldu.";
                     durumMetni.style.color = "#27ae60";
-                    HK.CartManager.sepetiTemizle();
+                    HK.CartManager.sepetiTemizle(siparisKasaId);
                     document.getElementById("fis-onay-modal").style.display = "flex";
                     jQuery(document).trigger('hk:siparis-tamamlandi');
                 } else {
