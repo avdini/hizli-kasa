@@ -52,7 +52,10 @@ window.HizliKasa = window.HizliKasa || {};
                     }
                     phoneInput.value = state.musteriTelefon || "";
                 } finally {
-                    HK._telefonProgramatikGuncelleniyor = false;
+                    clearTimeout(HK._telefonProgramatikTimer);
+                    HK._telefonProgramatikTimer = setTimeout(function() {
+                        HK._telefonProgramatikGuncelleniyor = false;
+                    }, 0);
                 }
             }
 
@@ -61,11 +64,29 @@ window.HizliKasa = window.HizliKasa || {};
             }
         },
 
+        _telefonStateiniInputtanGuncelle: function() {
+            var state = HK.State;
+            var phoneInput = document.getElementById("musteri-telefon");
+
+            if (phoneInput) {
+                state.musteriTelefon = phoneInput.value || "";
+            }
+
+            if (HK.iti) {
+                var countryData = HK.iti.getSelectedCountryData();
+                state.musteriTelefonUlkeKodu = "+" + countryData.dialCode;
+                state.musteriTelefonUlkeIso = countryData.iso2 || "tr";
+            }
+        },
+
         /**
          * Mevcut sepeti localStorage'a kaydet
          */
         sepetiKaydet: function() {
             var state = HK.State;
+            if (!HK._telefonProgramatikGuncelleniyor) {
+                this._telefonStateiniInputtanGuncelle();
+            }
             localStorage.setItem('hizli_kasa_aktif_id', state.aktifKasaId);
 
             var veri = {
@@ -92,6 +113,7 @@ window.HizliKasa = window.HizliKasa || {};
         sepetiYukle: function(kasaId) {
             var state = HK.State;
             if (kasaId) state.aktifKasaId = parseInt(kasaId);
+            localStorage.setItem('hizli_kasa_aktif_id', state.aktifKasaId);
 
             var kaydedilen = localStorage.getItem(this._slotKey(state.aktifKasaId));
             if (kaydedilen) {
@@ -140,6 +162,7 @@ window.HizliKasa = window.HizliKasa || {};
                 HK.UIRenderer.sidebarGuncelle();
                 HK.UIRenderer.arayuzuGuncelle();
             }
+            this._telefonAlaniniGuncelle();
         },
 
         /**
@@ -171,7 +194,10 @@ window.HizliKasa = window.HizliKasa || {};
                     phoneInput.value = "";
                     if (HK.iti) HK.iti.setCountry("tr");
                 } finally {
-                    HK._telefonProgramatikGuncelleniyor = false;
+                    clearTimeout(HK._telefonProgramatikTimer);
+                    HK._telefonProgramatikTimer = setTimeout(function() {
+                        HK._telefonProgramatikGuncelleniyor = false;
+                    }, 0);
                 }
             }
             var musteriPanel = document.getElementById("musteri-telefon-panel");
