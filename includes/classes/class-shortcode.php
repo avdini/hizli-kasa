@@ -118,7 +118,7 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-ui-renderer', $js_base . 'modules/ui-renderer.js', array('kasa-cart-manager', 'kasa-currency-mask'), $pos_version, true);
     wp_enqueue_script('kasa-barcode-scanner', $js_base . 'modules/barcode-scanner.js', array('kasa-cart-manager', 'kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-modal-manager', $js_base . 'modules/modal-manager.js', array('kasa-cart-manager', 'kasa-ui-renderer'), $pos_version, true);
-    wp_enqueue_script('kasa-order-processor', $js_base . 'modules/order-processor.js', array('kasa-cart-manager', 'kasa-ui-renderer'), $pos_version, true);
+    wp_enqueue_script('kasa-order-processor', $js_base . 'modules/order-processor.js', array('intl-tel-input', 'kasa-cart-manager', 'kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-receipt-printer', $js_base . 'modules/receipt-printer.js', array('kasa-order-processor'), $pos_version, true);
     wp_enqueue_script('kasa-day-end-report', $js_base . 'modules/day-end-report.js', array('kasa-cart-manager'), $pos_version, true);
     wp_enqueue_script('kasa-anlik-kasa', $js_base . 'modules/anlik-kasa.js', array('kasa-ui-renderer'), $pos_version, true);

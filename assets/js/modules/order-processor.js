@@ -121,14 +121,17 @@
                     initialCountry: "tr",
                     separateDialCode: true,
                     strictMode: true,
-                    preferredCountries: ["tr", "de", "nl", "be", "at", "fr", "gb", "us"],
-                    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@29.0.3/dist/js/utils.js",
-                    autoPlaceholder: "AGGRESSIVE",
+                    countryOrder: ["tr", "de", "nl", "be", "at", "fr", "gb", "us"],
+                    loadUtils: function () {
+                        return import("https://cdn.jsdelivr.net/npm/intl-tel-input@29.0.3/dist/js/utils.js");
+                    },
+                    placeholderNumberPolicy: "AGGRESSIVE",
+                    formatAsYouType: true,
                     countrySearch: true,
                     countryNameLocale: "tr",
                     uiTranslations: {
                         searchPlaceholder: "Ülke ara...",
-                        noCountryFound: "Sonuç bulunamadı",
+                        searchEmptyState: "Sonuç bulunamadı",
                     }
                 });
 
@@ -171,32 +174,6 @@
 
             if (phoneInput) {
                 phoneInput.addEventListener("input", function (e) {
-                    var countryData = HK.iti ? HK.iti.getSelectedCountryData() : { iso2: 'tr' };
-                    var val = e.target.value.replace(/\D/g, '');
-                    
-                    if (countryData.iso2 === "tr") {
-                        // Türkiye için özel maske
-                        if (val.length > 0 && val[0] === '0') {
-                            val = val.substring(1);
-                        }
-                        if (val.length > 10) val = val.substring(0, 10);
-                        var x = val.match(/(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
-                        if (!x[1]) {
-                            e.target.value = '';
-                        } else {
-                            e.target.value = '(' + x[1] + (x[2] ? ') ' + x[2] : '') + (x[3] ? ' ' + x[3] : '') + (x[4] ? ' ' + x[4] : '');
-                        }
-                    } else if (HK.iti && typeof intlTelInputGlobals !== 'undefined') {
-                        // Diğer ülkeler için kütüphanenin formatlama yeteneğini kullanmayı dene
-                        // Not: utilsScript yüklendiğinde intlTelInputGlobals.formatNumber kullanılabilir
-                        if (val.length > 15) val = val.substring(0, 15);
-                        e.target.value = val.replace(/(\d{3})(?=\d)/g, '$1 ').trim();
-                    } else {
-                        if (val.length > 15) val = val.substring(0, 15);
-                        e.target.value = val.replace(/(\d{3})(?=\d)/g, '$1 ').trim();
-                    }
-
-                    // State'i güncelle ve kaydet
                     HK.State.musteriTelefon = e.target.value;
                     HK.CartManager.sepetiKaydet();
 
