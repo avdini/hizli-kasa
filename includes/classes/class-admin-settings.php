@@ -246,6 +246,10 @@ function hizli_kasa_ayarlari_kaydet()
     register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_mismatch_check_enabled');
     register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_mismatch_interval');
     register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_dismiss_hours');
+    // Debug log ayarı (Sistem Araçları sekmesi)
+    register_setting('hizli_kasa_araclar_grubu', 'hizli_kasa_debug_log_aktif', array(
+        'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
+    ));
 }
 
 /**
@@ -1674,6 +1678,29 @@ function hizli_kasa_ayarlar_sayfasi()
                 </div>
 
             <?php elseif ($active_tab == 'araclar'): ?>
+                <form method="post" action="options.php" class="card" style="margin-bottom:20px;">
+                    <?php settings_fields('hizli_kasa_araclar_grubu'); ?>
+                    <h3>Geliştirici Ayarları</h3>
+                    <p>Hızlı Kasa'nın performansını ve hata kayıtlarını yönetin.</p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Debug Logu (Sistem Kayıtları)</th>
+                            <td>
+                                <?php $debug_aktif = get_option('hizli_kasa_debug_log_aktif', '0'); ?>
+                                <label>
+                                    <input type="checkbox" name="hizli_kasa_debug_log_aktif" value="1" <?php checked($debug_aktif, '1'); ?>>
+                                    Debug Logu Aktif
+                                </label>
+                                <p class="description">
+                                    Etkinleştirildiğinde <code>hizli-kasa-debug.log</code> dosyasına ve PHP error_log sistemine sipariş/stok süreçleri detaylı olarak yazılır.<br>
+                                    <strong style="color:#d63638;">Sadece sorun tespiti sırasında açın!</strong> Sürekli açık kalması disk I/O işlemlerini artırır ve POS sipariş onay hızını düşürür.
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button('Ayarları Kaydet', 'primary', 'submit', false); ?>
+                </form>
+
                 <div class="card">
                     <h3>Sistemi Başlat: Stokları Kopyala</h3>
                     <p>Mevcut WooCommerce ana stoklarını seçilen depoya transfer eder ve sistemi kullanıma hazırlar.</p>

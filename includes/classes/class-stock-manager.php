@@ -244,12 +244,30 @@ class Hizli_Kasa_Stock_Manager {
         }
         self::log_movement($product_id, $variation_id, $location_id, $old_qty, $new_qty, $reason);
 
-        // Uyuşmazlık önbelleğini sıfırla
-        if (class_exists('Hizli_Kasa_Mismatch_Notifier')) {
-            Hizli_Kasa_Mismatch_Notifier::reset_status();
-        }
+        // Uyuşmazlık önbelleğini ertelenmiş olarak sıfırla (istek sonunda 1 kez çalışır).
+        // Bir siparişteki N ürün N kez değil, tüm stok güncellemeleri bittikten sonra 1 kez tetiklenir.
+        self::schedule_deferred_invalidation();
 
         return $new_qty;
+    }
+
+    /**
+     * Mismatch ve rapor önbelleklerini PHP isteği kapanırken 1 kez sıfırla.
+     * Bu sayede N ürünlü sipariş N değil 1 delete_option + 1 update_option işlemi yapar.
+     */
+    private static $deferred_invalidation_scheduled = false;
+
+    public static function schedule_deferred_invalidation() {
+        if (self::$deferred_invalidation_scheduled) {
+            return; // Zaten planlandı, tekrar ekleme
+        }
+        self::$deferred_invalidation_scheduled = true;
+
+        add_action('shutdown', function () {
+            if (class_exists('Hizli_Kasa_Mismatch_Notifier')) {
+                Hizli_Kasa_Mismatch_Notifier::reset_status();
+            }
+        }, 99);
     }
 
     public static function transfer_out($product_id, $variation_id, $kaynak_depo_id, $qty, $sevk_id) {
@@ -696,10 +714,8 @@ class Hizli_Kasa_Stock_Manager {
 
         self::log_movement($product_id, $variation_id, $location_id, $old_qty, $new_qty, $reason);
 
-        // Uyuşmazlık önbelleğini sıfırla
-        if (class_exists('Hizli_Kasa_Mismatch_Notifier')) {
-            Hizli_Kasa_Mismatch_Notifier::reset_status();
-        }
+        // Uyuşmazlık önbelleğini ertelenmiş olarak sıfırla
+        self::schedule_deferred_invalidation();
 
         return $new_qty;
     }
