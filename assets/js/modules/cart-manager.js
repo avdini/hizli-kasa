@@ -72,10 +72,12 @@ window.HizliKasa = window.HizliKasa || {};
                 state.musteriTelefon = phoneInput.value || "";
             }
 
-            if (HK.iti) {
+            if (HK.iti && typeof HK.iti.getSelectedCountryData === 'function') {
                 var countryData = HK.iti.getSelectedCountryData();
-                state.musteriTelefonUlkeKodu = "+" + countryData.dialCode;
-                state.musteriTelefonUlkeIso = countryData.iso2 || "tr";
+                if (countryData && countryData.dialCode) {
+                    state.musteriTelefonUlkeKodu = "+" + countryData.dialCode;
+                    state.musteriTelefonUlkeIso = countryData.iso2 || "tr";
+                }
             }
         },
 

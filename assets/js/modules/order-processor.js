@@ -137,9 +137,9 @@
 
                 // Ülke değiştiğinde state'i güncelle ve placeholder'ı temizle/yenile
                 phoneInput.addEventListener("countrychange", function() {
-                    var countryData = HK.iti.getSelectedCountryData();
-                    HK.State.musteriTelefonUlkeKodu = "+" + countryData.dialCode;
-                    HK.State.musteriTelefonUlkeIso = countryData.iso2 || "tr";
+                    var countryData = typeof HK.iti.getSelectedCountryData === 'function' ? HK.iti.getSelectedCountryData() : {};
+                    HK.State.musteriTelefonUlkeKodu = countryData.dialCode ? "+" + countryData.dialCode : HK.State.musteriTelefonUlkeKodu;
+                    HK.State.musteriTelefonUlkeIso = countryData.iso2 || HK.State.musteriTelefonUlkeIso || "tr";
 
                     if (HK._telefonProgramatikGuncelleniyor) {
                         return;
@@ -180,10 +180,12 @@
 
             if (phoneInput) {
                 phoneInput.addEventListener("input", function (e) {
-                    if (HK.iti) {
+                    if (HK.iti && typeof HK.iti.getSelectedCountryData === 'function') {
                         var countryData = HK.iti.getSelectedCountryData();
-                        HK.State.musteriTelefonUlkeKodu = "+" + countryData.dialCode;
-                        HK.State.musteriTelefonUlkeIso = countryData.iso2 || "tr";
+                        if (countryData && countryData.dialCode) {
+                            HK.State.musteriTelefonUlkeKodu = "+" + countryData.dialCode;
+                            HK.State.musteriTelefonUlkeIso = countryData.iso2 || "tr";
+                        }
                     }
                     HK.State.musteriTelefon = e.target.value;
                     HK.CartManager.sepetiKaydet();
