@@ -188,6 +188,7 @@
     padding: 5px 12px;
     border: 1px solid var(--hk-border);
     background: var(--hk-bg-card);
+    color: var(--hk-text-main);
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
@@ -371,9 +372,20 @@
 }
 
 .report-item-content strong {
-    display: block;
+    display: inline;
     margin-bottom: 3px;
     overflow-wrap: anywhere;
+}
+
+.report-item-sku {
+    color: var(--hk-accent);
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 4px;
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    padding: 1px 4px;
+    border-radius: 4px;
 }
 
 .report-item-subline {

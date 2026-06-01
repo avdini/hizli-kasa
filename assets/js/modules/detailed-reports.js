@@ -360,6 +360,7 @@
                     '<div class="report-item-media">' + imageHtml + '</div>' +
                     '<div class="report-item-content">' +
                         '<strong>' + this.escapeHtml(item.name || 'Ürün') + '</strong>' +
+                        (item.sku ? ' <span class="report-item-sku">[' + this.escapeHtml(item.sku) + ']</span>' : '') +
                         '<div class="report-item-subline">Adet: ' + this.escapeHtml(qty) + ' <span class="item-price-calc">(' + priceFormatted + ' x ' + this.escapeHtml(qty) + ' = ' + subtotalFormatted + ')</span></div>' +
                         (metaStr ? '<div class="report-item-meta-tags">' + metaStr + '</div>' : '') +
                     '</div>' +

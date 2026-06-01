@@ -655,6 +655,7 @@ function hizli_kasa_get_reports_data($request, $is_refund = false)
 
             $order_data['items'][] = array(
                 'name' => $item->get_name(),
+                'sku' => $product ? $product->get_sku() : '',
                 'qty' => $qty,
                 'price' => round($unit_price, 2),
                 'subtotal' => round($total, 2),
