@@ -47,8 +47,8 @@ window.HizliKasa = window.HizliKasa || {};
             if (phoneInput) {
                 HK._telefonProgramatikGuncelleniyor = true;
                 try {
-                    if (HK.iti && state.musteriTelefonUlkeIso) {
-                        HK.iti.setCountry(state.musteriTelefonUlkeIso);
+                    if (HK.iti && state.musteriTelefonUlkeIso && typeof HK.iti.setFlag === 'function') {
+                        HK.iti.setFlag(state.musteriTelefonUlkeIso);
                     }
                     phoneInput.value = state.musteriTelefon || "";
                 } finally {
@@ -192,7 +192,7 @@ window.HizliKasa = window.HizliKasa || {};
                 HK._telefonProgramatikGuncelleniyor = true;
                 try {
                     phoneInput.value = "";
-                    if (HK.iti) HK.iti.setCountry("tr");
+                    if (HK.iti && typeof HK.iti.setFlag === 'function') HK.iti.setFlag("tr");
                 } finally {
                     clearTimeout(HK._telefonProgramatikTimer);
                     HK._telefonProgramatikTimer = setTimeout(function() {
