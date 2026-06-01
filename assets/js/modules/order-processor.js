@@ -175,22 +175,23 @@
                     var val = e.target.value.replace(/\D/g, '');
                     
                     if (countryData.iso2 === "tr") {
-                        // Türkiye için özel maske (Geriye dönük uyumluluk ve alışkanlıklar için)
+                        // Türkiye için özel maske
                         if (val.length > 0 && val[0] === '0') {
                             val = val.substring(1);
                         }
-                        
                         if (val.length > 10) val = val.substring(0, 10);
-
                         var x = val.match(/(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
                         if (!x[1]) {
                             e.target.value = '';
                         } else {
                             e.target.value = '(' + x[1] + (x[2] ? ') ' + x[2] : '') + (x[3] ? ' ' + x[3] : '') + (x[4] ? ' ' + x[4] : '');
                         }
+                    } else if (HK.iti && typeof intlTelInputGlobals !== 'undefined') {
+                        // Diğer ülkeler için kütüphanenin formatlama yeteneğini kullanmayı dene
+                        // Not: utilsScript yüklendiğinde intlTelInputGlobals.formatNumber kullanılabilir
+                        if (val.length > 15) val = val.substring(0, 15);
+                        e.target.value = val.replace(/(\d{3})(?=\d)/g, '$1 ').trim();
                     } else {
-                        // Diğer ülkeler için ham rakamları boşluklarla grupla (veya kütüphanenin utilsScript'ine bırak)
-                        // utilsScript yüklendiğinde formatNumber kullanılabilir ama anlık input için basit gruplama:
                         if (val.length > 15) val = val.substring(0, 15);
                         e.target.value = val.replace(/(\d{3})(?=\d)/g, '$1 ').trim();
                     }

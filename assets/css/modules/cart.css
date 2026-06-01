@@ -295,11 +295,17 @@
     color: var(--hk-text-main) !important;
     outline: none !important;
     box-sizing: border-box !important;
-    padding-left: 12px !important;
+    min-width: 0 !important; /* Taşmayı önlemek için */
+}
+
+.iti {
+    width: 100% !important;
 }
 
 .iti input, .iti input[type=tel] {
+    width: 100% !important;
     padding-left: 12px !important;
+    margin: 0 !important;
 }
 
 .musteri-telefon-input:focus {

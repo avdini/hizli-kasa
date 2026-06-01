@@ -110,7 +110,7 @@ if (!defined('ABSPATH'))
                 <div class="musteri-input-grup">
                     <span class="musteri-ikon">👤</span>
                     <input type="tel" id="musteri-telefon" class="musteri-telefon-input"
-                        placeholder="0 (5xx) xxx xx xx" autocomplete="off">
+                        autocomplete="off">
                     <button id="musteri-telefon-kapat" class="input-temizle-btn">✕</button>
                 </div>
             </div>
