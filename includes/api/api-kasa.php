@@ -45,11 +45,11 @@ function hizli_kasa_ozel_arama($data)
     $cache_aktif = get_option('hizli_kasa_cache_aktif', '1') === '1';
     $cache_version = get_option('hizli_kasa_search_cache_version', '1');
     $cache_key = 'hk_search_v2_' . $cache_version . '_' . md5($s . '_' . $exact . '_' . (int) $depo_id);
-    
+
     if ($cache_aktif) {
         $found_ids = get_transient($cache_key);
     }
-    
+
     if (false === $found_ids || !$cache_aktif) {
         $found_ids = [];
 
@@ -58,7 +58,7 @@ function hizli_kasa_ozel_arama($data)
             $found_ids = $wpdb->get_col($wpdb->prepare("
                 SELECT pm.post_id FROM {$wpdb->postmeta} pm
                 JOIN {$wpdb->posts} p ON pm.post_id = p.ID
-                WHERE pm.meta_key = '_sku' AND pm.meta_value = %s 
+                WHERE pm.meta_key = '_sku' AND pm.meta_value = %s
                 AND p.post_status IN ('publish', 'private')
                 LIMIT 10", $s));
         } else {
@@ -112,17 +112,20 @@ function hizli_kasa_ozel_arama($data)
 
 /**
  * Depo Stok Kontrolü — Sipariş Onayı Öncesi Toplu Kontrol
- * 
- * Sepetteki tüm ürünlerin hem WooCommerce site stoğunu hem de
- * aktif depo stoğunu tek seferde kontrol eder.
- * 
+ *
+ * Sepetteki tüm ürünlerin hem WooCommerce site stoğunu hem de aktif depo
+ * stoğunu BATCH SQL ile tek seferde kontrol eder.
+ *
+ * Önceki implementasyon: N*3 DB sorgusu (her ürün için ayrı ayrı)
+ * Bu implementasyon : sabit 3 DB sorgusu (ürün sayısından bağımsız)
+ *
  * POST /hizli-kasa/v1/warehouse-stock-check
  * Body: { items: [{product_id, variation_id, qty}], depo_id: X }
  */
 function hizli_kasa_warehouse_stock_check($request)
 {
-    $data = $request->get_json_params();
-    $items = $data['items'] ?? [];
+    $data    = $request->get_json_params();
+    $items   = $data['items'] ?? [];
     $depo_id = intval($data['depo_id'] ?? 0);
 
     if (empty($items)) {
@@ -130,73 +133,122 @@ function hizli_kasa_warehouse_stock_check($request)
     }
 
     global $wpdb;
-    $tables = Hizli_Kasa_Database::get_tables();
+    $tables     = Hizli_Kasa_Database::get_tables();
     $stok_table = $tables['stok_konumlari'];
 
-    $results = [];
+    // --- Girdi Normalizasyonu ---
+    // target_id: variation_id varsa variation, yoksa product_id (WC meta'sı bu ID'ye yazılır)
+    $target_ids = [];
+    $item_map   = []; // target_id => [product_id, variation_id, qty]
 
     foreach ($items as $item) {
-        $product_id = intval($item['product_id'] ?? 0);
-        $variation_id = intval($item['variation_id'] ?? 0);
-        $requested_qty = intval($item['qty'] ?? 0);
-        $target_id = $variation_id ?: $product_id;
+        $pid = intval($item['product_id'] ?? 0);
+        $vid = intval($item['variation_id'] ?? 0);
+        $qty = intval($item['qty'] ?? 0);
+        if (!$pid) continue;
+        $tid          = $vid ?: $pid;
+        $target_ids[] = $tid;
+        $item_map[$tid] = ['product_id' => $pid, 'variation_id' => $vid, 'qty' => $qty];
+    }
 
-        if (!$target_id)
-            continue;
+    if (empty($target_ids)) {
+        return [];
+    }
 
-        // Ürün adını al
-        $product = wc_get_product($target_id);
-        $name = $product ? $product->get_name() : "Ürün #$target_id";
+    $ids_placeholder = implode(',', array_map('intval', $target_ids));
 
-        // 1. WooCommerce site stoğu
-        $site_stock = null;
-        $manage_stock = false;
-        $stock_status = 'instock';
+    // =========================================================
+    // BATCH 1 — Ürün başlıkları (posts tablosu)
+    // Önceden: wc_get_product() ile her ürün için ayrı sorgu
+    // =========================================================
+    $name_rows = $wpdb->get_results(
+        "SELECT ID, post_title FROM {$wpdb->posts} WHERE ID IN ($ids_placeholder)"
+    );
+    $name_map = [];
+    foreach ($name_rows as $row) {
+        $name_map[(int) $row->ID] = $row->post_title;
+    }
 
-        if ($product) {
-            $manage_stock = $product->get_manage_stock();
-            $site_stock = $manage_stock ? (float) $product->get_stock_quantity() : null;
-            $stock_status = $product->get_stock_status();
-        }
+    // =========================================================
+    // BATCH 2 — WooCommerce stok meta verileri (postmeta)
+    // _manage_stock, _stock, _stock_status — tek sorguda hepsi
+    // Önceden: her ürün için wc_get_product() içinde N meta sorgusu
+    // =========================================================
+    $meta_rows = $wpdb->get_results(
+        "SELECT post_id, meta_key, meta_value
+         FROM {$wpdb->postmeta}
+         WHERE post_id IN ($ids_placeholder)
+           AND meta_key IN ('_manage_stock', '_stock', '_stock_status')"
+    );
+    $meta_map = []; // [post_id][meta_key] = meta_value
+    foreach ($meta_rows as $row) {
+        $meta_map[(int) $row->post_id][$row->meta_key] = $row->meta_value;
+    }
 
-        // 2. Aktif depo stoğu ve rezervasyonu
-        $depo_stock = 0;
-        $depo_reserved = 0;
-        if ($depo_id) {
-            $stock_row = $wpdb->get_row($wpdb->prepare(
-                "SELECT quantity, reserved FROM $stok_table WHERE product_id = %d AND variation_id = %d AND location_id = %d",
-                $product_id,
-                $variation_id,
-                $depo_id
-            ));
-            if ($stock_row) {
-                $depo_stock = (float) $stock_row->quantity;
-                $depo_reserved = (float) $stock_row->reserved;
+    // =========================================================
+    // BATCH 3 — Tüm depo stoklarını tek sorguda çek
+    // PHP'de aktif depo / diğer depolar olarak ayır
+    // Önceden: her ürün için 2 ayrı DB sorgusu (aktif + diğerleri)
+    // =========================================================
+    $all_product_ids = array_unique(array_column(array_values($item_map), 'product_id'));
+    $all_pids_ph     = implode(',', array_map('intval', $all_product_ids));
+
+    $depo_rows = $wpdb->get_results(
+        "SELECT product_id, variation_id, location_id, quantity, reserved
+         FROM $stok_table
+         WHERE product_id IN ($all_pids_ph)"
+    );
+
+    $depo_stock_map = []; // aktif depo: "pid_vid" => {quantity, reserved}
+    $other_depo_agg = []; // diğer depolar toplam: "pid_vid" => {total_qty, total_res}
+
+    foreach ($depo_rows as $row) {
+        $k = $row->product_id . '_' . $row->variation_id;
+        if ((int) $row->location_id === $depo_id) {
+            $depo_stock_map[$k] = [
+                'quantity' => (float) $row->quantity,
+                'reserved' => (float) $row->reserved,
+            ];
+        } else {
+            if (!isset($other_depo_agg[$k])) {
+                $other_depo_agg[$k] = ['total_qty' => 0.0, 'total_res' => 0.0];
             }
+            $other_depo_agg[$k]['total_qty'] += (float) $row->quantity;
+            $other_depo_agg[$k]['total_res'] += (float) $row->reserved;
         }
+    }
 
-        // 3. Diğer depolardaki toplam stok ve rezervasyon
-        $other_depo_stock = 0;
-        $other_depo_reserved = 0;
-        if ($depo_id) {
-            $other_rows = $wpdb->get_row($wpdb->prepare(
-                "SELECT COALESCE(SUM(quantity), 0) as total_qty, COALESCE(SUM(reserved), 0) as total_res FROM $stok_table WHERE product_id = %d AND variation_id = %d AND location_id != %d",
-                $product_id,
-                $variation_id,
-                $depo_id
-            ));
-            if ($other_rows) {
-                $other_depo_stock = (float) $other_rows->total_qty;
-                $other_depo_reserved = (float) $other_rows->total_res;
-            }
-        }
+    // =========================================================
+    // In-memory değerlendirme — sıfır ek DB sorgusu
+    // =========================================================
+    $results = [];
 
-        // 4. Kontrol sonuçları (Rezervasyon dahil)
+    foreach ($item_map as $tid => $info) {
+        $pid           = $info['product_id'];
+        $vid           = $info['variation_id'];
+        $requested_qty = $info['qty'];
+        $k             = $pid . '_' . $vid;
+
+        $name         = $name_map[$tid] ?? "Ürün #$tid";
+        $meta         = $meta_map[$tid] ?? [];
+        $manage_stock = isset($meta['_manage_stock']) && $meta['_manage_stock'] === 'yes';
+        $site_stock   = $manage_stock ? (float) ($meta['_stock'] ?? 0) : null;
+        $stock_status = $meta['_stock_status'] ?? 'instock';
+
+        $depo_data     = $depo_stock_map[$k] ?? ['quantity' => 0.0, 'reserved' => 0.0];
+        $depo_stock    = $depo_data['quantity'];
+        $depo_reserved = $depo_data['reserved'];
+
+        $other_data  = $other_depo_agg[$k] ?? ['total_qty' => 0.0, 'total_res' => 0.0];
+        $other_stock = $other_data['total_qty'];
+        $other_res   = $other_data['total_res'];
+
+        $available_depo = $depo_stock - $depo_reserved;
+
+        // Kontrol sonuçları
         $site_ok = true;
         $depo_ok = true;
         $warning = null;
-
-        $available_depo = $depo_stock - $depo_reserved;
 
         if ($manage_stock && $site_stock !== null) {
             $site_ok = ($requested_qty <= $site_stock);
@@ -210,32 +262,30 @@ function hizli_kasa_warehouse_stock_check($request)
 
         // Uyarı mesajları
         if ($site_ok && !$depo_ok) {
-            if (($depo_stock + $other_depo_stock - $depo_reserved - $other_depo_reserved) >= $requested_qty) {
+            if (($depo_stock + $other_stock - $depo_reserved - $other_res) >= $requested_qty) {
                 $warning = "Sitede var ama bu depoda rezerve/yok — başka depoda gözüküyor!";
+            } elseif ($depo_reserved > 0) {
+                $warning = "⚠️ Kritik Stok Uyarısı! Ürünün {$depo_reserved} adedi internet siparişleri için ayırtılmıştır. (Depoda Toplam: " . (int) $depo_stock . ")";
             } else {
-                if ($depo_reserved > 0) {
-                    $warning = "⚠️ Kritik Stok Uyarısı! Ürünün {$depo_reserved} adedi internet siparişleri için ayırtılmıştır. (Depoda Toplam: " . (int)$depo_stock . ")";
-                } else {
-                    $warning = "Depoda yetersiz stok! (Depo: " . (int) $depo_stock . ", İhtiyaç: $requested_qty)";
-                }
+                $warning = "Depoda yetersiz stok! (Depo: " . (int) $depo_stock . ", İhtiyaç: $requested_qty)";
             }
         } elseif (!$site_ok) {
             $warning = "Site stoğu yetersiz! (Site: " . ($site_stock !== null ? (int) $site_stock : 'N/A') . ", İhtiyaç: $requested_qty)";
         }
 
         $results[] = [
-            'product_id' => $product_id,
-            'variation_id' => $variation_id,
-            'name' => $name,
-            'site_stock' => $site_stock,
-            'depo_stock' => (float) $depo_stock,
-            'depo_reserved' => (float) $depo_reserved,
-            'available_stock' => (float) $available_depo,
-            'other_depo_stock' => (float) $other_depo_stock,
-            'requested_qty' => $requested_qty,
-            'site_ok' => $site_ok,
-            'depo_ok' => $depo_ok,
-            'warning' => $warning,
+            'product_id'       => $pid,
+            'variation_id'     => $vid,
+            'name'             => $name,
+            'site_stock'       => $site_stock,
+            'depo_stock'       => $depo_stock,
+            'depo_reserved'    => $depo_reserved,
+            'available_stock'  => $available_depo,
+            'other_depo_stock' => $other_stock,
+            'requested_qty'    => $requested_qty,
+            'site_ok'          => $site_ok,
+            'depo_ok'          => $depo_ok,
+            'warning'          => $warning,
         ];
     }
 
@@ -248,8 +298,8 @@ function hizli_kasa_warehouse_stock_check($request)
  */
 function hizli_kasa_api_get_barcode_data($request)
 {
-    $product_id = intval($request->get_param('product_id'));
-    $variation_id = intval($request->get_param('variation_id'));
+    $product_id    = intval($request->get_param('product_id'));
+    $variation_id  = intval($request->get_param('variation_id'));
     $variation_ids = $request->get_param('variation_ids');
 
     if (!empty($variation_ids) && is_array($variation_ids)) {
@@ -269,4 +319,3 @@ function hizli_kasa_api_get_barcode_data($request)
 
     return $data;
 }
-
