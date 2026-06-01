@@ -122,11 +122,13 @@
                     separateDialCode: true,
                     strictMode: true,
                     preferredCountries: ["tr", "de", "nl", "be", "at", "fr", "gb", "us"],
-                    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@24.8.1/build/js/utils.js",
+                    utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@29.0.3/dist/js/utils.js",
                     autoPlaceholder: "aggressive",
+                    countrySearch: true,
                     countryNameLocale: "tr",
-                    i18n: {
+                    uiTranslations: {
                         searchPlaceholder: "Ülke ara...",
+                        noCountryFound: "Sonuç bulunamadı",
                     }
                 });
 
