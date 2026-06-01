@@ -123,7 +123,7 @@
                     strictMode: true,
                     preferredCountries: ["tr", "de", "nl", "be", "at", "fr", "gb", "us"],
                     utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@29.0.3/dist/js/utils.js",
-                    autoPlaceholder: "aggressive",
+                    autoPlaceholder: "AGGRESSIVE",
                     countrySearch: true,
                     countryNameLocale: "tr",
                     uiTranslations: {
