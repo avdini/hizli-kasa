@@ -195,6 +195,15 @@
     flex: 1 !important;
     position: relative;
     overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    width: 100% !important;
+}
+
+/* Kütüphanenin eklediği gizli inputu ve diğer olası elementleri düzelt */
+.iti__hide {
+    display: none !important;
 }
 
 /* Bayrak Seçim Kutusu */

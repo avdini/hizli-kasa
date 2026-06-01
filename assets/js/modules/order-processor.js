@@ -132,11 +132,17 @@
                     }
                 });
 
-                // Ülke değiştiğinde state'i güncelle
+                // Ülke değiştiğinde state'i güncelle ve placeholder'ı temizle/yenile
                 phoneInput.addEventListener("countrychange", function() {
                     var countryData = HK.iti.getSelectedCountryData();
                     HK.State.musteriTelefonUlkeKodu = "+" + countryData.dialCode;
+                    
+                    // Ülke değiştiğinde inputu temizle (farklı maske çakışmalarını önlemek için)
+                    phoneInput.value = "";
+                    HK.State.musteriTelefon = "";
+                    
                     HK.CartManager.sepetiKaydet();
+                    self._telefonGrupDurumunuGuncelle();
                 });
             }
 
@@ -165,16 +171,15 @@
 
             if (phoneInput) {
                 phoneInput.addEventListener("input", function (e) {
-                    var countryCode = HK.State.musteriTelefonUlkeKodu || "+90";
+                    var countryData = HK.iti ? HK.iti.getSelectedCountryData() : { iso2: 'tr' };
                     var val = e.target.value.replace(/\D/g, '');
                     
-                    if (countryCode === "+90") {
-                        // Türkiye için: Eğer sıfırla başlıyorsa sıfırı sil (Ülke kodu zaten var)
+                    if (countryData.iso2 === "tr") {
+                        // Türkiye için özel maske (Geriye dönük uyumluluk ve alışkanlıklar için)
                         if (val.length > 0 && val[0] === '0') {
                             val = val.substring(1);
                         }
                         
-                        // Max 10 hane (5xx xxx xx xx)
                         if (val.length > 10) val = val.substring(0, 10);
 
                         var x = val.match(/(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
@@ -184,6 +189,8 @@
                             e.target.value = '(' + x[1] + (x[2] ? ') ' + x[2] : '') + (x[3] ? ' ' + x[3] : '') + (x[4] ? ' ' + x[4] : '');
                         }
                     } else {
+                        // Diğer ülkeler için ham rakamları boşluklarla grupla (veya kütüphanenin utilsScript'ine bırak)
+                        // utilsScript yüklendiğinde formatNumber kullanılabilir ama anlık input için basit gruplama:
                         if (val.length > 15) val = val.substring(0, 15);
                         e.target.value = val.replace(/(\d{3})(?=\d)/g, '$1 ').trim();
                     }
