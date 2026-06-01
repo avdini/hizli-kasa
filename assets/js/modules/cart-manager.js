@@ -130,8 +130,6 @@ window.HizliKasa = window.HizliKasa || {};
                     state.siparisNotu = veri.siparisNotu || "";
                     state.splitData = veri.splitData || null;
 
-                    this._telefonAlaniniGuncelle();
-
                     // Geriye dönük uyumluluk: discounted_price'ı line_discount'a çevir
                     state.sepet.forEach(function(item) {
                         if (typeof item.line_discount !== 'number') {
@@ -155,16 +153,27 @@ window.HizliKasa = window.HizliKasa || {};
                 state.musteriTelefonUlkeIso = "tr";
                 state.siparisNotu = "";
                 state.splitData = null;
-                this._telefonAlaniniGuncelle();
             }
 
             state.lastUpdatedId = null;
+
+            // Yükleme + UI güncellemesi boyunca ITI'den okuma yapılmasın.
+            // arayuzuGuncelle → sepetiKaydet → _telefonStateiniInputtanGuncelle zinciri
+            // ITI'nin async utils yüklenmemiş olabileceğinden yanlış ülke döndürebilir.
+            clearTimeout(HK._telefonProgramatikTimer);
+            HK._telefonProgramatikGuncelleniyor = true;
+
+            this._telefonAlaniniGuncelle();
 
             if (HK.UIRenderer) {
                 HK.UIRenderer.sidebarGuncelle();
                 HK.UIRenderer.arayuzuGuncelle();
             }
-            this._telefonAlaniniGuncelle();
+
+            // UI akışı bittikten sonra bayrağı kaldır (100ms: async event loop için yeterli)
+            HK._telefonProgramatikTimer = setTimeout(function() {
+                HK._telefonProgramatikGuncelleniyor = false;
+            }, 100);
         },
 
         /**
