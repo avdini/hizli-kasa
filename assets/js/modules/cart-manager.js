@@ -46,23 +46,22 @@ window.HizliKasa = window.HizliKasa || {};
 
             if (phoneInput) {
                 HK._telefonProgramatikGuncelleniyor = true;
-                try {
-                    if (HK.iti && state.musteriTelefonUlkeIso && typeof HK.iti.setFlag === 'function') {
-                        HK.iti.setFlag(state.musteriTelefonUlkeIso);
-                    }
-                    phoneInput.value = state.musteriTelefon || "";
-                } finally {
-                    clearTimeout(HK._telefonProgramatikTimer);
-                    HK._telefonProgramatikTimer = setTimeout(function() {
-                        HK._telefonProgramatikGuncelleniyor = false;
-                    }, 0);
+                if (HK.iti && state.musteriTelefonUlkeIso && typeof HK.iti.setCountry === 'function') {
+                    HK.iti.setCountry(state.musteriTelefonUlkeIso);
                 }
+                phoneInput.value = state.musteriTelefon || "";
+                // Flag'i sıfırla — sepetiYukle bunu clearTimeout ile iptal eder ve kendi timer'ını koyar
+                clearTimeout(HK._telefonProgramatikTimer);
+                HK._telefonProgramatikTimer = setTimeout(function() {
+                    HK._telefonProgramatikGuncelleniyor = false;
+                }, 0);
             }
 
             if (musteriPanel) {
                 musteriPanel.style.display = state.musteriTelefon ? "block" : "none";
             }
         },
+
 
         _telefonStateiniInputtanGuncelle: function() {
             var state = HK.State;
@@ -203,7 +202,7 @@ window.HizliKasa = window.HizliKasa || {};
                 HK._telefonProgramatikGuncelleniyor = true;
                 try {
                     phoneInput.value = "";
-                    if (HK.iti && typeof HK.iti.setFlag === 'function') HK.iti.setFlag("tr");
+                    if (HK.iti && typeof HK.iti.setCountry === 'function') HK.iti.setCountry("tr");
                 } finally {
                     clearTimeout(HK._telefonProgramatikTimer);
                     HK._telefonProgramatikTimer = setTimeout(function() {

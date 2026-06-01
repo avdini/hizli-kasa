@@ -171,7 +171,7 @@
                         HK.State.musteriTelefon = "";
                         HK.State.musteriTelefonUlkeKodu = "+90";
                         HK.State.musteriTelefonUlkeIso = "tr";
-                        if (HK.iti && typeof HK.iti.setFlag === 'function') HK.iti.setFlag("tr");
+                        if (HK.iti && typeof HK.iti.setCountry === 'function') HK.iti.setCountry("tr");
                     }
                     HK.CartManager.sepetiKaydet();
                     self._telefonGrupDurumunuGuncelle();
