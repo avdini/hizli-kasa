@@ -812,17 +812,27 @@ class Hizli_Kasa_Stock_Manager {
             SELECT im.order_item_id, i.order_id, im.meta_value as reservations
             FROM {$wpdb->prefix}woocommerce_order_itemmeta im
             JOIN {$wpdb->prefix}woocommerce_order_items i ON im.order_item_id = i.order_item_id
+            JOIN {$wpdb->prefix}woocommerce_order_itemmeta im2 ON im.order_item_id = im2.order_item_id
             JOIN {$wpdb->posts} p ON i.order_id = p.ID
             WHERE im.meta_key = '_hk_reservations'
+              AND im2.meta_key = '_product_id' AND im2.meta_value = %d
               AND p.post_status = 'wc-processing'
             ORDER BY p.post_date DESC
-        ");
+        ", $product_id);
         
         $results = $wpdb->get_results($orders_query);
         $remaining_to_fix = $conflict_qty;
 
         foreach ($results as $row) {
             if ($remaining_to_fix <= 0) break;
+
+            $item_variation_id = (int) wc_get_order_item_meta($row->order_item_id, '_variation_id', true);
+            if ($variation_id > 0 && $item_variation_id != $variation_id) {
+                continue;
+            }
+            if ($variation_id == 0 && $item_variation_id > 0) {
+                continue;
+            }
 
             $reservations = maybe_unserialize($row->reservations);
             if (!is_array($reservations)) continue;
@@ -837,15 +847,9 @@ class Hizli_Kasa_Stock_Manager {
                     $to_cancel = min($res_qty, $remaining_to_fix);
 
                     // Siparişi "Failed" (Başarısız) durumuna al
+                    // Not: Bu işlem 'woocommerce_order_status_failed' kancasını tetikleyecek ve 
+                    // handle_cancelled_order_stock fonksiyonu rezervasyonları otomatik olarak temizleyecektir.
                     $order->update_status('failed', sprintf('Stok yetersizliği nedeniyle sistem tarafından iptal edildi. (POS Satışı Çakışması, Ürün ID: %d, Depo ID: %d)', ($variation_id ?: $product_id), $location_id));
-                    
-                    // Rezervasyonu tamamen kaldır (çünkü sipariş failed oldu)
-                    foreach ($reservations as $r) {
-                        self::update_warehouse_stock_reservation($product_id, $variation_id, $r['depo_id'], -$r['qty']);
-                    }
-                    
-                    // Meta'yı temizle
-                    wc_delete_order_item_meta($row->order_item_id, '_hk_reservations');
                     
                     $remaining_to_fix -= $to_cancel;
                     hizli_kasa_log("Çatışma Çözüldü: Sipariş #{$row->order_id} başarısız durumuna alındı.");
