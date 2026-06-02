@@ -482,7 +482,7 @@ function hizli_kasa_terminal_update_stock($request)
  * Terminal için kategori ve marka listesini döner.
  */
 function hizli_kasa_terminal_get_filters($request) {
-    // Kategoriler
+    // Kategorileri ağaç yapısında getir
     $categories = get_terms([
         'taxonomy' => 'product_cat',
         'hide_empty' => false,
@@ -490,12 +490,8 @@ function hizli_kasa_terminal_get_filters($request) {
 
     $formatted_cats = [];
     if (!is_wp_error($categories)) {
-        foreach ($categories as $cat) {
-            $formatted_cats[] = [
-                'id'   => $cat->term_id,
-                'name' => $cat->name
-            ];
-        }
+        // Yardımcı fonksiyon: Kategorileri hiyerarşik olarak dizer
+        $formatted_cats = hizli_kasa_sort_terms_hierarchicaly($categories);
     }
 
     // Markalar (Çeşitli eklenti destekleri)
@@ -525,5 +521,29 @@ function hizli_kasa_terminal_get_filters($request) {
         'categories' => $formatted_cats,
         'brands'     => $formatted_brands
     ];
+}
+
+/**
+ * Kategorileri hiyerarşik olarak sıralar ve önüne tire ekler.
+ */
+function hizli_kasa_sort_terms_hierarchicaly(array &$terms, $parentId = 0, $depth = 0) {
+    $branch = array();
+
+    foreach ($terms as $term) {
+        if ($term->parent == $parentId) {
+            $prefix = str_repeat('— ', $depth);
+            $branch[] = [
+                'id'   => $term->term_id,
+                'name' => $prefix . $term->name
+            ];
+            
+            $children = hizli_kasa_sort_terms_hierarchicaly($terms, $term->term_id, $depth + 1);
+            if ($children) {
+                $branch = array_merge($branch, $children);
+            }
+        }
+    }
+
+    return $branch;
 }
 
