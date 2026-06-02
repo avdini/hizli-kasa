@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 7.8.3
+ * Version: 7.8.4
  * Author: Seyfullah Kurt
  */
 

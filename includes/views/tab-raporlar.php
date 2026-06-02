@@ -12,8 +12,8 @@
     <!-- Alt Sekme Navigasyonu -->
     <div class="rapor-alt-sekmeler">
         <button class="rapor-alt-btn aktif" data-target="rapor-tum-siparisler">🛍️ Tüm Siparişler</button>
-        <button class="rapor-alt-btn" data-target="rapor-internet-siparisleri">🌐 İnternet Siparişleri</button>
         <button class="rapor-alt-btn" data-target="rapor-iade-listesi">🔙 İadeler</button>
+        <button class="rapor-alt-btn" data-target="rapor-internet-siparisleri">🌐 İnternet Siparişleri</button>
         <button class="rapor-alt-btn" data-target="rapor-siparis-duzenleme">✏️ Sipariş Düzenlemeleri</button>
         <button class="rapor-alt-btn" data-target="rapor-gun-sonu-arsivi">📂 Gün Sonu Arşivi</button>
         <button class="rapor-alt-btn" data-target="rapor-ozet-istatistik">📈 İstatistik Dashboardu</button>
