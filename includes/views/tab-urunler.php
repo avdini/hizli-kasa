@@ -49,10 +49,42 @@ if (!defined('ABSPATH')) exit;
                 </select>
             </div>
 
+            <button id="btn-terminal-filtre-toggle" class="terminal-btn btn-filtre-toggle" title="Gelişmiş Filtreler">
+                <span class="ikon">🔍</span> Filtrele
+            </button>
+
             <div class="arama-kutusu">
                 <input type="text" id="terminal-arama-input" placeholder="Ürün adı veya barkod okutun..." autocomplete="off">
                 <span class="arama-ikon">🔍</span>
             </div>
+        </div>
+    </div>
+
+    <!-- Gelişmiş Filtre Paneli -->
+    <div id="terminal-filtre-bar" class="terminal-filter-bar glass" style="display:none;">
+        <div class="filter-group">
+            <label>Kategori:</label>
+            <select id="filter-category" class="terminal-select">
+                <option value="0">Tüm Kategoriler</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Marka:</label>
+            <select id="filter-brand" class="terminal-select">
+                <option value="0">Tüm Markalar</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Stok:</label>
+            <select id="filter-stock-status" class="terminal-select">
+                <option value="all">Hepsi</option>
+                <option value="instock">Stokta Var</option>
+                <option value="lowstock">Kritik Stok</option>
+                <option value="outofstock">Stokta Yok</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button id="btn-clear-filters" class="btn-clear-link">Temizle</button>
         </div>
     </div>
 

@@ -23,7 +23,12 @@
             orderby: 'date',
             order: 'desc',
             total: 0,
-            warehouses: []
+            warehouses: [],
+            filters: {
+                category: 0,
+                brand: 0,
+                stockStatus: 'all'
+            }
         },
 
         init: function() {
@@ -58,6 +63,66 @@
                 self.state.currentPage = 1;
                 self.loadProducts();
             });
+
+            // --- Filtre Paneli Toggle ---
+            const filterToggleBtn = document.getElementById('btn-terminal-filtre-toggle');
+            const filterBar = document.getElementById('terminal-filtre-bar');
+            if (filterToggleBtn && filterBar) {
+                filterToggleBtn.addEventListener('click', function() {
+                    const isHidden = filterBar.style.display === 'none';
+                    filterBar.style.display = isHidden ? 'flex' : 'none';
+                    filterToggleBtn.classList.toggle('active', isHidden);
+                    
+                    // Eğer ilk kez açılıyorsa filtreleri yükle
+                    if (isHidden && !self._filtersLoaded) {
+                        self.loadFilterOptions();
+                    }
+                });
+            }
+
+            // --- Filtre Dinleyicileri ---
+            const filterCat = document.getElementById('filter-category');
+            const filterBrand = document.getElementById('filter-brand');
+            const filterStock = document.getElementById('filter-stock-status');
+            const clearFilters = document.getElementById('btn-clear-filters');
+
+            if (filterCat) {
+                filterCat.addEventListener('change', function() {
+                    self.state.filters.category = parseInt(this.value);
+                    self.state.currentPage = 1;
+                    self.loadProducts();
+                });
+            }
+
+            if (filterBrand) {
+                filterBrand.addEventListener('change', function() {
+                    self.state.filters.brand = parseInt(this.value);
+                    self.state.currentPage = 1;
+                    self.loadProducts();
+                });
+            }
+
+            if (filterStock) {
+                filterStock.addEventListener('change', function() {
+                    self.state.filters.stockStatus = this.value;
+                    self.state.currentPage = 1;
+                    self.loadProducts();
+                });
+            }
+
+            if (clearFilters) {
+                clearFilters.addEventListener('click', function() {
+                    if (filterCat) filterCat.value = 0;
+                    if (filterBrand) filterBrand.value = 0;
+                    if (filterStock) filterStock.value = 'all';
+                    
+                    self.state.filters.category = 0;
+                    self.state.filters.brand = 0;
+                    self.state.filters.stockStatus = 'all';
+                    self.state.currentPage = 1;
+                    self.loadProducts();
+                });
+            }
 
             // --- Paginaton Listeners ---
             var prevBtn = document.getElementById('prev-page');
@@ -268,6 +333,48 @@
         },
 
         /**
+         * Filtre seçeneklerini (kategori ve marka) API'den yükler.
+         */
+        loadFilterOptions: async function() {
+            if (this._filtersLoading) return;
+            this._filtersLoading = true;
+
+            try {
+                const response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/terminal/filters', {
+                    headers: { 'X-WP-Nonce': kasaAyar.nonce }
+                });
+                const data = await response.json();
+
+                const filterCat = document.getElementById('filter-category');
+                const filterBrand = document.getElementById('filter-brand');
+
+                if (filterCat && data.categories) {
+                    data.categories.forEach(cat => {
+                        const opt = document.createElement('option');
+                        opt.value = cat.id;
+                        opt.textContent = cat.name;
+                        filterCat.appendChild(opt);
+                    });
+                }
+
+                if (filterBrand && data.brands) {
+                    data.brands.forEach(brand => {
+                        const opt = document.createElement('option');
+                        opt.value = brand.id;
+                        opt.textContent = brand.name;
+                        filterBrand.appendChild(opt);
+                    });
+                }
+
+                this._filtersLoaded = true;
+            } catch (e) {
+                console.error("Filtreler yüklenemedi", e);
+            } finally {
+                this._filtersLoading = false;
+            }
+        },
+
+        /**
          * Ürünleri API'den yükler.
          */
         loadProducts: async function() {
@@ -304,9 +411,16 @@
             try {
                 var offset = (this.state.currentPage - 1) * this.state.perPage;
                 var url = kasaAyar.rootApiUrl + 'hizli-kasa/v1/terminal/products?limit=' + this.state.perPage + '&offset=' + offset + '&depo_id=' + depoId + '&_=' + Date.now();
+                
                 if (s) url += '&s=' + encodeURIComponent(s);
                 if (this.state.orderby) url += '&orderby=' + this.state.orderby;
                 if (this.state.order)   url += '&order=' + this.state.order;
+
+                // Gelişmiş Filtreler
+                if (this.state.filters.category > 0) url += '&cat=' + this.state.filters.category;
+                if (this.state.filters.brand > 0)    url += '&brand=' + this.state.filters.brand;
+                if (this.state.filters.stockStatus !== 'all') url += '&stock_status=' + this.state.filters.stockStatus;
+
                 var fetchOptions = { headers: { 'X-WP-Nonce': kasaAyar.nonce } };
                 if (controller) {
                     fetchOptions.signal = controller.signal;

@@ -144,6 +144,92 @@
     }
 }
 
+/* =============================================
+   GELİŞMİŞ FİLTRE PANELİ
+   ============================================= */
+.terminal-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 20px;
+    margin-bottom: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--hk-border);
+    animation: filterSlideIn 0.3s ease;
+}
+
+@keyframes filterSlideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--hk-text-sub);
+    white-space: nowrap;
+}
+
+.filter-group select {
+    min-width: 150px;
+}
+
+.filter-actions {
+    margin-left: auto;
+}
+
+.btn-clear-link {
+    background: none;
+    border: none;
+    color: var(--hk-accent);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-clear-link:hover {
+    background: rgba(59, 130, 246, 0.1);
+    text-decoration: underline;
+}
+
+.btn-filtre-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.btn-filtre-toggle.active {
+    background: var(--hk-accent) !important;
+    color: #fff !important;
+    border-color: var(--hk-accent) !important;
+}
+
+@media screen and (max-width: 1190px) {
+    .terminal-filter-bar {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .filter-group select {
+        min-width: 120px;
+        font-size: 12px;
+        padding: 8px 30px 8px 10px;
+    }
+}
+
 .siralama-kutusu {
     position: relative;
 }

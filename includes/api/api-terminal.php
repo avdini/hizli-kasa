@@ -18,6 +18,14 @@ add_action('rest_api_init', function () {
         }
     ));
 
+    register_rest_route('hizli-kasa/v1', '/terminal/filters', array(
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_terminal_get_filters',
+        'permission_callback' => function () {
+            return hizli_kasa_can_access_app();
+        }
+    ));
+
 });
 
 /**
@@ -37,14 +45,52 @@ function hizli_kasa_terminal_products($request)
     $offset = intval($request->get_param('offset') ?: 0);
     $depo_id = intval($request->get_param('depo_id'));
     $s = sanitize_text_field($request->get_param('s'));
+    $cat_id = intval($request->get_param('cat'));
+    $brand_id = intval($request->get_param('brand'));
+    $stock_status = sanitize_text_field($request->get_param('stock_status'));
 
     $threshold = (int) get_option('hizli_kasa_kritik_stok_esigi', 5);
     $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
 
     $where = "p.post_status IN ('publish', 'private') AND p.post_type = 'product'";
     $join_extra = "";
+
+    // --- Kategori Filtresi ---
+    if ($cat_id > 0) {
+        $join_extra .= " INNER JOIN {$wpdb->term_relationships} tr_cat ON (p.ID = tr_cat.object_id)";
+        $join_extra .= $wpdb->prepare(" INNER JOIN {$wpdb->term_taxonomy} tt_cat ON (tr_cat.term_taxonomy_id = tt_cat.term_taxonomy_id AND tt_cat.taxonomy = 'product_cat' AND tt_cat.term_id = %d)", $cat_id);
+    }
+
+    // --- Marka Filtresi ---
+    if ($brand_id > 0) {
+        $brand_tax = 'product_brand';
+        if (!taxonomy_exists($brand_tax)) {
+            if (taxonomy_exists('pwb-brand')) $brand_tax = 'pwb-brand';
+            elseif (taxonomy_exists('brand')) $brand_tax = 'brand';
+        }
+        $join_extra .= " INNER JOIN {$wpdb->term_relationships} tr_brand ON (p.ID = tr_brand.object_id)";
+        $join_extra .= $wpdb->prepare(" INNER JOIN {$wpdb->term_taxonomy} tt_brand ON (tr_brand.term_taxonomy_id = tt_brand.term_taxonomy_id AND tt_brand.taxonomy = %s AND tt_brand.term_id = %d)", $brand_tax, $brand_id);
+    }
+
     if ($depo_id) {
-        $stock_join_type = !empty($s) ? 'LEFT JOIN' : 'INNER JOIN';
+        $stock_join_type = (!empty($s) || $cat_id > 0 || $brand_id > 0) ? 'LEFT JOIN' : 'INNER JOIN';
+        
+        // Stok Durumu Filtresi
+        if (!empty($stock_status) && $stock_status !== 'all') {
+            $stock_join_type = 'INNER JOIN'; // Filtre varsa eşleşme zorunlu
+            switch($stock_status) {
+                case 'instock':
+                    $where .= " AND sk_filter.quantity > 0";
+                    break;
+                case 'lowstock':
+                    $where .= $wpdb->prepare(" AND sk_filter.quantity > 0 AND sk_filter.quantity <= %d", $threshold);
+                    break;
+                case 'outofstock':
+                    $where .= " AND (sk_filter.quantity <= 0 OR sk_filter.quantity IS NULL)";
+                    break;
+            }
+        }
+        
         $join_extra .= $wpdb->prepare(" $stock_join_type $stok_table sk_filter ON (sk_filter.product_id = p.ID AND sk_filter.location_id = %d)", $depo_id);
     }
 
@@ -429,6 +475,55 @@ function hizli_kasa_terminal_update_stock($request)
         'success' => true,
         'new_qty' => $new_qty,
         'message' => 'Stok başarıyla güncellendi.'
+    ];
+}
+
+/**
+ * Terminal için kategori ve marka listesini döner.
+ */
+function hizli_kasa_terminal_get_filters($request) {
+    // Kategoriler
+    $categories = get_terms([
+        'taxonomy' => 'product_cat',
+        'hide_empty' => false,
+    ]);
+
+    $formatted_cats = [];
+    if (!is_wp_error($categories)) {
+        foreach ($categories as $cat) {
+            $formatted_cats[] = [
+                'id'   => $cat->term_id,
+                'name' => $cat->name
+            ];
+        }
+    }
+
+    // Markalar (Çeşitli eklenti destekleri)
+    $brand_tax = 'product_brand';
+    if (!taxonomy_exists($brand_tax)) {
+        if (taxonomy_exists('pwb-brand')) $brand_tax = 'pwb-brand';
+        elseif (taxonomy_exists('brand')) $brand_tax = 'brand';
+    }
+
+    $formatted_brands = [];
+    if (taxonomy_exists($brand_tax)) {
+        $brands = get_terms([
+            'taxonomy' => $brand_tax,
+            'hide_empty' => false,
+        ]);
+        if (!is_wp_error($brands)) {
+            foreach ($brands as $brand) {
+                $formatted_brands[] = [
+                    'id'   => $brand->term_id,
+                    'name' => $brand->name
+                ];
+            }
+        }
+    }
+
+    return [
+        'categories' => $formatted_cats,
+        'brands'     => $formatted_brands
     ];
 }
 
