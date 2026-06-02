@@ -26,6 +26,14 @@ add_action('rest_api_init', function () {
         }
     ));
 
+    register_rest_route('hizli-kasa/v1', '/reports/internet-orders', array(
+        'methods' => 'GET',
+        'callback' => 'hizli_kasa_get_reports_internet_orders',
+        'permission_callback' => function () {
+            return hizli_kasa_can_access_app();
+        }
+    ));
+
     register_rest_route('hizli-kasa/v1', '/reports/order-receipt/(?P<id>\d+)', array(
         'methods' => 'GET',
         'callback' => 'hizli_kasa_get_reports_order_receipt',
@@ -333,7 +341,7 @@ function hizli_kasa_gun_sonu_raporu($request)
  */
 function hizli_kasa_get_reports_orders($request)
 {
-    return hizli_kasa_get_reports_data($request, false);
+    return hizli_kasa_get_reports_data($request, 'pos_orders');
 }
 
 /**
@@ -341,7 +349,15 @@ function hizli_kasa_get_reports_orders($request)
  */
 function hizli_kasa_get_reports_refunds($request)
 {
-    return hizli_kasa_get_reports_data($request, true);
+    return hizli_kasa_get_reports_data($request, 'pos_refunds');
+}
+
+/**
+ * Raporlar için tüm internet siparişlerini getirir.
+ */
+function hizli_kasa_get_reports_internet_orders($request)
+{
+    return hizli_kasa_get_reports_data($request, 'internet_orders');
 }
 
 /**
@@ -519,7 +535,7 @@ function hizli_kasa_get_reports_order_receipt($request)
 /**
  * Rapor verilerini çeken ortak fonksiyon.
  */
-function hizli_kasa_get_reports_data($request, $is_refund = false)
+function hizli_kasa_get_reports_data($request, $report_type = 'pos_orders')
 {
     $paged = $request->get_param('page') ? intval($request->get_param('page')) : 1;
     $per_page = $request->get_param('per_page') ? intval($request->get_param('per_page')) : 20;
@@ -546,37 +562,45 @@ function hizli_kasa_get_reports_data($request, $is_refund = false)
 
     $meta_query = array();
 
-    // Sadece POS Siparişlerini Getir
-    $meta_query[] = array(
-        'key' => '_hizli_kasa_kasa_no',
-        'compare' => 'EXISTS',
-    );
-
-    $depo_id = intval($request->get_param('depo_id'));
-    if ($depo_id > 0) {
+    // Rapor Türüne Göre Filtreleme
+    if ($report_type === 'pos_orders' || $report_type === 'pos_refunds') {
+        // Sadece POS Siparişlerini Getir
         $meta_query[] = array(
-            'key' => '_hk_cikis_depo_id',
-            'value' => $depo_id,
+            'key' => '_hizli_kasa_kasa_no',
+            'compare' => 'EXISTS',
         );
-    }
 
-    // İade / Satış Ayrımı
-    if ($is_refund) {
+        $depo_id = intval($request->get_param('depo_id'));
+        if ($depo_id > 0) {
+            $meta_query[] = array(
+                'key' => '_hk_cikis_depo_id',
+                'value' => $depo_id,
+            );
+        }
+
+        // İade / Satış Ayrımı
+        if ($report_type === 'pos_refunds') {
+            $meta_query[] = array(
+                'key' => '_hizli_kasa_is_refund',
+                'value' => 'yes',
+                'compare' => '=',
+            );
+        } else {
+            $meta_query[] = array(
+                'key' => '_hizli_kasa_is_refund',
+                'compare' => 'NOT EXISTS',
+            );
+        }
+    } else if ($report_type === 'internet_orders') {
+        // POS Dışı (İnternet) Siparişleri Getir
         $meta_query[] = array(
-            'key' => '_hizli_kasa_is_refund',
-            'value' => 'yes',
-            'compare' => '=',
-        );
-    } else {
-        $meta_query[] = array(
-            'key' => '_hizli_kasa_is_refund',
+            'key' => '_hizli_kasa_kasa_no',
             'compare' => 'NOT EXISTS',
         );
     }
 
-    $meta_query['relation'] = 'AND';
-
     if (!empty($meta_query)) {
+        $meta_query['relation'] = 'AND';
         $args['meta_query'] = $meta_query;
     }
 
@@ -600,11 +624,13 @@ function hizli_kasa_get_reports_data($request, $is_refund = false)
         if (!$order instanceof WC_Order)
             continue;
 
-        // HPOS Güvenlik Filtresi: meta_query HPOS'ta bazen is_refund koşulunu
-        // es geçebiliyor. PHP seviyesinde ikinci kez kontrol ediyoruz.
+        // HPOS Güvenlik Filtresi
         $order_is_refund = ($order->get_meta('_hizli_kasa_is_refund') === 'yes');
-        if ($is_refund && !$order_is_refund) continue; // İade bekleniyorken normal sipariş geldi
-        if (!$is_refund && $order_is_refund) continue;  // Sipariş bekleniyorken iade geldi
+        $has_kasa_no = $order->get_meta('_hizli_kasa_kasa_no') ? true : false;
+
+        if ($report_type === 'pos_refunds' && (!$order_is_refund || !$has_kasa_no)) continue;
+        if ($report_type === 'pos_orders' && ($order_is_refund || !$has_kasa_no)) continue;
+        if ($report_type === 'internet_orders' && $has_kasa_no) continue;
 
         $date_created = $order->get_date_created();
         $date_str = $date_created ? $date_created->date('Y-m-d H:i:s') : 'Bilinmiyor';
@@ -613,10 +639,12 @@ function hizli_kasa_get_reports_data($request, $is_refund = false)
             'id' => $order->get_id(),
             'date' => $date_str,
             'total' => $order->get_total(),
-            'cashier' => $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmeyen',
-            'kasa_no' => $order->get_meta('_hizli_kasa_kasa_no') ?: 'Bilinmeyen',
+            'cashier' => $order->get_meta('_hizli_kasa_kasiyer') ?: ($has_kasa_no ? 'Bilinmeyen' : 'Müşteri'),
+            'kasa_no' => $order->get_meta('_hizli_kasa_kasa_no') ?: ($has_kasa_no ? 'Bilinmeyen' : 'Online'),
             'depo_id' => (int) $order->get_meta('_hk_cikis_depo_id'),
             'depo_adi' => $order->get_meta('_hk_cikis_depo_adi') ?: '-',
+            'status' => wc_get_order_status_name($order->get_status()),
+            'customer' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'payment' => $order->get_payment_method_title(),
             'items' => array(),
             'meta' => array(),

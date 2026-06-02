@@ -12,6 +12,7 @@
     <!-- Alt Sekme Navigasyonu -->
     <div class="rapor-alt-sekmeler">
         <button class="rapor-alt-btn aktif" data-target="rapor-tum-siparisler">🛍️ Tüm Siparişler</button>
+        <button class="rapor-alt-btn" data-target="rapor-internet-siparisleri">🌐 İnternet Siparişleri</button>
         <button class="rapor-alt-btn" data-target="rapor-iade-listesi">🔙 İadeler</button>
         <button class="rapor-alt-btn" data-target="rapor-siparis-duzenleme">✏️ Sipariş Düzenlemeleri</button>
         <button class="rapor-alt-btn" data-target="rapor-gun-sonu-arsivi">📂 Gün Sonu Arşivi</button>
@@ -43,6 +44,33 @@
                 </tbody>
             </table>
             <div id="all-orders-pagination" class="hk-pagination"></div>
+        </div>
+    </div>
+
+    <div id="rapor-internet-siparisleri" class="rapor-icerik-paneli">
+        <div class="rapor-kart">
+            <div class="rapor-kart-header">
+                <h3 class="rapor-kart-title">İnternet Siparişleri</h3>
+                <input type="text" id="internet-order-search-input" class="hk-input rapor-arama-input" placeholder="Sipariş ID veya Müşteri Ara...">
+            </div>
+            
+            <table class="gs-tablo" id="internet-orders-table">
+                <thead>
+                    <tr>
+                        <th>Tarih/Saat</th>
+                        <th>Sipariş ID</th>
+                        <th>Müşteri</th>
+                        <th>Ürünler</th>
+                        <th>Durum</th>
+                        <th>Toplam</th>
+                        <th>Detay</th>
+                    </tr>
+                </thead>
+                <tbody id="internet-orders-body">
+                    <tr><td colspan="7" class="rapor-empty-td">Sorgulama yapın...</td></tr>
+                </tbody>
+            </table>
+            <div id="internet-orders-pagination" class="hk-pagination"></div>
         </div>
     </div>
 

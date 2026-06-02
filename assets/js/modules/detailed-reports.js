@@ -10,6 +10,7 @@
     HK.DetailedReports = {
         currentPageOrders: 1,
         currentPageRefunds: 1,
+        currentPageInternetOrders: 1,
         perPage: 50,
 
         init: function() {
@@ -61,6 +62,8 @@
 
                     if (target === 'rapor-tum-siparisler') {
                         self.loadOrders(1);
+                    } else if (target === 'rapor-internet-siparisleri') {
+                        self.loadInternetOrders(1);
                     } else if (target === 'rapor-iade-listesi') {
                         self.loadRefunds(1);
                     } else if (target === 'rapor-gun-sonu-arsivi') {
@@ -74,18 +77,21 @@
             // Arama inputları
             var orderSearch = document.getElementById("order-search-input");
             if (orderSearch) {
-                console.log("HK.DetailedReports: Order search input found");
                 orderSearch.addEventListener("keyup", HK.utils.debounce(function() {
-                    console.log("HK.DetailedReports: Order search triggered", this.value);
                     self.loadOrders(1);
+                }, 500));
+            }
+
+            var internetOrderSearch = document.getElementById("internet-order-search-input");
+            if (internetOrderSearch) {
+                internetOrderSearch.addEventListener("keyup", HK.utils.debounce(function() {
+                    self.loadInternetOrders(1);
                 }, 500));
             }
 
             var refundSearch = document.getElementById("refund-search-input");
             if (refundSearch) {
-                console.log("HK.DetailedReports: Refund search input found");
                 refundSearch.addEventListener("keyup", HK.utils.debounce(function() {
-                    console.log("HK.DetailedReports: Refund search triggered", this.value);
                     self.loadRefunds(1);
                 }, 500));
             }
@@ -93,13 +99,13 @@
             // Global rapor yenile butonu
             var refreshBtn = document.getElementById("rapor-yenile");
             if (refreshBtn) {
-                console.log("HK.DetailedReports: Refresh button found");
                 refreshBtn.addEventListener("click", function() {
                     var activeBtn = document.querySelector(".rapor-alt-btn.aktif");
                     if (!activeBtn) return;
                     var activeTarget = activeBtn.dataset.target;
-                    console.log("HK.DetailedReports: Refresh clicked, active target:", activeTarget);
+                    
                     if (activeTarget === 'rapor-tum-siparisler') self.loadOrders(1);
+                    if (activeTarget === 'rapor-internet-siparisleri') self.loadInternetOrders(1);
                     if (activeTarget === 'rapor-iade-listesi') self.loadRefunds(1);
                     if (activeTarget === 'rapor-gun-sonu-arsivi') self.loadDayEndHistory();
                     if (activeTarget === 'rapor-depo-sayimlari') self.loadSayimHistory();
@@ -116,11 +122,43 @@
                 var reportsTabContainer = document.querySelector('.rapor-alt-sekmeler');
                 if (reportsTabContainer && reportsTabContainer.offsetParent !== null) {
                     if (activeTarget === 'rapor-tum-siparisler') self.loadOrders(1);
+                    else if (activeTarget === 'rapor-internet-siparisleri') self.loadInternetOrders(1);
                     else if (activeTarget === 'rapor-iade-listesi') self.loadRefunds(1);
                     else if (activeTarget === 'rapor-gun-sonu-arsivi') self.loadDayEndHistory();
                     else if (activeTarget === 'rapor-depo-sayimlari') self.loadSayimHistory();
                 }
             });
+        },
+
+        loadInternetOrders: async function(page) {
+            this.currentPageInternetOrders = page || 1;
+            var tbody = document.getElementById("internet-orders-body");
+            var pagin = document.getElementById("internet-orders-pagination");
+            if (!tbody) return;
+
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;">Yükleniyor...</td></tr>';
+            
+            var dateStart = document.getElementById("rapor-tarih-bas").value;
+            var dateEnd = document.getElementById("rapor-tarih-bit").value;
+            var search = document.getElementById("internet-order-search-input").value;
+
+            try {
+                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/internet-orders?page=${this.currentPageInternetOrders}&per_page=${this.perPage}&date_start=${dateStart}&date_end=${dateEnd}&search=${encodeURIComponent(search)}`;
+                var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
+                var res = await response.json();
+
+                if (!response.ok) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:orange;">⚠️ ' + (res.message || 'Siparişler yüklenemedi.') + '</td></tr>';
+                    return;
+                }
+
+                this.renderTable(tbody, res.orders, 'internet_orders');
+                this.renderPagination(pagin, res.max_pages, this.currentPageInternetOrders, 'internet_orders');
+
+            } catch (e) {
+                console.error("HK.DetailedReports: Load internet orders error", e);
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px; color:red;">Hata: Veriler çekilemedi.</td></tr>';
+            }
         },
 
         fieldLabelMap: {
@@ -495,8 +533,11 @@
             console.log(`HK.DetailedReports: Rendering ${type} table, count:`, orders ? orders.length : 0);
             var self = this;
             tbody.innerHTML = "";
+            
+            var colCount = (type === 'internet_orders') ? 7 : 6;
+
             if (!orders || orders.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px;">Kayıt bulunamadı.</td></tr>';
+                tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center; padding:40px;">Kayıt bulunamadı.</td></tr>`;
                 return;
             }
 
@@ -504,31 +545,46 @@
                 var itemsHtml = this.renderOrderItemsList(order.items);
                 var metaDetails = this.renderOrderMetaDetails(order.meta);
                 var orderTotal = this.formatCurrency(order.total || 0);
-                var kasaNoLabel = order.kasa_no ? ('Kasa: ' + this.escapeHtml(order.kasa_no)) : '-';
-                var paymentBadge = this.getPaymentBadgeHtml(order);
-
+                
                 var tr = document.createElement("tr");
                 var actionButtons = '<button class="btn-detail" data-id="' + this.escapeHtml(order.id || '') + '">🔍 Detay</button>';
-                if (type === 'orders') {
-                    actionButtons += '<button class="btn-reprint" data-id="' + this.escapeHtml(order.id || '') + '">🧾 Fiş Yazdır</button>';
+                
+                if (type === 'internet_orders') {
+                    tr.innerHTML = `
+                        <td>${this.escapeHtml(order.date || '-')}</td>
+                        <td><span class="report-order-id">#${this.escapeHtml(order.id || '-')}</span></td>
+                        <td>${this.escapeHtml(order.customer || '-')}</td>
+                        <td>${itemsHtml}</td>
+                        <td><span class="status-badge status-${this.escapeHtml(order.status || 'unknown')}">${this.escapeHtml(order.status || '-')}</span></td>
+                        <td class="report-total-cell">${orderTotal}</td>
+                        <td><div class="report-action-buttons">${actionButtons}</div></td>
+                    `;
+                } else {
+                    var kasaNoLabel = order.kasa_no ? ('Kasa: ' + this.escapeHtml(order.kasa_no)) : '-';
+                    var paymentBadge = this.getPaymentBadgeHtml(order);
+                    
+                    if (type === 'orders') {
+                        actionButtons += '<button class="btn-reprint" data-id="' + this.escapeHtml(order.id || '') + '">🧾 Fiş Yazdır</button>';
+                    }
+                    
+                    tr.innerHTML = `
+                        <td>${this.escapeHtml(order.date || '-')}</td>
+                        <td>
+                            <span class="report-order-id">#${this.escapeHtml(order.id || '-')}</span>
+                            <div class="report-payment-container">${paymentBadge}</div>
+                        </td>
+                        <td>${this.escapeHtml(order.cashier || '-')} <br><small class="report-kasa-no">${kasaNoLabel}</small></td>
+                        <td>${itemsHtml}</td>
+                        <td class="report-total-cell">${orderTotal}</td>
+                        <td><div class="report-action-buttons">${actionButtons}</div></td>
+                    `;
                 }
-                tr.innerHTML = `
-                    <td>${this.escapeHtml(order.date || '-')}</td>
-                    <td>
-                        <span class="report-order-id">#${this.escapeHtml(order.id || '-')}</span>
-                        <div class="report-payment-container">${paymentBadge}</div>
-                    </td>
-                    <td>${this.escapeHtml(order.cashier || '-')} <br><small class="report-kasa-no">${kasaNoLabel}</small></td>
-                    <td>${itemsHtml}</td>
-                    <td class="report-total-cell">${orderTotal}</td>
-                    <td><div class="report-action-buttons">${actionButtons}</div></td>
-                `;
                 tbody.appendChild(tr);
 
                 var detailTr = document.createElement("tr");
                 detailTr.className = "meta-details-row";
                 detailTr.id = `meta-row-${order.id}`;
-                detailTr.innerHTML = `<td colspan="6"><div class="meta-details-container">${metaDetails || 'Detay bilgisi yok.'}</div></td>`;
+                detailTr.innerHTML = `<td colspan="${colCount}"><div class="meta-details-container">${metaDetails || 'Detay bilgisi yok.'}</div></td>`;
                 tbody.appendChild(detailTr);
             });
 
@@ -592,6 +648,7 @@
                 btn.innerText = i;
                 btn.addEventListener("click", () => {
                     if (type === 'orders') this.loadOrders(i);
+                    else if (type === 'internet_orders') this.loadInternetOrders(i);
                     else this.loadRefunds(i);
                 });
                 container.appendChild(btn);

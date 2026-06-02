@@ -695,3 +695,53 @@
     color: var(--hk-warning);
     border-color: rgba(245, 158, 11, 0.25);
 }
+
+/* Sipariş Durum Rozetleri */
+.status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+}
+
+.status-badge.status-processing {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--hk-accent);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.status-badge.status-completed {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--hk-success);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.status-badge.status-on-hold {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--hk-warning);
+    border-color: rgba(245, 158, 11, 0.2);
+}
+
+.status-badge.status-pending {
+    background-color: rgba(100, 116, 139, 0.1);
+    color: var(--hk-text-muted);
+    border-color: rgba(100, 116, 139, 0.2);
+}
+
+#hizli-kasa-app.theme-dark .status-badge.status-processing {
+    background-color: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.25);
+}
+
+#hizli-kasa-app.theme-dark .status-badge.status-completed {
+    background-color: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+#hizli-kasa-app.theme-dark .status-badge.status-on-hold {
+    background-color: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.25);
+}
