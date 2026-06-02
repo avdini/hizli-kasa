@@ -222,6 +222,7 @@
 .btn-filtre-toggle:hover {
     border-color: var(--hk-accent);
     background: var(--hk-bg-hover);
+    color: var(--hk-text-main);
     transform: translateY(-1px);
     box-shadow: var(--hk-shadow-md);
 }
@@ -229,17 +230,19 @@
 .btn-filtre-toggle:focus {
     background: var(--hk-bg-input);
     border-color: var(--hk-accent);
+    color: var(--hk-text-main);
 }
 
 .btn-filtre-toggle.active {
     background: linear-gradient(135deg, var(--hk-accent), #2563eb);
-    color: #fff;
+    color: #fff !important;
     border-color: var(--hk-accent);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .btn-filtre-toggle.active:focus {
     background: linear-gradient(135deg, var(--hk-accent), #2563eb);
+    color: #fff !important;
 }
 
 @media screen and (max-width: 1190px) {
