@@ -210,10 +210,13 @@
     white-space: nowrap;
     border-radius: 12px;
     background: var(--hk-bg-input);
+    background-image: none;
     border: 1px solid var(--hk-border);
     color: var(--hk-text-main);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--hk-shadow-sm);
+    cursor: pointer;
+    outline: none;
 }
 
 .btn-filtre-toggle:hover {
@@ -223,11 +226,20 @@
     box-shadow: var(--hk-shadow-md);
 }
 
+.btn-filtre-toggle:focus {
+    background: var(--hk-bg-input);
+    border-color: var(--hk-accent);
+}
+
 .btn-filtre-toggle.active {
-    background: linear-gradient(135deg, var(--hk-accent), #2563eb) !important;
-    color: #fff !important;
-    border-color: var(--hk-accent) !important;
+    background: linear-gradient(135deg, var(--hk-accent), #2563eb);
+    color: #fff;
+    border-color: var(--hk-accent);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-filtre-toggle.active:focus {
+    background: linear-gradient(135deg, var(--hk-accent), #2563eb);
 }
 
 @media screen and (max-width: 1190px) {
