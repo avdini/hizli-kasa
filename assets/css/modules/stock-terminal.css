@@ -61,6 +61,8 @@
 .arama-kutusu {
     position: relative;
     width: 400px;
+    flex-shrink: 1;
+    min-width: 200px;
 }
 
 #terminal-arama-input {
@@ -93,6 +95,53 @@
     display: flex;
     align-items: center;
     gap: 15px;
+    flex: 1;
+    justify-content: flex-end;
+    min-width: 0;
+}
+
+@media screen and (max-width: 1190px) {
+    .terminal-header {
+        padding: 15px;
+        gap: 15px;
+    }
+
+    .arama-kutusu-wrapper {
+        gap: 10px;
+    }
+
+    .arama-kutusu {
+        width: auto;
+        flex: 1;
+        max-width: 350px;
+        min-width: 150px;
+    }
+
+    #terminal-arama-input {
+        padding: 12px 40px 12px 15px;
+        font-size: 14px;
+    }
+
+    .terminal-select {
+        min-width: 160px;
+        padding: 10px 35px 10px 12px;
+        font-size: 13px;
+    }
+
+    .btn-mobil-arac, .btn-stok-sayimi {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+    }
+
+    .depo-switcher {
+        min-width: 180px;
+        padding: 8px 12px;
+    }
+
+    .depo-switcher-trigger span:first-child {
+        max-width: 110px;
+        font-size: 13px;
+    }
 }
 
 .siralama-kutusu {
