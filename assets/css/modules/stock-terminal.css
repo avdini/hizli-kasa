@@ -148,7 +148,7 @@
    GELİŞMİŞ FİLTRE PANELİ
    ============================================= */
 .terminal-filter-bar {
-    display: flex;
+    display: none; /* JS ile açılır */
     align-items: center;
     gap: 20px;
     padding: 12px 20px;
@@ -204,16 +204,30 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 15px;
+    padding: 10px 18px;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     white-space: nowrap;
+    border-radius: 12px;
+    background: var(--hk-bg-input);
+    border: 1px solid var(--hk-border);
+    color: var(--hk-text-main);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--hk-shadow-sm);
+}
+
+.btn-filtre-toggle:hover {
+    border-color: var(--hk-accent);
+    background: var(--hk-bg-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--hk-shadow-md);
 }
 
 .btn-filtre-toggle.active {
-    background: var(--hk-accent) !important;
+    background: linear-gradient(135deg, var(--hk-accent), #2563eb) !important;
     color: #fff !important;
     border-color: var(--hk-accent) !important;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 @media screen and (max-width: 1190px) {
@@ -991,8 +1005,9 @@ body.dark-mode .other-stock-badge {
 /* --- Mobil Araç Butonu --- */
 .mobil-arac-trigger-wrapper {
     display: flex;
-    gap: 10px;
-    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
 }
 
 .btn-mobil-arac {

@@ -61,7 +61,7 @@ if (!defined('ABSPATH')) exit;
     </div>
 
     <!-- Gelişmiş Filtre Paneli -->
-    <div id="terminal-filtre-bar" class="terminal-filter-bar glass" style="display:none;">
+    <div id="terminal-filtre-bar" class="terminal-filter-bar glass">
         <div class="filter-group">
             <label>Kategori:</label>
             <select id="filter-category" class="terminal-select">
