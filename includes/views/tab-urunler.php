@@ -139,6 +139,10 @@ if (!defined('ABSPATH')) exit;
                 <div class="sayim-kart glass sayim-ayarlar-kart">
                     <h4>Ayarlar & Bilgi</h4>
                     <div class="sayim-info-item">
+                        <label>Depo:</label>
+                        <span id="sayim-depo-adi">-</span>
+                    </div>
+                    <div class="sayim-info-item">
                         <label>Başlatan:</label>
                         <span id="sayim-personel-adi">-</span>
                     </div>

@@ -43,6 +43,7 @@
                 aktifEkrani: document.getElementById('sayim-aktif-ekrani'),
                 btnSayimBaslat: document.getElementById('btn-sayim-baslat'),
                 barkodInput: document.getElementById('sayim-barkod-input'),
+                depoAdi: document.getElementById('sayim-depo-adi'),
                 personelAdi: document.getElementById('sayim-personel-adi'),
                 tarihLabel: document.getElementById('sayim-tarihi'),
                 soundCheckbox: document.getElementById('chk-sayim-ses'),
@@ -250,6 +251,9 @@
                     self.elements.aktifEkrani.style.display = 'grid';
 
                     // Update UI labels
+                    if (HK.DepoManager) {
+                        self.elements.depoAdi.textContent = HK.DepoManager.getViewDepoName();
+                    }
                     self.elements.personelAdi.textContent = data.session.created_by;
                     
                     // Format date beautifully
