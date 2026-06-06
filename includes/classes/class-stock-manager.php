@@ -215,7 +215,7 @@ class Hizli_Kasa_Stock_Manager {
         hizli_kasa_log("update_warehouse_stock çağrıldı: P:$product_id, V:$variation_id, L:$location_id, Change:$change_amount");
 
         $current = $wpdb->get_row($wpdb->prepare("
-            SELECT id, quantity FROM {$tables['stok_konumlari']} 
+            SELECT id, quantity, reserved FROM {$tables['stok_konumlari']} 
             WHERE product_id = %d AND variation_id = %d AND location_id = %d
         ", $product_id, $variation_id, $location_id));
 
