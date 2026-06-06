@@ -36,6 +36,80 @@
         ].join(''));
     }
 
+    // ===== Siparis Bilgileri: Odeme yontemi degisikligi =====
+    function handlePaymentMethodChange(root) {
+        var select = qs('#hk-oi-payment-method', root);
+        if (!select) return;
+
+        var method = select.value;
+        var orderTotal = parseFloat(qs('#hk-oi-order-total', root).value) || 0;
+        var nakitInput = qs('#hk-oi-nakit', root);
+        var kartInput = qs('#hk-oi-kart', root);
+        var ibanInput = qs('#hk-oi-iban', root);
+        var hint = qs('#hk-oi-payment-hint', root);
+
+        if (method === 'split') {
+            // Bolunmus odeme: tum alanlar duzenlenebilir
+            nakitInput.removeAttribute('readonly');
+            kartInput.removeAttribute('readonly');
+            ibanInput.removeAttribute('readonly');
+            if (hint) hint.textContent = 'Bolunmus odeme — tutarlari asagidan duzenleyebilirsiniz.';
+        } else {
+            // Tek kanal: otomatik hesapla ve kilitle
+            nakitInput.setAttribute('readonly', 'readonly');
+            kartInput.setAttribute('readonly', 'readonly');
+            ibanInput.setAttribute('readonly', 'readonly');
+
+            nakitInput.value = '0.00';
+            kartInput.value = '0.00';
+            ibanInput.value = '0.00';
+
+            if (method === 'cod') {
+                nakitInput.value = orderTotal.toFixed(2);
+            } else if (method === 'other') {
+                kartInput.value = orderTotal.toFixed(2);
+            } else if (method === 'bacs') {
+                ibanInput.value = orderTotal.toFixed(2);
+            }
+
+            if (hint) hint.textContent = 'Yontem degistirildiginde tutarlar otomatik guncellenir.';
+        }
+    }
+
+    // ===== Siparis Bilgileri: Depo degisikligi =====
+    function handleDepoChange(root) {
+        var select = qs('#hk-oi-depo', root);
+        var depoAdiInput = qs('#hk-oi-depo-adi', root);
+        if (!select || !depoAdiInput) return;
+
+        var selectedOption = select.options[select.selectedIndex];
+        var depoAdi = selectedOption && selectedOption.value ? selectedOption.getAttribute('data-name') || selectedOption.text : '';
+        depoAdiInput.value = depoAdi;
+    }
+
+    // ===== Siparis Bilgileri: order_info payload =====
+    function collectOrderInfo(root) {
+        var depoSelect = qs('#hk-oi-depo', root);
+        var depoOption = depoSelect ? depoSelect.options[depoSelect.selectedIndex] : null;
+
+        return {
+            kasiyer: (qs('#hk-oi-kasiyer', root) || {}).value || '',
+            kasa_no: (qs('#hk-oi-kasa-no', root) || {}).value || '',
+            kaynak: (qs('#hk-oi-kaynak', root) || {}).value || '',
+            rapor_kaynak: (qs('#hk-oi-rapor-kaynak', root) || {}).value || '',
+            telefon: (qs('#hk-oi-telefon', root) || {}).value || '',
+            note: (qs('#hk-oi-note', root) || {}).value || '',
+            payment_method: (qs('#hk-oi-payment-method', root) || {}).value || '',
+            odeme_nakit: (qs('#hk-oi-nakit', root) || {}).value || '0',
+            odeme_kart: (qs('#hk-oi-kart', root) || {}).value || '0',
+            odeme_iban: (qs('#hk-oi-iban', root) || {}).value || '0',
+            depo_id: depoSelect ? depoSelect.value : '',
+            depo_adi: depoOption && depoOption.value ? (depoOption.getAttribute('data-name') || depoOption.text) : '',
+            original_order: (qs('#hk-oi-orijinal-siparis', root) || {}).value || '',
+            toplam_iskonto: (qs('#hk-oi-toplam-iskonto', root) || {}).value || '0'
+        };
+    }
+
     function collectPayload(root) {
         return {
             order_id: root.getAttribute('data-order-id'),
@@ -92,7 +166,8 @@
                     key: qs('.hk-aot-meta-key', row).value,
                     value: qs('.hk-aot-meta-value', row).value
                 };
-            })
+            }),
+            order_info: collectOrderInfo(root)
         };
     }
 
@@ -102,6 +177,23 @@
         message.textContent = text || '';
     }
 
+    // ===== Change event handler (odeme yontemi + depo) =====
+    document.addEventListener('change', function(event) {
+        var root = event.target.closest('.hk-admin-order-tools');
+        if (!root) return;
+
+        if (event.target.id === 'hk-oi-payment-method') {
+            handlePaymentMethodChange(root);
+            return;
+        }
+
+        if (event.target.id === 'hk-oi-depo') {
+            handleDepoChange(root);
+            return;
+        }
+    });
+
+    // ===== Click event handler =====
     document.addEventListener('click', function(event) {
         var root = event.target.closest('.hk-admin-order-tools');
         if (!root) {

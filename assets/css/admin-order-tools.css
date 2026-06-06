@@ -1,3 +1,5 @@
+/* ===== Hızlı Kasa – Admin Order Tools ===== */
+
 .hk-admin-order-tools {
     background: #fff;
     display: flex;
@@ -51,6 +53,7 @@
     border: 1px solid #dcdcde;
     border-radius: 8px;
     display: flex;
+    flex-wrap: wrap;
     gap: 4px;
     padding: 4px;
     width: fit-content;
@@ -219,6 +222,203 @@
     color: #646970;
 }
 
+/* ===== Sipariş Bilgileri Panel ===== */
+
+/* Kart kapsayıcı */
+.hk-aot-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Tekil kart */
+.hk-aot-card {
+    background: #f8fafc;
+    border: 1px solid #e2e6eb;
+    border-radius: 10px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.hk-aot-card-header {
+    align-items: center;
+    background: linear-gradient(135deg, #f0f4f8, #e8ecf1);
+    border-bottom: 1px solid #e2e6eb;
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px;
+}
+
+.hk-aot-card-header .dashicons {
+    color: #3858e9;
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+}
+
+.hk-aot-card-header h4 {
+    color: #1d2327;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.hk-aot-card-body {
+    padding: 16px;
+}
+
+/* Kart içi form grid */
+.hk-aot-form-grid {
+    display: grid;
+    gap: 14px;
+    grid-template-columns: 1fr 1fr;
+}
+
+.hk-aot-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.hk-aot-form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.hk-aot-form-group label {
+    color: #50575e;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.hk-aot-form-group input,
+.hk-aot-form-group select,
+.hk-aot-form-group textarea {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 6px;
+    color: #1d2327;
+    font-size: 13px;
+    padding: 8px 10px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    width: 100%;
+}
+
+.hk-aot-form-group input:focus,
+.hk-aot-form-group select:focus,
+.hk-aot-form-group textarea:focus {
+    border-color: #3858e9;
+    box-shadow: 0 0 0 1px #3858e9;
+    outline: none;
+}
+
+.hk-aot-form-group input[readonly] {
+    background: #f0f0f1;
+    color: #646970;
+    cursor: not-allowed;
+}
+
+.hk-aot-form-group textarea {
+    min-height: 60px;
+    resize: vertical;
+}
+
+/* Ödeme tutarları satırı (3 sütun) */
+.hk-aot-payment-amounts {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* Toggle / Checkbox stili */
+.hk-aot-toggle-group {
+    align-items: center;
+    display: flex;
+    gap: 8px;
+}
+
+.hk-aot-toggle-group input[type="checkbox"] {
+    height: 18px;
+    width: 18px;
+}
+
+.hk-aot-toggle-group span {
+    color: #3c434a;
+    font-size: 13px;
+}
+
+/* Bilgi rozetleri */
+.hk-aot-badge {
+    border-radius: 999px;
+    display: inline-flex;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    padding: 5px 10px;
+}
+
+.hk-aot-badge.is-yes {
+    background: #e6f4ea;
+    color: #137333;
+}
+
+.hk-aot-badge.is-no {
+    background: #f0f0f1;
+    color: #646970;
+}
+
+.hk-aot-badge.is-warning {
+    background: #fef3e2;
+    color: #b45309;
+}
+
+/* Ödeme yöntemi ipucu */
+.hk-aot-hint {
+    color: #646970;
+    font-size: 11px;
+    font-style: italic;
+    margin-top: 2px;
+}
+
+/* İade bilgi kartları – kompakt grid */
+.hk-aot-refund-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+.hk-aot-refund-item {
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e2e6eb;
+    border-radius: 8px;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    padding: 10px 12px;
+}
+
+.hk-aot-refund-item .label {
+    color: #646970;
+    font-size: 12px;
+}
+
+.hk-aot-refund-item .value {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* Kart içi ayırıcı çizgi */
+.hk-aot-divider {
+    background: #e2e6eb;
+    height: 1px;
+    margin: 12px 0;
+}
+
+/* ===== Responsive ===== */
 @media (max-width: 782px) {
     .hk-aot-toolbar,
     .hk-aot-actions,
@@ -237,5 +437,14 @@
     .hk-aot-section-head {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .hk-aot-form-grid,
+    .hk-aot-payment-amounts {
+        grid-template-columns: 1fr;
+    }
+
+    .hk-aot-refund-grid {
+        grid-template-columns: 1fr;
     }
 }

@@ -87,6 +87,20 @@ class Hizli_Kasa_Admin_Order_Tools
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce(self::NONCE_ACTION),
             'metaCatalog' => self::get_meta_catalog(),
+            'depolar' => self::get_depolar(),
+            'paymentMethods' => [
+                'cod' => 'Nakit',
+                'other' => 'Kredi Karti',
+                'bacs' => 'IBAN / Havale',
+                'split' => 'Bolunmus Odeme',
+            ],
+            'kaynaklar' => [
+                'pos_satis' => 'POS Satis',
+                'web' => 'Web',
+                'telefon' => 'Telefon',
+                'magaza' => 'Magaza',
+                'diger' => 'Diger',
+            ],
             'labels' => [
                 'saving' => 'Kaydediliyor...',
                 'saved' => 'Siparis guncellendi.',
@@ -124,6 +138,7 @@ class Hizli_Kasa_Admin_Order_Tools
             <div class="hk-aot-tabs" role="tablist">
                 <button type="button" class="is-active" data-hk-aot-tab="items">Sepet</button>
                 <button type="button" data-hk-aot-tab="fees">Ucret / Kargo</button>
+                <button type="button" data-hk-aot-tab="order-info">Siparis Bilgileri</button>
                 <button type="button" data-hk-aot-tab="meta">Metalar</button>
             </div>
 
@@ -199,6 +214,10 @@ class Hizli_Kasa_Admin_Order_Tools
                         </div>
                     <?php endforeach; ?>
                 </div>
+            </section>
+
+            <section class="hk-aot-panel" data-hk-aot-panel="order-info">
+                <?php self::render_order_info_panel($order); ?>
             </section>
 
             <section class="hk-aot-panel" data-hk-aot-panel="meta">
@@ -284,6 +303,11 @@ class Hizli_Kasa_Admin_Order_Tools
             if (!empty($data['recalculate'])) {
                 $order->calculate_totals(true);
             }
+
+            // Siparis Bilgileri panelinden gelen verileri kaydet
+            // (recalculate_totals'dan sonra calisir, cunku odeme yontemi
+            // degisikliginde guncel toplam gerekir)
+            self::save_order_info($order, $data['order_info'] ?? []);
 
             $order->add_order_note('Hizli Kasa gelismis admin paneli ile siparis guncellendi.');
             $order->save();
@@ -588,5 +612,376 @@ class Hizli_Kasa_Admin_Order_Tools
         }
 
         return in_array($screen_id, array_unique($order_screens), true);
+    }
+
+    /**
+     * Depo listesini veritabanından çeker.
+     */
+    public static function get_depolar()
+    {
+        global $wpdb;
+        $tables = Hizli_Kasa_Database::get_tables();
+        if (empty($tables['depolar'])) {
+            return [];
+        }
+
+        $rows = $wpdb->get_results("SELECT id, name FROM {$tables['depolar']} ORDER BY name ASC");
+        $depolar = [];
+        foreach ((array) $rows as $row) {
+            $depolar[] = [
+                'id' => (int) $row->id,
+                'name' => $row->name,
+            ];
+        }
+
+        return $depolar;
+    }
+
+    /**
+     * Siparis Bilgileri panelini render eder.
+     */
+    public static function render_order_info_panel($order)
+    {
+        $payment_method = $order->get_payment_method();
+        $payment_methods = [
+            'cod' => 'Nakit',
+            'other' => 'Kredi Karti',
+            'bacs' => 'IBAN / Havale',
+            'split' => 'Bolunmus Odeme',
+        ];
+        $kaynaklar = [
+            'pos_satis' => 'POS Satis',
+            'web' => 'Web',
+            'telefon' => 'Telefon',
+            'magaza' => 'Magaza',
+            'diger' => 'Diger',
+        ];
+        $depolar = self::get_depolar();
+        $current_depo_id = (int) $order->get_meta('_hk_cikis_depo_id');
+        $current_kaynak = $order->get_meta('_hizli_kasa_kaynak') ?: '';
+        $is_refund = $order->get_meta('_hizli_kasa_is_refund') === 'yes';
+        $is_fully_refunded = $order->get_meta('_hk_is_fully_refunded') === 'yes';
+        $has_refund = $order->get_meta('_hk_has_refund') === 'yes';
+        $order_total = (float) $order->get_total();
+        $is_split = ($payment_method === 'split');
+        ?>
+        <div class="hk-aot-cards">
+
+            <!-- Genel Bilgiler -->
+            <div class="hk-aot-card">
+                <div class="hk-aot-card-header">
+                    <span class="dashicons dashicons-info-outline"></span>
+                    <h4>Genel Bilgiler</h4>
+                </div>
+                <div class="hk-aot-card-body">
+                    <div class="hk-aot-form-grid">
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-kasiyer">Kasiyer</label>
+                            <input type="text" id="hk-oi-kasiyer" value="<?php echo esc_attr($order->get_meta('_hizli_kasa_kasiyer')); ?>" placeholder="Kasiyer adi">
+                        </div>
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-kasa-no">Kasa No</label>
+                            <input type="text" id="hk-oi-kasa-no" value="<?php echo esc_attr($order->get_meta('_hizli_kasa_kasa_no')); ?>" placeholder="Kasa numarasi">
+                        </div>
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-kaynak">Kaynak</label>
+                            <select id="hk-oi-kaynak">
+                                <option value="">Seciniz</option>
+                                <?php foreach ($kaynaklar as $val => $label) : ?>
+                                    <option value="<?php echo esc_attr($val); ?>" <?php selected($current_kaynak, $val); ?>><?php echo esc_html($label); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-rapor-kaynak">Rapor Etiketi</label>
+                            <input type="text" id="hk-oi-rapor-kaynak" value="<?php echo esc_attr($order->get_meta('_hk_kaynak')); ?>" placeholder="Rapor kaynagi">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Musteri Bilgileri -->
+            <div class="hk-aot-card">
+                <div class="hk-aot-card-header">
+                    <span class="dashicons dashicons-admin-users"></span>
+                    <h4>Musteri Bilgileri</h4>
+                </div>
+                <div class="hk-aot-card-body">
+                    <div class="hk-aot-form-grid">
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-telefon">Musteri Telefonu</label>
+                            <input type="tel" id="hk-oi-telefon" value="<?php echo esc_attr($order->get_meta('_hizli_kasa_musteri_telefon')); ?>" placeholder="05XX XXX XX XX">
+                        </div>
+                        <div class="hk-aot-form-group">
+                            <label>Fatura Telefonu</label>
+                            <input type="tel" value="<?php echo esc_attr($order->get_billing_phone()); ?>" readonly title="WooCommerce fatura telefonu (salt okunur)">
+                        </div>
+                        <div class="hk-aot-form-group full-width">
+                            <label for="hk-oi-note">Siparis Notu</label>
+                            <textarea id="hk-oi-note" rows="2" placeholder="Siparise ozel not ekleyin..."><?php echo esc_textarea($order->get_customer_note()); ?></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Odeme Yontemi -->
+            <div class="hk-aot-card">
+                <div class="hk-aot-card-header">
+                    <span class="dashicons dashicons-money-alt"></span>
+                    <h4>Odeme Yontemi</h4>
+                </div>
+                <div class="hk-aot-card-body">
+                    <div class="hk-aot-form-grid">
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-payment-method">Odeme Yontemi</label>
+                            <select id="hk-oi-payment-method">
+                                <?php foreach ($payment_methods as $val => $label) : ?>
+                                    <option value="<?php echo esc_attr($val); ?>" <?php selected($payment_method, $val); ?>><?php echo esc_html($label); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <span class="hk-aot-hint" id="hk-oi-payment-hint">
+                                <?php if (!$is_split) : ?>
+                                    Yontem degistirildiginde tutarlar otomatik guncellenir.
+                                <?php else : ?>
+                                    Bolunmus odeme — tutarlari asagidan duzenleyebilirsiniz.
+                                <?php endif; ?>
+                            </span>
+                        </div>
+                        <div class="hk-aot-form-group">
+                            <label>Siparis Toplami</label>
+                            <input type="text" value="<?php echo esc_attr($order->get_formatted_order_total()); ?>" readonly id="hk-oi-order-total-display">
+                            <input type="hidden" id="hk-oi-order-total" value="<?php echo esc_attr(wc_format_decimal($order_total, 2)); ?>">
+                        </div>
+                    </div>
+
+                    <div class="hk-aot-divider"></div>
+
+                    <div class="hk-aot-payment-amounts">
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-nakit">Nakit (TL)</label>
+                            <input type="number" step="0.01" min="0" id="hk-oi-nakit" value="<?php echo esc_attr(wc_format_decimal((float) $order->get_meta('_odeme_nakit'), 2)); ?>" <?php echo $is_split ? '' : 'readonly'; ?>>
+                        </div>
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-kart">Kart (TL)</label>
+                            <input type="number" step="0.01" min="0" id="hk-oi-kart" value="<?php echo esc_attr(wc_format_decimal((float) $order->get_meta('_odeme_kart'), 2)); ?>" <?php echo $is_split ? '' : 'readonly'; ?>>
+                        </div>
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-iban">IBAN (TL)</label>
+                            <input type="number" step="0.01" min="0" id="hk-oi-iban" value="<?php echo esc_attr(wc_format_decimal((float) $order->get_meta('_odeme_iban'), 2)); ?>" <?php echo $is_split ? '' : 'readonly'; ?>>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Depo Bilgileri -->
+            <div class="hk-aot-card">
+                <div class="hk-aot-card-header">
+                    <span class="dashicons dashicons-building"></span>
+                    <h4>Depo Bilgileri</h4>
+                </div>
+                <div class="hk-aot-card-body">
+                    <div class="hk-aot-form-grid">
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-depo">Cikis Deposu</label>
+                            <select id="hk-oi-depo">
+                                <option value="">Depo seciniz</option>
+                                <?php foreach ($depolar as $depo) : ?>
+                                    <option value="<?php echo esc_attr($depo['id']); ?>" data-name="<?php echo esc_attr($depo['name']); ?>" <?php selected($current_depo_id, $depo['id']); ?>>
+                                        <?php echo esc_html($depo['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="hk-aot-form-group">
+                            <label>Depo Adi</label>
+                            <input type="text" value="<?php echo esc_attr($order->get_meta('_hk_cikis_depo_adi')); ?>" readonly id="hk-oi-depo-adi">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Iade Bilgileri -->
+            <div class="hk-aot-card">
+                <div class="hk-aot-card-header">
+                    <span class="dashicons dashicons-undo"></span>
+                    <h4>Iade & Iskonto Bilgileri</h4>
+                </div>
+                <div class="hk-aot-card-body">
+                    <div class="hk-aot-refund-grid">
+                        <div class="hk-aot-refund-item">
+                            <span class="label">Iade Kaydi</span>
+                            <span class="hk-aot-badge <?php echo $is_refund ? 'is-yes' : 'is-no'; ?>">
+                                <?php echo $is_refund ? 'Evet' : 'Hayir'; ?>
+                            </span>
+                        </div>
+                        <div class="hk-aot-refund-item">
+                            <span class="label">Tam Iade</span>
+                            <span class="hk-aot-badge <?php echo $is_fully_refunded ? 'is-warning' : 'is-no'; ?>">
+                                <?php echo $is_fully_refunded ? 'Evet' : 'Hayir'; ?>
+                            </span>
+                        </div>
+                        <div class="hk-aot-refund-item">
+                            <span class="label">Iade Var</span>
+                            <span class="hk-aot-badge <?php echo $has_refund ? 'is-yes' : 'is-no'; ?>">
+                                <?php echo $has_refund ? 'Evet' : 'Hayir'; ?>
+                            </span>
+                        </div>
+                        <div class="hk-aot-refund-item">
+                            <span class="label">Manuel Iade</span>
+                            <span class="hk-aot-badge <?php echo $order->get_meta('_hizli_kasa_manual_refund') === 'yes' ? 'is-yes' : 'is-no'; ?>">
+                                <?php echo $order->get_meta('_hizli_kasa_manual_refund') === 'yes' ? 'Evet' : 'Hayir'; ?>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="hk-aot-divider"></div>
+
+                    <div class="hk-aot-form-grid">
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-orijinal-siparis">Orijinal Siparis ID</label>
+                            <input type="number" id="hk-oi-orijinal-siparis" min="0" value="<?php echo esc_attr($order->get_meta('_hizli_kasa_original_order')); ?>" placeholder="Iade siparisinin orjinali">
+                        </div>
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-toplam-iskonto">Toplam Iskonto</label>
+                            <input type="number" step="0.01" id="hk-oi-toplam-iskonto" value="<?php echo esc_attr(wc_format_decimal((float) $order->get_meta('_hk_toplam_iskonto'), 2)); ?>">
+                        </div>
+                        <div class="hk-aot-form-group">
+                            <label>Musteri Odedi</label>
+                            <input type="number" step="0.01" value="<?php echo esc_attr(wc_format_decimal((float) $order->get_meta('_hk_customer_paid_total'), 2)); ?>" readonly>
+                        </div>
+                        <div class="hk-aot-form-group">
+                            <label>Iade Edilen Iskonto</label>
+                            <input type="number" step="0.01" value="<?php echo esc_attr(wc_format_decimal((float) $order->get_meta('_hk_refunded_discount'), 2)); ?>" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <?php
+    }
+
+    /**
+     * Siparis Bilgileri panelinden gelen verileri kaydeder.
+     */
+    private static function save_order_info($order, $info)
+    {
+        if (!is_array($info)) {
+            return;
+        }
+
+        // Genel Bilgiler
+        if (isset($info['kasiyer'])) {
+            $order->update_meta_data('_hizli_kasa_kasiyer', sanitize_text_field($info['kasiyer']));
+        }
+        if (isset($info['kasa_no'])) {
+            $order->update_meta_data('_hizli_kasa_kasa_no', sanitize_text_field($info['kasa_no']));
+        }
+        if (isset($info['kaynak'])) {
+            $order->update_meta_data('_hizli_kasa_kaynak', sanitize_text_field($info['kaynak']));
+        }
+        if (isset($info['rapor_kaynak'])) {
+            $order->update_meta_data('_hk_kaynak', sanitize_text_field($info['rapor_kaynak']));
+        }
+
+        // Musteri Bilgileri
+        if (isset($info['telefon'])) {
+            $telefon = sanitize_text_field($info['telefon']);
+            $order->update_meta_data('_hizli_kasa_musteri_telefon', $telefon);
+            $order->set_billing_phone($telefon);
+        }
+        if (isset($info['note'])) {
+            $order->set_customer_note(sanitize_textarea_field($info['note']));
+        }
+
+        // Odeme Yontemi
+        if (!empty($info['payment_method'])) {
+            $new_payment = sanitize_text_field($info['payment_method']);
+            $payment_titles = [
+                'cod' => 'Nakit',
+                'other' => 'Kredi Kartı',
+                'bacs' => 'IBAN / Havale',
+                'split' => 'Bölünmüş Ödeme',
+            ];
+
+            $order->set_payment_method($new_payment);
+            $order->set_payment_method_title($payment_titles[$new_payment] ?? $new_payment);
+
+            // Odeme tutarlarini guncelle
+            $final_total = (float) $order->get_total();
+
+            if ($new_payment === 'split') {
+                // Bolunmus odeme — tutarlar frontend'den gelir
+                $nakit = isset($info['odeme_nakit']) ? (float) wc_format_decimal($info['odeme_nakit']) : 0;
+                $kart = isset($info['odeme_kart']) ? (float) wc_format_decimal($info['odeme_kart']) : 0;
+                $iban = isset($info['odeme_iban']) ? (float) wc_format_decimal($info['odeme_iban']) : 0;
+
+                $order->update_meta_data('_odeme_nakit', $nakit);
+                $order->update_meta_data('_odeme_kart', $kart);
+                $order->update_meta_data('_odeme_iban', $iban);
+
+                // Gorunen odeme metalarini guncelle
+                $order->delete_meta_data('Ödeme (Nakit)');
+                $order->delete_meta_data('Ödeme (Kredi Kartı)');
+                $order->delete_meta_data('Ödeme (Kart)');
+                $order->delete_meta_data('Ödeme (IBAN)');
+
+                if ($nakit > 0) {
+                    $order->update_meta_data('Ödeme (Nakit)', number_format($nakit, 2, '.', '') . ' TL');
+                }
+                if ($kart > 0) {
+                    $order->update_meta_data('Ödeme (Kredi Kartı)', number_format($kart, 2, '.', '') . ' TL');
+                }
+                if ($iban > 0) {
+                    $order->update_meta_data('Ödeme (IBAN)', number_format($iban, 2, '.', '') . ' TL');
+                }
+            } else {
+                // Tek kanal odeme — tum tutar secilen kanala atanir
+                $order->update_meta_data('_odeme_nakit', 0);
+                $order->update_meta_data('_odeme_kart', 0);
+                $order->update_meta_data('_odeme_iban', 0);
+                $order->delete_meta_data('Ödeme (Nakit)');
+                $order->delete_meta_data('Ödeme (Kredi Kartı)');
+                $order->delete_meta_data('Ödeme (Kart)');
+                $order->delete_meta_data('Ödeme (IBAN)');
+
+                if ($new_payment === 'cod') {
+                    $order->update_meta_data('_odeme_nakit', $final_total);
+                    $order->update_meta_data('Ödeme (Nakit)', number_format($final_total, 2, '.', '') . ' TL');
+                } elseif ($new_payment === 'other') {
+                    $order->update_meta_data('_odeme_kart', $final_total);
+                    $order->update_meta_data('Ödeme (Kredi Kartı)', number_format($final_total, 2, '.', '') . ' TL');
+                } elseif ($new_payment === 'bacs') {
+                    $order->update_meta_data('_odeme_iban', $final_total);
+                    $order->update_meta_data('Ödeme (IBAN)', number_format($final_total, 2, '.', '') . ' TL');
+                }
+            }
+        }
+
+        // Depo Bilgileri
+        if (isset($info['depo_id'])) {
+            $depo_id = absint($info['depo_id']);
+            $order->update_meta_data('_hk_cikis_depo_id', $depo_id);
+
+            // Depo adini bul
+            if ($depo_id > 0 && !empty($info['depo_adi'])) {
+                $order->update_meta_data('_hk_cikis_depo_adi', sanitize_text_field($info['depo_adi']));
+            } elseif ($depo_id === 0) {
+                $order->update_meta_data('_hk_cikis_depo_adi', '');
+            }
+        }
+
+        // Iade/Iskonto Bilgileri
+        if (isset($info['original_order'])) {
+            $val = sanitize_text_field($info['original_order']);
+            if ($val !== '') {
+                $order->update_meta_data('_hizli_kasa_original_order', $val);
+            } else {
+                $order->delete_meta_data('_hizli_kasa_original_order');
+            }
+        }
+        if (isset($info['toplam_iskonto'])) {
+            $order->update_meta_data('_hk_toplam_iskonto', wc_format_decimal($info['toplam_iskonto'], 2));
+        }
     }
 }
