@@ -289,6 +289,9 @@
                         throw new Error(result && result.data && result.data.message ? result.data.message : hkAdminOrderTools.labels.error);
                     }
                     setMessage(root, result.data.message || hkAdminOrderTools.labels.saved, 'success');
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1000);
                 })
                 .catch(function(error) {
                     setMessage(root, error.message || hkAdminOrderTools.labels.error, 'error');
@@ -299,4 +302,154 @@
                 });
         }
     });
+
+    function initializeItemMetaEditors(root) {
+        var rows = qsa('#hk-aot-items tr', root);
+        rows.forEach(function(row) {
+            var textarea = qs('.hk-aot-item-meta', row);
+            if (!textarea || textarea.dataset.initialized) return;
+            textarea.dataset.initialized = '1';
+
+            // Hide the raw JSON textarea
+            textarea.style.display = 'none';
+
+            // Create visual editor container
+            var editor = document.createElement('div');
+            editor.className = 'hk-aot-item-meta-editor';
+
+            // Parse initial JSON
+            var metaArray = [];
+            try {
+                metaArray = JSON.parse(textarea.value || '[]');
+            } catch (e) {
+                metaArray = [];
+            }
+            if (!Array.isArray(metaArray)) {
+                metaArray = [];
+            }
+
+            var depoId = '';
+            var discount = '';
+            metaArray.forEach(function(m) {
+                if (m.key === '_hk_cikis_depo_id') depoId = String(m.value || '');
+                if (m.key === '_hk_item_discount') discount = String(m.value || '');
+            });
+
+            // Build warehouse options
+            var depoHtml = '<option value="">Depo Seçiniz</option>';
+            if (hkAdminOrderTools.depolar && Array.isArray(hkAdminOrderTools.depolar)) {
+                hkAdminOrderTools.depolar.forEach(function(depo) {
+                    var selected = (String(depo.id) === depoId) ? 'selected' : '';
+                    depoHtml += '<option value="' + depo.id + '" data-name="' + escapeHtml(depo.name) + '" ' + selected + '>' + escapeHtml(depo.name) + '</option>';
+                });
+            }
+
+            editor.innerHTML = [
+                '<div class="hk-aot-ime-row">',
+                '  <div class="hk-aot-ime-group">',
+                '    <label>Depo</label>',
+                '    <select class="hk-aot-ime-depo">' + depoHtml + '</select>',
+                '  </div>',
+                '  <div class="hk-aot-ime-group">',
+                '    <label>İskonto (₺)</label>',
+                '    <input type="number" step="0.01" min="0" class="hk-aot-ime-discount" value="' + escapeHtml(discount) + '" placeholder="0.00">',
+                '  </div>',
+                '  <div class="hk-aot-ime-group inline-btn">',
+                '    <button type="button" class="button button-small hk-aot-ime-toggle-advanced" title="Gelişmiş JSON Metaları Düzenle">⚙️ Gelişmiş</button>',
+                '  </div>',
+                '</div>'
+            ].join('');
+
+            textarea.parentNode.appendChild(editor);
+
+            var depoSelect = qs('.hk-aot-ime-depo', editor);
+            var discountInput = qs('.hk-aot-ime-discount', editor);
+            var advancedBtn = qs('.hk-aot-ime-toggle-advanced', editor);
+
+            function syncToTextarea() {
+                var currentDepoId = depoSelect.value;
+                var currentDepoOption = depoSelect.options[depoSelect.selectedIndex];
+                var currentDepoName = currentDepoOption && currentDepoOption.value ? currentDepoOption.getAttribute('data-name') : '';
+                var currentDiscount = discountInput.value;
+
+                var textArray = [];
+                try {
+                    textArray = JSON.parse(textarea.value || '[]');
+                } catch(e) {
+                    textArray = [];
+                }
+                if (!Array.isArray(textArray)) {
+                    textArray = [];
+                }
+
+                // Filter out standard keys
+                textArray = textArray.filter(function(item) {
+                    return item.key !== '_hk_cikis_depo_id' && item.key !== '_hk_cikis_depo_adi' && item.key !== '_hk_item_discount';
+                });
+
+                // Add values back if they exist
+                if (currentDepoId) {
+                    textArray.push({ key: '_hk_cikis_depo_id', value: currentDepoId });
+                    if (currentDepoName) {
+                        textArray.push({ key: '_hk_cikis_depo_adi', value: currentDepoName });
+                    }
+                }
+                if (currentDiscount && parseFloat(currentDiscount) > 0) {
+                    textArray.push({ key: '_hk_item_discount', value: parseFloat(currentDiscount).toFixed(2) });
+                }
+
+                textarea.value = JSON.stringify(textArray, null, 4);
+            }
+
+            function syncToUI() {
+                var textArray = [];
+                try {
+                    textArray = JSON.parse(textarea.value || '[]');
+                } catch(e) {
+                    textArray = [];
+                }
+                if (!Array.isArray(textArray)) {
+                    textArray = [];
+                }
+
+                var dId = '';
+                var disc = '';
+                textArray.forEach(function(item) {
+                    if (item.key === '_hk_cikis_depo_id') dId = String(item.value || '');
+                    if (item.key === '_hk_item_discount') disc = String(item.value || '');
+                });
+
+                depoSelect.value = dId;
+                discountInput.value = disc;
+            }
+
+            depoSelect.addEventListener('change', syncToTextarea);
+            discountInput.addEventListener('input', syncToTextarea);
+            textarea.addEventListener('input', syncToUI);
+
+            advancedBtn.addEventListener('click', function() {
+                if (textarea.style.display === 'none') {
+                    textarea.style.display = 'block';
+                    advancedBtn.textContent = 'Gizle';
+                } else {
+                    textarea.style.display = 'none';
+                    advancedBtn.textContent = '⚙️ Gelişmiş';
+                }
+            });
+        });
+    }
+
+    function init() {
+        var root = qs('.hk-admin-order-tools');
+        if (root) {
+            initializeItemMetaEditors(root);
+            handlePaymentMethodChange(root);
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 })();

@@ -749,7 +749,9 @@ class Hizli_Kasa_Admin_Order_Tools
                         </div>
                         <div class="hk-aot-form-group">
                             <label>Siparis Toplami</label>
-                            <input type="text" value="<?php echo esc_attr($order->get_formatted_order_total()); ?>" readonly id="hk-oi-order-total-display">
+                            <div class="hk-aot-order-total-display" id="hk-oi-order-total-display">
+                                <?php echo wp_kses_post($order->get_formatted_order_total()); ?>
+                            </div>
                             <input type="hidden" id="hk-oi-order-total" value="<?php echo esc_attr(wc_format_decimal($order_total, 2)); ?>">
                         </div>
                     </div>
