@@ -568,13 +568,19 @@
 
                 var isVariable = p.is_variable && p.variations && p.variations.length > 0;
                 
+                // Stok kaynağı: all_stocks[depoId] tercih, yoksa warehouse_stock fallback
+                var pDepoStock = (p.all_stocks && depoId && p.all_stocks[String(depoId)] != null) ? parseFloat(p.all_stocks[String(depoId)]) : parseFloat(p.warehouse_stock || 0);
+
                 // Stok durumunu belirle (Grup toplamı)
                 var totalGroupStock = isVariable 
-                    ? p.variations.reduce((sum, v) => sum + parseFloat(v.warehouse_stock || 0), 0)
-                    : parseFloat(p.warehouse_stock || 0);
+                    ? p.variations.reduce(function(sum, v) {
+                        var vStock = (v.all_stocks && depoId && v.all_stocks[String(depoId)] != null) ? parseFloat(v.all_stocks[String(depoId)]) : parseFloat(v.warehouse_stock || 0);
+                        return sum + vStock;
+                    }, 0)
+                    : pDepoStock;
                 
                 var isStockOut = totalGroupStock <= 0;
-                var isCritical = !isVariable && p.warehouse_stock > 0 && p.warehouse_stock <= threshold;
+                var isCritical = !isVariable && pDepoStock > 0 && pDepoStock <= threshold;
                 var img = p.images && p.images[0] ? p.images[0].src : '';
 
                 // Fiyat Hesaplamaları
@@ -627,7 +633,7 @@
                             </div>
                             <div class="stok-ayirici" style="width: 2px; height: 35px; background: var(--hk-border); opacity: 0.4; border-radius: 2px;"></div>
                             <div class="urun-stok ${isStockOut ? 'stok-bitti' : (isCritical ? 'stok-kritik' : 'stok-tamam')}" style="min-width: 85px; text-align: right;">
-                                <span class="stok-sayi">${p.warehouse_stock}</span>
+                                <span class="stok-sayi">${pDepoStock}</span>
                                 <span class="stok-etiket">MEVCUT STOK</span>
                             </div>
                             ` : ''}
@@ -650,7 +656,8 @@
                     });
 
                     sortedVariations.forEach(v => {
-                        var vCritical = v.warehouse_stock > 0 && v.warehouse_stock <= threshold;
+                        var vDepoStock = (v.all_stocks && depoId && v.all_stocks[String(depoId)] != null) ? parseFloat(v.all_stocks[String(depoId)]) : parseFloat(v.warehouse_stock || 0);
+                        var vCritical = vDepoStock > 0 && vDepoStock <= threshold;
                         var vImg = (v.images && v.images[0]) ? v.images[0].src : '';
                         
                         // Varyasyon Fiyatları
@@ -666,7 +673,7 @@
                                 <div class="urun-detay">
                                     <div class="urun-temel-bilgi">
                                         <div class="urun-ad">${v.name}</div>
-                                        <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${v.warehouse_stock}</div>
+                                        <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${vDepoStock}</div>
                                     </div>
                                     
                                     <div class="terminal-fiyat-alani">
@@ -690,8 +697,8 @@
                                         ${getOtherStocksHtml(v)}
                                     </div>
                                     <div class="stok-ayirici" style="width: 2px; height: 35px; background: var(--hk-border); opacity: 0.4; border-radius: 2px;"></div>
-                                    <div class="urun-stok ${v.warehouse_stock <= 0 ? 'stok-bitti' : (vCritical ? 'stok-kritik' : 'stok-tamam')}" style="min-width: 85px; text-align: right;">
-                                        <span class="stok-sayi">${v.warehouse_stock}</span>
+                                    <div class="urun-stok ${vDepoStock <= 0 ? 'stok-bitti' : (vCritical ? 'stok-kritik' : 'stok-tamam')}" style="min-width: 85px; text-align: right;">
+                                        <span class="stok-sayi">${vDepoStock}</span>
                                         <span class="stok-etiket">STOK</span>
                                     </div>
                                 </div>

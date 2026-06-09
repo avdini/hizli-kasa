@@ -239,7 +239,7 @@
         },
 
         switchDepo: function(id) {
-            this.state.aktifDepoId = id;
+            this.state.aktifDepoId = parseInt(id, 10) || id;
             this.updateDepoDisplay();
             
             // Eğer arama yapılmışsa sonuçları yenile
@@ -943,7 +943,7 @@
             const img = (p.images && p.images[0]) ? p.images[0].src : '';
             const allStocks = p.all_stocks || {};
             
-            const currentQty = allStocks[this.state.aktifDepoId] || 0;
+            const currentQty = allStocks[String(this.state.aktifDepoId)] || 0;
             const aktifDepoName = this.state.depolar.find(d => d.id == this.state.aktifDepoId)?.name || "Depo";
             
             let otherTotal = 0;
@@ -1104,6 +1104,26 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         MobileApp.init();
+
+        // Safari BFCache koruması — geri/ileri navigasyonda donmuş (eski) stok verisini engelle
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                const query = MobileApp.state.lastSearchQuery;
+                if (query && query.length >= 2) {
+                    MobileApp.searchProducts(query);
+                }
+            }
+        });
+
+        // Tab'a geri dönüş koruması — kullanıcı başka sekmeye/uygulamaya geçip döndüğünde
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                const query = MobileApp.state.lastSearchQuery;
+                if (query && query.length >= 2) {
+                    MobileApp.searchProducts(query);
+                }
+            }
+        });
     });
 
 })();

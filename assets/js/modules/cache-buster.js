@@ -20,7 +20,10 @@
     window.fetch = function (url, options) {
         // Sadece string URL'leri ve hizli-kasa/v1/ namespace'ini hedef al
         if (typeof url === 'string' && url.indexOf('hizli-kasa/v1/') !== -1) {
-            var method = (options && options.method) ? options.method.toUpperCase() : 'GET';
+            // Safari memory cache koruması — tarayıcının eski response'u servis etmesini engelle
+            options = Object.assign({}, options || {}, { cache: 'no-store' });
+
+            var method = (options.method) ? options.method.toUpperCase() : 'GET';
 
             // Yalnızca GET isteklerine cache-busting uygula
             // (POST/PUT/DELETE zaten önbelleğe alınmaz)
