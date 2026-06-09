@@ -923,6 +923,7 @@
         createParentCardHtml: function(p, isOpen) {
             const img = (p.images && p.images[0]) ? p.images[0].src : '';
             const varCount = p.variations ? p.variations.length : 0;
+            const depoKodu = p.all_codes && p.all_codes[String(this.state.aktifDepoId)] ? p.all_codes[String(this.state.aktifDepoId)] : '';
 
             return `
                 <div class="mobile-urun-kart parent-card ${isOpen ? 'is-open' : ''}" data-target="vars-of-${p.id}">
@@ -930,7 +931,7 @@
                         <img src="${img}" class="card-img" alt="">
                         <div class="card-info">
                             <div class="card-name">${p.name}</div>
-                            <div class="card-sku">${p.sku || 'KARIŞIK SKU'}</div>
+                            <div class="card-sku">${p.sku || 'KARIŞIK SKU'} ${depoKodu ? ` · <span class="depo-kodu-badge" style="background: rgba(255,255,255,0.1); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase;">DK: ${depoKodu}</span>` : ''}</div>
                             <div class="var-summary">${varCount} Varyasyon Mevcut</div>
                         </div>
                         <div class="expand-chevron">▼</div>
@@ -942,6 +943,8 @@
         createProductCardHtml: function(p, isVariation = false) {
             const img = (p.images && p.images[0]) ? p.images[0].src : '';
             const allStocks = p.all_stocks || {};
+            const allCodes = p.all_codes || {};
+            const depoKodu = allCodes[String(this.state.aktifDepoId)] || '';
             
             const currentQty = allStocks[String(this.state.aktifDepoId)] || 0;
             const aktifDepoName = this.state.depolar.find(d => d.id == this.state.aktifDepoId)?.name || "Depo";
@@ -980,7 +983,7 @@
                             <img src="${img}" class="card-img-mini" alt="">
                             <div class="card-info">
                                 <div class="card-name">${p.name.replace(/.* - /, '')}</div>
-                                <div class="card-sku">${p.sku || ''}</div>
+                                <div class="card-sku">${p.sku || ''} ${depoKodu ? ` · <span class="depo-kodu-badge" style="background: rgba(255,255,255,0.1); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase;">DK: ${depoKodu}</span>` : ''}</div>
                                 ${priceHtml}
                             </div>
                             <div class="card-side-stocks">
@@ -1009,7 +1012,7 @@
                         <img src="${img}" class="card-img" alt="">
                         <div class="card-info">
                             <div class="card-name">${p.name} ${p.is_variable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
-                            <div class="card-sku">${p.sku || 'SKU YOK'}</div>
+                            <div class="card-sku">${p.sku || 'SKU YOK'} ${depoKodu ? ` · <span class="depo-kodu-badge" style="background: rgba(255,255,255,0.1); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase;">DK: ${depoKodu}</span>` : ''}</div>
                             ${priceHtml}
                         </div>
                     </div>

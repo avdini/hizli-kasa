@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 7.13
+ * Version: 8.0
  * Author: Seyfullah Kurt
  */
 
@@ -11,7 +11,7 @@ if (!defined('ABSPATH'))
     exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '7.13');
+define('HIZLI_KASA_VERSION', '8.0');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -76,9 +76,9 @@ Hizli_Kasa_Email_Modifier::init();
 // Canary Log: Sadece WP hazır olduğunda çalıştır
 add_action('init', function () {
     hizli_kasa_log("--- Eklenti Başarıyla Başlatıldı (init) ---");
-    if (get_option('hizli_kasa_db_version_sayim') !== '1.0') {
+    if (get_option('hizli_kasa_db_version_sayim') !== '2.0') {
         Hizli_Kasa_Database::init();
-        update_option('hizli_kasa_db_version_sayim', '1.0');
+        update_option('hizli_kasa_db_version_sayim', '2.0');
     }
 });
 
@@ -151,7 +151,7 @@ add_action('user_register', 'hizli_kasa_invalidate_user_perms_cache');
 add_filter('rest_pre_serve_request', function ($served, $result, $request, $server) {
     $route = $request->get_route();
 
-    if (strpos($route, '/hizli-kasa/v1/') === 0) {
+    if (strpos($route, '/hizli-kasa/v1/') === 0 || strpos($route, '/hizli-kasa/v2/') === 0) {
         // WordPress standart önbellek engelleme sabiti
         if (!defined('DONOTCACHEPAGE')) {
             define('DONOTCACHEPAGE', true);

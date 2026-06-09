@@ -192,14 +192,15 @@ function hizli_kasa_terminal_products($request)
             GROUP BY p.ID
         ", array_merge([$depo_id], $parent_ids)));
 
-        // --- Multi-Warehouse Stock Fetch ---
+        // --- Multi-Warehouse Stock & Code Fetch ---
         $all_warehouses = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar ORDER BY priority DESC");
         $all_item_ids = array_merge($parent_ids, !empty($v_results) ? wp_list_pluck($v_results, 'ID') : []);
         $all_stocks = [];
+        $all_codes = [];
         if (!empty($all_item_ids)) {
             $ids_ph_all = implode(',', array_fill(0, count($all_item_ids), '%d'));
             $stocks_raw = $wpdb->get_results($wpdb->prepare("
-                SELECT location_id, product_id, variation_id, quantity 
+                SELECT location_id, product_id, variation_id, quantity, depo_kodu 
                 FROM $stok_table 
                 WHERE (product_id IN ($ids_ph_all) OR variation_id IN ($ids_ph_all))
             ", array_merge($all_item_ids, $all_item_ids)));
@@ -207,6 +208,9 @@ function hizli_kasa_terminal_products($request)
             foreach ($stocks_raw as $sr) {
                 $item_id = ($sr->variation_id > 0) ? (int)$sr->variation_id : (int)$sr->product_id;
                 $all_stocks[$item_id][$sr->location_id] = (float)$sr->quantity;
+                if (!empty($sr->depo_kodu)) {
+                    $all_codes[$item_id][$sr->location_id] = $sr->depo_kodu;
+                }
             }
         }
 
@@ -249,6 +253,7 @@ function hizli_kasa_terminal_products($request)
                 }
                 $v->attributes = $clean_attrs;
                 $v->all_stocks = $all_stocks[$v->ID] ?? [];
+                $v->all_codes = $all_codes[$v->ID] ?? [];
                 $variations_by_parent[$v->post_parent][] = $v;
             }
 
@@ -336,6 +341,7 @@ function hizli_kasa_terminal_products($request)
     $formatted = [];
     foreach ($results as $row) {
         $row->all_stocks = $all_stocks[$row->ID] ?? [];
+        $row->all_codes = $all_codes[$row->ID] ?? [];
         $item = hizli_kasa_format_urun_row($row, $depo_id, $variations_by_parent);
         if ($item)
             $formatted[] = $item;

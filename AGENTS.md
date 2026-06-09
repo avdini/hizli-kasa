@@ -1,0 +1,13 @@
+# Hızlı Kasa Project AI Agent Rules & Instructions
+
+You are an AI coding assistant working on the Hızlı Kasa WooCommerce POS plugin.
+Before writing any code or proposing edits, you must read the project guidelines and API standards located in the `.agents/` folder.
+
+## CRITICAL RULES FOR ALL AI AGENTS (NO SELFISH DESIGNS)
+
+1. **Check Documentation First:** Always read the guidelines before making any changes. The files are located at:
+   - **Modern ACS Path:** `.agents/context/guidelines.md` and `.agents/skills/api-development.md`
+2. **No Code Clutter / No Inline Comments:** Do not write verbose, explanatory inline comments in the code. Keep code comments minimal. Document complex architecture decisions, new endpoints, and APIs in the `.agents/` directory.
+3. **API Standard (V2):** All new APIs must use Object-Oriented Programming (OOP) and inherit from `Hizli_Kasa_API_Controller_Base`. Use `Hizli_Kasa_API_Response` to format responses.
+4. **No-Cache Enforcement:** Ensure all V2 API endpoints enforce no-cache headers.
+5. **No Breaking Changes:** Keep legacy V1 procedural code intact unless explicitly instructed otherwise. Do not break existing API helpers.

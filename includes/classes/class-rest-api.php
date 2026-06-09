@@ -24,3 +24,15 @@ require_once $api_dir . 'api-terminal.php';
 require_once $api_dir . 'api-istatistik.php';
 require_once $api_dir . 'api-sayim.php';
 
+// Load V2 API Classes
+require_once $api_dir . 'v2/core/class-api-response.php';
+require_once $api_dir . 'v2/core/class-api-controller-base.php';
+require_once $api_dir . 'v2/controllers/class-api-product-codes.php';
+
+// Register V2 REST Routes
+add_action('rest_api_init', function () {
+    $product_codes_controller = new Hizli_Kasa_API_Product_Codes();
+    $product_codes_controller->register_routes();
+});
+
+

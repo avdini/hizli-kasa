@@ -135,10 +135,12 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id)
     $stok_raw = $wpdb->get_results($wpdb->prepare("
         SELECT * FROM $stok_table WHERE location_id = %d AND (product_id IN ($ids_str) OR variation_id IN ($ids_str))", $depo_id));
     $stok_map = [];
+    $code_map = [];
     if (!empty($stok_raw)) {
         foreach ($stok_raw as $s) {
             $key = ($s->variation_id > 0) ? 'v_' . $s->variation_id : 'p_' . $s->product_id;
             $stok_map[$key] = (float) $s->quantity;
+            $code_map[$key] = $s->depo_kodu;
         }
     }
 
@@ -161,6 +163,7 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id)
         $p_type = $type_map[$pid] ?? '';
         $stok_key = ($p->post_type === 'product_variation') ? 'v_' . $pid : 'p_' . $pid;
         $w_stock = $stok_map[$stok_key] ?? 0;
+        $d_code = $code_map[$stok_key] ?? null;
         $thumb_id = $m['_thumbnail_id'] ?? '';
         $img_url = $thumb_id ? wp_get_attachment_image_url($thumb_id, 'thumbnail') : '';
 
@@ -176,6 +179,7 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id)
             'manage_stock' => ($m['_manage_stock'] ?? 'no') === 'yes',
             'stock_quantity' => (float) ($m['_stock'] ?? 0),
             'warehouse_stock' => $w_stock,
+            'depo_kodu' => $d_code,
             'images' => $img_url ? [['src' => $img_url]] : [],
             'is_variable' => $p_type === 'variable',
             'variations' => []
@@ -212,6 +216,7 @@ function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent
                     'warehouse_stock' => (float) $v->warehouse_stock,
                     'stock_quantity' => (float) $v->stock_quantity,
                     'all_stocks' => $v->all_stocks ?? [],
+                    'all_codes' => $v->all_codes ?? [],
                     'images' => $var_img ? [['src' => $var_img]] : [],
                     'attributes' => $v->attributes ?? []
                 ];
@@ -236,6 +241,7 @@ function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent
             'stock_quantity' => (float) $row->stock_quantity,
             'warehouse_stock' => (float) $row->warehouse_stock,
             'all_stocks' => $row->all_stocks ?? [],
+            'all_codes' => $row->all_codes ?? [],
             'images' => $image_url ? [['src' => $image_url]] : [],
             'permalink' => get_permalink($parent_id),
             'is_variable' => $is_variable,

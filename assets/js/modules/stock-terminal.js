@@ -327,6 +327,20 @@
                             self.openEditModal(product);
                         }
                         */
+                });
+
+                // Depo Kodu Değişikliği Event Delegation
+                listContainer.addEventListener('change', function(e) {
+                    var target = e.target;
+                    if (target.classList.contains('hk-depo-kodu-input')) {
+                        self.saveWarehouseCode(target);
+                    }
+                });
+
+                listContainer.addEventListener('keypress', function(e) {
+                    var target = e.target;
+                    if (target.classList.contains('hk-depo-kodu-input') && e.key === 'Enter') {
+                        target.blur(); // Triggers change event
                     }
                 });
             }
@@ -597,6 +611,17 @@
                             <div class="urun-temel-bilgi">
                                 <div class="urun-ad">${p.name} ${isVariable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
                                 <div class="urun-sku">${p.sku || 'SKU YOK'} | Toplam: ${totalGroupStock}</div>
+                                <div class="depo-kodu-container" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 4px;">
+                                    <span style="font-size: 11px; opacity: 0.6; text-transform: uppercase;">Depo Kodu:</span>
+                                    <input type="text" 
+                                           class="hk-depo-kodu-input" 
+                                           value="${p.all_codes && p.all_codes[String(depoId)] ? p.all_codes[String(depoId)] : ''}" 
+                                           placeholder="---" 
+                                           maxlength="6" 
+                                           style="width: 65px; height: 22px; font-size: 11px; font-weight: bold; text-align: center; border-radius: 4px; border: 1px solid var(--hk-border); background: rgba(255,255,255,0.05); color: #fff; text-transform: uppercase;"
+                                           ${(depoId && window.HizliKasa && HizliKasa.DepoManager && HizliKasa.DepoManager.canManageDepo(depoId)) ? '' : 'readonly disabled'}
+                                    >
+                                </div>
                             </div>
                             
                             ${!isVariable ? `
@@ -674,6 +699,17 @@
                                     <div class="urun-temel-bilgi">
                                         <div class="urun-ad">${v.name}</div>
                                         <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${vDepoStock}</div>
+                                        <div class="depo-kodu-container" style="display: inline-flex; align-items: center; gap: 4px; margin-top: 4px;">
+                                            <span style="font-size: 11px; opacity: 0.6; text-transform: uppercase;">Depo Kodu:</span>
+                                            <input type="text" 
+                                                   class="hk-depo-kodu-input" 
+                                                   value="${v.all_codes && v.all_codes[String(depoId)] ? v.all_codes[String(depoId)] : ''}" 
+                                                   placeholder="---" 
+                                                   maxlength="6" 
+                                                   style="width: 65px; height: 22px; font-size: 11px; font-weight: bold; text-align: center; border-radius: 4px; border: 1px solid var(--hk-border); background: rgba(255,255,255,0.05); color: #fff; text-transform: uppercase;"
+                                                   ${(depoId && window.HizliKasa && HizliKasa.DepoManager && HizliKasa.DepoManager.canManageDepo(depoId)) ? '' : 'readonly disabled'}
+                                            >
+                                        </div>
                                     </div>
                                     
                                     <div class="terminal-fiyat-alani">
@@ -859,6 +895,87 @@
             };
             
             img.src = fullSrc;
+        },
+
+        saveWarehouseCode: async function(input) {
+            var kart = input.closest('.terminal-urun-kart');
+            if (!kart) return;
+
+            var id = parseInt(kart.dataset.id);
+            var vid = parseInt(kart.dataset.vid || 0);
+            var depoId = (window.HizliKasa && HizliKasa.DepoManager)
+                ? HizliKasa.DepoManager.getViewDepo()
+                : null;
+
+            if (!depoId) return;
+
+            var rawValue = input.value.trim().toUpperCase();
+            
+            if (rawValue !== '') {
+                if (rawValue.length > 6 || !/^[A-Z0-9]+$/.test(rawValue)) {
+                    alert('Depo kodu en fazla 6 haneli olmalı, yalnızca harf ve rakamlardan oluşmalıdır.');
+                    var product = this.state.products.find(p => p.id === id);
+                    var originalValue = '';
+                    if (vid > 0 && product && product.variations) {
+                        var variation = product.variations.find(v => v.id === vid);
+                        originalValue = (variation && variation.all_codes && variation.all_codes[String(depoId)]) ? variation.all_codes[String(depoId)] : '';
+                    } else if (product) {
+                        originalValue = (product.all_codes && product.all_codes[String(depoId)]) ? product.all_codes[String(depoId)] : '';
+                    }
+                    input.value = originalValue;
+                    return;
+                }
+            }
+
+            input.style.borderColor = 'var(--hk-border)';
+            input.disabled = true;
+
+            try {
+                var response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v2/product/warehouse-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': kasaAyar.nonce
+                    },
+                    body: JSON.stringify({
+                        product_id: id,
+                        variation_id: vid,
+                        depo_id: depoId,
+                        depo_kodu: rawValue
+                    })
+                });
+
+                var res = await response.json();
+                if (res.success) {
+                    input.style.borderColor = '#10b981';
+                    setTimeout(() => {
+                        input.style.borderColor = 'var(--hk-border)';
+                    }, 1500);
+
+                    var product = this.state.products.find(p => p.id === id);
+                    if (product) {
+                        if (vid > 0 && product.variations) {
+                            var variation = product.variations.find(v => v.id === vid);
+                            if (variation) {
+                                if (!variation.all_codes) variation.all_codes = {};
+                                variation.all_codes[String(depoId)] = rawValue || null;
+                            }
+                        } else {
+                            if (!product.all_codes) product.all_codes = {};
+                            product.all_codes[String(depoId)] = rawValue || null;
+                        }
+                    }
+                } else {
+                    alert('Hata: ' + (res.errors ? res.errors.join(', ') : 'Depo kodu güncellenemedi.'));
+                    input.style.borderColor = '#ef4444';
+                }
+            } catch (e) {
+                console.error(e);
+                alert('İletişim hatası oluştu.');
+                input.style.borderColor = '#ef4444';
+            } finally {
+                input.disabled = false;
+            }
         }
     };
 
