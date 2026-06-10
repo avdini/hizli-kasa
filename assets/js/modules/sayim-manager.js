@@ -136,6 +136,7 @@
                 if (e.target !== self.elements.urunEkleInput && 
                     e.target.tagName !== 'INPUT' && 
                     e.target.tagName !== 'BUTTON' &&
+                    !self.elements.urunEkleResults.contains(e.target) &&
                     !e.target.classList.contains('btn-sayim-adet') &&
                     !e.target.classList.contains('sayim-adet-input')) {
                     self.elements.barkodInput.focus();
@@ -157,7 +158,9 @@
 
             // Hide results when clicking outside
             document.addEventListener('click', function(e) {
-                if (e.target !== self.elements.urunEkleInput && e.target !== self.elements.urunEkleResults) {
+                if (e.target !== self.elements.urunEkleInput && 
+                    e.target !== self.elements.urunEkleResults && 
+                    !self.elements.urunEkleResults.contains(e.target)) {
                     self.elements.urunEkleResults.style.display = 'none';
                 }
             });
@@ -794,6 +797,7 @@
                         self.elements.urunEkleResults.style.display = 'none';
                         self.elements.urunEkleInput.value = '';
                         self.scanBarcode();
+                        self.elements.barkodInput.focus();
                     });
                 });
 
