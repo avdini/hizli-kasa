@@ -243,9 +243,16 @@
                     var barkodTekliBtn = target.closest('.btn-barkod-tekli');
                     var urunGitBtn = target.closest('.btn-urun-git');
                     var imgTarget = target.closest('.urun-img') || target.closest('.variation-img');
+                    var depoKoduTarget = target.closest('.depo-kodu-container');
                     var kart = target.closest('.terminal-urun-kart');
                     
                     if (!kart) return;
+
+                    // Depo Kodu / RAF alanına tıklanınca kart açılıp kapanmasını engelle
+                    if (depoKoduTarget) {
+                        e.stopPropagation();
+                        return;
+                    }
 
                     // Resme Tıklama (Önizleme)
                     if (imgTarget) {
