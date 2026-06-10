@@ -862,3 +862,42 @@ body.mobile-inventory-app {
     margin-left: 4px;
     vertical-align: middle;
 }
+
+/* Depo Kodu Badge */
+.depo-kodu-badge {
+    background: var(--input-bg);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    border: 1px solid var(--glass-border);
+    text-transform: uppercase;
+}
+
+/* Identifiers (SKU & RAF) */
+.card-identifiers {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 2px;
+}
+.card-identifiers strong {
+    color: var(--text-main);
+    font-weight: 600;
+}
+.card-separator {
+    color: var(--text-dim);
+    opacity: 0.5;
+}
+.card-shelf {
+    color: var(--accent);
+    font-size: 11px;
+}
+.card-shelf strong {
+    color: var(--accent);
+    font-weight: 800;
+    font-size: 12px;
+}

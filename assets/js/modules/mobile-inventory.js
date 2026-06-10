@@ -1011,7 +1011,10 @@
                         <img src="${img}" class="card-img" alt="">
                         <div class="card-info">
                             <div class="card-name">${p.name}</div>
-                            <div class="card-sku">${p.sku || 'KARIŞIK SKU'} ${depoKodu ? ` · <span class="depo-kodu-badge" style="background: rgba(255,255,255,0.1); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase;">DK: ${depoKodu}</span>` : ''}</div>
+                            <div class="card-identifiers">
+                                <span class="card-sku">SKU: <strong>${p.sku || 'KARIŞIK SKU'}</strong></span>
+                                ${depoKodu ? `<span class="card-separator">/</span><span class="card-shelf">RAF: <strong>${depoKodu}</strong></span>` : ''}
+                            </div>
                             <div class="var-summary">${varCount} Varyasyon Mevcut</div>
                         </div>
                         <div class="expand-chevron">▼</div>
@@ -1071,7 +1074,10 @@
                             <img src="${img}" class="card-img-mini" alt="">
                             <div class="card-info">
                                 <div class="card-name">${p.name.replace(/.* - /, '')}</div>
-                                <div class="card-sku">${p.sku || ''} ${depoKodu ? ` · <span class="depo-kodu-badge" style="background: rgba(255,255,255,0.1); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase;">DK: ${depoKodu}</span>` : ''}</div>
+                                <div class="card-identifiers">
+                                    <span class="card-sku">SKU: <strong>${p.sku || 'YOK'}</strong></span>
+                                    ${depoKodu ? `<span class="card-separator">/</span><span class="card-shelf">RAF: <strong>${depoKodu}</strong></span>` : ''}
+                                </div>
                                 ${priceHtml}
                             </div>
                             <div class="card-side-stocks">
@@ -1100,7 +1106,10 @@
                         <img src="${img}" class="card-img" alt="">
                         <div class="card-info">
                             <div class="card-name">${p.name} ${p.is_variable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
-                            <div class="card-sku">${p.sku || 'SKU YOK'} ${depoKodu ? ` · <span class="depo-kodu-badge" style="background: rgba(255,255,255,0.1); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase;">DK: ${depoKodu}</span>` : ''}</div>
+                            <div class="card-identifiers">
+                                <span class="card-sku">SKU: <strong>${p.sku || 'SKU YOK'}</strong></span>
+                                ${depoKodu ? `<span class="card-separator">/</span><span class="card-shelf">RAF: <strong>${depoKodu}</strong></span>` : ''}
+                            </div>
                             ${priceHtml}
                         </div>
                     </div>
