@@ -19,6 +19,12 @@ Bu klasör projenin "hafızasıdır". Çalıştığınız alanda daha önce bir 
 2.  **Mevcut Notları Güncelleyin:** Bir dosyanın yapısını veya çalışma mantığını değiştirdiyseniz, `.agents/` içerisindeki ilgili dokümanı güncelleyin.
 3.  **Arama Standardı:** Projede çalışmaya başlayan her ajan ilk iş olarak `.agents/` klasörünü analiz etmeli ve projenin yapısına buradan hakim olmalıdır.
 
+### Önemli Bellek Dokümanları:
+-   **Genel Kılavuzlar:** [guidelines.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/context/guidelines.md)
+-   **V2 REST API Standartları:** [api-development.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/skills/api-development.md)
+-   **Stok Sayımı ve Arka Plan Eşitleme Mimarisi:** [stock-sync-architecture.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/context/stock-sync-architecture.md)
+
+
 ---
 
 ## 3. Mimari ve API Standartları (V2)

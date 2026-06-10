@@ -1546,8 +1546,58 @@ body.dark-mode .other-stock-badge {
     font-size: 12px;
 }
 
-.sayim-detail-inline th {
+/* Son Okutulan Ürün HUD Kartı */
+.sayim-hud-kart-visual {
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%) !important;
+    border: 1px solid var(--hk-accent) !important;
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15) !important;
+    animation: hudPulse 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transform-origin: center;
+}
+
+@keyframes hudPulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.hud-urun-icerik {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.hud-urun-gorsel-wrapper {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: var(--hk-bg-input);
+    border-radius: 10px;
+    border: 1px solid var(--hk-border);
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+/* Büyük Farklılık Uyuşmazlık Uyarıları */
+.sayim-bitir-uyarilar {
+    background: rgba(231, 76, 60, 0.05);
+    border: 1px solid rgba(231, 76, 60, 0.2);
+    border-radius: 10px;
+    padding: 12px;
+}
+.sayim-bitir-uyarilar th {
+    background: rgba(231, 76, 60, 0.1) !important;
+    color: #e74c3c !important;
+    font-weight: 700;
+}
+.sayim-bitir-uyarilar td {
+    border-bottom: 1px solid rgba(231, 76, 60, 0.1) !important;
+}
+.sayim-bitir-uyarilar tbody tr:last-child td {
+    border-bottom: none !important;
 }
 
 /* Mobilde Ürün Kartı Düzenleme */

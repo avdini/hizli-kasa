@@ -167,6 +167,29 @@ if (!defined('ABSPATH')) exit;
                     </div>
                     <p class="sayim-yardim-metni">Barkod okutulduğunda ürün listede varsa adeti 1 artar, yoksa listeye 1 adet olarak eklenir.</p>
                 </div>
+
+                <!-- Son Okutulan Ürün HUD Kartı -->
+                <div id="sayim-hud-kart" class="sayim-kart glass sayim-hud-kart-visual" style="display: none;">
+                    <h4>Son Okutulan Ürün</h4>
+                    <div class="hud-urun-icerik">
+                        <div class="hud-urun-gorsel-wrapper">
+                            <img id="hud-urun-resim" src="" alt="Ürün Görseli" style="display: none; width: 50px; height: 50px; border-radius: 6px; object-fit: cover;">
+                            <span id="hud-urun-placeholder" class="ikon" style="font-size: 32px; display: block; text-align: center;">📦</span>
+                        </div>
+                        <div class="hud-urun-detaylar" style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+                            <span id="hud-urun-ad" class="hud-baslik" style="font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;">-</span>
+                            <span id="hud-urun-sku" class="hud-alt" style="font-size: 11px; color: var(--hk-text-muted); display: block;">-</span>
+                            <div class="hud-adet-info" style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 4px;">
+                                <span class="hud-etiket" style="color: var(--hk-text-sub);">Sayılan Adet:</span>
+                                <span id="hud-urun-adet" class="hud-deger" style="font-weight: 700; color: var(--hk-text-main);">-</span>
+                            </div>
+                            <div class="hud-fark-info" style="display: flex; justify-content: space-between; font-size: 12px;">
+                                <span class="hud-etiket" style="color: var(--hk-text-sub);">Fark:</span>
+                                <span id="hud-urun-fark" class="hud-deger-fark" style="font-weight: 700;">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="sayim-kart glass sayim-ayarlar-kart">
                     <h4>Ayarlar & Bilgi</h4>
@@ -188,6 +211,13 @@ if (!defined('ABSPATH')) exit;
                             <span class="slider"></span>
                         </label>
                         <span>Sesli Geri Bildirim</span>
+                    </div>
+                    <div class="sayim-ses-kontrol" style="margin-top: 10px;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="chk-sayim-miktar-sor">
+                            <span class="slider"></span>
+                        </label>
+                        <span>Barkod Okununca Miktar Sor</span>
                     </div>
                 </div>
             </div>
@@ -260,9 +290,46 @@ if (!defined('ABSPATH')) exit;
                 </label>
             </div>
 
-            <div class="modal-butonlar">
+            <!-- Büyük Farklılık Uyuşmazlık Uyarıları -->
+            <div id="sayim-discrepancy-warnings" class="sayim-bitir-uyarilar" style="display: none; margin-top: 15px; border-top: 1px solid var(--hk-border); padding-top: 15px;">
+                <h4 style="color: #e74c3c; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                    <span>⚠️</span> Büyük Stok Farkları Tespit Edildi
+                </h4>
+                <div style="max-height: 150px; overflow-y: auto; border: 1px solid var(--hk-border); border-radius: 8px;">
+                    <table class="gs-tablo" style="width: 100%; font-size: 11px; margin: 0;">
+                        <thead>
+                            <tr>
+                                <th>Ürün Adı</th>
+                                <th style="text-align: center; width: 60px;">Sistem</th>
+                                <th style="text-align: center; width: 60px;">Sayılan</th>
+                                <th style="text-align: center; width: 60px;">Fark</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sayim-discrepancy-body">
+                            <!-- JS tarafından doldurulacak -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-butonlar" style="margin-top: 20px;">
                 <button id="sayim-bitir-vazgec" class="btn-secondary">İptal</button>
                 <button id="sayim-bitir-onayla" class="btn-primary">Sayımı Bitir ve Eşitle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Miktar Doğrulama Hızlı Giriş Modalı -->
+    <div id="sayim-qty-prompt-modal" class="modal-cerceve" style="display:none; z-index: 1100;">
+        <div class="modal-icerik glass" style="max-width: 350px; text-align: center; padding: 25px;">
+            <h3 id="sayim-qty-prompt-title" style="margin-top: 0;">Miktar Girin</h3>
+            <p id="sayim-qty-prompt-product" style="font-weight: 600; font-size: 14px; color: var(--hk-text-main); margin-bottom: 15px; word-break: break-word;">-</p>
+            <div class="sayim-qty-prompt-input-wrapper" style="margin: 20px 0;">
+                <input type="number" id="sayim-qty-prompt-input" style="font-size: 28px; text-align: center; padding: 10px; width: 140px; border-radius: 10px; border: 2px solid var(--hk-border); background: var(--hk-bg-input); color: var(--hk-text-main); font-weight: 700;" min="0" step="1" value="1">
+            </div>
+            <div class="modal-butonlar" style="justify-content: center; gap: 10px; margin-top: 15px;">
+                <button id="btn-sayim-qty-prompt-cancel" class="btn-secondary" style="padding: 8px 20px;">İptal</button>
+                <button id="btn-sayim-qty-prompt-confirm" class="btn-primary" style="padding: 8px 25px;">Onayla</button>
             </div>
         </div>
     </div>

@@ -12,7 +12,8 @@
             activeSession: null,
             items: [],
             isCountingMode: false,
-            searchTimer: null
+            searchTimer: null,
+            pollingTimer: null
         },
 
         init: function() {
@@ -55,7 +56,22 @@
                 urunEkleResults: document.getElementById('sayim-urun-ekle-results'),
                 bitirModal: document.getElementById('sayim-bitir-modal'),
                 bitirVazgec: document.getElementById('sayim-bitir-vazgec'),
-                bitirOnayla: document.getElementById('sayim-bitir-onayla')
+                bitirOnayla: document.getElementById('sayim-bitir-onayla'),
+                chkMiktarSor: document.getElementById('chk-sayim-miktar-sor'),
+                hudKart: document.getElementById('sayim-hud-kart'),
+                hudResim: document.getElementById('hud-urun-resim'),
+                hudPlaceholder: document.getElementById('hud-urun-placeholder'),
+                hudAd: document.getElementById('hud-urun-ad'),
+                hudSku: document.getElementById('hud-urun-sku'),
+                hudAdet: document.getElementById('hud-urun-adet'),
+                hudFark: document.getElementById('hud-urun-fark'),
+                discrepancyWarnings: document.getElementById('sayim-discrepancy-warnings'),
+                discrepancyBody: document.getElementById('sayim-discrepancy-body'),
+                qtyPromptModal: document.getElementById('sayim-qty-prompt-modal'),
+                qtyPromptInput: document.getElementById('sayim-qty-prompt-input'),
+                qtyPromptConfirm: document.getElementById('btn-sayim-qty-prompt-confirm'),
+                qtyPromptCancel: document.getElementById('btn-sayim-qty-prompt-cancel'),
+                qtyPromptProduct: document.getElementById('sayim-qty-prompt-product')
             };
         },
 
@@ -79,7 +95,7 @@
 
             // Complete session modal triggers
             this.elements.btnSayimBitir.addEventListener('click', function() {
-                self.elements.bitirModal.style.display = 'flex';
+                self.showCompleteModal();
             });
 
             this.elements.bitirVazgec.addEventListener('click', function() {
@@ -88,6 +104,22 @@
 
             this.elements.bitirOnayla.addEventListener('click', function() {
                 self.completeSession();
+            });
+
+            // Quantity prompt modal triggers
+            this.elements.qtyPromptCancel.addEventListener('click', function() {
+                self.elements.qtyPromptModal.style.display = 'none';
+                self.elements.barkodInput.focus();
+            });
+
+            this.elements.qtyPromptConfirm.addEventListener('click', function() {
+                self.confirmQtyPrompt();
+            });
+
+            this.elements.qtyPromptInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    self.confirmQtyPrompt();
+                }
             });
 
             // Barcode scanning keypress (Enter)
@@ -219,6 +251,12 @@
                 if (sortingBox) sortingBox.style.display = '';
                 if (searchBox) searchBox.style.display = '';
 
+                // Clear any active polling timer
+                if (this.state.pollingTimer) {
+                    clearTimeout(this.state.pollingTimer);
+                    this.state.pollingTimer = null;
+                }
+
                 // Reload product list to show any stock changes
                 if (HK.StockTerminal) {
                     HK.StockTerminal.loadProducts();
@@ -252,7 +290,7 @@
 
                     // Update UI labels
                     if (HK.DepoManager) {
-                        self.elements.depoAdi.textContent = HK.DepoManager.getViewDepoName();
+                        self.elements.depoAdi.textContent = data.is_other_warehouse_processing ? data.other_warehouse_name : HK.DepoManager.getViewDepoName();
                     }
                     self.elements.personelAdi.textContent = data.session.created_by;
                     
@@ -261,9 +299,76 @@
                     var formattedDate = dateObj.toLocaleDateString('tr-TR') + ' ' + dateObj.toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'});
                     self.elements.tarihLabel.textContent = formattedDate;
 
-                    self.renderItems();
-                    self.elements.barkodInput.focus();
+                    if (data.session.status === 'processing') {
+                        self.elements.barkodInput.disabled = true;
+                        self.elements.urunEkleInput.disabled = true;
+                        self.elements.btnSayimBitir.disabled = true;
+                        self.elements.btnSayimIptal.disabled = true;
+                        
+                        var progress = data.progress || { processed: 0, total: 0, percentage: 0 };
+                        var pct = parseInt(progress.percentage);
+                        var processed = parseInt(progress.processed);
+                        var total = parseInt(progress.total);
+
+                        var syncTitle = data.is_other_warehouse_processing 
+                            ? `Stoklar Arka Planda Eşitleniyor (${data.other_warehouse_name})`
+                            : 'Stoklar Arka Planda Eşitleniyor';
+                        var syncDesc = data.is_other_warehouse_processing
+                            ? `"${data.other_warehouse_name}" deposunun stok güncellemeleri işleniyor. Yeni bir sayım başlatmak için lütfen bu işlemin bitmesini bekleyin.`
+                            : 'Sunucu stok güncellemelerini işliyor. Sayfayı güvenle kapatabilirsiniz, işlem arka planda devam eder.';
+
+                        self.elements.itemsBody.innerHTML = `
+                            <tr>
+                                <td colspan="7" class="rapor-empty-td" style="padding: 45px 20px; text-align: center;">
+                                    <h4 style="color: var(--hk-accent, #3b82f6); margin: 0 0 10px; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                                        <div class="spin" style="width: 18px; height: 18px; border-width: 2.5px; vertical-align: middle;"></div>
+                                        ${syncTitle}
+                                    </h4>
+                                    <p style="color: var(--hk-text-muted); font-size: 13px; margin: 0 0 20px;">
+                                        ${syncDesc}
+                                    </p>
+                                    <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--hk-border); border-radius: 10px; height: 24px; max-width: 400px; margin: 0 auto 10px; overflow: hidden; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);">
+                                        <div style="background: linear-gradient(90deg, var(--hk-accent, #3b82f6) 0%, #2563eb 100%); height: 100%; width: ${pct}%; transition: width 0.4s ease-out; box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);"></div>
+                                        <span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">${pct}%</span>
+                                    </div>
+                                    <span style="font-size: 12px; color: var(--hk-text-sub); font-weight: 600;">Güncellenen: ${processed} / ${total} Ürün</span>
+                                </td>
+                            </tr>
+                        `;
+
+                        // Polling to update progress
+                        if (self.state.pollingTimer) {
+                            clearTimeout(self.state.pollingTimer);
+                        }
+                        self.state.pollingTimer = setTimeout(function() {
+                            if (self.state.isCountingMode && self.state.activeSession && self.state.activeSession.status === 'processing') {
+                                self.loadActiveSession();
+                            }
+                        }, 3000);
+                    } else {
+                        if (self.state.pollingTimer) {
+                            clearTimeout(self.state.pollingTimer);
+                            self.state.pollingTimer = null;
+                        }
+                        self.elements.barkodInput.disabled = false;
+                        self.elements.urunEkleInput.disabled = false;
+                        self.elements.btnSayimBitir.disabled = false;
+                        self.elements.btnSayimIptal.disabled = false;
+                        self.renderItems();
+                        self.elements.barkodInput.focus();
+                    }
                 } else {
+                    // Eşitleme bittiğinde kullanıcıya bildirim ver
+                    if (self.state.activeSession && self.state.activeSession.status === 'processing') {
+                        if (HK.UIRenderer) HK.UIRenderer.showToast('Stok eşitleme arka planda başarıyla tamamlandı!', 'success');
+                        if (HK.StockTerminal) {
+                            HK.StockTerminal.loadProducts();
+                        }
+                    }
+                    if (self.state.pollingTimer) {
+                        clearTimeout(self.state.pollingTimer);
+                        self.state.pollingTimer = null;
+                    }
                     self.state.activeSession = null;
                     self.state.items = [];
                     self.elements.baslangicEkrani.style.display = 'flex';
@@ -316,6 +421,16 @@
 
             if (!barcode || !this.state.activeSession) return;
 
+            // Double Scan Protection (1.5 seconds cooldown)
+            var now = Date.now();
+            if (self.state.lastScannedBarcode === barcode && (now - self.state.lastScannedTime) < 1500) {
+                self.playFeedbackSound('error');
+                if (HK.UIRenderer) HK.UIRenderer.showToast('Çift okutma engellendi!', 'warning');
+                return;
+            }
+            self.state.lastScannedBarcode = barcode;
+            self.state.lastScannedTime = now;
+
             try {
                 var response = await fetch(`${kasaAyar.rootApiUrl}hizli-kasa/v1/sayim/scan-item`, {
                     method: 'POST',
@@ -345,8 +460,23 @@
                         self.state.items.push(data.item);
                     }
 
-                    // Render with flash effect on the scanned item
+                    // HUD Kartını güncelle
+                    self.updateHUDCard(data.item);
+
+                    // Render list
                     self.renderItems(data.item.id);
+
+                    // Miktar Sor modu aktifse modalı aç
+                    if (self.elements.chkMiktarSor && self.elements.chkMiktarSor.checked) {
+                        self.state.promptItem = data.item;
+                        self.elements.qtyPromptProduct.textContent = data.item.name + (data.item.attributes ? ' (' + data.item.attributes + ')' : '');
+                        self.elements.qtyPromptInput.value = parseFloat(data.item.counted_qty);
+                        self.elements.qtyPromptModal.style.display = 'flex';
+                        setTimeout(function() {
+                            self.elements.qtyPromptInput.focus();
+                            self.elements.qtyPromptInput.select();
+                        }, 50);
+                    }
                 } else {
                     self.playFeedbackSound('error');
                     var msg = data.message || 'Barkod bulunamadı!';
@@ -358,7 +488,51 @@
                 if (HK.UIRenderer) HK.UIRenderer.showToast('Barkod sorgulanırken hata oluştu.', 'error');
             }
 
-            self.elements.barkodInput.focus();
+            if (!self.elements.chkMiktarSor || !self.elements.chkMiktarSor.checked) {
+                self.elements.barkodInput.focus();
+            }
+        },
+
+        updateHUDCard: function(item) {
+            var self = this;
+            if (!self.elements.hudKart) return;
+
+            self.elements.hudKart.style.display = 'block';
+            self.elements.hudAd.textContent = item.name;
+            self.elements.hudSku.textContent = 'SKU: ' + item.sku;
+            self.elements.hudAdet.textContent = parseFloat(item.counted_qty);
+            
+            var diffVal = parseFloat(item.diff);
+            self.elements.hudFark.textContent = (diffVal > 0 ? '+' : '') + diffVal;
+            self.elements.hudFark.className = 'hud-deger-fark ' + (diffVal > 0 ? 'diff-plus' : (diffVal < 0 ? 'diff-minus' : 'diff-zero'));
+
+            if (item.image) {
+                self.elements.hudResim.src = item.image;
+                self.elements.hudResim.style.display = 'block';
+                self.elements.hudPlaceholder.style.display = 'none';
+            } else {
+                self.elements.hudResim.style.display = 'none';
+                self.elements.hudPlaceholder.style.display = 'block';
+            }
+
+            // Animasyon efekti tetikle
+            self.elements.hudKart.classList.remove('sayim-hud-kart-visual');
+            void self.elements.hudKart.offsetWidth; // Reflow
+            self.elements.hudKart.classList.add('sayim-hud-kart-visual');
+        },
+
+        confirmQtyPrompt: function() {
+            var self = this;
+            if (!self.state.promptItem) return;
+
+            var newQty = parseFloat(self.elements.qtyPromptInput.value);
+            if (isNaN(newQty) || newQty < 0) {
+                newQty = 0;
+            }
+
+            self.elements.qtyPromptModal.style.display = 'none';
+            self.updateItemQty(self.state.promptItem, newQty);
+            self.state.promptItem = null;
         },
 
         updateItemQty: async function(item, newQty) {
@@ -469,6 +643,46 @@
             }
         },
 
+        showCompleteModal: function() {
+            var self = this;
+            if (!self.state.activeSession) return;
+
+            // Find discrepancy warnings
+            var discrepancies = [];
+            self.state.items.forEach(function(item) {
+                var counted = parseFloat(item.counted_qty);
+                var system = parseFloat(item.system_qty);
+                var diff = Math.abs(counted - system);
+                
+                // Alert if difference is >= 20 OR (system > 0 and difference is >= 90% of system stock)
+                var isLargeDiff = (diff >= 20) || (system > 0 && (diff / system) >= 0.9);
+                if (isLargeDiff) {
+                    discrepancies.push(item);
+                }
+            });
+
+            if (discrepancies.length > 0 && self.elements.discrepancyWarnings && self.elements.discrepancyBody) {
+                var html = '';
+                discrepancies.forEach(function(item) {
+                    var diffVal = parseFloat(item.diff);
+                    var diffSign = diffVal > 0 ? '+' : '';
+                    var diffClass = diffVal > 0 ? 'diff-plus' : 'diff-minus';
+                    html += '<tr>' +
+                        '<td>' + self.escapeHtml(item.name) + (item.attributes ? ' <span class="var-badge">' + self.escapeHtml(item.attributes) + '</span>' : '') + '</td>' +
+                        '<td style="text-align:center; font-weight:500;">' + parseFloat(item.system_qty) + '</td>' +
+                        '<td style="text-align:center; font-weight:500;">' + parseFloat(item.counted_qty) + '</td>' +
+                        '<td style="text-align:center;" class="' + diffClass + '">' + diffSign + diffVal + '</td>' +
+                        '</tr>';
+                });
+                self.elements.discrepancyBody.innerHTML = html;
+                self.elements.discrepancyWarnings.style.display = 'block';
+            } else if (self.elements.discrepancyWarnings) {
+                self.elements.discrepancyWarnings.style.display = 'none';
+            }
+
+            self.elements.bitirModal.style.display = 'flex';
+        },
+
         completeSession: async function() {
             var self = this;
             if (!this.state.activeSession) return;
@@ -483,6 +697,8 @@
             }
 
             try {
+                if (HK.UIRenderer) HK.UIRenderer.showToast('Sayım sonlandırılıyor, lütfen bekleyin...', 'info');
+
                 var response = await fetch(`${kasaAyar.rootApiUrl}hizli-kasa/v1/sayim/complete`, {
                     method: 'POST',
                     headers: {
@@ -498,7 +714,7 @@
                 var data = await response.json();
 
                 if (response.ok && data.success) {
-                    if (HK.UIRenderer) HK.UIRenderer.showToast('Sayım seansı başarıyla tamamlandı ve envanter eşitlendi.', 'success');
+                    alert('Başarılı!\n\nSunucu tüm güncel sayım listesini aldı ve stok eşitleme işlemini arka planda devraldı.\n\nArtık bu sekmeyi güvenle kapatabilirsiniz veya POS üzerinden satış yapmaya devam edebilirsiniz. İşlem arka planda tamamlandığında raporlar sekmesinde arşivlenecektir.');
                     self.loadActiveSession();
                 } else {
                     var msg = data.message || 'Sayım tamamlanamadı!';

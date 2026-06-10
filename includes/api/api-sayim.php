@@ -181,30 +181,67 @@ function hizli_kasa_sayim_get_active($request) {
     // Aktif oturumu bul
     $session = $wpdb->get_row($wpdb->prepare("
         SELECT * FROM {$tables['sayim_sessions']} 
-        WHERE location_id = %d AND status = 'aktif'
+        WHERE location_id = %d AND status IN ('aktif', 'processing')
         LIMIT 1
     ", $depo_id));
+
+    $is_other_warehouse_processing = false;
+    $other_warehouse_name = '';
+
+    if (!$session) {
+        $session = $wpdb->get_row("
+            SELECT * FROM {$tables['sayim_sessions']} 
+            WHERE status = 'processing'
+            LIMIT 1
+        ");
+        if ($session) {
+            $is_other_warehouse_processing = true;
+            $other_warehouse_name = $wpdb->get_var($wpdb->prepare("
+                SELECT name FROM {$tables['depolar']} WHERE id = %d
+            ", $session->location_id));
+        }
+    }
 
     if (!$session) {
         return ['active' => false];
     }
 
     // Oturumun kalemlerini en son güncellenen en üstte olacak şekilde getir
-    $kalemler = $wpdb->get_results($wpdb->prepare("
-        SELECT * FROM {$tables['sayim_kalemleri']}
-        WHERE session_id = %d
-        ORDER BY updated_at DESC
-    ", $session->id));
-
     $items = [];
-    foreach ($kalemler as $row) {
-        $items[] = hizli_kasa_sayim_format_kalem($row);
+    if (!$is_other_warehouse_processing) {
+        $kalemler = $wpdb->get_results($wpdb->prepare("
+            SELECT * FROM {$tables['sayim_kalemleri']}
+            WHERE session_id = %d
+            ORDER BY updated_at DESC
+        ", $session->id));
+
+        foreach ($kalemler as $row) {
+            $items[] = hizli_kasa_sayim_format_kalem($row);
+        }
     }
 
     $creator = get_userdata($session->created_by);
 
+    $progress = null;
+    if ($session->status === 'processing') {
+        $processed = (int)$session->total_items;
+        $remaining = (int)$wpdb->get_var($wpdb->prepare("
+            SELECT COUNT(*) FROM {$tables['sayim_kalemleri']} WHERE session_id = %d
+        ", $session->id));
+        $total = $processed + $remaining;
+        $pct = $total > 0 ? round(($processed / $total) * 100) : 0;
+        $progress = [
+            'processed' => $processed,
+            'remaining' => $remaining,
+            'total' => $total,
+            'percentage' => $pct
+        ];
+    }
+
     return [
         'active' => true,
+        'is_other_warehouse_processing' => $is_other_warehouse_processing,
+        'other_warehouse_name' => $other_warehouse_name ?: '',
         'session' => [
             'id' => (int)$session->id,
             'location_id' => (int)$session->location_id,
@@ -212,7 +249,8 @@ function hizli_kasa_sayim_get_active($request) {
             'created_by' => $creator ? $creator->display_name : 'Bilinmeyen',
             'created_at' => $session->created_at
         ],
-        'items' => $items
+        'items' => $items,
+        'progress' => $progress
     ];
 }
 
@@ -230,15 +268,29 @@ function hizli_kasa_sayim_start($request) {
 
     $tables = Hizli_Kasa_Database::get_tables();
 
-    // Zaten aktif bir oturum var mı kontrol et
-    $active_session = $wpdb->get_var($wpdb->prepare("
-        SELECT id FROM {$tables['sayim_sessions']}
+    // Zaten aktif veya işlenen bir oturum var mı kontrol et
+    $active_session = $wpdb->get_row($wpdb->prepare("
+        SELECT id, status FROM {$tables['sayim_sessions']}
         WHERE location_id = %d AND status = 'aktif'
         LIMIT 1
     ", $depo_id));
 
     if ($active_session) {
         return new WP_Error('session_exists', 'Bu depo için halihazırda aktif bir sayım oturumu bulunuyor.', ['status' => 400]);
+    }
+
+    $processing_session = $wpdb->get_row("
+        SELECT id, location_id FROM {$tables['sayim_sessions']}
+        WHERE status = 'processing'
+        LIMIT 1
+    ");
+
+    if ($processing_session) {
+        $depo_name = $wpdb->get_var($wpdb->prepare("
+            SELECT name FROM {$tables['depolar']} WHERE id = %d
+        ", $processing_session->location_id));
+        $depo_label = $depo_name ? "'{$depo_name}'" : "Bir başka";
+        return new WP_Error('processing_exists', "{$depo_label} deposu için arka planda stok eşitleme işlemi (cron) devam ediyor. Lütfen bu işlem bitene kadar yeni bir sayım başlatmayın.", ['status' => 400]);
     }
 
     $user_id = get_current_user_id();
@@ -494,7 +546,7 @@ function hizli_kasa_sayim_discard($request) {
 }
 
 /**
- * Sayımı tamamlar ve WooCommerce depolarını eşitler.
+ * Sayımı tamamlar ve asenkron WooCommerce depolarını eşitlemeyi başlatır.
  */
 function hizli_kasa_sayim_complete($request) {
     global $wpdb;
@@ -508,6 +560,20 @@ function hizli_kasa_sayim_complete($request) {
 
     $tables = Hizli_Kasa_Database::get_tables();
 
+    $processing_session = $wpdb->get_row("
+        SELECT id, location_id FROM {$tables['sayim_sessions']}
+        WHERE status = 'processing'
+        LIMIT 1
+    ");
+
+    if ($processing_session) {
+        $depo_name = $wpdb->get_var($wpdb->prepare("
+            SELECT name FROM {$tables['depolar']} WHERE id = %d
+        ", $processing_session->location_id));
+        $depo_label = $depo_name ? "'{$depo_name}'" : "Bir başka";
+        return new WP_Error('processing_exists', "{$depo_label} deposu için arka planda stok eşitleme işlemi (cron) devam ediyor. Lütfen bu işlem bitene kadar sayımı sonlandırmayın.", ['status' => 400]);
+    }
+
     $session = $wpdb->get_row($wpdb->prepare("
         SELECT * FROM {$tables['sayim_sessions']} WHERE id = %d AND status = 'aktif'
     ", $session_id));
@@ -517,23 +583,105 @@ function hizli_kasa_sayim_complete($request) {
     }
 
     $location_id = $session->location_id;
+    $now = current_time('mysql');
 
-    // Sayılmış kalemleri çek
-    $kalemler = $wpdb->get_results($wpdb->prepare("
-        SELECT * FROM {$tables['sayim_kalemleri']} WHERE session_id = %d
+    // Durumu 'processing' yap ve rapor alanını sıfırla
+    $wpdb->update($tables['sayim_sessions'], [
+        'status' => 'processing',
+        'update_type' => $update_type,
+        'report_data' => wp_json_encode([]),
+        'total_items' => 0,
+        'total_diff' => 0.0
+    ], ['id' => $session_id]);
+
+    // Eğer güncelleme tipi 'full' (Tam Eşitleme) ise:
+    // Bu depoda kaydı olan ama sayılmayan TÜM diğer ürünleri 0 olarak sayım kalemlerine ekle.
+    if ($update_type === 'full') {
+        $wpdb->query($wpdb->prepare("
+            INSERT INTO {$tables['sayim_kalemleri']} (session_id, product_id, variation_id, counted_qty, system_qty, updated_at)
+            SELECT %d, sk.product_id, sk.variation_id, 0.0, sk.quantity, %s
+            FROM {$tables['stok_konumlari']} sk
+            WHERE sk.location_id = %d AND sk.quantity > 0
+              AND NOT EXISTS (
+                  SELECT 1 FROM {$tables['sayim_kalemleri']} k
+                  WHERE k.session_id = %d AND k.product_id = sk.product_id AND k.variation_id = sk.variation_id
+              )
+        ", $session_id, $now, $location_id, $session_id));
+    }
+
+    // Tek seferlik WP Cron olayını planla
+    wp_schedule_single_event(time(), 'hizli_kasa_sayim_background_sync', array($session_id));
+
+    // Cron'u tetikle (asenkron istek atarak hemen başlat)
+    wp_remote_post(
+        site_url('wp-cron.php'),
+        array(
+            'timeout'   => 0.01,
+            'blocking'  => false,
+            'sslverify' => false,
+        )
+    );
+
+    return [
+        'success' => true,
+        'message' => 'Sayım başarıyla kuyruğa alındı. Sunucu işlemleri devraldı, tarayıcıyı kapatabilirsiniz.',
+        'session_id' => $session_id,
+        'status' => 'processing'
+    ];
+}
+
+// Cron Kancasını Kaydet
+add_action('hizli_kasa_sayim_background_sync', 'hizli_kasa_sayim_background_sync_callback');
+
+/**
+ * Arka planda sayım kalemlerini 100'erli paketler halinde işler.
+ */
+function hizli_kasa_sayim_background_sync_callback($session_id) {
+    global $wpdb;
+    $tables = Hizli_Kasa_Database::get_tables();
+
+    $session = $wpdb->get_row($wpdb->prepare("
+        SELECT * FROM {$tables['sayim_sessions']} WHERE id = %d AND status = 'processing'
     ", $session_id));
 
-    $scanned_map = []; // Hangi varyasyon/ürünlerin güncellendiğini tutmak için
-    $report_items = [];
-    $total_items = 0;
-    $total_diff = 0.0;
+    if (!$session) {
+        return;
+    }
+
+    $location_id = $session->location_id;
+    $update_type = $session->update_type;
+
+    // Sıradaki 100 kalemi çek
+    $kalemler = $wpdb->get_results($wpdb->prepare("
+        SELECT * FROM {$tables['sayim_kalemleri']} WHERE session_id = %d LIMIT 100
+    ", $session_id));
+
+    if (empty($kalemler)) {
+        // İşlenecek kalem kalmadı -> Oturumu tamamla
+        $wpdb->update($tables['sayim_sessions'], [
+            'status' => 'tamamlandi',
+            'completed_at' => current_time('mysql')
+        ], ['id' => $session_id]);
+
+        if (class_exists('Hizli_Kasa_Mismatch_Notifier')) {
+            Hizli_Kasa_Mismatch_Notifier::reset_status();
+        }
+        return;
+    }
+
+    $processed_ids = [];
+    $batch_report_items = [];
+    $batch_total_items = 0;
+    $batch_total_diff = 0.0;
+
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
 
     foreach ($kalemler as $row) {
         $product_id = (int)$row->product_id;
         $variation_id = (int)$row->variation_id;
         $counted_qty = (float)$row->counted_qty;
 
-        // Stok güncellemesini yap
+        // Depo stoğunu güncelle
         Hizli_Kasa_Stock_Manager::update_warehouse_stock_set(
             $product_id,
             $variation_id,
@@ -542,10 +690,10 @@ function hizli_kasa_sayim_complete($request) {
             sprintf('Fiziksel Sayım (%s - Seans #%d)', $update_type === 'full' ? 'Tam' : 'Kısmi', $session_id)
         );
 
-        $scanned_map[$product_id . '_' . $variation_id] = true;
+        $processed_ids[] = (int)$row->id;
 
         $formatted = hizli_kasa_sayim_format_kalem($row);
-        $report_items[] = [
+        $batch_report_items[] = [
             'product_id' => $product_id,
             'variation_id' => $variation_id,
             'name' => $formatted['name'],
@@ -556,89 +704,46 @@ function hizli_kasa_sayim_complete($request) {
             'diff' => $counted_qty - $formatted['system_qty']
         ];
 
-        $total_items++;
-        $total_diff += ($counted_qty - $formatted['system_qty']);
+        $batch_total_items++;
+        $batch_total_diff += ($counted_qty - $formatted['system_qty']);
     }
 
-    // Eğer güncelleme tipi 'full' (Tam Eşitleme) ise:
-    // Bu depoda kaydı olan ama sayılmayan TÜM diğer ürünleri 0 yap.
-    if ($update_type === 'full') {
-        $other_stocks = $wpdb->get_results($wpdb->prepare("
-            SELECT product_id, variation_id, quantity FROM {$tables['stok_konumlari']}
-            WHERE location_id = %d AND quantity > 0
-        ", $location_id));
-
-        foreach ($other_stocks as $stok) {
-            $key = $stok->product_id . '_' . $stok->variation_id;
-            if (!isset($scanned_map[$key])) {
-                // Sayılmayan ürünü sıfırla
-                $p_id = (int)$stok->product_id;
-                $v_id = (int)$stok->variation_id;
-                $sys_qty = (float)$stok->quantity;
-
-                Hizli_Kasa_Stock_Manager::update_warehouse_stock_set(
-                    $p_id,
-                    $v_id,
-                    $location_id,
-                    0.0,
-                    sprintf('Fiziksel Sayım (Tam Eşitleme Sıfırlama - Seans #%d)', $session_id)
-                );
-
-                // Bu sıfırlamayı da rapora ekle
-                $product = wc_get_product($v_id ?: $p_id);
-                if ($product) {
-                    $name = $product->get_name();
-                    $sku = $product->get_sku();
-                    
-                    $attr_desc = '';
-                    if ($product->is_type('variation')) {
-                        $attributes = $product->get_variation_attributes();
-                        $attr_parts = [];
-                        foreach ($attributes as $key_attr => $val_attr) {
-                            $taxonomy = str_replace('attribute_', '', $key_attr);
-                            $label = wc_attribute_label($taxonomy, $product);
-                            $term = get_term_by('slug', $val_attr, $taxonomy);
-                            $display_value = $term ? $term->name : $val_attr;
-                            $attr_parts[] = $label . ': ' . $display_value;
-                        }
-                        $attr_desc = implode(', ', $attr_parts);
-                    }
-
-                    $report_items[] = [
-                        'product_id' => $p_id,
-                        'variation_id' => $v_id,
-                        'name' => $name,
-                        'sku' => $sku ?: (string)($v_id ?: $p_id),
-                        'attributes' => $attr_desc,
-                        'system_qty' => $sys_qty,
-                        'counted_qty' => 0.0,
-                        'diff' => - $sys_qty
-                    ];
-
-                    $total_items++;
-                    $total_diff -= $sys_qty;
-                }
-            }
+    // Mevcut rapor verilerini yükle
+    $existing_report = [];
+    if (!empty($session->report_data)) {
+        $existing_report = json_decode($session->report_data, true);
+        if (!is_array($existing_report)) {
+            $existing_report = [];
         }
     }
 
-    // Oturumu tamamlandı olarak güncelle ve JSON dizisini kaydet
+    $updated_report = array_merge($existing_report, $batch_report_items);
+    $new_total_items = (int)$session->total_items + $batch_total_items;
+    $new_total_diff = (float)$session->total_diff + $batch_total_diff;
+
+    // Oturum özetini güncelle
     $wpdb->update($tables['sayim_sessions'], [
-        'status' => 'tamamlandi',
-        'update_type' => $update_type,
-        'total_items' => $total_items,
-        'total_diff' => $total_diff,
-        'report_data' => wp_json_encode($report_items),
-        'completed_at' => current_time('mysql')
+        'total_items' => $new_total_items,
+        'total_diff' => $new_total_diff,
+        'report_data' => wp_json_encode($updated_report)
     ], ['id' => $session_id]);
 
-    // Kalem detay tablosunu temizle
-    $wpdb->delete($tables['sayim_kalemleri'], ['session_id' => $session_id]);
+    // İşlenen kalemleri detay tablosundan sil
+    $id_list = implode(',', $processed_ids);
+    $wpdb->query("DELETE FROM {$tables['sayim_kalemleri']} WHERE id IN ($id_list)");
 
-    return [
-        'success' => true,
-        'message' => 'Sayım başarıyla tamamlandı ve stoklar güncellendi.'
-    ];
+    // Sonraki 100 kalem için kendisini 1 saniye sonra tekrar planla
+    wp_schedule_single_event(time() + 1, 'hizli_kasa_sayim_background_sync', array($session_id));
+
+    // Cron'u tetikle
+    wp_remote_post(
+        site_url('wp-cron.php'),
+        array(
+            'timeout'   => 0.01,
+            'blocking'  => false,
+            'sslverify' => false,
+        )
+    );
 }
 
 /**
