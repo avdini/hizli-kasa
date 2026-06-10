@@ -252,8 +252,8 @@ function hizli_kasa_terminal_products($request)
                     $clean_attrs[$clean_k] = isset($term_names[$tax][$av]) ? $term_names[$tax][$av] : $av;
                 }
                 $v->attributes = $clean_attrs;
-                $v->all_stocks = $all_stocks[$v->ID] ?? [];
-                $v->all_codes = $all_codes[$v->ID] ?? [];
+                $v->all_stocks = (object) ($all_stocks[$v->ID] ?? []);
+                $v->all_codes = (object) ($all_codes[$v->ID] ?? []);
                 $variations_by_parent[$v->post_parent][] = $v;
             }
 
@@ -340,8 +340,8 @@ function hizli_kasa_terminal_products($request)
 
     $formatted = [];
     foreach ($results as $row) {
-        $row->all_stocks = $all_stocks[$row->ID] ?? [];
-        $row->all_codes = $all_codes[$row->ID] ?? [];
+        $row->all_stocks = (object) ($all_stocks[$row->ID] ?? []);
+        $row->all_codes = (object) ($all_codes[$row->ID] ?? []);
         $item = hizli_kasa_format_urun_row($row, $depo_id, $variations_by_parent);
         if ($item)
             $formatted[] = $item;

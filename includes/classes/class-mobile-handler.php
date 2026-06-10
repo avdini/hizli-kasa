@@ -107,8 +107,11 @@ class Hizli_Kasa_Mobile_Handler {
                 }
 
                 $aktif_depo_id = get_user_meta($user->ID, '_hizli_kasa_active_depo', true);
-                if (!$aktif_depo_id && !empty($depolar)) {
-                    $aktif_depo_id = $depolar[0]->id;
+                
+                // Aktif deponun yetkili listede olduğundan emin ol (Güvenlik ve iOS 0 Stok Önlemi)
+                $allowed_ids = wp_list_pluck($depolar, 'id');
+                if (!$aktif_depo_id || !in_array((int)$aktif_depo_id, array_map('intval', $allowed_ids))) {
+                    $aktif_depo_id = !empty($depolar) ? $depolar[0]->id : 0;
                 }
 
                 wp_localize_script('kasa-mobile-inventory', 'kasaAyar', array(

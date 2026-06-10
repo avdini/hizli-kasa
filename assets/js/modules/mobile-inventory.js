@@ -28,6 +28,7 @@
 
         init: function() {
             this.loadSettings();
+            this.restoreActiveDepo();
             this.updateDepoDisplay();
             this.bindEvents();
             console.log('Mobile Inventory initialized');
@@ -53,6 +54,22 @@
                 }
             } catch (err) {
                 console.warn("Failed to load settings", err);
+            }
+        },
+
+        restoreActiveDepo: function() {
+            try {
+                const savedId = localStorage.getItem('hk_mobile_active_depo');
+                if (savedId) {
+                    const id = parseInt(savedId, 10);
+                    // Sadece yetkili listesinde varsa ve geçerli bir sayıysa geri yükle
+                    if (id > 0 && this.state.depolar.some(d => d.id == id)) {
+                        this.state.aktifDepoId = id;
+                        console.log("Restored active depo from localStorage:", id);
+                    }
+                }
+            } catch (e) {
+                console.warn("Failed to restore active depo", e);
             }
         },
 
@@ -239,9 +256,18 @@
         },
 
         switchDepo: function(id) {
-            this.state.aktifDepoId = parseInt(id, 10) || id;
+            const newId = parseInt(id, 10) || id;
+            this.state.aktifDepoId = newId;
             this.updateDepoDisplay();
             
+            // Yerel sakla
+            try {
+                localStorage.setItem('hk_mobile_active_depo', newId);
+            } catch(e) {}
+
+            // Sunucuya gönder
+            this.saveActiveDepoToServer(newId);
+
             // Eğer arama yapılmışsa sonuçları yenile
             const searchVal = this.state.lastSearchQuery;
             if (searchVal.length >= 2) {
@@ -249,6 +275,46 @@
             }
             
             this.showToast("Depo değiştirildi.");
+        },
+
+        saveActiveDepoToServer: async function(depoId) {
+            try {
+                const response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/user/set-active-depo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': kasaAyar.nonce
+                    },
+                    body: JSON.stringify({ depo_id: depoId })
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    this.handleSessionExpired();
+                }
+            } catch(e) {
+                console.warn("Could not save active depo to server", e);
+            }
+        },
+
+        handleSessionExpired: function() {
+            this.showToast("Oturum süresi doldu, sayfa yenileniyor...", "error");
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        },
+
+        renderErrorState: function(message = "Bağlantı Hatası") {
+            const container = document.getElementById('results-container');
+            container.innerHTML = `
+                <div class="initial-state error-state" style="padding: 40px 20px; text-align: center;">
+                    <div class="welcome-icon" style="color: #ef4444; font-size: 64px; margin-bottom: 20px;">⚠️</div>
+                    <h2 style="color: #ef4444; margin-bottom: 10px;">${message}</h2>
+                    <p style="color: #94a3b8; margin-bottom: 20px;">Sunucuyla iletişim kurulamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.</p>
+                    <button onclick="location.reload()" class="scanner-btn" style="background:#ef4444; border:none; color:white; padding:12px 24px; border-radius:8px; font-weight:bold; cursor:pointer;">Sayfayı Yenile</button>
+                </div>
+            `;
+            const countEl = document.getElementById('result-count');
+            if (countEl) countEl.innerText = 'Bağlantı hatası';
         },
 
         startScanner: async function() {
@@ -865,6 +931,12 @@
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });
 
+                if (response.status === 401 || response.status === 403) {
+                    this.showToast("Oturum süresi doldu, sayfa yenileniyor...", "error");
+                    setTimeout(() => window.location.reload(), 1500);
+                    return;
+                }
+
                 if (!response.ok) throw new Error("Sunucu hatası");
 
                 const data = await response.json();
@@ -874,6 +946,14 @@
             } catch (err) {
                 console.error(err);
                 this.showToast("Ürünler yüklenirken hata oluştu", "error");
+                container.innerHTML = `
+                    <div class="initial-state" style="color: #e74c3c;">
+                        <div class="welcome-icon">⚠️</div>
+                        <h2>Bağlantı Hatası</h2>
+                        <p>Sunucuya ulaşılamadı veya oturumunuz sonlandı. Lütfen sayfayı yenileyin.</p>
+                    </div>
+                `;
+                document.getElementById('result-count').innerText = '0 Ürün bulundu';
             } finally {
                 loader.style.display = 'none';
             }
@@ -944,16 +1024,24 @@
             const img = (p.images && p.images[0]) ? p.images[0].src : '';
             const allStocks = p.all_stocks || {};
             const allCodes = p.all_codes || {};
-            const depoKodu = allCodes[String(this.state.aktifDepoId)] || '';
+            const aktifDepoIdStr = String(this.state.aktifDepoId);
             
-            const currentQty = allStocks[String(this.state.aktifDepoId)] || 0;
+            const depoKodu = allCodes[aktifDepoIdStr] || '';
+            
+            // API'den gelen warehouse_stock direkt o depo için hesaplanmıştır, en güvenilir kaynak odur.
+            // all_stocks içinden de doğrulanabilir ama tip uyumsuzluklarına karşı warehouse_stock daha sağlamdır.
+            const currentQty = (p.warehouse_stock != null) ? parseFloat(p.warehouse_stock) : (parseFloat(allStocks[aktifDepoIdStr]) || 0);
+            
             const aktifDepoName = this.state.depolar.find(d => d.id == this.state.aktifDepoId)?.name || "Depo";
             
             let otherTotal = 0;
-            Object.keys(allStocks).forEach(depoId => {
-                if (depoId == this.state.aktifDepoId) return;
-                otherTotal += parseFloat(allStocks[depoId] || 0);
-            });
+            if (allStocks && typeof allStocks === 'object') {
+                Object.keys(allStocks).forEach(depoId => {
+                    if (String(depoId) === aktifDepoIdStr) return;
+                    const val = parseFloat(allStocks[depoId]);
+                    if (!isNaN(val)) otherTotal += val;
+                });
+            }
 
             // Fiyat Hesaplamaları
             const currentPrice = parseFloat(p.price || 0);
