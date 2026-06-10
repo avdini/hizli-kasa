@@ -70,6 +70,7 @@ function hizli_kasa_process_refund($request)
             $item_id = $refund_order->add_product($product, 1, array(
                 'totals' => array('subtotal' => $line_total, 'subtotal_tax' => 0, 'total' => $line_total, 'tax' => 0)
             ));
+            /** @var WC_Order_Item_Product $refund_item */
             $refund_item = $refund_order->get_item($item_id);
             $refund_item->set_quantity($neg_qty);
             $refund_item->set_total($line_total);
@@ -193,6 +194,7 @@ function hizli_kasa_process_refund($request)
         // 2. Fallback: Orijinal siparişin item meta'sından çıkış deposunu bul
         if (!$target_depo_id && $original_order) {
             foreach ($original_order->get_items() as $orig_item_id => $orig_item) {
+                /** @var WC_Order_Item_Product $orig_item */
                 $match_product = ($orig_item->get_product_id() == $product_id);
                 $match_variation = ($orig_item->get_variation_id() == $variation_id);
                 if ($match_product && ($variation_id == 0 || $match_variation)) {
@@ -289,6 +291,7 @@ function hizli_kasa_send_custom_refund_email($order)
 
     $items_html = '';
     foreach ($order->get_items() as $item) {
+        /** @var WC_Order_Item_Product $item */
         $items_html .= sprintf(
             '<li style="margin-bottom: 8px;"><strong>%s</strong><br><span style="color:#7f8c8d; font-size:13px;">%d adet x %s TL</span></li>',
             $item->get_name(),
