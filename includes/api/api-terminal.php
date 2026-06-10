@@ -205,11 +205,13 @@ function hizli_kasa_terminal_products($request)
                 WHERE (product_id IN ($ids_ph_all) OR variation_id IN ($ids_ph_all))
             ", array_merge($all_item_ids, $all_item_ids)));
 
-            foreach ($stocks_raw as $sr) {
-                $item_id = ($sr->variation_id > 0) ? (int)$sr->variation_id : (int)$sr->product_id;
-                $all_stocks[$item_id][$sr->location_id] = (float)$sr->quantity;
-                if (!empty($sr->depo_kodu)) {
-                    $all_codes[$item_id][$sr->location_id] = $sr->depo_kodu;
+            if (!empty($stocks_raw)) {
+                foreach ($stocks_raw as $sr) {
+                    $item_id = ($sr->variation_id > 0) ? (int)$sr->variation_id : (int)$sr->product_id;
+                    $all_stocks[$item_id][$sr->location_id] = (float)$sr->quantity;
+                    if (!empty($sr->depo_kodu)) {
+                        $all_codes[$item_id][$sr->location_id] = $sr->depo_kodu;
+                    }
                 }
             }
         }
