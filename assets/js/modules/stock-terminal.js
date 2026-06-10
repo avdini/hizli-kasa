@@ -327,6 +327,7 @@
                             self.openEditModal(product);
                         }
                         */
+                    }
                 });
 
                 // Depo Kodu Değişikliği Event Delegation
