@@ -28,6 +28,9 @@ class Hizli_Kasa_Database {
             'sevk_kalemleri'   => $wpdb->prefix . 'hizli_kasa_sevk_kalemleri',
             'sayim_sessions'   => $wpdb->prefix . 'hizli_kasa_sayim_sessions',
             'sayim_kalemleri'  => $wpdb->prefix . 'hizli_kasa_sayim_kalemleri',
+            'suppliers'        => $wpdb->prefix . 'hizli_kasa_suppliers',
+            'purchase_orders'  => $wpdb->prefix . 'hizli_kasa_purchase_orders',
+            'purchase_order_items' => $wpdb->prefix . 'hizli_kasa_purchase_order_items',
         ];
     }
 
@@ -230,6 +233,62 @@ class Hizli_Kasa_Database {
         dbDelta($sql10);
         if ($wpdb->last_error) {
             error_log('Hızlı Kasa DB Delta Hatası (Sayım Kalemleri): ' . $wpdb->last_error);
+        }
+
+        $sql11 = "CREATE TABLE {$tables['suppliers']} (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            name varchar(255) NOT NULL,
+            contact_info text,
+            phone varchar(50) DEFAULT NULL,
+            email varchar(100) DEFAULT NULL,
+            tax_id varchar(50) DEFAULT NULL,
+            address text,
+            created_at datetime NOT NULL,
+            updated_at datetime NOT NULL,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
+        dbDelta($sql11);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Tedarikçiler): ' . $wpdb->last_error);
+        }
+
+        $sql12 = "CREATE TABLE {$tables['purchase_orders']} (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            supplier_id bigint(20) NOT NULL,
+            reference_no varchar(100) DEFAULT NULL,
+            status varchar(30) NOT NULL DEFAULT 'pending', /* pending, partial, completed, cancelled */
+            order_date date DEFAULT NULL,
+            expected_date date DEFAULT NULL,
+            received_date datetime DEFAULT NULL,
+            created_by bigint(20) NOT NULL,
+            notes text,
+            created_at datetime NOT NULL,
+            updated_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            KEY supplier_id (supplier_id),
+            KEY status (status)
+        ) $charset_collate;";
+        dbDelta($sql12);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Alım Siparişleri): ' . $wpdb->last_error);
+        }
+
+        $sql13 = "CREATE TABLE {$tables['purchase_order_items']} (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            purchase_order_id bigint(20) NOT NULL,
+            product_id bigint(20) NOT NULL,
+            variation_id bigint(20) DEFAULT 0,
+            expected_qty decimal(15,4) NOT NULL DEFAULT 0.0000,
+            received_qty decimal(15,4) NOT NULL DEFAULT 0.0000,
+            unit_cost decimal(15,4) DEFAULT 0.0000,
+            PRIMARY KEY  (id),
+            KEY purchase_order_id (purchase_order_id),
+            KEY product_id (product_id),
+            KEY variation_id (variation_id)
+        ) $charset_collate;";
+        dbDelta($sql13);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Alım Siparişi Kalemleri): ' . $wpdb->last_error);
         }
     }
 

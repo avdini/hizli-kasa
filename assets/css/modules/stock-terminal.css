@@ -1789,3 +1789,28 @@ body.dark-mode .other-stock-badge {
         width: 45px;
     }
 }
+
+/* --- Readonly Depo Kodu/Raf Styling --- */
+.depo-kodu-container.readonly {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    cursor: default !important;
+}
+.depo-kodu-container.readonly:hover, .depo-kodu-container.readonly:focus-within {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+.hk-depo-kodu-text {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--hk-text-main);
+    text-transform: uppercase;
+}
+@media screen and (max-width: 768px) {
+    .depo-kodu-container.readonly {
+        padding: 0 !important;
+    }
+}

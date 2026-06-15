@@ -38,6 +38,9 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
             <div class="ust-sekme" data-tab="sevk">
                 <span class="sekme-ikon">🚚</span> Sevk
             </div>
+            <div class="ust-sekme" data-tab="malkabul">
+                <span class="sekme-ikon">📥</span> Mal Kabul
+            </div>
             <div class="ust-sekme" data-tab="raporlar">
                 <span class="sekme-ikon">📊</span> Raporlar
             </div>
@@ -81,6 +84,7 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
         <div id="tab-content-iade" class="tab-content"></div>
         <div id="tab-content-urunler" class="tab-content"></div>
         <div id="tab-content-sevk" class="tab-content"></div>
+        <div id="tab-content-malkabul" class="tab-content"></div>
         <div id="tab-content-raporlar" class="tab-content"></div>
         <div id="tab-content-ayarlar" class="tab-content"></div>
     </div>

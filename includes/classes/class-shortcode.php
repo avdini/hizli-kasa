@@ -135,6 +135,7 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-detailed-reports', $js_base . 'modules/detailed-reports.js', array('kasa-ui-renderer'), $pos_version, true);
     wp_enqueue_script('kasa-report-receipt-printer', $js_base . 'modules/report-receipt-printer.js', array('kasa-detailed-reports', 'kasa-print-manager', 'jsbarcode'), $pos_version, true);
     wp_enqueue_script('kasa-sevk-manager', $js_base . 'modules/sevk-manager.js', array('kasa-ui-renderer', 'kasa-depo-manager'), $pos_version, true);
+    wp_enqueue_script('kasa-malkabul-manager', $js_base . 'modules/malkabul-manager.js', array('kasa-ui-renderer', 'kasa-depo-manager'), $pos_version, true);
     wp_enqueue_script('kasa-statistics-dashboard', $js_base . 'modules/statistics-dashboard.js', array('kasa-ui-renderer', 'kasa-depo-manager', 'chartjs'), $pos_version, true);
     wp_enqueue_script('kasa-js', $js_base . 'kasa.js', array(
         'kasa-cart-manager',
@@ -154,6 +155,7 @@ function hizli_kasa_uygulamasi()
         'kasa-detailed-reports',
         'kasa-report-receipt-printer',
         'kasa-sevk-manager',
+        'kasa-malkabul-manager',
         'kasa-statistics-dashboard',
         'kasa-currency-mask'
     ), $pos_version, true);

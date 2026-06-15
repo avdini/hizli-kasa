@@ -533,6 +533,7 @@
             var depoId = (window.HizliKasa && HizliKasa.DepoManager)
                 ? HizliKasa.DepoManager.getViewDepo()
                 : null;
+            var canManage = depoId && window.HizliKasa && HizliKasa.DepoManager && HizliKasa.DepoManager.canManageDepo(depoId);
 
             var html = '';
             var threshold = (typeof kasaAyar !== 'undefined' && kasaAyar.kritikStokEsigi) ? parseInt(kasaAyar.kritikStokEsigi) : 5;
@@ -620,16 +621,19 @@
                                 <div class="urun-ad">${p.name} ${isVariable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
                                 <div class="urun-sku-grup">
                                     <div class="urun-sku">${p.sku || 'SKU YOK'} | Toplam: ${totalGroupStock}</div>
-                                    <div class="depo-kodu-container">
+                                    <div class="depo-kodu-container ${canManage ? '' : 'readonly'}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                                         <span class="depo-kodu-label">RAF:</span>
+                                        ${canManage ? `
                                         <input type="text" 
                                                class="hk-depo-kodu-input" 
                                                value="${p.all_codes && p.all_codes[String(depoId)] ? p.all_codes[String(depoId)] : ''}" 
                                                placeholder="---" 
                                                maxlength="6" 
-                                               ${(depoId && window.HizliKasa && HizliKasa.DepoManager && HizliKasa.DepoManager.canManageDepo(depoId)) ? '' : 'readonly disabled'}
                                         >
+                                        ` : `
+                                        <span class="hk-depo-kodu-text">${p.all_codes && p.all_codes[String(depoId)] ? p.all_codes[String(depoId)] : '---'}</span>
+                                        `}
                                     </div>
                                 </div>
                             </div>
@@ -710,16 +714,19 @@
                                         <div class="urun-ad">${v.name}</div>
                                         <div class="urun-sku-grup">
                                             <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${vDepoStock}</div>
-                                            <div class="depo-kodu-container">
+                                            <div class="depo-kodu-container ${canManage ? '' : 'readonly'}">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.7"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                                                 <span class="depo-kodu-label">RAF:</span>
+                                                ${canManage ? `
                                                 <input type="text" 
                                                        class="hk-depo-kodu-input" 
                                                        value="${v.all_codes && v.all_codes[String(depoId)] ? v.all_codes[String(depoId)] : ''}" 
                                                        placeholder="---" 
                                                        maxlength="6" 
-                                                       ${(depoId && window.HizliKasa && HizliKasa.DepoManager && HizliKasa.DepoManager.canManageDepo(depoId)) ? '' : 'readonly disabled'}
                                                 >
+                                                ` : `
+                                                <span class="hk-depo-kodu-text">${v.all_codes && v.all_codes[String(depoId)] ? v.all_codes[String(depoId)] : '---'}</span>
+                                                `}
                                             </div>
                                         </div>
                                     </div>
@@ -920,6 +927,12 @@
                 : null;
 
             if (!depoId) return;
+
+            // Yetki kontrolü (Yönetim yetkisi yoksa kaydetme)
+            if (!window.HizliKasa || !HizliKasa.DepoManager || !HizliKasa.DepoManager.canManageDepo(depoId)) {
+                alert('Bu depoda depo kodu değiştirme yetkiniz yok.');
+                return;
+            }
 
             var rawValue = input.value.trim().toUpperCase();
             

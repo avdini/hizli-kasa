@@ -58,7 +58,7 @@
             this.state.activeDepoId = depoId;
 
             // Yönetim deposu değişince görüntüleme deposunu da güncelle
-            this.setViewDepo(depoId, true);
+            this.setViewDepo(depoId);
 
             // 1. localStorage
             try {
