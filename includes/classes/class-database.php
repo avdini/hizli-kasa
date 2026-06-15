@@ -278,6 +278,7 @@ class Hizli_Kasa_Database {
             purchase_order_id bigint(20) NOT NULL,
             product_id bigint(20) NOT NULL,
             variation_id bigint(20) DEFAULT 0,
+            custom_product_name varchar(255) DEFAULT NULL,
             expected_qty decimal(15,4) NOT NULL DEFAULT 0.0000,
             received_qty decimal(15,4) NOT NULL DEFAULT 0.0000,
             unit_cost decimal(15,4) DEFAULT 0.0000,

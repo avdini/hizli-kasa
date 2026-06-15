@@ -101,13 +101,20 @@ class Hizli_Kasa_API_Purchase_Orders extends Hizli_Kasa_API_Controller_Base {
         
         // Ürün detaylarını çek
         foreach($items as &$item) {
-            $product = wc_get_product($item['variation_id'] > 0 ? $item['variation_id'] : $item['product_id']);
-            if ($product) {
-                $item['product_name'] = $product->get_name();
-                $item['sku'] = $product->get_sku();
+            if ($item['product_id'] == 0 && !empty($item['custom_product_name'])) {
+                $item['product_name'] = $item['custom_product_name'];
+                $item['sku'] = 'BAĞIMSIZ';
+                $item['is_custom'] = true;
             } else {
-                $item['product_name'] = 'Bilinmeyen Ürün';
-                $item['sku'] = '';
+                $product = wc_get_product($item['variation_id'] > 0 ? $item['variation_id'] : $item['product_id']);
+                if ($product) {
+                    $item['product_name'] = $product->get_name();
+                    $item['sku'] = $product->get_sku();
+                } else {
+                    $item['product_name'] = 'Bilinmeyen Ürün';
+                    $item['sku'] = '';
+                }
+                $item['is_custom'] = false;
             }
         }
 
@@ -160,16 +167,19 @@ class Hizli_Kasa_API_Purchase_Orders extends Hizli_Kasa_API_Controller_Base {
             $variation_id = isset($item['variation_id']) ? absint($item['variation_id']) : 0;
             $expected_qty = floatval($item['expected_qty']);
             $unit_cost = isset($item['unit_cost']) ? floatval($item['unit_cost']) : 0;
+            $custom_name = isset($item['custom_product_name']) ? sanitize_text_field($item['custom_product_name']) : '';
 
-            if ($product_id <= 0 || $expected_qty <= 0) continue;
+            if ($expected_qty <= 0) continue;
+            if ($product_id <= 0 && empty($custom_name)) continue;
 
             $item_data = [
-                'purchase_order_id' => $po_id,
-                'product_id'        => $product_id,
-                'variation_id'      => $variation_id,
-                'expected_qty'      => $expected_qty,
-                'received_qty'      => 0,
-                'unit_cost'         => $unit_cost
+                'purchase_order_id'   => $po_id,
+                'product_id'          => $product_id,
+                'variation_id'        => $variation_id,
+                'custom_product_name' => $product_id <= 0 ? $custom_name : null,
+                'expected_qty'        => $expected_qty,
+                'received_qty'        => 0,
+                'unit_cost'           => $unit_cost
             ];
 
             if (!$wpdb->insert($tables['purchase_order_items'], $item_data)) {
@@ -228,7 +238,7 @@ class Hizli_Kasa_API_Purchase_Orders extends Hizli_Kasa_API_Controller_Base {
             $total_received = floatval($db_item->received_qty) + $new_received_qty;
 
             // Stok artırma (Hızlı Kasa Stock Manager kullanarak)
-            if (class_exists('Hizli_Kasa_Stock_Manager')) {
+            if ($db_item->product_id > 0 && class_exists('Hizli_Kasa_Stock_Manager')) {
                 // Stock Manager'da genelde set_stock_quantity var ama biz üzerine ekleyeceğiz
                 // WooCommerce ürün objesini alıp güncelliyoruz, Hızlı Kasa hookları geri kalanı halleder.
                 $product_obj_id = $db_item->variation_id > 0 ? $db_item->variation_id : $db_item->product_id;

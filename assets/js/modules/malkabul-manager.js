@@ -46,6 +46,11 @@ const MalkabulManager = (function () {
             });
         }
 
+        const btnAddCustom = document.getElementById('malkabul-yeni-bagimsiz-btn');
+        if (btnAddCustom) {
+            btnAddCustom.addEventListener('click', addCustomProductToPO);
+        }
+
         const btnSavePO = document.getElementById('malkabul-yeni-kaydet');
         if (btnSavePO) {
             btnSavePO.addEventListener('click', savePurchaseOrder);
@@ -206,6 +211,22 @@ const MalkabulManager = (function () {
         }
     }
 
+    async function addCustomProductToPO() {
+        const customName = prompt("Sitede olmayan bağımsız ürünün adını girin:");
+        if (!customName || customName.trim() === '') return;
+
+        poItems.push({
+            product_id: 0,
+            variation_id: 0,
+            name: customName.trim(),
+            custom_product_name: customName.trim(),
+            expected_qty: 1,
+            unit_cost: 0,
+            is_custom: true
+        });
+        renderPOItems();
+    }
+
     function renderPOItems() {
         const tbody = document.getElementById('malkabul-yeni-kalemler');
         if (!tbody) return;
@@ -217,9 +238,13 @@ const MalkabulManager = (function () {
 
         let html = '';
         poItems.forEach((item, index) => {
+            const displayName = item.is_custom 
+                ? `${item.name} <span class="sevk-tab-badge" style="background:var(--secondary); font-size:10px;">Bağımsız</span>`
+                : item.name;
+
             html += `
                 <tr>
-                    <td>${item.name}</td>
+                    <td>${displayName}</td>
                     <td><input type="number" class="hk-input po-item-qty" data-index="${index}" value="${item.expected_qty}" min="1" style="width:80px;"></td>
                     <td><input type="number" class="hk-input po-item-cost" data-index="${index}" value="${item.unit_cost}" min="0" step="0.01" style="width:100px;"></td>
                     <td><button type="button" class="sevk-icon-btn po-item-remove" data-index="${index}" style="color:var(--danger)">🗑️</button></td>
@@ -377,9 +402,10 @@ const MalkabulManager = (function () {
 
                 currentPO.items.forEach(item => {
                     const remaining = Math.max(0, parseFloat(item.expected_qty) - parseFloat(item.received_qty));
+                    const badge = item.is_custom ? ' <span class="sevk-tab-badge" style="background:var(--secondary); font-size:10px;">Bağımsız</span>' : '';
                     html += `
                         <tr>
-                            <td>${item.product_name}<br><small>${item.sku}</small></td>
+                            <td>${item.product_name}${badge}<br><small>${item.sku}</small></td>
                             <td>${item.expected_qty}</td>
                             <td>${item.received_qty}</td>
                             <td>

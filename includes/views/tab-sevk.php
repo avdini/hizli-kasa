@@ -226,6 +226,7 @@ if (!defined('ABSPATH'))
                 <h4>Sipariş Kalemleri</h4>
                 <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                     <input type="text" id="malkabul-yeni-barkod" class="hk-input" style="flex: 1;" placeholder="Barkod okutun veya ürün adı yazın">
+                    <button type="button" id="malkabul-yeni-bagimsiz-btn" class="sevk-btn secondary">Bağımsız Ürün Ekle (Sitede Yok)</button>
                 </div>
                 <div class="sevk-table-wrap compact">
                     <table class="sevk-table">
