@@ -13,7 +13,7 @@ const MalkabulManager = (function () {
         document.addEventListener('hkTabLoaded', (e) => {
             if (e.detail.tab === 'sevk') {
                 bindEvents();
-                activeDepoId = DepoManager ? DepoManager.getActiveDepoId() : kasaAyar.activeDepoId;
+                activeDepoId = HK.DepoManager ? HK.DepoManager.getActiveDepoId() : kasaAyar.activeDepoId;
                 loadSuppliers();
                 loadPurchaseOrders();
             }
@@ -401,7 +401,7 @@ const MalkabulManager = (function () {
     async function receivePurchaseOrder() {
         if (!currentPO) return;
         
-        activeDepoId = DepoManager ? DepoManager.getActiveDepoId() : kasaAyar.activeDepoId;
+        activeDepoId = HK.DepoManager ? HK.DepoManager.getActiveDepoId() : kasaAyar.activeDepoId;
 
         const itemsToReceive = [];
         document.querySelectorAll('.po-receive-qty').forEach(input => {
