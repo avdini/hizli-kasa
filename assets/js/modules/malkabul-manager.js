@@ -11,32 +11,11 @@ const MalkabulManager = (function () {
     function init() {
         // Tab Yüklendiğinde
         document.addEventListener('hkTabLoaded', (e) => {
-            if (e.detail.tab === 'malkabul') {
+            if (e.detail.tab === 'sevk') {
                 bindEvents();
                 activeDepoId = DepoManager ? DepoManager.getActiveDepoId() : kasaAyar.activeDepoId;
                 loadSuppliers();
                 loadPurchaseOrders();
-            }
-        });
-
-        // Alt sekme geçişleri
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('#malkabul-nav .sevk-alt-btn')) {
-                const btn = e.target.closest('.sevk-alt-btn');
-                document.querySelectorAll('#malkabul-nav .sevk-alt-btn').forEach(b => b.classList.remove('aktif'));
-                btn.classList.add('aktif');
-
-                const targetId = btn.getAttribute('data-target');
-                document.querySelectorAll('#tab-content-malkabul .sevk-icerik-paneli').forEach(p => {
-                    p.style.display = 'none';
-                    p.classList.remove('aktif');
-                });
-                
-                const targetPanel = document.getElementById(targetId);
-                if(targetPanel) {
-                    targetPanel.style.display = 'block';
-                    targetPanel.classList.add('aktif');
-                }
             }
         });
     }
