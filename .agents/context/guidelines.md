@@ -34,3 +34,11 @@ Bu klasör projenin "hafızasıdır". Çalıştığınız alanda daha önce bir 
   - Endpoint controller sınıfları: `includes/api/v2/controllers/`
 - **Taban Sınıfları Kullanın:** Yeni bir controller oluştururken mutlaka `Hizli_Kasa_API_Controller_Base` sınıfından türetin. Yetki kontrolleri, no-cache başlıkları ve hata yakalama (try-catch) bu taban sınıfta standartlaştırılmıştır.
 - **Standart Yanıt:** Tüm endpoint dönüşleri `Hizli_Kasa_API_Response` sınıfının `success()` veya `error()` metotlarını kullanmalıdır.
+
+---
+
+## 4. Kod Arama ve CodeGraph Kullanımı
+
+- **CodeGraph Önceliği:** Projede CodeGraph dizini (`.codegraph/`) oluşturulmuştur. CodeGraph aracını/komutlarını kullanabilen (bu yeteneğe sahip olan) tüm AI ajanları, grep/find yapmak veya doğrudan dosyaları okumak yerine öncelikle CodeGraph'i kullanmalıdır.
+- **Dürüstlük İlkesi:** Eğer çalışan AI ajanı teknik kısıtlamalar veya yetersizlikler sebebiyle CodeGraph araçlarını kullanamıyorsa (örneğin MCP entegrasyonu o oturumda aktif değilse veya desteklemiyorsa), bunu kullanıcıya dürüstçe belirtmeli ve alternatif arama/analiz yöntemlerine geçmelidir.
+
