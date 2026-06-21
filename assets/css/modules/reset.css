@@ -9,7 +9,8 @@ aside:not(#hizli-kasa-app *),
 nav:not(#hizli-kasa-app *), 
 .site-header, .site-footer, .header-wrapper, .footer-wrapper, 
 #header, #footer, #sidebar, .sidebar, .site-navigation, #site-navigation, .main-navigation,
-.navbar, .navbar-wrapper, .top-bar, .secondary-navigation, .breadcrumb, .entry-header, .entry-footer { 
+.navbar, .navbar-wrapper, .top-bar, .secondary-navigation, .breadcrumb, .entry-header, .entry-footer,
+.ct-sidebar, [data-sidebar] aside { 
     display: none !important; 
     height: 0 !important;
     visibility: hidden !important;
@@ -19,7 +20,8 @@ nav:not(#hizli-kasa-app *),
 
 /* 2. Tüm Kapsayıcı Konteynerleri Zorla Genişlet */
 html, body, #page, .site, #content, .site-content, .main-content, #main-content, .container, .container-fluid, 
-.wrap, .wrapper, .page-wrapper, .entry-content, .ast-container, .elementor-section, .elementor-container { 
+.wrap, .wrapper, .page-wrapper, .entry-content, .ast-container, .elementor-section, .elementor-container,
+.ct-container, [data-page-structure], [data-sidebar], .site-main { 
     width: 100% !important;
     max-width: 100% !important;
     min-width: 100% !important;
