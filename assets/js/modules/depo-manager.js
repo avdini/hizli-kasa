@@ -144,7 +144,7 @@
             } catch(e) {}
 
             try {
-                var response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/user/depolar?_=' + Date.now(), {
+                var response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/user/depolar', {
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });
 
@@ -201,7 +201,7 @@
          */
         _saveToServer: async function(depoId) {
             try {
-                await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/user/set-active-depo?_=' + Date.now(), {
+                await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/user/set-active-depo', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
