@@ -49,6 +49,54 @@
     background: var(--hk-success);
     box-shadow: 0 0 0 5px rgba(16, 185, 129, .14);
 }
+.sevk-grup-kontrol {
+    display: inline-flex;
+    background: var(--hk-bg-sidebar);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--hk-border);
+    margin: 8px 0;
+    gap: 4px;
+    width: 100%;
+    max-width: 440px;
+}
+
+.sevk-grup-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--hk-text-muted);
+    font-weight: 600;
+    font-size: 13.5px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sevk-grup-btn:hover {
+    color: var(--hk-text-main);
+    background: var(--hk-bg-hover);
+}
+
+.sevk-grup-btn.aktif {
+    background: var(--hk-bg-card);
+    border-color: var(--hk-border);
+    color: var(--hk-text-main);
+    box-shadow: var(--hk-shadow-sm);
+}
+
+.sevk-shell[data-active-group="sevk"] .sevk-alt-btn[data-group="tedarik"] {
+    display: none !important;
+}
+
+.sevk-shell[data-active-group="tedarik"] .sevk-alt-btn[data-group="sevk"] {
+    display: none !important;
+}
 
 .sevk-alt-sekmeler {
     display: flex;

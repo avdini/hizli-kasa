@@ -6,7 +6,7 @@ if (!defined('ABSPATH'))
     exit;
 ?>
 
-<div class="hk-tab-container sevk-shell">
+<div class="hk-tab-container sevk-shell" data-active-group="sevk">
     <header class="sevk-header">
         <div>
             <h2>Sevk & Tedarik İşlemleri</h2>
@@ -18,14 +18,23 @@ if (!defined('ABSPATH'))
         </div>
     </header>
 
+    <div class="sevk-grup-kontrol">
+        <button type="button" class="sevk-grup-btn aktif" data-group="sevk">
+            <span>🚚</span> Sevk Transferleri
+        </button>
+        <button type="button" class="sevk-grup-btn" data-group="tedarik">
+            <span>📦</span> Tedarik & Mal Kabul
+        </button>
+    </div>
+
     <nav class="sevk-alt-sekmeler" aria-label="Sevk alt sekmeleri">
-        <button class="sevk-alt-btn aktif" data-target="sevk-genel">Genel Sevk</button>
-        <button class="sevk-alt-btn" data-target="sevk-kabul">Sevk Kabul <span id="sevk-kabul-badge" class="sevk-tab-badge" style="display:none;">0</span></button>
-        <button class="sevk-alt-btn" data-target="sevk-iste">Sevk İste</button>
-        <button class="sevk-alt-btn" data-target="sevk-cikis">Sevk Çıkış</button>
-        <button class="sevk-alt-btn" data-target="malkabul-siparisler">Alım Siparişleri</button>
-        <button class="sevk-alt-btn" data-target="malkabul-yeni-siparis">Yeni Sipariş Oluştur</button>
-        <button class="sevk-alt-btn" data-target="malkabul-tedarikciler">Tedarikçiler</button>
+        <button class="sevk-alt-btn aktif" data-group="sevk" data-target="sevk-genel">Genel Sevk</button>
+        <button class="sevk-alt-btn" data-group="sevk" data-target="sevk-kabul">Sevk Kabul <span id="sevk-kabul-badge" class="sevk-tab-badge" style="display:none;">0</span></button>
+        <button class="sevk-alt-btn" data-group="sevk" data-target="sevk-iste">Sevk İste</button>
+        <button class="sevk-alt-btn" data-group="sevk" data-target="sevk-cikis">Sevk Çıkış</button>
+        <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-siparisler">Alım Siparişleri</button>
+        <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-yeni-siparis">Yeni Sipariş Oluştur</button>
+        <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-tedarikciler">Tedarikçiler</button>
     </nav>
 
     <section id="sevk-genel" class="sevk-icerik-paneli aktif">

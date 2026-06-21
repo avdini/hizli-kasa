@@ -207,3 +207,24 @@ document.addEventListener('click', function(e) {
         }
     }
 });
+
+// Sevk ana grup seçici için event delegation
+document.addEventListener('click', function(e) {
+    const groupBtn = e.target.closest('.sevk-grup-btn');
+    if (groupBtn) {
+        const container = groupBtn.closest('.sevk-shell');
+        if (container) {
+            const group = groupBtn.getAttribute('data-group');
+            
+            container.querySelectorAll('.sevk-grup-btn').forEach(btn => btn.classList.remove('aktif'));
+            groupBtn.classList.add('aktif');
+            
+            container.setAttribute('data-active-group', group);
+            
+            const firstSubTab = container.querySelector(`.sevk-alt-btn[data-group="${group}"]`);
+            if (firstSubTab) {
+                firstSubTab.click();
+            }
+        }
+    }
+});
