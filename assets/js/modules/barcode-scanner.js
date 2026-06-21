@@ -56,6 +56,8 @@ window.HizliKasa = window.HizliKasa || {};
 
                 if (e.key === "Enter") {
                     if (self.aktifBarkod.trim() !== "") {
+                        e.preventDefault();
+                        e.stopPropagation();
                         var sku = self.aktifBarkod.trim();
                         self.barkodKuyrugu.push(sku);
                         self.aktifBarkod = "";

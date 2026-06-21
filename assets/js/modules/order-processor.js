@@ -44,6 +44,7 @@
             }
 
             document.getElementById("onayla-buton").addEventListener("click", async function () {
+                this.blur();
                 var state = HK.State;
                 if (state.sepet.length === 0) return;
 
