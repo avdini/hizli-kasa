@@ -193,13 +193,15 @@
                 '<tr><td>💵 Nakit Satış</td><td class="gs-sag">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>' +
                 '<tr><td>💳 Kart Satış</td><td class="gs-sag">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>' +
                 '<tr><td>🏦 IBAN Satış</td><td class="gs-sag">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>' +
+                (ozet.kupon_toplam > 0 ? '<tr><td>🎟️ Kupon Satış</td><td class="gs-sag">' + ozet.kupon_toplam.toFixed(2) + ' TL</td></tr>' : '') +
                 '<tr class="gs-toplam-satir" style="color:#27ae60;"><td><strong>TOPLAMCİRO</strong></td><td class="gs-sag"><strong>' + ozet.toplam_ciro.toFixed(2) + ' TL</strong></td></tr>';
 
             if (ozet.toplam_iade > 0) {
                 html += '<tr><td colspan="2" style="height:10px;"></td></tr>' +
                     '<tr><td style="color:#e67e22;">🔄 Nakit İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_nakit.toFixed(2) + ' TL</td></tr>' +
                     '<tr><td style="color:#e67e22;">🔄 Kart İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_kart.toFixed(2) + ' TL</td></tr>' +
-                    '<tr><td style="color:#e67e22;">🔄 IBAN İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_iban.toFixed(2) + ' TL</td></tr>';
+                    '<tr><td style="color:#e67e22;">🔄 IBAN İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_iban.toFixed(2) + ' TL</td></tr>' +
+                    (ozet.iade_kupon > 0 ? '<tr><td style="color:#e67e22;">🔄 Kupon İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_kupon.toFixed(2) + ' TL</td></tr>' : '');
             }
 
             if (isGenel && ozet.toplam_masraf > 0) {
@@ -394,6 +396,7 @@
                 if (ozet.iade_kart > 0) html += '<tr><td>Kart İade</td><td style="text-align:right;">-' + ozet.iade_kart.toFixed(2) + ' TL</td></tr>';
                 if (ozet.iade_iban > 0) html += '<tr><td>IBAN İade</td><td style="text-align:right;">-' + ozet.iade_iban.toFixed(2) + ' TL</td></tr>';
                 if (ozet.iade_nakit > 0) html += '<tr><td>Nakit İade</td><td style="text-align:right;">-' + ozet.iade_nakit.toFixed(2) + ' TL</td></tr>';
+                if (ozet.iade_kupon > 0) html += '<tr><td>Kupon İade</td><td style="text-align:right;">-' + ozet.iade_kupon.toFixed(2) + ' TL</td></tr>';
                 
                 // Masraflar (Sadece Genel raporda)
                 if (isGenel) {

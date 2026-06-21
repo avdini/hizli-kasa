@@ -204,11 +204,13 @@
             var nakit = parseFloat(meta._odeme_nakit || 0);
             var kart = parseFloat(meta._odeme_kart || 0);
             var iban = parseFloat(meta._odeme_iban || 0);
+            var kupon = parseFloat(meta._odeme_coupon || 0);
             
             var activeMethods = [];
             if (Math.abs(nakit) > 0.01) activeMethods.push({ type: 'nakit', name: 'Nakit', amount: nakit });
             if (Math.abs(kart) > 0.01) activeMethods.push({ type: 'kart', name: 'Kart', amount: kart });
             if (Math.abs(iban) > 0.01) activeMethods.push({ type: 'iban', name: 'IBAN', amount: iban });
+            if (Math.abs(kupon) > 0.01) activeMethods.push({ type: 'kupon', name: 'Kupon', amount: kupon });
             
             var badgeClass = '';
             var badgeText = '';
@@ -220,7 +222,7 @@
                 tooltipText = activeMethods.map(m => m.name + ': ' + this.formatCurrency(m.amount)).join(' | ');
             } else if (activeMethods.length === 1) {
                 var method = activeMethods[0];
-                var icons = { nakit: '💵', kart: '💳', iban: '📱' };
+                var icons = { nakit: '💵', kart: '💳', iban: '📱', kupon: '🎟️' };
                 badgeClass = 'payment-' + method.type;
                 badgeText = (icons[method.type] || '') + ' ' + method.name;
                 tooltipText = method.name + ' Ödeme: ' + this.formatCurrency(method.amount);
@@ -239,6 +241,9 @@
                 } else if (normalized.indexOf('iban') !== -1 || normalized.indexOf('havale') !== -1 || normalized.indexOf('transfer') !== -1) {
                     paymentType = 'iban';
                     icon = '📱';
+                } else if (normalized.indexOf('kupon') !== -1) {
+                    paymentType = 'kupon';
+                    icon = '🎟️';
                 }
                 
                 badgeClass = 'payment-' + paymentType;

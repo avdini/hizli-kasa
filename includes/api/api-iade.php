@@ -153,6 +153,8 @@ function hizli_kasa_process_refund($request)
             $refund_order->update_meta_data('Ödeme (IBAN)', number_format(abs($s_iban), 2, '.', '') . ' TL');
         }
     } elseif ($payment_method === 'coupon') {
+        $refund_order->set_payment_method('coupon');
+        $refund_order->set_payment_method_title('Kupon');
         $coupon_phone = sanitize_text_field($data['coupon_phone'] ?? '');
         $refund_order->update_meta_data('_odeme_coupon', $final_refund_total);
         $refund_order->update_meta_data('Ödeme (Kupon)', number_format(abs($final_refund_total), 2, '.', '') . ' TL');

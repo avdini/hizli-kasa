@@ -658,6 +658,12 @@
     border-color: rgba(139, 92, 246, 0.2);
 }
 
+.payment-badge.payment-kupon {
+    background-color: rgba(236, 72, 153, 0.1);
+    color: #ec4899;
+    border-color: rgba(236, 72, 153, 0.2);
+}
+
 .payment-badge.payment-bolunmus {
     background-color: rgba(245, 158, 11, 0.1);
     color: var(--hk-warning);
@@ -688,6 +694,12 @@
     background-color: rgba(139, 92, 246, 0.15);
     color: #a78bfa;
     border-color: rgba(139, 92, 246, 0.25);
+}
+
+#hizli-kasa-app.theme-dark .payment-badge.payment-kupon {
+    background-color: rgba(236, 72, 153, 0.15);
+    color: #f472b6;
+    border-color: rgba(236, 72, 153, 0.25);
 }
 
 #hizli-kasa-app.theme-dark .payment-badge.payment-bolunmus {

@@ -146,6 +146,7 @@ function hizli_kasa_gun_sonu_raporu($request)
     $nakit_toplam = 0;
     $kart_toplam = 0;
     $iban_toplam = 0;
+    $kupon_toplam = 0;
     $toplam_ciro = 0;
     $toplam_iskonto = 0;
     $urun_adet = 0;
@@ -159,6 +160,7 @@ function hizli_kasa_gun_sonu_raporu($request)
     $iade_nakit = 0;
     $iade_kart = 0;
     $iade_iban = 0;
+    $iade_kupon = 0;
 
     foreach ($orders as $order) {
         $order_id = $order->get_id();
@@ -167,6 +169,7 @@ function hizli_kasa_gun_sonu_raporu($request)
         $o_nakit = (float) $order->get_meta('_odeme_nakit');
         $o_kart = (float) $order->get_meta('_odeme_kart');
         $o_iban = (float) $order->get_meta('_odeme_iban');
+        $o_kupon = (float) $order->get_meta('_odeme_coupon');
 
         $kasiyer = $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmeyen';
         $odeme_tipi = $order->get_payment_method_title();
@@ -179,6 +182,7 @@ function hizli_kasa_gun_sonu_raporu($request)
             $iade_nakit += abs($o_nakit);
             $iade_kart += abs($o_kart);
             $iade_iban += abs($o_iban);
+            $iade_kupon += abs($o_kupon);
 
             $iade_siparisler[] = array(
                 'id' => $order_id,
@@ -194,6 +198,7 @@ function hizli_kasa_gun_sonu_raporu($request)
         $nakit_toplam += $o_nakit;
         $kart_toplam += $o_kart;
         $iban_toplam += $o_iban;
+        $kupon_toplam += $o_kupon;
 
         if (!isset($kasiyer_map[$kasiyer]))
             $kasiyer_map[$kasiyer] = 0;
@@ -248,6 +253,7 @@ function hizli_kasa_gun_sonu_raporu($request)
             'nakit' => $o_nakit,
             'kart' => $o_kart,
             'iban' => $o_iban,
+            'kupon' => $o_kupon,
             'iskonto' => $iskonto,
             'kasiyer' => $kasiyer,
             'urunler' => $urunler,
@@ -320,6 +326,8 @@ function hizli_kasa_gun_sonu_raporu($request)
             'iade_nakit' => round($iade_nakit, 2),
             'iade_kart' => round($iade_kart, 2),
             'iade_iban' => round($iade_iban, 2),
+            'iade_kupon' => round($iade_kupon, 2),
+            'kupon_toplam' => round($kupon_toplam ?? 0, 2),
         ),
         'iade_siparisler' => $iade_siparisler,
         'masraf_detay' => $masraf_listesi,
