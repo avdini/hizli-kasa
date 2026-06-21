@@ -784,6 +784,14 @@ const RefundManager = (function () {
                 countryOrder: ["tr", "de", "nl", "be", "at", "fr", "gb", "us"],
                 loadUtils: function () {
                     return import("https://cdn.jsdelivr.net/npm/intl-tel-input@29.0.3/dist/js/utils.js");
+                },
+                placeholderNumberPolicy: "AGGRESSIVE",
+                formatAsYouType: true,
+                countrySearch: true,
+                countryNameLocale: "tr",
+                uiTranslations: {
+                    searchPlaceholder: "Ülke ara...",
+                    searchEmptyState: "Sonuç bulunamadı",
                 }
             });
         }

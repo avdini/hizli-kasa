@@ -189,7 +189,7 @@
 }
 
 /* intl-tel-input uyumluluğu */
-.iti {
+.musteri-input-grup .iti {
     display: flex !important;
     align-items: center;
     flex: 1 !important;
@@ -202,12 +202,12 @@
 }
 
 /* Kütüphanenin eklediği gizli inputu ve diğer olası elementleri düzelt */
-.iti__hide {
+.musteri-input-grup .iti__hide {
     display: none !important;
 }
 
 /* Bayrak Seçim Kutusu */
-.iti__country-container {
+.musteri-input-grup .iti__country-container {
     position: relative !important;
     display: flex !important;
     align-items: center !important;
@@ -215,7 +215,7 @@
     z-index: 10 !important;
 }
 
-.iti__selected-country {
+.musteri-input-grup .iti__selected-country {
     flex: 0 0 auto !important;
     min-width: 80px !important;
     height: 38px !important;
@@ -233,13 +233,13 @@
 }
 
 /* Hover Renk Düzeltmesi */
-.iti__selected-country:hover {
+.musteri-input-grup .iti__selected-country:hover {
     background-color: var(--hk-bg-hover) !important;
     border-color: var(--hk-accent) !important;
 }
 
 /* Ülke Listesi (Dropdown) - Yukarı Doğru Açılma Zorlaması */
-.iti__dropdown-content {
+.musteri-input-grup .iti__dropdown-content {
     bottom: 100% !important;
     top: auto !important;
     margin-bottom: 5px !important;
@@ -252,7 +252,7 @@
     overflow: hidden !important;
 }
 
-.iti__country-list {
+.musteri-input-grup .iti__country-list {
     max-height: 250px !important;
     color: var(--hk-text-main) !important;
     margin: 0 !important;
@@ -264,16 +264,16 @@
 }
 
 /* Liste içi arama ve öğeler */
-.iti__country:hover, .iti__country.iti__highlight {
+.musteri-input-grup .iti__country:hover, .musteri-input-grup .iti__country.iti__highlight {
     background-color: var(--hk-bg-hover) !important;
 }
-.iti__selected-dial-code {
+.musteri-input-grup .iti__selected-dial-code {
     color: var(--hk-text-main) !important;
     font-size: 13px !important;
     font-weight: 700 !important;
     margin-left: 6px !important;
 }
-.iti__search-input {
+.musteri-input-grup .iti__search-input {
     background-color: var(--hk-bg-hover) !important;
     color: var(--hk-text-main) !important;
     border: 1px solid var(--hk-border) !important;
@@ -298,11 +298,11 @@
     min-width: 0 !important; /* Taşmayı önlemek için */
 }
 
-.iti {
+.musteri-input-grup .iti {
     width: 100% !important;
 }
 
-.iti input, .iti input[type=tel] {
+.musteri-input-grup .iti input, .musteri-input-grup .iti input[type=tel] {
     width: 100% !important;
     padding-left: 12px !important;
     margin: 0 !important;
