@@ -773,11 +773,18 @@ const RefundManager = (function () {
         });
         
         const couponPhoneInput = document.getElementById('iade-coupon-phone');
-        if (couponPhoneInput) {
-            couponPhoneInput.addEventListener('input', function (e) {
-                var x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
-                if (!x[1]) { e.target.value = ''; return; }
-                e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + (x[3] ? ') ' + x[3] : '') + (x[4] ? ' ' + x[4] : '') + (x[5] ? ' ' + x[5] : '');
+        if (couponPhoneInput && window.intlTelInput) {
+            if (window.refundIti) {
+                window.refundIti.destroy();
+            }
+            window.refundIti = window.intlTelInput(couponPhoneInput, {
+                initialCountry: "tr",
+                separateDialCode: true,
+                strictMode: true,
+                countryOrder: ["tr", "de", "nl", "be", "at", "fr", "gb", "us"],
+                loadUtils: function () {
+                    return import("https://cdn.jsdelivr.net/npm/intl-tel-input@29.0.3/dist/js/utils.js");
+                }
             });
         }
 
@@ -971,10 +978,18 @@ const RefundManager = (function () {
 
             let couponPhone = '';
             if (paymentMethod === 'coupon') {
-                couponPhone = document.getElementById('iade-coupon-phone') ? document.getElementById('iade-coupon-phone').value.trim() : '';
-                if (couponPhone.replace(/\D/g, '').length < 10) {
-                    alert('Lütfen kupon için geçerli bir telefon numarası girin!');
-                    return;
+                if (window.refundIti) {
+                    if (!window.refundIti.isValidNumber()) {
+                        alert('Lütfen kupon için geçerli bir telefon numarası girin!');
+                        return;
+                    }
+                    couponPhone = window.refundIti.getNumber();
+                } else {
+                    couponPhone = document.getElementById('iade-coupon-phone') ? document.getElementById('iade-coupon-phone').value.trim() : '';
+                    if (couponPhone.replace(/\D/g, '').length < 10) {
+                        alert('Lütfen kupon için geçerli bir telefon numarası girin!');
+                        return;
+                    }
                 }
             }
 
