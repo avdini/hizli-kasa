@@ -32,6 +32,19 @@
                 fisDegisimFarkiSatiri: document.getElementById("fis-degisim-farki-satiri"),
                 fisDegisimFarkiTutar: document.getElementById("fis-degisim-farki-tutar"),
                 fisListeToplamiSatiri: document.getElementById("fis-liste-toplami-satiri"),
+                fisListeToplamiTutar: document.getElementById("fis-liste-toplami-tutar"),
+                fisGenelToplam: document.getElementById("fis-genel-toplam"),
+                fisTarih: document.getElementById("fis-tarih"),
+                fisNoText: document.getElementById("fis-no-text")
+            };
+
+            this._bindEvents();
+        },
+
+        /**
+         * Fiş şablonunu sipariş verileriyle doldur
+         * @param {Object} order WooCommerce API'den dönen sipariş objesi
+         */
         fisHazirla: function(order) {
             var els = this.els;
             var state = HK.State;
