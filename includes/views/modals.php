@@ -143,6 +143,31 @@ if (!defined('ABSPATH')) exit;
     </div>
 </div>
 
+<!-- Kupon Doğrulama Modalı -->
+<div id="kupon-dogrulama-modal" class="modal-cerceve" style="display:none;">
+    <div class="modal-icerik modal-icerik-sm">
+        <h3>🎟️ İade Çeki Doğrulama</h3>
+        <p style="font-size: 13px; color: var(--hk-text-muted); margin-bottom: 15px;">Bu kuponu kullanabilmek için iade esnasında verilen telefon numarasını doğrulamanız gerekmektedir.</p>
+        
+        <div class="masraf-form-group">
+            <label>Kupon Kodu</label>
+            <input type="text" id="dogrulama-kupon-kodu" class="hk-input" readonly disabled style="background-color: var(--hk-bg-hover); font-weight: bold;">
+        </div>
+
+        <div class="masraf-form-group" style="margin-top: 15px;">
+            <label>Müşteri Telefon Numarası</label>
+            <input type="tel" id="dogrulama-kupon-telefon" class="hk-input" placeholder="0 (5xx) xxx xx xx" autocomplete="off">
+        </div>
+
+        <div id="kupon-dogrulama-hata" style="color: #e74c3c; font-size: 12px; margin-top: 10px; display: none;"></div>
+
+        <div class="modal-butonlar" style="margin-top: 20px;">
+            <button id="kupon-dogrulama-iptal" class="modal-btn-cancel">İptal</button>
+            <button id="kupon-dogrulama-onay" class="hk-btn-primary" style="padding:12px;">Doğrula ve Kullan</button>
+        </div>
+    </div>
+</div>
+
 <!-- Gizli Fiş Şablonu (Sadece Yazdırma İçin) -->
 <div id="fis-sablon" style="color:#000;">
     <div style="text-align:center; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:10px;">
@@ -192,6 +217,35 @@ if (!defined('ABSPATH')) exit;
 
     <div style="text-align:center; margin-top:20px; font-size:11px; border-top:1px solid #000; padding-top:10px;">
         Bizi tercih ettiğiniz için teşekkür ederiz.
+    </div>
+</div>
+
+<!-- İade Kuponu Fiş Şablonu (Sadece Yazdırma İçin) -->
+<div id="fis-coupon-sablon" style="color:#000;">
+    <div style="text-align:center; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:10px;">
+        <h2 style="margin:0; font-size:18px;"><?php echo get_bloginfo('name'); ?></h2>
+        <p style="margin:5px 0; font-size:12px; font-weight:bold;">İADE ÇEKİ</p>
+        <p id="fis-coupon-tarih" style="margin:0; font-size:11px;"></p>
+        <div style="text-align:center; margin-top:15px; margin-bottom:10px;">
+            <svg id="fis-coupon-barkod" style="max-width:100%; height:auto;"></svg>
+        </div>
+        <p id="fis-coupon-kodu" style="font-weight:bold; margin:5px 0; font-size:16px;"></p>
+    </div>
+
+    <div style="font-size:14px; text-align:center; margin-bottom:15px;">
+        <div>Çek Tutarı:</div>
+        <div id="fis-coupon-tutar" style="font-weight:bold; font-size:24px; margin-top:5px;"></div>
+    </div>
+    
+    <div style="border-top:1px solid #000; padding-top:10px; font-size:12px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <span>Müşteri Tel:</span>
+            <span id="fis-coupon-telefon" style="font-weight:bold;"></span>
+        </div>
+    </div>
+
+    <div style="text-align:center; margin-top:20px; font-size:10px; border-top:1px dashed #000; padding-top:10px;">
+        Bu iade çeki tek seferliktir. Bir sonraki alışverişinizde kasada okutarak veya web sitemizde kullanabilirsiniz.
     </div>
 </div>
 

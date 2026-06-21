@@ -458,6 +458,22 @@
                 return p;
             });
 
+            // Kuponları ayıkla
+            var couponLines = [];
+            var gercekSatisGorenUrunler = [];
+            temizSepet.forEach(function(item) {
+                if (item.product_id === "COUPON") {
+                    // SKU is hidden inside saleItems array, let's find it
+                    var orijinalItem = saleItems.find(function(si) { return si.product_id === "COUPON"; });
+                    if (orijinalItem && orijinalItem.sku) {
+                        couponLines.push({ code: orijinalItem.sku });
+                    }
+                } else {
+                    gercekSatisGorenUrunler.push(item);
+                }
+            });
+            temizSepet = gercekSatisGorenUrunler;
+
             // %5 önce, iskonto sonra
             var autoDiscountTotal = isAutoDiscount ? (sepetAraToplam * 0.05) : 0;
             var netSatisToplami = sepetAraToplam - autoDiscountTotal - state.iskontoTutar;
@@ -583,7 +599,8 @@
                     { key: "_hizli_kasa_musteri_telefon", value: this._getPhoneInfo().fullPhone },
                     { key: "_hizli_kasa_musteri_telefon_ulke_kodu", value: state.musteriTelefonUlkeKodu || "+90" },
                     { key: "_hizli_kasa_siparis_notu", value: siparisNotu }
-                ]
+                ],
+                coupon_lines: couponLines
             };
 
             // İade ile bağlantı meta verisi

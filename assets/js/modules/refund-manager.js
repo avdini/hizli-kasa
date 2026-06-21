@@ -685,6 +685,10 @@ const RefundManager = (function () {
                             <input type="radio" name="iade_payment_method" value="iban" ${defaultMethod === 'iban' ? 'checked' : ''}>
                             <span>🏦 IBAN</span>
                         </label>
+                        <label class="iade-odeme-btn-label">
+                            <input type="radio" name="iade_payment_method" value="coupon" ${defaultMethod === 'coupon' ? 'checked' : ''}>
+                            <span>🎟️ Kupon</span>
+                        </label>
                     </div>
                 </div>
 
@@ -704,6 +708,14 @@ const RefundManager = (function () {
                         </div>
                     </div>
                     <div id="iade-bol-kalan-uyari" style="margin-top: 10px; font-size: 12px; font-weight: bold; text-align: center;"></div>
+                </div>
+
+                <div id="iade-coupon-detay" style="display:none; margin-top: 15px; padding: 12px; background: var(--hk-bg-body); border-radius: 8px; border: 1px dashed var(--hk-accent);">
+                    <div class="iade-ayar-satir">
+                        <label style="font-weight:bold; color:var(--hk-danger);">Kupon Telefon Numarası (Zorunlu):</label>
+                        <input type="text" id="iade-coupon-phone" class="hk-input" placeholder="05XX XXX XX XX" maxlength="15">
+                        <small style="color:var(--hk-text-muted); display:block; margin-top:5px;">Müşteri fişi kaybederse veya tekrar kullanmak isterse doğrulamak için zorunludur.</small>
+                    </div>
                 </div>
 
                 <div class="iade-ayar-satir" style="margin-top: 15px;">
@@ -741,6 +753,9 @@ const RefundManager = (function () {
         radios.forEach(r => {
             r.addEventListener('change', () => {
                 bolDetay.style.display = r.value === 'split' ? 'block' : 'none';
+                const couponDetay = container.querySelector('#iade-coupon-detay');
+                if (couponDetay) couponDetay.style.display = r.value === 'coupon' ? 'block' : 'none';
+
                 if (r.value === 'split') {
                     // Varsayılan olarak hepsini sıfırla (Kasiyer manuel girecek)
                     document.getElementById('iade-bol-nakit').value = '0,00';
@@ -756,6 +771,15 @@ const RefundManager = (function () {
         bolInputs.forEach(inp => {
             inp.addEventListener('input', calculateRefundSplit);
         });
+        
+        const couponPhoneInput = document.getElementById('iade-coupon-phone');
+        if (couponPhoneInput) {
+            couponPhoneInput.addEventListener('input', function (e) {
+                var x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+                if (!x[1]) { e.target.value = ''; return; }
+                e.target.value = !x[2] ? x[1] : x[1] + ' (' + x[2] + (x[3] ? ') ' + x[3] : '') + (x[4] ? ' ' + x[4] : '') + (x[5] ? ' ' + x[5] : '');
+            });
+        }
 
         container.style.display = 'block';
     }
@@ -945,6 +969,15 @@ const RefundManager = (function () {
                 return;
             }
 
+            let couponPhone = '';
+            if (paymentMethod === 'coupon') {
+                couponPhone = document.getElementById('iade-coupon-phone') ? document.getElementById('iade-coupon-phone').value.trim() : '';
+                if (couponPhone.replace(/\D/g, '').length < 10) {
+                    alert('Lütfen kupon için geçerli bir telefon numarası girin!');
+                    return;
+                }
+            }
+
             const response = await fetch(`${apiBase}hizli-kasa/v1/process-refund`, {
                 method: 'POST',
                 headers: {
@@ -958,6 +991,7 @@ const RefundManager = (function () {
                     kasa_no: selectedKasa,
                     payment_method: paymentMethod,
                     split_data: refundSplitData,
+                    coupon_phone: couponPhone,
                     refund_discount: (originalOrder && originalOrder.has_item_discount) ? 0 : HK.CurrencyMask.parse(document.getElementById('iade-iskonto-input')?.value || "0"),
                     items: refundCart.map(item => ({
                         id: item.id,
@@ -973,6 +1007,12 @@ const RefundManager = (function () {
             const data = await response.json();
             if (data.success) {
                 alert('İade başarıyla tamamlandı. Sipariş No: #' + data.order_id);
+                
+                if (paymentMethod === 'coupon' && data.coupon) {
+                    if (window.HizliKasa && window.HizliKasa.ReceiptPrinter && typeof window.HizliKasa.ReceiptPrinter.printCouponReceipt === 'function') {
+                        window.HizliKasa.ReceiptPrinter.printCouponReceipt(data.coupon);
+                    }
+                }
 
                 closeRefundModal();
 

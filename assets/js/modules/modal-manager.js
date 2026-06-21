@@ -49,13 +49,18 @@
                 siparisNotuSayac: document.getElementById("siparis-notu-sayac"),
                 siparisNotuKaydet: document.getElementById("siparis-notu-kaydet"),
                 siparisNotuIptal: document.getElementById("siparis-notu-iptal"),
-                siparisNotuTemizle: document.getElementById("siparis-notu-temizle")
+                siparisNotuTemizle: document.getElementById("siparis-notu-temizle"),
+                kuponDogrulamaModal: document.getElementById("kupon-dogrulama-modal"),
+                kuponDogrulamaKapat: document.getElementById("kupon-dogrulama-kapat"),
+                kuponDogrulamaIptal: document.getElementById("kupon-dogrulama-iptal"),
+                kuponDogrulamaOnay: document.getElementById("kupon-dogrulama-onay")
             };
 
             this._bindIskontoModal();
             this._bindUrunAramaModal();
             this._bindOdemeBolModal();
             this._bindSiparisNotuModal();
+            this._bindKuponDogrulamaModal();
             this._bindYuvarlaButon();
             this._bindModalDismiss();
         },
@@ -575,6 +580,103 @@
             }
         },
 
+        // =========================================
+        //  KUPON DOĞRULAMA MODALI
+        // =========================================
+
+        _bindKuponDogrulamaModal: function() {
+            var els = this.els;
+            if (!els.kuponDogrulamaModal) return;
+
+            var telInput = document.getElementById("dogrulama-kupon-telefon");
+            var koduInput = document.getElementById("dogrulama-kupon-kodu");
+            var hataDiv = document.getElementById("kupon-dogrulama-hata");
+            var iti;
+
+            if (telInput && window.intlTelInput) {
+                iti = window.intlTelInput(telInput, {
+                    initialCountry: "tr",
+                    separateDialCode: true,
+                    strictMode: true,
+                    countryOrder: ["tr", "de", "nl", "be", "at", "fr", "gb", "us"],
+                    loadUtils: function () {
+                        return import("https://cdn.jsdelivr.net/npm/intl-tel-input@29.0.3/dist/js/utils.js");
+                    }
+                });
+            }
+
+            var closeIt = function() {
+                els.kuponDogrulamaModal.style.display = "none";
+                if (telInput) telInput.value = "";
+                if (hataDiv) hataDiv.style.display = "none";
+            };
+
+            if (els.kuponDogrulamaKapat) els.kuponDogrulamaKapat.addEventListener("click", closeIt);
+            if (els.kuponDogrulamaIptal) els.kuponDogrulamaIptal.addEventListener("click", closeIt);
+
+            if (els.kuponDogrulamaOnay) {
+                els.kuponDogrulamaOnay.addEventListener("click", async function() {
+                    var telefon = iti ? iti.getNumber() : (telInput ? telInput.value : "");
+                    var kuponKodu = koduInput ? koduInput.value : "";
+
+                    if (!telefon) {
+                        if (hataDiv) { hataDiv.innerText = "Lütfen telefon numarası girin."; hataDiv.style.display = "block"; }
+                        return;
+                    }
+
+                    els.kuponDogrulamaOnay.disabled = true;
+                    els.kuponDogrulamaOnay.innerText = "Doğrulanıyor...";
+                    if (hataDiv) hataDiv.style.display = "none";
+
+                    try {
+                        var apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
+                        var response = await fetch(apiBase + 'hizli-kasa/v2/validate-coupon', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-WP-Nonce': kasaAyar.nonce
+                            },
+                            body: JSON.stringify({
+                                coupon_code: kuponKodu,
+                                phone_number: telefon
+                            })
+                        });
+
+                        var result = await response.json();
+
+                        if (result.success) {
+                            closeIt();
+                            HK.CartManager.ekleUrunObjesiyle({
+                                id: "COUPON",
+                                name: "İade Çeki (" + kuponKodu + ")",
+                                sku: kuponKodu,
+                                price: -Math.abs(parseFloat(result.data.amount)),
+                                regular_price: -Math.abs(parseFloat(result.data.amount)),
+                                quantity: 1,
+                                images: [],
+                                manage_stock: false,
+                                is_variable: false
+                            });
+                            HK.UIRenderer.showToast("İade çeki sepete eklendi.", "success");
+                        } else {
+                            if (hataDiv) {
+                                hataDiv.innerText = result.errors ? result.errors[0] : "Kupon doğrulanamadı.";
+                                hataDiv.style.display = "block";
+                            }
+                        }
+                    } catch (error) {
+                        if (hataDiv) {
+                            hataDiv.innerText = "Bir hata oluştu.";
+                            hataDiv.style.display = "block";
+                        }
+                    } finally {
+                        els.kuponDogrulamaOnay.disabled = false;
+                        els.kuponDogrulamaOnay.innerText = "Doğrula ve Kullan";
+                    }
+                });
+            }
+        },
+
         /**
          * Ödeme bölme kalan tutarını hesapla
          */
@@ -643,6 +745,11 @@
                 if (mevcutToplam <= 0) return;
 
                 // Yuvarlanan hedefi hesapla (adımın alt katına yuvarla)
+
+                var mevcutToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
+                if (mevcutToplam <= 0) return;
+
+                // Yuvarlanan hedefi hesapla (adımın alt katına yuvarla)
                 var yuvarlanmis = Math.floor(mevcutToplam / adim) * adim;
 
                 // Eğer zaten yuvarlak ise bir şey yapma
@@ -676,6 +783,7 @@
                 if (event.target == els.urunAramaModal) els.urunAramaModal.style.display = "none";
                 if (event.target == els.bolModal) els.bolModal.style.display = "none";
                 if (event.target == els.siparisNotuModal) els.siparisNotuModal.style.display = "none";
+                if (els.kuponDogrulamaModal && event.target == els.kuponDogrulamaModal) els.kuponDogrulamaModal.style.display = "none";
             });
         },
 

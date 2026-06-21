@@ -152,6 +152,29 @@ function hizli_kasa_process_refund($request)
             $refund_order->update_meta_data('_odeme_iban', $s_iban);
             $refund_order->update_meta_data('Ödeme (IBAN)', number_format(abs($s_iban), 2, '.', '') . ' TL');
         }
+    } elseif ($payment_method === 'coupon') {
+        $coupon_phone = sanitize_text_field($data['coupon_phone'] ?? '');
+        $refund_order->update_meta_data('_odeme_coupon', $final_refund_total);
+        $refund_order->update_meta_data('Ödeme (Kupon)', number_format(abs($final_refund_total), 2, '.', '') . ' TL');
+        
+        $coupon_code = 'KUPON-' . strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
+        $coupon = new WC_Coupon();
+        $coupon->set_code($coupon_code);
+        $coupon->set_discount_type('fixed_cart');
+        $coupon->set_amount(abs($final_refund_total));
+        $coupon->set_usage_limit(1);
+        $coupon->set_description('POS İade Çeki. Kaynak Sipariş: #' . ($original_order_id ?: 'Manuel'));
+        $coupon->add_meta_data('_hizli_kasa_coupon_phone', $coupon_phone);
+        $coupon->save();
+
+        $refund_order->update_meta_data('_verilen_kupon_kodu', $coupon_code);
+
+        $generated_coupon = array(
+            'code' => $coupon_code,
+            'amount' => abs($final_refund_total),
+            'phone' => $coupon_phone,
+            'date' => date_i18n('d.m.Y H:i')
+        );
     }
 
     // Toplamlar (Raporlar için)
@@ -263,12 +286,18 @@ function hizli_kasa_process_refund($request)
         }
     }
 
-    return array(
+    $response_data = array(
         'success' => true,
         'order_id' => $refund_order->get_id(),
         'total' => $refund_order->get_total(),
         'message' => 'İade başarıyla oluşturuldu.'
     );
+
+    if (isset($generated_coupon)) {
+        $response_data['coupon'] = $generated_coupon;
+    }
+
+    return $response_data;
 }
 
 /**

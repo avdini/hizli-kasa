@@ -32,19 +32,6 @@
                 fisDegisimFarkiSatiri: document.getElementById("fis-degisim-farki-satiri"),
                 fisDegisimFarkiTutar: document.getElementById("fis-degisim-farki-tutar"),
                 fisListeToplamiSatiri: document.getElementById("fis-liste-toplami-satiri"),
-                fisListeToplamiTutar: document.getElementById("fis-liste-toplami-tutar"),
-                fisGenelToplam: document.getElementById("fis-genel-toplam"),
-                fisTarih: document.getElementById("fis-tarih"),
-                fisNoText: document.getElementById("fis-no-text")
-            };
-
-            this._bindEvents();
-        },
-
-        /**
-         * Fiş şablonunu sipariş verileriyle doldur
-         * @param {Object} order WooCommerce API'den dönen sipariş objesi
-         */
         fisHazirla: function(order) {
             var els = this.els;
             var state = HK.State;
@@ -190,6 +177,46 @@
                     console.error("Barkod oluşturulamadı:", e);
                 }
             }
+        },
+
+        /**
+         * Kupon fişini doldur ve yazdır
+         * @param {Object} couponData Kupon bilgileri (code, amount, phone, date)
+         */
+        printCouponReceipt: function(couponData) {
+            var els = {
+                tarih: document.getElementById('fis-coupon-tarih'),
+                kodu: document.getElementById('fis-coupon-kodu'),
+                tutar: document.getElementById('fis-coupon-tutar'),
+                telefon: document.getElementById('fis-coupon-telefon')
+            };
+
+            if (!els.tarih || !els.kodu) return;
+
+            els.tarih.innerText = couponData.date || new Date().toLocaleString('tr-TR');
+            els.kodu.innerText = couponData.code;
+            els.tutar.innerText = parseFloat(couponData.amount).toFixed(2) + " TL";
+            els.telefon.innerText = couponData.phone;
+
+            // Barkod Üret (CODE128)
+            if (typeof JsBarcode === "function") {
+                try {
+                    JsBarcode("#fis-coupon-barkod", couponData.code, {
+                        format: "CODE128",
+                        width: 2,
+                        height: 50,
+                        displayValue: false,
+                        margin: 0,
+                        background: "#ffffff",
+                        lineColor: "#000000"
+                    });
+                } catch (e) {
+                    console.error("Kupon barkodu oluşturulamadı:", e);
+                }
+            }
+
+            // Doğrudan kupon yazdırma modunu tetikle
+            HK.PrintManager.print('coupon');
         },
 
         /**

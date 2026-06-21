@@ -59,10 +59,19 @@ window.HizliKasa = window.HizliKasa || {};
                         e.preventDefault();
                         e.stopPropagation();
                         var sku = self.aktifBarkod.trim();
-                        self.barkodKuyrugu.push(sku);
                         self.aktifBarkod = "";
                         barkodIzleme.innerText = "...";
-                        self._kuyruguIsle();
+                        
+                        if (sku.toUpperCase().startsWith("KUPON-")) {
+                            if (HK.CartManager && typeof HK.CartManager.verifyCoupon === "function") {
+                                HK.CartManager.verifyCoupon(sku);
+                            } else {
+                                console.error("Kupon doğrulama fonksiyonu bulunamadı.");
+                            }
+                        } else {
+                            self.barkodKuyrugu.push(sku);
+                            self._kuyruguIsle();
+                        }
                     }
                 } else if (e.key === "Backspace") {
                     self.aktifBarkod = self.aktifBarkod.slice(0, -1);

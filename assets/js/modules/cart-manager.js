@@ -592,6 +592,26 @@ window.HizliKasa = window.HizliKasa || {};
                 }
             });
             state.iskontoTutar = parseFloat(toplam.toFixed(2));
+        },
+
+        /**
+         * Kupon barkodu okutulduğunda doğrulama modalını açar
+         */
+        verifyCoupon: function(sku) {
+            var modal = document.getElementById("kupon-dogrulama-modal");
+            var koduInput = document.getElementById("dogrulama-kupon-kodu");
+            var telInput = document.getElementById("dogrulama-kupon-telefon");
+            var hataDiv = document.getElementById("kupon-dogrulama-hata");
+
+            if (modal && koduInput && telInput) {
+                koduInput.value = sku;
+                telInput.value = "";
+                if (hataDiv) hataDiv.style.display = "none";
+                modal.style.display = "flex";
+                setTimeout(function() { telInput.focus(); }, 100);
+            } else {
+                console.error("Kupon doğrulama modal öğeleri bulunamadı!");
+            }
         }
     };
 

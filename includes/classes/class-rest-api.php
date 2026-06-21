@@ -30,6 +30,7 @@ require_once $api_dir . 'v2/core/class-api-controller-base.php';
 require_once $api_dir . 'v2/controllers/class-api-product-codes.php';
 require_once $api_dir . 'v2/controllers/class-api-suppliers.php';
 require_once $api_dir . 'v2/controllers/class-api-purchase-orders.php';
+require_once $api_dir . 'v2/controllers/class-api-validate-coupon.php';
 
 // Register V2 REST Routes
 add_action('rest_api_init', function () {
@@ -41,6 +42,9 @@ add_action('rest_api_init', function () {
 
     $purchase_orders_controller = new Hizli_Kasa_API_Purchase_Orders();
     $purchase_orders_controller->register_routes();
+
+    $validate_coupon_controller = new Hizli_Kasa_API_Validate_Coupon();
+    $validate_coupon_controller->register_routes();
 });
 
 
