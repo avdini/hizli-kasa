@@ -323,8 +323,20 @@
             // Sipariş öncesi sekmeler arası çakışmayı önle
             HK.CartManager.sepetiYukle(state.aktifKasaId);
 
-            if (state.sepet.length === 0) {
+            var hasRefundItems = state.sepet.some(function(item) {
+                return item._is_exchange_return && item.quantity < 0;
+            });
+            var hasRealProducts = state.sepet.some(function(item) {
+                return item.product_id !== "COUPON" && !(item._is_exchange_return && item.quantity < 0);
+            });
+
+            if (!hasRefundItems && !hasRealProducts) {
                 this.toggleLoading(false);
+                if (HK.UIRenderer && typeof HK.UIRenderer.showToast === "function") {
+                    HK.UIRenderer.showToast("Sepette satışı yapılacak ürün bulunmamaktadır!", "error", true);
+                } else {
+                    alert("Sepette satışı yapılacak ürün bulunmamaktadır!");
+                }
                 return;
             }
 
@@ -433,6 +445,44 @@
                     sepetIskontoluToplam += ((item.price * item.quantity) - (item.line_discount || 0));
                 }
             });
+
+            if (couponAmount > 0) {
+                var currentDurumMetni = durumMetni.innerText;
+                durumMetni.innerText = "Kupon geçerliliği kontrol ediliyor...";
+                try {
+                    var couponItem = saleItems.find(function(si) { return si.product_id === "COUPON"; });
+                    var phone = couponItem ? couponItem.verified_phone : "";
+
+                    var validateResponse = await fetch(apiBase + 'hizli-kasa/v2/validate-coupon', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-WP-Nonce': kasaAyar.nonce
+                        },
+                        body: JSON.stringify({
+                            coupon_code: couponCode,
+                            phone_number: phone || ""
+                        })
+                    });
+
+                    var validateResult = await validateResponse.json();
+                    if (!validateResult.success) {
+                        this.toggleLoading(false);
+                        var errorMsg = validateResult.errors ? validateResult.errors[0] : "Kupon geçerliliğini yitirmiş veya başka bir yerde kullanılmış.";
+                        durumMetni.innerText = "HATA: " + errorMsg;
+                        durumMetni.style.color = "red";
+                        HK.UIRenderer.showToast(errorMsg, "error", true);
+                        return;
+                    }
+                } catch (err) {
+                    this.toggleLoading(false);
+                    durumMetni.innerText = "HATA: Kupon doğrulaması başarısız.";
+                    durumMetni.style.color = "red";
+                    HK.UIRenderer.showToast("Kupon doğrulanırken bir hata oluştu.", "error", true);
+                    return;
+                }
+                durumMetni.innerText = currentDurumMetni;
+            }
 
             var temizSepet = saleItems.map(function (item) {
                 var lineEtiketFiyati = (item.regular_price || item.price);

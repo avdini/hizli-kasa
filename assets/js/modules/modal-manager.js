@@ -622,6 +622,19 @@
             if (els.kuponDogrulamaKapat) els.kuponDogrulamaKapat.addEventListener("click", closeIt);
             if (els.kuponDogrulamaIptal) els.kuponDogrulamaIptal.addEventListener("click", closeIt);
 
+            var handleEnterKey = function(event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (els.kuponDogrulamaOnay && !els.kuponDogrulamaOnay.disabled) {
+                        els.kuponDogrulamaOnay.click();
+                    }
+                }
+            };
+
+            if (telInput) telInput.addEventListener("keydown", handleEnterKey);
+            if (koduInput) koduInput.addEventListener("keydown", handleEnterKey);
+
             if (els.kuponDogrulamaOnay) {
                 els.kuponDogrulamaOnay.addEventListener("click", async function() {
                     var telefon = iti ? iti.getNumber() : (telInput ? telInput.value : "");
@@ -653,6 +666,37 @@
                         var result = await response.json();
 
                         if (result.success) {
+                            var state = HK.State;
+                            var isCouponInOtherCart = false;
+                            for (var i = 1; i <= state.MAX_KASA; i++) {
+                                var slotVeri = localStorage.getItem(HK.CartManager._slotKey(i));
+                                if (slotVeri) {
+                                    try {
+                                        var veri = JSON.parse(slotVeri);
+                                        if (veri && veri.sepet) {
+                                            var contains = veri.sepet.some(function(item) {
+                                                return item.product_id === "COUPON" && item.sku === kuponKodu;
+                                            });
+                                            if (contains) {
+                                                isCouponInOtherCart = true;
+                                                break;
+                                            }
+                                        }
+                                    } catch(e) {}
+                                }
+                            }
+                            var isInActiveCart = state.sepet.some(function(item) {
+                                return item.product_id === "COUPON" && item.sku === kuponKodu;
+                            });
+
+                            if (isCouponInOtherCart || isInActiveCart) {
+                                if (hataDiv) {
+                                    hataDiv.innerText = "Bu kupon zaten bir sepete eklenmiş!";
+                                    hataDiv.style.display = "block";
+                                }
+                                return;
+                            }
+
                             closeIt();
                             HK.CartManager.ekleUrunObjesiyle({
                                 id: "COUPON",
@@ -663,7 +707,8 @@
                                 quantity: 1,
                                 images: [],
                                 manage_stock: false,
-                                is_variable: false
+                                is_variable: false,
+                                verified_phone: telefon
                             });
                             HK.UIRenderer.showToast("İade çeki sepete eklendi.", "success");
                         } else {

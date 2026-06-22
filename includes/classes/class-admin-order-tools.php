@@ -128,6 +128,17 @@ class Hizli_Kasa_Admin_Order_Tools
                     <strong>#<?php echo esc_html($order_id); ?></strong>
                     <span class="hk-aot-pill"><?php echo esc_html($order->get_formatted_order_total()); ?></span>
                     <span class="hk-aot-pill"><?php echo esc_html(wc_get_order_status_name($order->get_status())); ?></span>
+                    <?php
+                    $used_coupon_code = $order->get_meta('_hizli_kasa_used_coupon_code');
+                    $used_coupon_amount = $order->get_meta('_hizli_kasa_used_coupon_amount');
+                    if ($used_coupon_code) {
+                        ?>
+                        <span class="hk-aot-pill" style="background-color: #27ae60; color: white; font-weight: bold;">
+                            🎟️ Kullanılan İade Çeki: <?php echo esc_html($used_coupon_code); ?> (-<?php echo esc_html(wc_format_decimal($used_coupon_amount, 2)); ?> TL)
+                        </span>
+                        <?php
+                    }
+                    ?>
                 </div>
                 <label class="hk-aot-check">
                     <input type="checkbox" id="hk-aot-recalculate" checked>
