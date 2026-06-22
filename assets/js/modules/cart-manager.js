@@ -286,6 +286,7 @@ window.HizliKasa = window.HizliKasa || {};
             };
 
             if (isVariation) eklenecekUrun.variation_id = urun.id;
+            if (urun.verified_phone) eklenecekUrun.verified_phone = urun.verified_phone;
 
             var mevcutUrunIndex = state.sepet.findIndex(function(item) {
                 // Değişim iade satırlarını (negatif) normal ürünlerle birleştirme

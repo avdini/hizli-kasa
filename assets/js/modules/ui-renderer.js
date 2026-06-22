@@ -78,6 +78,48 @@ window.HizliKasa = window.HizliKasa || {};
             var genelToplam = 0;
 
             state.sepet.forEach(function(item, index) {
+                // --- Kupon satırı ---
+                if (item.product_id === "COUPON") {
+                    var lineTotal = item.price * item.quantity;
+                    var li = document.createElement("li");
+                    li.className = "coupon-cart-item";
+
+                    li.innerHTML =
+                        '<div class="urun-sol-kolon">' +
+                            '<div style="width:40px; height:40px; background:var(--hk-accent, #27ae60); border-radius:4px; margin-right:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px;">🎟️</div>' +
+                            '<span class="urun-bilgi">' +
+                                '<strong class="urun-ad">' + item.name + '</strong>' +
+                                '<span class="urun-sku" style="color:#27ae60; font-size:12px; font-weight:bold;">' + (item.sku || '') + ' <span class="exchange-badge" style="background:#27ae60; color:#fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px;">KUPON</span></span>' +
+                            '</span>' +
+                        '</div>' +
+                        '<div class="urun-orta-detay">' +
+                            '<span class="urun-detay-metin" style="font-size:15px; font-weight:bold; color:#27ae60;">' +
+                                item.quantity + ' Adet</span>' +
+                        '</div>' +
+                        '<div class="urun-sag-aksiyonlar">' +
+                            '<span class="urun-fiyat-grup" style="text-align:right; flex-shrink:0;">' +
+                                '<div class="ara-toplam" style="font-size: 19px; color: #27ae60; font-weight: 800; line-height: 1.1;">' + lineTotal.toFixed(2) + ' TL</div>' +
+                            '</span>' +
+                        '</div>';
+
+                    // Silme (çıkarma) butonu
+                    var silButon = document.createElement("button");
+                    silButon.innerText = "✕";
+                    silButon.className = "btn-adet exchange-remove-btn";
+                    silButon.title = "Kuponu kaldır";
+                    silButon.addEventListener("click", (function(idx) {
+                        return function() {
+                            state.sepet.splice(idx, 1);
+                            self.arayuzuGuncelle();
+                        };
+                    })(index));
+
+                    var sagAksiyonlar = li.querySelector(".urun-sag-aksiyonlar");
+                    sagAksiyonlar.prepend(silButon);
+                    els.sepetListesi.appendChild(li);
+                    return; // forEach'in sonraki iterasyonuna geç
+                }
+
                 // --- Negatif satır (Değişim iade ürünü) ---
                 if (item.quantity < 0) {
                     var absQty = Math.abs(item.quantity);
