@@ -147,6 +147,25 @@
                 els.fisIskontoSatiri.style.display = "none";
             }
 
+            // Kupon satırını ekle/güncelle
+            var couponFee = (order.fee_lines || []).find(function(f) { return f.name.indexOf("İade Çeki") !== -1; });
+            var kuponSatirEleman = document.getElementById("fis-kupon-satiri");
+            if (couponFee) {
+                if (!kuponSatirEleman) {
+                    kuponSatirEleman = document.createElement("div");
+                    kuponSatirEleman.id = "fis-kupon-satiri";
+                    kuponSatirEleman.style = "display:flex; justify-content:space-between; margin-bottom:3px; font-size:12px;";
+                    var parent = els.fisIskontoSatiri.parentNode;
+                    parent.insertBefore(kuponSatirEleman, els.fisDegisimFarkiSatiri || els.fisGenelToplam.parentNode);
+                }
+                kuponSatirEleman.style.display = "flex";
+                kuponSatirEleman.innerHTML = '<span>' + couponFee.name + ':</span> <span>' + parseFloat(couponFee.total).toFixed(2) + ' TL</span>';
+            } else {
+                if (kuponSatirEleman) {
+                    kuponSatirEleman.style.display = "none";
+                }
+            }
+
             var exchangeRefundTotalMeta = getMeta(order.meta_data, "_hk_exchange_refund_total");
             var customerPaidTotalMeta = getMeta(order.meta_data, "_hk_customer_paid_total");
             var exchangeRefundTotal = exchangeRefundTotalMeta !== null ? parseFloat(exchangeRefundTotalMeta) : 0;

@@ -212,22 +212,30 @@
             if (Math.abs(iban) > 0.01) activeMethods.push({ type: 'iban', name: 'IBAN', amount: iban });
             if (Math.abs(kupon) > 0.01) activeMethods.push({ type: 'kupon', name: 'Kupon', amount: kupon });
             
-            var badgeClass = '';
-            var badgeText = '';
-            var tooltipText = '';
+            var nonCouponMethods = [];
+            if (Math.abs(nakit) > 0.01) nonCouponMethods.push({ type: 'nakit', name: 'Nakit', amount: nakit });
+            if (Math.abs(kart) > 0.01) nonCouponMethods.push({ type: 'kart', name: 'Kart', amount: kart });
+            if (Math.abs(iban) > 0.01) nonCouponMethods.push({ type: 'iban', name: 'IBAN', amount: iban });
             
-            if (activeMethods.length > 1) {
-                badgeClass = 'payment-bolunmus';
-                badgeText = '🔀 Bölünmüş';
-                tooltipText = activeMethods.map(m => m.name + ': ' + this.formatCurrency(m.amount)).join(' | ');
-            } else if (activeMethods.length === 1) {
-                var method = activeMethods[0];
-                var icons = { nakit: '💵', kart: '💳', iban: '📱', kupon: '🎟️' };
-                badgeClass = 'payment-' + method.type;
-                badgeText = (icons[method.type] || '') + ' ' + method.name;
-                tooltipText = method.name + ' Ödeme: ' + this.formatCurrency(method.amount);
-            } else {
-                // Fallback to order.payment
+            var badges = [];
+            var icons = { nakit: '💵', kart: '💳', iban: '📱', kupon: '🎟️' };
+
+            // 1. Eğer kupon kullanılmışsa kupon rozetini ayrı üret
+            if (Math.abs(kupon) > 0.01) {
+                badges.push('<div class="payment-badge payment-kupon" title="Kupon Ödeme: ' + this.escapeHtml(this.formatCurrency(kupon)) + '">🎟️ Kupon</div>');
+            }
+
+            // 2. Kalan ödeme kanalları için rozet üret
+            if (nonCouponMethods.length > 1) {
+                var tooltipText = nonCouponMethods.map(m => m.name + ': ' + this.formatCurrency(m.amount)).join(' | ');
+                badges.push('<div class="payment-badge payment-bolunmus" title="' + this.escapeHtml(tooltipText) + '">🔀 Bölünmüş</div>');
+            } else if (nonCouponMethods.length === 1) {
+                var method = nonCouponMethods[0];
+                badges.push('<div class="payment-badge payment-' + method.type + '" title="' + method.name + ' Ödeme: ' + this.escapeHtml(this.formatCurrency(method.amount)) + '">' + (icons[method.type] || '') + ' ' + method.name + '</div>');
+            }
+
+            // Eğer hiç yöntem bulunamadıysa fallback kullan
+            if (badges.length === 0) {
                 var paymentTitle = order.payment || 'Belirsiz';
                 var paymentType = 'belirsiz';
                 var icon = '❓';
@@ -245,13 +253,10 @@
                     paymentType = 'kupon';
                     icon = '🎟️';
                 }
-                
-                badgeClass = 'payment-' + paymentType;
-                badgeText = icon + ' ' + paymentTitle;
-                tooltipText = paymentTitle;
+                badges.push('<div class="payment-badge payment-' + paymentType + '" title="' + this.escapeHtml(paymentTitle) + '">' + icon + ' ' + paymentTitle + '</div>');
             }
-            
-            return '<div class="payment-badge ' + badgeClass + '" title="' + this.escapeHtml(tooltipText) + '">' + this.escapeHtml(badgeText) + '</div>';
+
+            return '<div style="display: flex; gap: 5px; flex-wrap: wrap;">' + badges.join('') + '</div>';
         },
 
         humanizeKey: function(key) {
