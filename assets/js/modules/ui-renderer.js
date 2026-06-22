@@ -86,7 +86,12 @@ window.HizliKasa = window.HizliKasa || {};
 
                     li.innerHTML =
                         '<div class="urun-sol-kolon">' +
-                            '<div style="width:40px; height:40px; background:var(--hk-accent, #27ae60); border-radius:4px; margin-right:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px;">🎟️</div>' +
+                            '<div style="width:40px; height:40px; background:#e8f8f5; border: 1px dashed #27ae60; border-radius:4px; margin-right:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center;">' +
+                                '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#27ae60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                                    '<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path>' +
+                                    '<path d="M13 5v14" stroke-dasharray="3 3"></path>' +
+                                '</svg>' +
+                            '</div>' +
                             '<span class="urun-bilgi">' +
                                 '<strong class="urun-ad">' + item.name + '</strong>' +
                                 '<span class="urun-sku" style="color:#27ae60; font-size:12px; font-weight:bold;">' + (item.sku || '') + ' <span class="exchange-badge" style="background:#27ae60; color:#fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 5px;">KUPON</span></span>' +
