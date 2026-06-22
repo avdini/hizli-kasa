@@ -57,22 +57,21 @@
     border: 1px solid var(--hk-border);
     margin: 0;
     gap: 4px;
-    width: 100%;
-    max-width: 440px;
+    flex-shrink: 0;
 }
 
 .sevk-grup-btn {
-    flex: 1;
+    flex: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 8px 16px;
+    gap: 6px;
+    padding: 6px 12px;
     border: 1px solid transparent;
     background: transparent;
     color: var(--hk-text-muted);
     font-weight: 600;
-    font-size: 13.5px;
+    font-size: 13px;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -133,7 +132,8 @@
 }
 
 .sevk-alt-btn {
-    padding: 10px 16px;
+    padding: 6px 12px;
+    font-size: 13px;
     position: relative;
 }
 
