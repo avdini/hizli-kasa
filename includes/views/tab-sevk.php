@@ -8,9 +8,9 @@ if (!defined('ABSPATH'))
 
 <div class="hk-tab-container sevk-shell" data-active-group="sevk">
     <div class="sevk-header">
-        <div>
-            <h2>Sevk & Tedarik İşlemleri</h2>
-            <p>Depolar arası transferler ve dışarıdan gelen ürünlerin tedarik süreci.</p>
+        <div class="sevk-header-title" style="display: flex; align-items: center; gap: 6px; cursor: help;" title="Sevk & Tedarik İşlemleri&#10;Depolar arası transferler ve dışarıdan gelen ürünlerin tedarik süreci.">
+            <span style="font-size: 18px;">🚚</span>
+            <span style="font-size: 13px; color: var(--hk-text-muted);">ℹ️</span>
         </div>
         <div class="sevk-grup-kontrol">
             <button type="button" class="sevk-grup-btn aktif" data-group="sevk">
