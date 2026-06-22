@@ -12,19 +12,18 @@ if (!defined('ABSPATH'))
             <h2>Sevk & Tedarik İşlemleri</h2>
             <p>Depolar arası transferler ve dışarıdan gelen ürünlerin tedarik süreci.</p>
         </div>
+        <div class="sevk-grup-kontrol">
+            <button type="button" class="sevk-grup-btn aktif" data-group="sevk">
+                <span>🚚</span> Sevk Transferleri
+            </button>
+            <button type="button" class="sevk-grup-btn" data-group="tedarik">
+                <span>📦</span> Tedarik & Mal Kabul
+            </button>
+        </div>
         <div class="sevk-header-actions">
             <span class="sevk-live-dot"></span>
             <span id="sevk-active-depo-label">Depo hazırlanıyor...</span>
         </div>
-    </div>
-
-    <div class="sevk-grup-kontrol">
-        <button type="button" class="sevk-grup-btn aktif" data-group="sevk">
-            <span>🚚</span> Sevk Transferleri
-        </button>
-        <button type="button" class="sevk-grup-btn" data-group="tedarik">
-            <span>📦</span> Tedarik & Mal Kabul
-        </button>
     </div>
 
     <div class="sevk-alt-sekmeler" aria-label="Sevk alt sekmeleri">
