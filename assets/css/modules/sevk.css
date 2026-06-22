@@ -90,19 +90,34 @@
     box-shadow: var(--hk-shadow-sm);
 }
 
-.sevk-shell[data-active-group="sevk"] .sevk-alt-btn[data-group="tedarik"] {
-    display: none !important;
-}
-
-.sevk-shell[data-active-group="tedarik"] .sevk-alt-btn[data-group="sevk"] {
-    display: none !important;
-}
-
 .sevk-alt-sekmeler {
     display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+.sevk-alt-grup-wrapper {
+    display: flex;
     gap: 8px;
-    margin: 18px 0;
-    flex-wrap: wrap;
+    overflow: hidden;
+    max-width: 500px;
+    opacity: 1;
+    transform: translateX(0);
+    transition: max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+                transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sevk-alt-grup-wrapper .sevk-alt-btn {
+    flex-shrink: 0;
+}
+
+.sevk-shell[data-active-group="sevk"] .sevk-alt-grup-wrapper[data-group-wrapper="tedarik"],
+.sevk-shell[data-active-group="tedarik"] .sevk-alt-grup-wrapper[data-group-wrapper="sevk"] {
+    max-width: 0;
+    opacity: 0;
+    transform: translateX(-20px);
+    pointer-events: none;
 }
 
 .sevk-alt-btn,

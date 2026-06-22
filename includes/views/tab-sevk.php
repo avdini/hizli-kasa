@@ -8,32 +8,34 @@ if (!defined('ABSPATH'))
 
 <div class="hk-tab-container sevk-shell" data-active-group="sevk">
     <div class="sevk-header">
-        <div class="sevk-header-title" style="display: flex; align-items: center; gap: 6px; cursor: help;" title="Sevk & Tedarik İşlemleri&#10;Depolar arası transferler ve dışarıdan gelen ürünlerin tedarik süreci.">
-            <span style="font-size: 18px;">🚚</span>
-            <span style="font-size: 13px; color: var(--hk-text-muted);">ℹ️</span>
-        </div>
-        <div class="sevk-grup-kontrol">
-            <button type="button" class="sevk-grup-btn aktif" data-group="sevk">
-                <span>🚚</span> Sevk Transferleri
-            </button>
-            <button type="button" class="sevk-grup-btn" data-group="tedarik">
-                <span>📦</span> Tedarik & Mal Kabul
-            </button>
+        <div style="display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0;">
+            <div class="sevk-grup-kontrol">
+                <button type="button" class="sevk-grup-btn aktif" data-group="sevk">
+                    <span>🚚</span> Sevkler
+                </button>
+                <button type="button" class="sevk-grup-btn" data-group="tedarik">
+                    <span>📦</span> Tedarik
+                </button>
+            </div>
+
+            <div class="sevk-alt-sekmeler" aria-label="Sevk alt sekmeleri">
+                <div class="sevk-alt-grup-wrapper" data-group-wrapper="sevk">
+                    <button class="sevk-alt-btn aktif" data-group="sevk" data-target="sevk-genel">Genel Sevk</button>
+                    <button class="sevk-alt-btn" data-group="sevk" data-target="sevk-kabul">Sevk Kabul <span id="sevk-kabul-badge" class="sevk-tab-badge" style="display:none;">0</span></button>
+                    <button class="sevk-alt-btn" data-group="sevk" data-target="sevk-iste">Sevk İste</button>
+                    <button class="sevk-alt-btn" data-group="sevk" data-target="sevk-cikis">Sevk Çıkış</button>
+                </div>
+                <div class="sevk-alt-grup-wrapper" data-group-wrapper="tedarik">
+                    <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-siparisler">Alım Siparişleri</button>
+                    <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-yeni-siparis">Yeni Sipariş Oluştur</button>
+                    <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-tedarikciler">Tedarikçiler</button>
+                </div>
+            </div>
         </div>
         <div class="sevk-header-actions">
             <span class="sevk-live-dot"></span>
             <span id="sevk-active-depo-label">Depo hazırlanıyor...</span>
         </div>
-    </div>
-
-    <div class="sevk-alt-sekmeler" aria-label="Sevk alt sekmeleri">
-        <button class="sevk-alt-btn aktif" data-group="sevk" data-target="sevk-genel">Genel Sevk</button>
-        <button class="sevk-alt-btn" data-group="sevk" data-target="sevk-kabul">Sevk Kabul <span id="sevk-kabul-badge" class="sevk-tab-badge" style="display:none;">0</span></button>
-        <button class="sevk-alt-btn" data-group="sevk" data-target="sevk-iste">Sevk İste</button>
-        <button class="sevk-alt-btn" data-group="sevk" data-target="sevk-cikis">Sevk Çıkış</button>
-        <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-siparisler">Alım Siparişleri</button>
-        <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-yeni-siparis">Yeni Sipariş Oluştur</button>
-        <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-tedarikciler">Tedarikçiler</button>
     </div>
 
     <section id="sevk-genel" class="sevk-icerik-paneli aktif">
