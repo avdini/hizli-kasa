@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 9.9
+ * Version: 10.0
  * Author: Seyfullah Kurt
  */
 
@@ -11,7 +11,7 @@ if (!defined('ABSPATH'))
     exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '9.9');
+define('HIZLI_KASA_VERSION', '10.0');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -50,7 +50,21 @@ function hizli_kasa_admin_log($message)
 
 // Sınıfları Yükle
 require_once HIZLI_KASA_PATH . 'includes/classes/class-database.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-hooks.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/class-user-warehouse-permissions.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/stock/class-stock-manager.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/stock/class-stock-order-handler.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/stock/class-stock-import-export.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/stock/class-stock-allocation.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-menu.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-settings-register.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-settings-page.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-depo-controller.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-mismatch-bubble.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-stock.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-import-export.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-unmatched.php';
+require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-tools.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-admin-settings.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-mismatch-notifier.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/class-rest-api.php';
@@ -65,7 +79,17 @@ require_once HIZLI_KASA_PATH . 'includes/classes/class-email-modifier.php';
 
 // Başlatıcılar
 // Hizli_Kasa_Database::init(); // Performans ve SEO için her istekte çalıştırılması engellendi (aktivasyon kancası kullanılmalıdır).
-Hizli_Kasa_Stock_Manager::listen();
+Hizli_Kasa_Hooks::init();
+Hizli_Kasa_Admin_Menu::init();
+Hizli_Kasa_Admin_Settings_Register::init();
+Hizli_Kasa_Admin_Depo_Controller::init();
+Hizli_Kasa_Admin_Mismatch_Bubble::init();
+Hizli_Kasa_User_Warehouse_Permissions::init();
+Hizli_Kasa_Ajax_Stock::init();
+Hizli_Kasa_Ajax_Import_Export::init();
+Hizli_Kasa_Ajax_Unmatched::init();
+Hizli_Kasa_Ajax_Tools::init();
+Hizli_Kasa_Stock_Order_Handler::listen();
 Hizli_Kasa_Mismatch_Notifier::init();
 Hizli_Kasa_Mobile_Handler::init();
 Hizli_Kasa_User_Handler::init();
@@ -115,92 +139,4 @@ add_filter('http_request_args', function ($args, $url) {
     }
     return $args;
 }, 10, 2);
-
-/**
- * ==========================================================================
- * ÖNBELLEK YIKIM (CACHE INVALIDATION) KANCALARI
- * ==========================================================================
- */
-
-// Sipariş kancaları: Raporlar ve İstatistikler için önbellek temizleme
-function hizli_kasa_invalidate_reports_cache()
-{
-    update_option('hk_reports_cache_version', time());
-}
-add_action('woocommerce_new_order', 'hizli_kasa_invalidate_reports_cache');
-add_action('woocommerce_update_order', 'hizli_kasa_invalidate_reports_cache');
-add_action('woocommerce_order_refunded', 'hizli_kasa_invalidate_reports_cache');
-
-// Kullanıcı yetki kancaları: Profil güncellendiğinde yetki önbelleği temizleme
-function hizli_kasa_invalidate_user_perms_cache($user_id)
-{
-    delete_transient("hk_user_view_depos_{$user_id}");
-    delete_transient("hk_user_manage_depos_{$user_id}");
-}
-add_action('profile_update', 'hizli_kasa_invalidate_user_perms_cache');
-add_action('user_register', 'hizli_kasa_invalidate_user_perms_cache');
-
-/**
- * ==========================================================================
- * GLOBAL REST API ÖNBELLEK ENGELLEYİCİ
- * ==========================================================================
- * Tüm hizli-kasa/v1/* endpoint yanıtlarına otomatik no-cache header'ları
- * ekler. LiteSpeed, Cloudflare ve tarayıcı önbelleğini devre dışı bırakır.
- * Yeni eklenen endpoint'ler de otomatik olarak bu koruma kapsamına girer.
- */
-add_filter('rest_pre_serve_request', function ($served, $result, $request, $server) {
-    $route = $request->get_route();
-
-    if (strpos($route, '/hizli-kasa/v1/') === 0 || strpos($route, '/hizli-kasa/v2/') === 0) {
-        // WordPress standart önbellek engelleme sabiti
-        if (!defined('DONOTCACHEPAGE')) {
-            define('DONOTCACHEPAGE', true);
-        }
-
-        // LiteSpeed Cache eklentisi için zorunlu no-cache kancası
-        do_action('litespeed_control_force_nocache');
-
-        if (!headers_sent()) {
-            // Tarayıcı ve proxy önbelleğini engelle
-            header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-            header('Pragma: no-cache');
-            header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
-            // LiteSpeed Web Sunucusu özel direktifi
-            header('X-LiteSpeed-Cache-Control: no-cache');
-        }
-    }
-
-    return $served;
-}, 10, 4);
-
-/**
- * Hızlı Kasa üzerinden kupon kullanıldığında kuponu geçersiz kılan ve kilitleri kaldıran fonksiyon.
- */
-function hizli_kasa_handle_coupon_use_on_new_order($order_id, $order = false)
-{
-    if (!$order) {
-        $order = wc_get_order($order_id);
-    }
-    if (!$order) {
-        return;
-    }
-
-    $kasiyer = $order->get_meta('_hizli_kasa_kasiyer');
-    if (!$kasiyer) {
-        return;
-    }
-
-    $coupon_code = $order->get_meta('_hizli_kasa_used_coupon_code');
-    if ($coupon_code) {
-        $coupon = new WC_Coupon($coupon_code);
-        if ($coupon->get_id()) {
-            $coupon->increase_usage_count();
-        }
-
-        // Çift harcama transient kilidini temizle
-        $lock_key = 'hk_coupon_lock_' . md5(strtoupper($coupon_code));
-        delete_transient($lock_key);
-    }
-}
-add_action('woocommerce_new_order', 'hizli_kasa_handle_coupon_use_on_new_order', 10, 2);
 
