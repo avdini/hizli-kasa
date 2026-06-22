@@ -627,6 +627,9 @@
                     HK.CartManager.sepetiTemizle(siparisKasaId);
                     document.getElementById("fis-onay-modal").style.display = "flex";
                     jQuery(document).trigger('hk:siparis-tamamlandi');
+                    if (HK.PrintManager) {
+                        HK.PrintManager.print('receipt');
+                    }
                 } else {
                     durumMetni.innerText = "HATA: " + (orderResult.message || "API sorunu!");
                     durumMetni.style.color = "red";
