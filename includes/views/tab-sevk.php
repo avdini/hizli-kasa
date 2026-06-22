@@ -7,7 +7,7 @@ if (!defined('ABSPATH'))
 ?>
 
 <div class="hk-tab-container sevk-shell" data-active-group="sevk">
-    <header class="sevk-header">
+    <div class="sevk-header">
         <div>
             <h2>Sevk & Tedarik İşlemleri</h2>
             <p>Depolar arası transferler ve dışarıdan gelen ürünlerin tedarik süreci.</p>
@@ -16,7 +16,7 @@ if (!defined('ABSPATH'))
             <span class="sevk-live-dot"></span>
             <span id="sevk-active-depo-label">Depo hazırlanıyor...</span>
         </div>
-    </header>
+    </div>
 
     <div class="sevk-grup-kontrol">
         <button type="button" class="sevk-grup-btn aktif" data-group="sevk">
@@ -27,7 +27,7 @@ if (!defined('ABSPATH'))
         </button>
     </div>
 
-    <nav class="sevk-alt-sekmeler" aria-label="Sevk alt sekmeleri">
+    <div class="sevk-alt-sekmeler" aria-label="Sevk alt sekmeleri">
         <button class="sevk-alt-btn aktif" data-group="sevk" data-target="sevk-genel">Genel Sevk</button>
         <button class="sevk-alt-btn" data-group="sevk" data-target="sevk-kabul">Sevk Kabul <span id="sevk-kabul-badge" class="sevk-tab-badge" style="display:none;">0</span></button>
         <button class="sevk-alt-btn" data-group="sevk" data-target="sevk-iste">Sevk İste</button>
@@ -35,7 +35,7 @@ if (!defined('ABSPATH'))
         <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-siparisler">Alım Siparişleri</button>
         <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-yeni-siparis">Yeni Sipariş Oluştur</button>
         <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-tedarikciler">Tedarikçiler</button>
-    </nav>
+    </div>
 
     <section id="sevk-genel" class="sevk-icerik-paneli aktif">
         <div class="sevk-dashboard-grid">
@@ -100,13 +100,13 @@ if (!defined('ABSPATH'))
 
     <section id="sevk-kabul" class="sevk-icerik-paneli" style="display:none;">
         <div class="sevk-split">
-            <aside class="sevk-list-panel">
+            <div class="sevk-list-panel">
                 <div class="sevk-panel-title">
                     <h3>Gelen Sevkler</h3>
                     <button type="button" id="sevk-kabul-yenile" class="sevk-icon-btn" title="Yenile">↻</button>
                 </div>
                 <div id="sevk-kabul-listesi" class="sevk-card-list"></div>
-            </aside>
+            </div>
             <main id="sevk-kabul-detay" class="sevk-detail-panel">
                 <div class="sevk-empty-state">
                     <h3>Bir sevk seçin</h3>
@@ -264,7 +264,7 @@ if (!defined('ABSPATH'))
     <!-- Tedarikçiler Ekranı -->
     <section id="malkabul-tedarikciler" class="sevk-icerik-paneli" style="display:none;">
         <div class="sevk-split">
-            <aside class="sevk-list-panel">
+            <div class="sevk-list-panel">
                 <div class="sevk-panel-title">
                     <h3>Tedarikçi Listesi</h3>
                     <button type="button" id="malkabul-tedarikciler-yenile" class="sevk-icon-btn" title="Yenile">↻</button>
@@ -272,7 +272,7 @@ if (!defined('ABSPATH'))
                 <div id="malkabul-tedarikci-listesi" class="sevk-card-list">
                     <!-- Dinamik doldurulacak -->
                 </div>
-            </aside>
+            </div>
             <main class="sevk-detail-panel">
                 <div class="sevk-detail-content">
                     <h3>Yeni Tedarikçi Ekle</h3>
