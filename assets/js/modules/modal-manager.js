@@ -135,7 +135,7 @@
         _getAutoDiscountBase: function() {
             var toplam = 0;
             HK.State.sepet.forEach(function(item) {
-                if (!item._is_exchange_return && item.quantity > 0) {
+                if (item.product_id !== "COUPON" && !item._is_exchange_return && item.quantity > 0) {
                     toplam += (item.price * item.quantity);
                 }
             });

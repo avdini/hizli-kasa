@@ -389,7 +389,7 @@ window.HizliKasa = window.HizliKasa || {};
             var enPahaliSatirKurus = 0;
 
             state.sepet.forEach(function(item, index) {
-                if (item._is_exchange_return || item.quantity <= 0) return;
+                if (item.product_id === "COUPON" || item._is_exchange_return || item.quantity <= 0) return;
                 var satirBrutKurus = Math.round(item.price * item.quantity * carpan * 100);
                 toplamKurus += satirBrutKurus;
                 if (satirBrutKurus > enPahaliSatirKurus) {
@@ -419,7 +419,7 @@ window.HizliKasa = window.HizliKasa || {};
             var toplamMinGereken = 0;
             state.sepet.forEach(function(item, index) {
                 iskontolar[index] = 0;
-                if (item._is_exchange_return || item.quantity <= 0) {
+                if (item.product_id === "COUPON" || item._is_exchange_return || item.quantity <= 0) {
                     minGerekenler[index] = 0;
                     return;
                 }
@@ -436,7 +436,7 @@ window.HizliKasa = window.HizliKasa || {};
             if (kalanD >= toplamMinGereken) {
                 // Hepsini temizlemeye yetecek kadar paramız var
                 state.sepet.forEach(function(item, index) {
-                    if (item._is_exchange_return || item.quantity <= 0) return;
+                    if (item.product_id === "COUPON" || item._is_exchange_return || item.quantity <= 0) return;
                     if (index === enPahaliIndex) return;
                     iskontolar[index] = minGerekenler[index];
                     kalanD -= minGerekenler[index];
@@ -445,7 +445,7 @@ window.HizliKasa = window.HizliKasa || {};
             } else {
                 // Hepsini temizlemeye yetmiyor. Gücümüzün yettiği kadarını temizleyelim.
                 state.sepet.forEach(function(item, index) {
-                    if (item._is_exchange_return || item.quantity <= 0) return;
+                    if (item.product_id === "COUPON" || item._is_exchange_return || item.quantity <= 0) return;
                     if (index === enPahaliIndex) return;
                     if (kalanD >= minGerekenler[index]) {
                         iskontolar[index] = minGerekenler[index];
@@ -458,7 +458,7 @@ window.HizliKasa = window.HizliKasa || {};
             // Aşama 2: Kalan iskontoyu oransal olarak 1 TL adımlarla dağıt (En pahalı hariç)
             var adimKurus = 100;
             state.sepet.forEach(function(item, index) {
-                if (item._is_exchange_return || item.quantity <= 0) return;
+                if (item.product_id === "COUPON" || item._is_exchange_return || item.quantity <= 0) return;
                 if (index === enPahaliIndex) return;
 
                 var satirBrutKurus = Math.round(item.price * item.quantity * carpan * 100);
@@ -498,7 +498,7 @@ window.HizliKasa = window.HizliKasa || {};
 
                 // Taşan kısmı mecburen diğerlerine yedir (bu aşamada temizlik bozulabilir ama ekstrem durumdur)
                 for (var i = 0; i < state.sepet.length && sonKalan > 0; i++) {
-                    if (state.sepet[i]._is_exchange_return || state.sepet[i].quantity <= 0) continue;
+                    if (state.sepet[i].product_id === "COUPON" || state.sepet[i]._is_exchange_return || state.sepet[i].quantity <= 0) continue;
                     if (i === enPahaliIndex) continue;
                     var itKurus = Math.round(state.sepet[i].price * state.sepet[i].quantity * carpan * 100);
                     var bosluk = itKurus - (iskontolar[i] || 0);

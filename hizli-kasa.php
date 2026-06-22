@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 9.7.1
+ * Version: 9.7.2
  * Author: Seyfullah Kurt
  */
 
@@ -11,7 +11,7 @@ if (!defined('ABSPATH'))
     exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '9.7.1');
+define('HIZLI_KASA_VERSION', '9.7.2');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -172,3 +172,35 @@ add_filter('rest_pre_serve_request', function ($served, $result, $request, $serv
 
     return $served;
 }, 10, 4);
+
+/**
+ * Hızlı Kasa üzerinden kupon kullanıldığında kuponu geçersiz kılan ve kilitleri kaldıran fonksiyon.
+ */
+function hizli_kasa_handle_coupon_use_on_new_order($order_id, $order = false)
+{
+    if (!$order) {
+        $order = wc_get_order($order_id);
+    }
+    if (!$order) {
+        return;
+    }
+
+    $kasiyer = $order->get_meta('_hizli_kasa_kasiyer');
+    if (!$kasiyer) {
+        return;
+    }
+
+    $coupon_code = $order->get_meta('_hizli_kasa_used_coupon_code');
+    if ($coupon_code) {
+        $coupon = new WC_Coupon($coupon_code);
+        if ($coupon->get_id()) {
+            $coupon->increase_usage_count();
+        }
+
+        // Çift harcama transient kilidini temizle
+        $lock_key = 'hk_coupon_lock_' . md5(strtoupper($coupon_code));
+        delete_transient($lock_key);
+    }
+}
+add_action('woocommerce_new_order', 'hizli_kasa_handle_coupon_use_on_new_order', 10, 2);
+

@@ -417,14 +417,21 @@
             // 2. ADIM: SATIŞ İŞLEMİ (Sale)
             durumMetni.innerText = "Satış işlemi tamamlanıyor...";
 
-            // Toplamlar için ön çalışma (sadece pozitif satırlar)
+            // Toplamlar için ön çalışma (sadece pozitif satırlar, kupon hariç)
             var sepetAraToplam = 0;
             var sepetListeToplami = 0;
             var sepetIskontoluToplam = 0;
+            var couponAmount = 0;
+            var couponCode = "";
             saleItems.forEach(function (item) {
-                sepetAraToplam += (item.price * item.quantity);
-                sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
-                sepetIskontoluToplam += ((item.price * item.quantity) - (item.line_discount || 0));
+                if (item.product_id === "COUPON") {
+                    couponAmount += Math.abs(item.price * item.quantity);
+                    couponCode = item.sku;
+                } else {
+                    sepetAraToplam += (item.price * item.quantity);
+                    sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
+                    sepetIskontoluToplam += ((item.price * item.quantity) - (item.line_discount || 0));
+                }
             });
 
             var temizSepet = saleItems.map(function (item) {
@@ -463,11 +470,7 @@
             var gercekSatisGorenUrunler = [];
             temizSepet.forEach(function(item) {
                 if (item.product_id === "COUPON") {
-                    // SKU is hidden inside saleItems array, let's find it
-                    var orijinalItem = saleItems.find(function(si) { return si.product_id === "COUPON"; });
-                    if (orijinalItem && orijinalItem.sku) {
-                        couponLines.push({ code: orijinalItem.sku });
-                    }
+                    // Kuponu WooCommerce coupon_lines olarak göndermiyoruz, çünkü fee_lines olarak ekleyeceğiz
                 } else {
                     gercekSatisGorenUrunler.push(item);
                 }
@@ -477,10 +480,25 @@
             // %5 önce, iskonto sonra
             var autoDiscountTotal = isAutoDiscount ? (sepetAraToplam * 0.05) : 0;
             var netSatisToplami = sepetAraToplam - autoDiscountTotal - state.iskontoTutar;
+
+            var appliedCouponAmount = 0;
+            if (couponAmount > 0) {
+                appliedCouponAmount = Math.min(couponAmount, netSatisToplami);
+                netSatisToplami -= appliedCouponAmount;
+            }
+
             var gercekOdenen = netSatisToplami - refundTotal; // Müşteriden alınacak / kasaya giren net para
             
             var feeLines = [];
             var eklenenFark = 0;
+
+            if (appliedCouponAmount > 0) {
+                feeLines.push({
+                    name: "İade Çeki (" + couponCode + ")",
+                    total: (-appliedCouponAmount).toFixed(2),
+                    tax_status: "none"
+                });
+            }
 
             if (gercekOdenen < 0) {
                 // İade edilen tutar yeni satış tutarından büyük.
@@ -584,6 +602,9 @@
                     { key: "_odeme_nakit", value: oNakit.toFixed(2) },
                     { key: "_odeme_kart", value: oKart.toFixed(2) },
                     { key: "_odeme_iban", value: oIban.toFixed(2) },
+                    { key: "_odeme_coupon", value: appliedCouponAmount.toFixed(2) },
+                    { key: "_hizli_kasa_used_coupon_code", value: couponCode },
+                    { key: "_hizli_kasa_used_coupon_amount", value: appliedCouponAmount.toFixed(2) },
                     { key: "_etiket_toplami", value: sepetListeToplami.toFixed(2) },
                     { key: "_ara_toplam", value: sepetAraToplam.toFixed(2) },
                     { key: "_hk_toplam_iskonto", value: state.iskontoTutar.toFixed(2) },
@@ -600,7 +621,7 @@
                     { key: "_hizli_kasa_musteri_telefon_ulke_kodu", value: state.musteriTelefonUlkeKodu || "+90" },
                     { key: "_hizli_kasa_siparis_notu", value: siparisNotu }
                 ],
-                coupon_lines: couponLines
+                coupon_lines: []
             };
 
             // İade ile bağlantı meta verisi
