@@ -176,7 +176,7 @@ if (!defined('ABSPATH')) exit;
         <p id="fis-tarih" style="margin:0; font-size:11px;"></p>
         <p id="fis-no-text" style="font-weight:bold; margin:5px 0; font-size:14px;"></p>
         <div style="text-align:center; margin-bottom:10px;">
-            <svg id="fis-barkod" style="max-width:100%; height:auto;"></svg>
+            <svg id="fis-barkod" style="width: 100%; max-width: 240px; height: auto; margin: 0 auto; display: block;"></svg>
         </div>
     </div>
 
@@ -222,30 +222,42 @@ if (!defined('ABSPATH')) exit;
 
 <!-- İade Kuponu Fiş Şablonu (Sadece Yazdırma İçin) -->
 <div id="fis-coupon-sablon" style="color:#000;">
-    <div style="text-align:center; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:10px;">
-        <h2 style="margin:0; font-size:18px;"><?php echo get_bloginfo('name'); ?></h2>
-        <p style="margin:5px 0; font-size:12px; font-weight:bold;">İADE ÇEKİ</p>
-        <p id="fis-coupon-tarih" style="margin:0; font-size:11px;"></p>
-        <div style="text-align:center; margin-top:15px; margin-bottom:10px;">
-            <svg id="fis-coupon-barkod" style="max-width:100%; height:auto;"></svg>
+    <div style="display: flex; align-items: stretch; font-family: 'Courier New', Courier, monospace; min-height: 220px; box-sizing: border-box;">
+        <!-- Sol Taraf (Bilgiler) -->
+        <div style="flex: 1; padding-right: 8px; border-right: 1px dashed #000; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box;">
+            <div>
+                <h2 style="margin:0; font-size:16px; font-weight:bold; text-align:center;"><?php echo get_bloginfo('name'); ?></h2>
+                <p style="margin:3px 0; font-size:11px; font-weight:bold; text-align:center; text-transform:uppercase; letter-spacing:1px;">İADE ÇEKİ</p>
+                <p id="fis-coupon-tarih" style="margin:0; font-size:10px; text-align:center; color:#555;"></p>
+                
+                <div style="margin:12px 0; text-align:center; border-top:1px solid #000; border-bottom:1px solid #000; padding:8px 0;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px;">Çek Tutarı:</div>
+                    <div id="fis-coupon-tutar" style="font-weight:bold; font-size:20px; margin-top:2px;"></div>
+                </div>
+                
+                <div style="font-size:10px; line-height:1.4;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                        <span>Müşteri Tel:</span>
+                        <span id="fis-coupon-telefon" style="font-weight:bold;"></span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                        <span>Kupon Kodu:</span>
+                        <span id="fis-coupon-kodu" style="font-weight:bold; font-size:11px;"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align:center; margin-top:10px; font-size:8.5px; border-top:1px dashed #000; padding-top:5px; line-height:1.3; color:#444;">
+                Bu iade çeki tek seferliktir. Kasada veya web sitemizde okutarak kullanabilirsiniz.
+            </div>
         </div>
-        <p id="fis-coupon-kodu" style="font-weight:bold; margin:5px 0; font-size:16px;"></p>
-    </div>
 
-    <div style="font-size:14px; text-align:center; margin-bottom:15px;">
-        <div>Çek Tutarı:</div>
-        <div id="fis-coupon-tutar" style="font-weight:bold; font-size:24px; margin-top:5px;"></div>
-    </div>
-    
-    <div style="border-top:1px solid #000; padding-top:10px; font-size:12px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-            <span>Müşteri Tel:</span>
-            <span id="fis-coupon-telefon" style="font-weight:bold;"></span>
+        <!-- Sağ Taraf (Dikine Barkod) -->
+        <div style="width: 50px; position: relative; overflow: visible; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+            <div style="position: absolute; top: 50%; left: 50%; width: 220px; height: 50px; margin-top: -25px; margin-left: -110px; transform: rotate(90deg); transform-origin: center; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+                <svg id="fis-coupon-barkod" style="width: 220px; height: 50px; display: block;"></svg>
+            </div>
         </div>
-    </div>
-
-    <div style="text-align:center; margin-top:20px; font-size:10px; border-top:1px dashed #000; padding-top:10px;">
-        Bu iade çeki tek seferliktir. Bir sonraki alışverişinizde kasada okutarak veya web sitemizde kullanabilirsiniz.
     </div>
 </div>
 
