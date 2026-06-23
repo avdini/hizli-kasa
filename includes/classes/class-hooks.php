@@ -106,7 +106,7 @@ class Hizli_Kasa_Hooks {
         }
 
         $coupon_code = $coupon->get_code();
-        $amount = $coupon->get_amount();
+        $amount = number_format($coupon->get_amount(), 2, '.', '') . ' TL';
         $saved_phone = $coupon->get_meta('_hizli_kasa_coupon_phone', true) ?: '-';
         $post_date = get_the_date('d.m.Y H:i', $coupon_id);
 
@@ -145,30 +145,7 @@ class Hizli_Kasa_Hooks {
         </head>
         <body>
             <div id="fis-coupon-sablon">
-                <h2 style="margin:0; font-size:18px; font-weight:bold;"><?php echo esc_html(get_bloginfo('name')); ?></h2>
-                <p style="margin:4px 0; font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:1px;">İADE ÇEKİ</p>
-                <p style="margin:0; font-size:11px; color:#555;"><?php echo esc_html($post_date); ?></p>
-                
-                <div style="border-top:1px solid #000; border-bottom:1px solid #000; margin:15px 0; padding:10px 0;">
-                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px;">Çek Tutarı</div>
-                    <div style="font-weight:bold; font-size:24px;"><?php echo esc_html(number_format($amount, 2, '.', '')); ?> TL</div>
-                </div>
-
-                <div style="text-align:center; margin:15px auto 5px auto;">
-                    <img id="fis-coupon-barkod" style="width: 100%; max-width: 220px; height: auto; margin: 0 auto; display: block;" />
-                </div>
-                <p style="font-weight:bold; margin:0 0 15px 0; font-size:14px; letter-spacing:0.5px;"><?php echo esc_html($coupon_code); ?></p>
-
-                <div style="border-top:1px dashed #000; padding-top:10px; font-size:11px; text-align:left;">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                        <span>Müşteri Tel:</span>
-                        <span style="font-weight:bold;"><?php echo esc_html($saved_phone); ?></span>
-                    </div>
-                </div>
-
-                <div style="text-align:center; margin-top:15px; font-size:9.5px; border-top:1px dashed #000; padding-top:10px; line-height:1.4; color:#333;">
-                    Bu iade çeki tek seferliktir. Kasada veya web sitemizde okutarak kullanabilirsiniz.
-                </div>
+                <?php include HIZLI_KASA_PATH . 'includes/views/receipt-coupon-template.php'; ?>
             </div>
 
             <script>
