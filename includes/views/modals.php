@@ -176,7 +176,7 @@ if (!defined('ABSPATH')) exit;
         <p id="fis-tarih" style="margin:0; font-size:11px;"></p>
         <p id="fis-no-text" style="font-weight:bold; margin:5px 0; font-size:14px;"></p>
         <div style="text-align:center; margin-bottom:10px;">
-            <svg id="fis-barkod" style="width: 100%; max-width: 240px; height: auto; margin: 0 auto; display: block;"></svg>
+            <img id="fis-barkod" style="width: 100%; max-width: 240px; height: auto; margin: 0 auto; display: block;" />
         </div>
     </div>
 
@@ -232,7 +232,7 @@ if (!defined('ABSPATH')) exit;
     </div>
 
     <div style="text-align:center; margin:15px auto 5px auto;">
-        <svg id="fis-coupon-barkod" style="width: 100%; max-width: 220px; height: auto; margin: 0 auto; display: block;"></svg>
+        <img id="fis-coupon-barkod" style="width: 100%; max-width: 220px; height: auto; margin: 0 auto; display: block;" />
     </div>
     <p id="fis-coupon-kodu" style="font-weight:bold; margin:0 0 15px 0; font-size:14px; letter-spacing:0.5px;"></p>
 

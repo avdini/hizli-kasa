@@ -155,7 +155,7 @@ class Hizli_Kasa_Hooks {
                 </div>
 
                 <div style="text-align:center; margin:15px auto 5px auto;">
-                    <svg id="fis-coupon-barkod" style="width: 100%; max-width: 220px; height: auto; margin: 0 auto; display: block;"></svg>
+                    <img id="fis-coupon-barkod" style="width: 100%; max-width: 220px; height: auto; margin: 0 auto; display: block;" />
                 </div>
                 <p style="font-weight:bold; margin:0 0 15px 0; font-size:14px; letter-spacing:0.5px;"><?php echo esc_html($coupon_code); ?></p>
 

@@ -186,7 +186,7 @@
             <p id="report-fis-tarih" style="margin:0; font-size:11px;"></p>
             <p id="report-fis-no-text" style="font-weight:bold; margin:5px 0; font-size:14px;"></p>
             <div style="text-align:center; margin-bottom:10px;">
-                <svg id="report-fis-barkod" style="max-width:100%; height:auto;"></svg>
+                <img id="report-fis-barkod" style="width: 100%; max-width: 240px; height: auto; margin: 0 auto; display: block;" />
             </div>
         </div>
 
