@@ -165,9 +165,11 @@ function hizli_kasa_search_orders($request)
     $date_bit = sanitize_text_field($request->get_param('date_end'));
     $price_min = floatval($request->get_param('price_min'));
     $price_max = floatval($request->get_param('price_max'));
+    $page = max(1, intval($request->get_param('page')));
 
     $args = array(
         'limit' => 50,
+        'paged' => $page,
         'status' => array('processing', 'completed'),
         'orderby' => 'date',
         'order' => 'DESC',
@@ -248,7 +250,12 @@ function hizli_kasa_search_orders($request)
         ];
     }
 
-    return $results;
+    $has_more = (count($orders) === 50);
+
+    return array(
+        'results'  => $results,
+        'has_more' => $has_more,
+    );
 }
 
 /**

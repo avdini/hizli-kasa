@@ -9,6 +9,8 @@ const RefundManager = (function () {
     let refundSplitData = null;
     let isManualMode = false;
     let manualSearchTimeout = null;
+    let currentSearchPage = 1;
+    let activeSearchParams = null;
 
     function init() {
         // İade sekmesi her yüklendiğinde (lazy load sonrası) elementleri tekrar yakala
@@ -375,7 +377,7 @@ const RefundManager = (function () {
         document.querySelector('.iade-sol-panel').classList.add('searching-mode');
 
         const depo_id = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
-        const params = new URLSearchParams({
+        activeSearchParams = {
             phone: document.getElementById('iade-arama-telefon').value,
             barcode: document.getElementById('iade-arama-urun').value,
             price_min: document.getElementById('iade-arama-fiyat-min').value,
@@ -383,6 +385,18 @@ const RefundManager = (function () {
             date_start: document.getElementById('iade-arama-tarih-bas').value,
             date_end: document.getElementById('iade-arama-tarih-bit').value,
             depo_id: depo_id
+        };
+
+        currentSearchPage = 1;
+        await fetchSearchOrdersPage(currentSearchPage, false);
+    }
+
+    async function fetchSearchOrdersPage(page, append = false) {
+        if (!activeSearchParams) return;
+
+        const params = new URLSearchParams({
+            ...activeSearchParams,
+            page: page
         });
 
         showLoading();
@@ -392,8 +406,8 @@ const RefundManager = (function () {
                 headers: { 'X-WP-Nonce': kasaAyar.nonce }
             });
 
-            const results = await response.json();
-            renderSearchResults(results);
+            const data = await response.json();
+            renderSearchResults(data, append);
 
         } catch (error) {
             alert('Arama hatası: ' + error.message);
@@ -402,34 +416,67 @@ const RefundManager = (function () {
         }
     }
 
-    function renderSearchResults(results) {
+    function loadMoreOrders() {
+        currentSearchPage++;
+        fetchSearchOrdersPage(currentSearchPage, true);
+    }
+
+    function renderSearchResults(data, append = false) {
         const container = document.getElementById('iade-arama-sonuclari');
         const list = document.getElementById('iade-sonuc-listesi');
 
         if (!list) return;
-        if (!results || results.length === 0) {
-            list.innerHTML = '<li class="sonuc-yok">Eşleşen sipariş bulunamadı.</li>';
-        } else {
-            list.innerHTML = results.map(order => {
-                const isFull = order.is_fully_refunded;
-                const clickAction = isFull ? '' : `RefundManager.selectOrder('${order.id}')`;
-                const fullClass = isFull ? 'fully-refunded-row' : '';
-                const badge = isFull ? '<span class="iade-badge">Tamamı İade Edildi</span>' : '';
 
-                return `
-                    <li onclick="${clickAction}" class="${fullClass}">
-                        <div class="sonuc-ana">
-                            <strong>#${order.id} ${badge}</strong>
-                            <span>${order.date}</span>
-                        </div>
-                        <div class="sonuc-detay">
-                            <span>💰 ${order.total} TL</span>
-                            <span>👤 ${order.telefon}</span>
-                            <span>👤 Kasiyer: ${order.kasiyer}</span>
-                        </div>
-                    </li>
-                `;
-            }).join('');
+        const results = data.results || [];
+        const has_more = data.has_more || false;
+
+        const itemsHtml = results.map(order => {
+            const isFull = order.is_fully_refunded;
+            const clickAction = isFull ? '' : `RefundManager.selectOrder('${order.id}')`;
+            const fullClass = isFull ? 'fully-refunded-row' : '';
+            const badge = isFull ? '<span class="iade-badge">Tamamı İade Edildi</span>' : '';
+
+            return `
+                <li onclick="${clickAction}" class="${fullClass}">
+                    <div class="sonuc-ana">
+                        <strong>#${order.id} ${badge}</strong>
+                        <span>${order.date}</span>
+                    </div>
+                    <div class="sonuc-detay">
+                        <span>💰 ${order.total} TL</span>
+                        <span>👤 ${order.telefon}</span>
+                        <span>👤 Kasiyer: ${order.kasiyer}</span>
+                    </div>
+                </li>
+            `;
+        }).join('');
+
+        if (append) {
+            list.innerHTML += itemsHtml;
+        } else {
+            if (results.length === 0) {
+                list.innerHTML = '<li class="sonuc-yok">Eşleşen sipariş bulunamadı.</li>';
+            } else {
+                list.innerHTML = itemsHtml;
+            }
+        }
+
+        // Manage Load More button
+        let loadMoreBtn = document.getElementById('iade-arama-daha-fazla-btn');
+        if (has_more) {
+            if (!loadMoreBtn) {
+                loadMoreBtn = document.createElement('button');
+                loadMoreBtn.id = 'iade-arama-daha-fazla-btn';
+                loadMoreBtn.className = 'iade-arama-btn tam-genislik';
+                loadMoreBtn.style.marginTop = '15px';
+                loadMoreBtn.innerText = 'Daha Fazla Yükle';
+                loadMoreBtn.onclick = loadMoreOrders;
+                list.parentNode.appendChild(loadMoreBtn);
+            }
+        } else {
+            if (loadMoreBtn) {
+                loadMoreBtn.remove();
+            }
         }
 
         container.style.display = 'block';
@@ -448,6 +495,10 @@ const RefundManager = (function () {
     function closeSearchResults() {
         document.querySelector('.iade-sol-panel').classList.remove('searching-mode');
         document.getElementById('iade-arama-sonuclari').style.display = 'none';
+        const loadMoreBtn = document.getElementById('iade-arama-daha-fazla-btn');
+        if (loadMoreBtn) {
+            loadMoreBtn.remove();
+        }
     }
 
     function selectOrder(id) {
