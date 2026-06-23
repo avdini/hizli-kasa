@@ -37,6 +37,63 @@ function hizli_kasa_process_refund($request)
     // Orijinal siparişi yükle (eğer varsa)
     $original_order = $original_order_id ? wc_get_order($original_order_id) : null;
 
+    if ($original_order_id && !$original_order) {
+        return new WP_Error('invalid_order', 'Orijinal sipariş bulunamadı.', array('status' => 404));
+    }
+
+    // --- Orijinal Sipariş İade Validasyonları ---
+    if ($original_order) {
+        foreach ($refund_items as $item) {
+            if (empty($item['item_id'])) {
+                return new WP_Error('invalid_item', 'İade edilmek istenen ürünün orijinal sipariş satır bilgisi eksik.', array('status' => 400));
+            }
+            
+            $orig_item_id = intval($item['item_id']);
+            $original_item = $original_order->get_item($orig_item_id);
+            
+            if (!$original_item || !is_a($original_item, 'WC_Order_Item_Product')) {
+                return new WP_Error('invalid_item', 'Orijinal siparişte böyle bir ürün bulunamadı.', array('status' => 400));
+            }
+            
+            $item_product_id = intval($original_item->get_product_id());
+            $item_variation_id = intval($original_item->get_variation_id());
+            $returned_product_id = intval($item['id']);
+            $returned_variation_id = intval($item['variation_id'] ?? 0);
+            
+            if (($returned_variation_id > 0 && $item_variation_id !== $returned_variation_id) || 
+                ($returned_variation_id === 0 && $item_product_id !== $returned_product_id)) {
+                return new WP_Error('item_mismatch', 'İade edilen ürün orijinal siparişteki ürünle eşleşmiyor.', array('status' => 400));
+            }
+            
+            $qty = abs($item['qty']);
+            $price = abs($item['price']);
+            
+            $orig_qty = $original_item->get_quantity();
+            $orig_total = $original_item->get_total();
+            $orig_unit_price = $orig_qty > 0 ? ($orig_total / $orig_qty) : 0;
+            
+            // Fiyat kontrolü (2 basamak yuvarlama ile)
+            if (round($price, 2) > round($orig_unit_price, 2)) {
+                return new WP_Error('price_limit_exceeded', sprintf(
+                    'İade birim fiyatı (%s TL), orijinal satın alma fiyatını (%s TL) geçemez.',
+                    number_format($price, 2, '.', ''),
+                    number_format($orig_unit_price, 2, '.', '')
+                ), array('status' => 400));
+            }
+            
+            // Miktar kontrolü
+            $already_refunded = (int) wc_get_order_item_meta($orig_item_id, '_hk_refunded_qty', true);
+            if ($already_refunded + $qty > $orig_qty) {
+                return new WP_Error('qty_limit_exceeded', sprintf(
+                    'İade adedi (%d), satın alınan adetten (%d) fazla olamaz. (Daha önce iade edilen: %d)',
+                    $qty,
+                    $orig_qty,
+                    $already_refunded
+                ), array('status' => 400));
+            }
+        }
+    }
+
     $refund_order = wc_create_order(array('status' => 'completed', 'customer_id' => 0));
 
     // Kasiyer ve Kasa Bilgilerini Al
@@ -158,8 +215,8 @@ function hizli_kasa_process_refund($request)
         $coupon_phone = sanitize_text_field($data['coupon_phone'] ?? '');
         $refund_order->update_meta_data('_odeme_coupon', $final_refund_total);
         $refund_order->update_meta_data('Ödeme (Kupon)', number_format(abs($final_refund_total), 2, '.', '') . ' TL');
-        
-        $coupon_code = 'KUPON-' . strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
+        $coupon_suffix = strtoupper(implode('-', str_split(bin2hex(random_bytes(4)), 4)));
+        $coupon_code = 'KUPON-' . $coupon_suffix;
         $coupon = new WC_Coupon();
         $coupon->set_code($coupon_code);
         $coupon->set_discount_type('fixed_cart');

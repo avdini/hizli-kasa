@@ -127,7 +127,9 @@
         _getSepetAraToplam: function() {
             var toplam = 0;
             HK.State.sepet.forEach(function(item) {
-                toplam += (item.price * item.quantity);
+                if (item.product_id !== "COUPON") {
+                    toplam += (item.price * item.quantity);
+                }
             });
             return parseFloat(toplam.toFixed(2));
         },
@@ -159,7 +161,13 @@
         },
 
         _getSepetNetToplam: function() {
-            var netToplam = this._getBazToplam() - (HK.State.iskontoTutar || 0);
+            var couponAmount = 0;
+            HK.State.sepet.forEach(function(item) {
+                if (item.product_id === "COUPON") {
+                    couponAmount += Math.abs(item.price * item.quantity);
+                }
+            });
+            var netToplam = this._getBazToplam() - (HK.State.iskontoTutar || 0) - couponAmount;
             return parseFloat(Math.max(netToplam, 0).toFixed(2));
         },
 

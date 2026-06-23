@@ -90,6 +90,10 @@ if (!defined('ABSPATH'))
                     <span class="toplam-etiket"><button id="iskonto-temizle-btn" title="İskontoyu Sıfırla">✕</button> İSKONTO:</span>
                     <span id="indirim-deger" class="indirim-deger">-0.00 TL</span>
                 </div>
+                <div class="toplam-satir" id="kupon-satiri" style="display:none !important;">
+                    <span class="toplam-etiket">İADE ÇEKİ:</span>
+                    <span id="kupon-deger" class="indirim-deger">-0.00 TL</span>
+                </div>
                 <div class="toplam-satir">
                     <span class="toplam-etiket">GENEL TOPLAM:</span>
                     <span id="genel-toplam" class="toplam-deger">0.00 TL</span>

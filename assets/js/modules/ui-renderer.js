@@ -37,7 +37,9 @@ window.HizliKasa = window.HizliKasa || {};
                 bolButon: document.getElementById("bol-buton"),
                 siparisNotuBtn: document.getElementById("siparis-notu-btn"),
                 sidebarButtons: document.querySelectorAll(".sidebar-btn"),
-                iskontoTemizleBtn: document.getElementById("iskonto-temizle-btn")
+                iskontoTemizleBtn: document.getElementById("iskonto-temizle-btn"),
+                kuponSatiri: document.getElementById("kupon-satiri"),
+                kuponDegerArea: document.getElementById("kupon-deger")
             };
 
             this._bindOdemeTipiSecici();
@@ -317,12 +319,18 @@ window.HizliKasa = window.HizliKasa || {};
             var sepetListeToplami = 0;
             var sepetIskontoluToplam = 0;
             var autoDiscountBase = 0;
+            var couponAmount = 0;
             
             var sepetKalem = 0;
             var sepetAdet = 0;
             var iadeAdet = 0;
 
             state.sepet.forEach(function(item) {
+                if (item.product_id === "COUPON") {
+                    couponAmount += Math.abs(item.price * item.quantity);
+                    return;
+                }
+
                 sepetAraToplam += (item.price * item.quantity);
                 sepetListeToplami += ((item.regular_price || item.price) * item.quantity);
                 sepetIskontoluToplam += ((item.price * item.quantity) - (item.line_discount || 0));
@@ -369,8 +377,11 @@ window.HizliKasa = window.HizliKasa || {};
                 if (els.iskontoTemizleBtn) els.iskontoTemizleBtn.style.display = "none";
             }
 
-            // Son Toplam = (AraToplam × autoFactor) - İskonto
+            // Son Toplam = (AraToplam - NakitIndirim) - İskonto - Kupon
             var sonToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
+            if (couponAmount > 0) {
+                sonToplam -= couponAmount;
+            }
             // Değişim iade satırları olsa bile toplam negatif gözükmesin (Müşteriye para üstü vermiyoruz)
             var hasExchangeItems = state.sepet.some(function(item) { return item._is_exchange_return; });
             if (sonToplam < 0) sonToplam = 0;
@@ -379,6 +390,14 @@ window.HizliKasa = window.HizliKasa || {};
             els.listeToplamiArea.innerText = sepetListeToplami.toFixed(2) + " TL";
 
             els.araToplamArea.innerText = sepetAraToplam.toFixed(2) + " TL";
+
+            if (couponAmount > 0) {
+                if (els.kuponSatiri) els.kuponSatiri.style.setProperty("display", "flex", "important");
+                if (els.kuponDegerArea) els.kuponDegerArea.innerText = "-" + couponAmount.toFixed(2) + " TL";
+            } else {
+                if (els.kuponSatiri) els.kuponSatiri.style.setProperty("display", "none", "important");
+            }
+
             els.genelToplamArea.innerText = sonToplam.toFixed(2) + " TL";
 
             // Ödeme Tipi Butonlarını Senkronize Et
@@ -494,7 +513,12 @@ window.HizliKasa = window.HizliKasa || {};
             // Toplamı tekrar hesapla (Özet için) — %5 önce, iskonto sonra
             var sepetAraToplam = 0;
             var autoDiscountBase = 0;
+            var couponAmount = 0;
             state.sepet.forEach(function(item) {
+                if (item.product_id === "COUPON") {
+                    couponAmount += Math.abs(item.price * item.quantity);
+                    return;
+                }
                 sepetAraToplam += (item.price * item.quantity);
                 if (!item._is_exchange_return && item.quantity > 0) {
                     autoDiscountBase += (item.price * item.quantity);
@@ -502,6 +526,9 @@ window.HizliKasa = window.HizliKasa || {};
             });
             var nakitIndirimTutar = ((state.odemeTipi === "cash" || state.odemeTipi === "iban")) ? (autoDiscountBase * 0.05) : 0;
             var sonToplam = sepetAraToplam - nakitIndirimTutar - state.iskontoTutar;
+            if (couponAmount > 0) {
+                sonToplam -= couponAmount;
+            }
             var hasExchangeItems = state.sepet.some(function(item) { return item._is_exchange_return; });
             if (sonToplam < 0) sonToplam = 0;
 
