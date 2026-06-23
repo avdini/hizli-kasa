@@ -479,7 +479,11 @@ const RefundManager = (function () {
             }
         }
 
-        container.style.display = 'block';
+        if (document.querySelector('.iade-sol-panel').classList.contains('searching-mode')) {
+            container.style.display = 'flex';
+        } else {
+            container.style.display = 'block';
+        }
 
         // Kapatma butonu ekle (Eğer yoksa)
         const baslik = container.querySelector('h3');

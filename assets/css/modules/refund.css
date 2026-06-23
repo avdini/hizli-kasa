@@ -173,7 +173,7 @@
     bottom: 0;
     background: var(--hk-bg-card);
     z-index: 1000;
-    display: flex;
+    display: flex !important;
     flex-direction: column;
     padding: 20px;
 }
