@@ -75,11 +75,11 @@ class Hizli_Kasa_Admin_Settings_Register {
         'default' => 12,
         'sanitize_callback' => 'intval'
     ));
-    // Bildirim AyarlarÄ± (AyrÄ± grup - Resetlenmeyi Ã¶nlemek iÃ§in)
+    // Bildirim Ayarları (Ayrı grup - Resetlenmeyi önlemek için)
     register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_mismatch_check_enabled');
     register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_mismatch_interval');
     register_setting('hizli_kasa_bildirim_grubu', 'hizli_kasa_dismiss_hours');
-    // Debug log ayarÄ± (Sistem AraÃ§larÄ± sekmesi)
+    // Debug log ayarı (Sistem Araçları sekmesi)
     register_setting('hizli_kasa_araclar_grubu', 'hizli_kasa_debug_log_aktif', array(
         'sanitize_callback' => function($val) { return $val ? '1' : '0'; }
     ));

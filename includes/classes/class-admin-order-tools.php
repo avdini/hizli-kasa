@@ -338,10 +338,10 @@ class Hizli_Kasa_Admin_Order_Tools
                 '_odeme_iban' => ['label' => 'IBAN odeme', 'default' => '0.00'],
                 '_ara_toplam' => ['label' => 'Ara toplam', 'default' => '0.00'],
                 '_etiket_toplami' => ['label' => 'Etiket toplami', 'default' => '0.00'],
-                'Ã–deme (Nakit)' => ['label' => 'Gorunen nakit odeme', 'default' => '0.00 TL'],
-                'Ã–deme (Kredi KartÄ±)' => ['label' => 'Gorunen kredi karti odeme', 'default' => '0.00 TL'],
-                'Ã–deme (Kart)' => ['label' => 'Gorunen kart odeme', 'default' => '0.00 TL'],
-                'Ã–deme (IBAN)' => ['label' => 'Gorunen IBAN odeme', 'default' => '0.00 TL'],
+                'Ödeme (Nakit)' => ['label' => 'Gorunen nakit odeme', 'default' => '0.00 TL'],
+                'Ödeme (Kredi Kartı)' => ['label' => 'Gorunen kredi karti odeme', 'default' => '0.00 TL'],
+                'Ödeme (Kart)' => ['label' => 'Gorunen kart odeme', 'default' => '0.00 TL'],
+                'Ödeme (IBAN)' => ['label' => 'Gorunen IBAN odeme', 'default' => '0.00 TL'],
             ],
             'item' => [
                 '_hk_item_discount' => ['label' => 'Kalem iskontosu', 'default' => '0.00'],
@@ -468,7 +468,7 @@ class Hizli_Kasa_Admin_Order_Tools
     }
 
     /**
-     * Depo listesini veritabanÄ±ndan Ã§eker.
+     * Depo listesini veritabanından çeker.
      */
     public static function get_depolar()
     {
@@ -558,9 +558,9 @@ class Hizli_Kasa_Admin_Order_Tools
             $new_payment = sanitize_text_field($info['payment_method']);
             $payment_titles = [
                 'cod' => 'Nakit',
-                'other' => 'Kredi KartÄ±',
+                'other' => 'Kredi Kartı',
                 'bacs' => 'IBAN / Havale',
-                'split' => 'BÃ¶lÃ¼nmÃ¼ÅŸ Ã–deme',
+                'split' => 'Bölünmüş Ödeme',
             ];
 
             $order->set_payment_method($new_payment);
@@ -570,7 +570,7 @@ class Hizli_Kasa_Admin_Order_Tools
             $final_total = (float) $order->get_total();
 
             if ($new_payment === 'split') {
-                // Bolunmus odeme â€” tutarlar frontend'den gelir
+                // Bolunmus odeme — tutarlar frontend'den gelir
                 $nakit = isset($info['odeme_nakit']) ? (float) wc_format_decimal($info['odeme_nakit']) : 0;
                 $kart = isset($info['odeme_kart']) ? (float) wc_format_decimal($info['odeme_kart']) : 0;
                 $iban = isset($info['odeme_iban']) ? (float) wc_format_decimal($info['odeme_iban']) : 0;
@@ -580,39 +580,39 @@ class Hizli_Kasa_Admin_Order_Tools
                 $order->update_meta_data('_odeme_iban', $iban);
 
                 // Gorunen odeme metalarini guncelle
-                $order->delete_meta_data('Ã–deme (Nakit)');
-                $order->delete_meta_data('Ã–deme (Kredi KartÄ±)');
-                $order->delete_meta_data('Ã–deme (Kart)');
-                $order->delete_meta_data('Ã–deme (IBAN)');
+                $order->delete_meta_data('Ödeme (Nakit)');
+                $order->delete_meta_data('Ödeme (Kredi Kartı)');
+                $order->delete_meta_data('Ödeme (Kart)');
+                $order->delete_meta_data('Ödeme (IBAN)');
 
                 if ($nakit > 0) {
-                    $order->update_meta_data('Ã–deme (Nakit)', number_format($nakit, 2, '.', '') . ' TL');
+                    $order->update_meta_data('Ödeme (Nakit)', number_format($nakit, 2, '.', '') . ' TL');
                 }
                 if ($kart > 0) {
-                    $order->update_meta_data('Ã–deme (Kredi KartÄ±)', number_format($kart, 2, '.', '') . ' TL');
+                    $order->update_meta_data('Ödeme (Kredi Kartı)', number_format($kart, 2, '.', '') . ' TL');
                 }
                 if ($iban > 0) {
-                    $order->update_meta_data('Ã–deme (IBAN)', number_format($iban, 2, '.', '') . ' TL');
+                    $order->update_meta_data('Ödeme (IBAN)', number_format($iban, 2, '.', '') . ' TL');
                 }
             } else {
-                // Tek kanal odeme â€” tum tutar secilen kanala atanir
+                // Tek kanal odeme — tum tutar secilen kanala atanir
                 $order->update_meta_data('_odeme_nakit', 0);
                 $order->update_meta_data('_odeme_kart', 0);
                 $order->update_meta_data('_odeme_iban', 0);
-                $order->delete_meta_data('Ã–deme (Nakit)');
-                $order->delete_meta_data('Ã–deme (Kredi KartÄ±)');
-                $order->delete_meta_data('Ã–deme (Kart)');
-                $order->delete_meta_data('Ã–deme (IBAN)');
+                $order->delete_meta_data('Ödeme (Nakit)');
+                $order->delete_meta_data('Ödeme (Kredi Kartı)');
+                $order->delete_meta_data('Ödeme (Kart)');
+                $order->delete_meta_data('Ödeme (IBAN)');
 
                 if ($new_payment === 'cod') {
                     $order->update_meta_data('_odeme_nakit', $final_total);
-                    $order->update_meta_data('Ã–deme (Nakit)', number_format($final_total, 2, '.', '') . ' TL');
+                    $order->update_meta_data('Ödeme (Nakit)', number_format($final_total, 2, '.', '') . ' TL');
                 } elseif ($new_payment === 'other') {
                     $order->update_meta_data('_odeme_kart', $final_total);
-                    $order->update_meta_data('Ã–deme (Kredi KartÄ±)', number_format($final_total, 2, '.', '') . ' TL');
+                    $order->update_meta_data('Ödeme (Kredi Kartı)', number_format($final_total, 2, '.', '') . ' TL');
                 } elseif ($new_payment === 'bacs') {
                     $order->update_meta_data('_odeme_iban', $final_total);
-                    $order->update_meta_data('Ã–deme (IBAN)', number_format($final_total, 2, '.', '') . ' TL');
+                    $order->update_meta_data('Ödeme (IBAN)', number_format($final_total, 2, '.', '') . ' TL');
                 }
             }
         }

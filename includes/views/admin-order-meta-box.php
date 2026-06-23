@@ -11,7 +11,7 @@
                     if ($used_coupon_code) {
                         ?>
                         <span class="hk-aot-pill" style="background-color: #27ae60; color: white; font-weight: bold;">
-                            ğŸŸï¸ KullanÄ±lan Ä°ade Ã‡eki: <?php echo esc_html($used_coupon_code); ?> (-<?php echo esc_html(wc_format_decimal($used_coupon_amount, 2)); ?> TL)
+                            ��� Kullanılan İade Çeki: <?php echo esc_html($used_coupon_code); ?> (-<?php echo esc_html(wc_format_decimal($used_coupon_amount, 2)); ?> TL)
                         </span>
                         <?php
                     }

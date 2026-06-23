@@ -8,7 +8,7 @@ class Hizli_Kasa_Ajax_Import_Export {
     }
 
 public static function export() {
-    if (!current_user_can('manage_options')) wp_die('Yetkisiz eriÅŸim');
+    if (!current_user_can('manage_options')) wp_die('Yetkisiz erişim');
     
     $format = isset($_GET['format']) ? sanitize_text_field($_GET['format']) : 'csv';
     $depo_id = isset($_GET['depo_id']) ? intval($_GET['depo_id']) : 0;
@@ -31,13 +31,13 @@ public static function export() {
 }
 
 /**
- * Stok Ä°Ã§e Aktarma (Import)
+ * Stok İçe Aktarma (Import)
  */
 public static function import() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz eriÅŸim']);
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
     
     if (!isset($_FILES['import_file'])) {
-        wp_send_json_error(['message' => 'Dosya seÃ§ilmedi.']);
+        wp_send_json_error(['message' => 'Dosya seçilmedi.']);
     }
 
     $file = $_FILES['import_file'];

@@ -8,10 +8,10 @@ class Hizli_Kasa_Admin_Menu {
 
     public static function register()
     {
-    // Ana MenÃ¼
+    // Ana Menü
     add_menu_page(
-        'HÄ±zlÄ± Kasa',
-        'HÄ±zlÄ± Kasa',
+        'Hızlı Kasa',
+        'Hızlı Kasa',
         'manage_options',
         'hizli-kasa',
         [Hizli_Kasa_Admin_Settings_Page::class, 'render'],
@@ -19,12 +19,12 @@ class Hizli_Kasa_Admin_Menu {
         30
     );
 
-    // Alt MenÃ¼ler
-    // Not: Ä°lk alt menÃ¼ ana menÃ¼ ile aynÄ± slug'a sahip olmalÄ± ki varsayÄ±lan olarak o gelsin.
+    // Alt Menüler
+    // Not: İlk alt menü ana menü ile aynı slug'a sahip olmalı ki varsayılan olarak o gelsin.
     add_submenu_page(
         'hizli-kasa',
-        'Stok YÃ¶netimi',
-        'Stok YÃ¶netimi',
+        'Stok Yönetimi',
+        'Stok Yönetimi',
         'manage_options',
         'hizli-kasa', // Landing Page
         [Hizli_Kasa_Admin_Settings_Page::class, 'render']
@@ -32,8 +32,8 @@ class Hizli_Kasa_Admin_Menu {
 
     add_submenu_page(
         'hizli-kasa',
-        'Depo YÃ¶netimi',
-        'Depo YÃ¶netimi',
+        'Depo Yönetimi',
+        'Depo Yönetimi',
         'manage_options',
         'hizli-kasa&tab=depolar',
         [Hizli_Kasa_Admin_Settings_Page::class, 'render']
@@ -41,8 +41,8 @@ class Hizli_Kasa_Admin_Menu {
 
     add_submenu_page(
         'hizli-kasa',
-        'EÅŸleÅŸmeyen ÃœrÃ¼nler',
-        'EÅŸleÅŸmeyen ÃœrÃ¼nler',
+        'Eşleşmeyen Ürünler',
+        'Eşleşmeyen Ürünler',
         'manage_options',
         'hizli-kasa&tab=unmatched',
         [Hizli_Kasa_Admin_Settings_Page::class, 'render']
@@ -68,8 +68,8 @@ class Hizli_Kasa_Admin_Menu {
 
     add_submenu_page(
         'hizli-kasa',
-        'Ã–nbellek (Cache)',
-        'Ã–nbellek (Cache)',
+        'Önbellek (Cache)',
+        'Önbellek (Cache)',
         'manage_options',
         'hizli-kasa&tab=onbellek',
         [Hizli_Kasa_Admin_Settings_Page::class, 'render']
@@ -77,8 +77,8 @@ class Hizli_Kasa_Admin_Menu {
 
     add_submenu_page(
         'hizli-kasa',
-        'Sistem AraÃ§larÄ±',
-        'Sistem AraÃ§larÄ±',
+        'Sistem Araçları',
+        'Sistem Araçları',
         'manage_options',
         'hizli-kasa&tab=araclar',
         [Hizli_Kasa_Admin_Settings_Page::class, 'render']
@@ -86,8 +86,8 @@ class Hizli_Kasa_Admin_Menu {
 
     add_submenu_page(
         'hizli-kasa',
-        'Terminali BaÅŸlat',
-        '<span style="color:#f58220; font-weight:bold;">POS Terminali â†—</span>',
+        'Terminali Başlat',
+        '<span style="color:#f58220; font-weight:bold;">POS Terminali ↗</span>',
         'manage_options',
         'hizli-kasa-terminal-link',
         function() {

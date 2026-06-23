@@ -1,11 +1,11 @@
 <?php if (!defined('ABSPATH')) exit; ?>
                 <form method="post" action="options.php" class="card" style="margin-bottom:20px;">
                     <?php settings_fields('hizli_kasa_araclar_grubu'); ?>
-                    <h3>GeliÅŸtirici AyarlarÄ±</h3>
-                    <p>HÄ±zlÄ± Kasa'nÄ±n performansÄ±nÄ± ve hata kayÄ±tlarÄ±nÄ± yÃ¶netin.</p>
+                    <h3>Geliştirici Ayarları</h3>
+                    <p>Hızlı Kasa'nın performansını ve hata kayıtlarını yönetin.</p>
                     <table class="form-table">
                         <tr>
-                            <th scope="row">Debug Logu (Sistem KayÄ±tlarÄ±)</th>
+                            <th scope="row">Debug Logu (Sistem Kayıtları)</th>
                             <td>
                                 <?php $debug_aktif = get_option('hizli_kasa_debug_log_aktif', '0'); ?>
                                 <label>
@@ -13,33 +13,33 @@
                                     Debug Logu Aktif
                                 </label>
                                 <p class="description">
-                                    EtkinleÅŸtirildiÄŸinde <code>hizli-kasa-debug.log</code> dosyasÄ±na ve PHP error_log sistemine sipariÅŸ/stok sÃ¼reÃ§leri detaylÄ± olarak yazÄ±lÄ±r.<br>
-                                    <strong style="color:#d63638;">Sadece sorun tespiti sÄ±rasÄ±nda aÃ§Ä±n!</strong> SÃ¼rekli aÃ§Ä±k kalmasÄ± disk I/O iÅŸlemlerini artÄ±rÄ±r ve POS sipariÅŸ onay hÄ±zÄ±nÄ± dÃ¼ÅŸÃ¼rÃ¼r.
+                                    Etkinleştirildiğinde <code>hizli-kasa-debug.log</code> dosyasına ve PHP error_log sistemine sipariş/stok süreçleri detaylı olarak yazılır.<br>
+                                    <strong style="color:#d63638;">Sadece sorun tespiti sırasında açın!</strong> Sürekli açık kalması disk I/O işlemlerini artırır ve POS sipariş onay hızını düşürür.
                                 </p>
                             </td>
                         </tr>
                     </table>
-                    <?php submit_button('AyarlarÄ± Kaydet', 'primary', 'submit', false); ?>
+                    <?php submit_button('Ayarları Kaydet', 'primary', 'submit', false); ?>
                 </form>
 
                 <div class="card">
-                    <h3>Sistemi BaÅŸlat: StoklarÄ± Kopyala</h3>
-                    <p>Mevcut WooCommerce ana stoklarÄ±nÄ± seÃ§ilen depoya transfer eder ve sistemi kullanÄ±ma hazÄ±rlar.</p>
+                    <h3>Sistemi Başlat: Stokları Kopyala</h3>
+                    <p>Mevcut WooCommerce ana stoklarını seçilen depoya transfer eder ve sistemi kullanıma hazırlar.</p>
                     <form id="hizli-kasa-setup-form">
                         <select id="setup-target-depo" required>
-                            <option value="">-- Hedef Depo SeÃ§in --</option>
+                            <option value="">-- Hedef Depo Seçin --</option>
                             <?php foreach($depolar as $d): ?>
                                 <option value="<?php echo $d->id; ?>"><?php echo esc_html($d->name); ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <button type="button" id="btn-hizli-kasa-setup" class="button button-primary">Sistemi BaÅŸlat</button>
+                        <button type="button" id="btn-hizli-kasa-setup" class="button button-primary">Sistemi Başlat</button>
                     </form>
                 </div>
 
                 <div class="card" style="margin-top:20px;">
-                    <h3>Depo StoklarÄ±nÄ± Siteyle Senkronize Et</h3>
-                    <p>TÃ¼m depolarÄ±n stok toplamlarÄ±nÄ± hesaplayÄ±p WooCommerce ana site stoÄŸu olarak gÃ¼nceller. Stok sayÄ±mÄ± sonrasÄ± oluÅŸan uyuÅŸmazlÄ±klarÄ± gidermek iÃ§in kullanabilirsiniz.</p>
-                    <button type="button" id="btn-hizli-kasa-sync-wh-to-wc" class="button button-primary">Depo StoklarÄ±nÄ± Siteye EÅŸitle</button>
+                    <h3>Depo Stoklarını Siteyle Senkronize Et</h3>
+                    <p>Tüm depoların stok toplamlarını hesaplayıp WooCommerce ana site stoğu olarak günceller. Stok sayımı sonrası oluşan uyuşmazlıkları gidermek için kullanabilirsiniz.</p>
+                    <button type="button" id="btn-hizli-kasa-sync-wh-to-wc" class="button button-primary">Depo Stoklarını Siteye Eşitle</button>
                     <div id="hk-sync-progress-wrapper" style="display:none; margin-top:15px; background:#f0f0f1; border-radius:4px; height:20px; overflow:hidden; position:relative; width:300px;">
                         <div id="hk-sync-progress-bar" style="background:#2271b1; height:100%; width:0%; transition:width 0.2s;"></div>
                         <span id="hk-sync-progress-text" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; color:#1d2327;">0%</span>
@@ -48,25 +48,25 @@
                 </div>
 
                 <div class="card" style="margin-top:20px; border-color:#d63638;">
-                    <h3 style="color:#d63638;">âš ï¸ Tehlikeli BÃ¶lge: Sistemi SÄ±fÄ±rla</h3>
-                    <p>Bu iÅŸlem tÃ¼m depo verilerini, stok konumlarÄ±nÄ± ve hareket loglarÄ±nÄ± kalÄ±cÄ± olarak siler!</p>
-                    <button type="button" id="btn-hizli-kasa-reset" class="button button-link-delete">Sistemi SÄ±fÄ±rla (Fabrika AyarlarÄ±)</button>
+                    <h3 style="color:#d63638;">⚠� Tehlikeli Bölge: Sistemi Sıfırla</h3>
+                    <p>Bu işlem tüm depo verilerini, stok konumlarını ve hareket loglarını kalıcı olarak siler!</p>
+                    <button type="button" id="btn-hizli-kasa-reset" class="button button-link-delete">Sistemi Sıfırla (Fabrika Ayarları)</button>
                 </div>
 
                 <div class="card" style="margin-top:20px;">
-                    <h3>Sistem OnarÄ±mÄ±</h3>
-                    <p>EÄŸer depolarÄ± kaydedemiyorsanÄ±z veya veritabanÄ± hatalarÄ± alÄ±yorsanÄ±z tablolarÄ± onarmayÄ± deneyin. Bu iÅŸlem verilerinizi silmez.</p>
-                    <button type="button" id="btn-hizli-kasa-repair" class="button button-secondary">TablolarÄ± Onar / VeritabanÄ± GÃ¼ncelle</button>
+                    <h3>Sistem Onarımı</h3>
+                    <p>Eğer depoları kaydedemiyorsanız veya veritabanı hataları alıyorsanız tabloları onarmayı deneyin. Bu işlem verilerinizi silmez.</p>
+                    <button type="button" id="btn-hizli-kasa-repair" class="button button-secondary">Tabloları Onar / Veritabanı Güncelle</button>
                 </div>
 
                 <script>
                 jQuery(document).ready(function($) {
                     $('#btn-hizli-kasa-setup').on('click', function() {
                         const depoId = $('#setup-target-depo').val();
-                        if(!depoId) return alert('LÃ¼tfen bir hedef depo seÃ§in.');
-                        if(!confirm('TÃ¼m Ã¼rÃ¼n stoklarÄ± bu depoya kopyalanacak. Devam edilsin mi?')) return;
+                        if(!depoId) return alert('Lütfen bir hedef depo seçin.');
+                        if(!confirm('Tüm ürün stokları bu depoya kopyalanacak. Devam edilsin mi?')) return;
                         
-                        $(this).prop('disabled', true).text('Ä°ÅŸleniyor...');
+                        $(this).prop('disabled', true).text('İşleniyor...');
                         $.post(ajaxurl, { action: 'hizli_kasa_setup', depo_id: depoId }, function(res) {
                             alert(res.data.message);
                             location.reload();
@@ -74,10 +74,10 @@
                     });
 
                     $('#btn-hizli-kasa-sync-wh-to-wc').on('click', function() {
-                        if(!confirm('TÃ¼m depolarÄ±n toplam stoÄŸu WooCommerce ana site stoÄŸu olarak yazÄ±lacak. Emin misiniz?')) return;
+                        if(!confirm('Tüm depoların toplam stoğu WooCommerce ana site stoğu olarak yazılacak. Emin misiniz?')) return;
                         
                         const btn = $(this);
-                        btn.prop('disabled', true).text('Ä°ÅŸleniyor...');
+                        btn.prop('disabled', true).text('İşleniyor...');
                         
                         const progressWrapper = $('#hk-sync-progress-wrapper');
                         const progressBar = $('#hk-sync-progress-bar');
@@ -87,12 +87,12 @@
                         progressWrapper.show();
                         progressBar.css('width', '0%');
                         progressText.text('0%');
-                        statusSpan.text('ÃœrÃ¼nler taranÄ±yor...');
+                        statusSpan.text('Ürünler taranıyor...');
                         
                         $.post(ajaxurl, { action: 'hizli_kasa_sync_wh_to_wc_start' }, function(res) {
                             if(!res.success || !res.data.ids || res.data.ids.length === 0) {
-                                alert(res.data.message || 'EÅŸitlenecek Ã¼rÃ¼n bulunamadÄ±.');
-                                btn.prop('disabled', false).text('Depo StoklarÄ±nÄ± Siteye EÅŸitle');
+                                alert(res.data.message || 'Eşitlenecek ürün bulunamadı.');
+                                btn.prop('disabled', false).text('Depo Stoklarını Siteye Eşitle');
                                 progressWrapper.hide();
                                 return;
                             }
@@ -104,15 +104,15 @@
                             
                             function processNextBatch() {
                                 if(processed >= total) {
-                                    statusSpan.text('EÅŸitleme baÅŸarÄ±yla tamamlandÄ±!');
-                                    btn.prop('disabled', false).text('Depo StoklarÄ±nÄ± Siteye EÅŸitle');
-                                    alert('TÃ¼m depo stoklarÄ± baÅŸarÄ±yla siteye eÅŸitlendi!');
+                                    statusSpan.text('Eşitleme başarıyla tamamlandı!');
+                                    btn.prop('disabled', false).text('Depo Stoklarını Siteye Eşitle');
+                                    alert('Tüm depo stokları başarıyla siteye eşitlendi!');
                                     location.reload();
                                     return;
                                 }
                                 
                                 const batch = ids.slice(processed, processed + batchSize);
-                                statusSpan.text('Ä°ÅŸleniyor: ' + processed + ' / ' + total);
+                                statusSpan.text('İşleniyor: ' + processed + ' / ' + total);
                                 
                                 $.post(ajaxurl, { action: 'hizli_kasa_sync_wh_to_wc_step', ids: batch }, function(stepRes) {
                                     if(stepRes.success) {
@@ -122,12 +122,12 @@
                                         progressText.text(pct + '%');
                                         processNextBatch();
                                     } else {
-                                        alert('EÅŸitleme sÄ±rasÄ±nda hata oluÅŸtu: ' + (stepRes.data.message || 'Bilinmeyen Hata'));
-                                        btn.prop('disabled', false).text('Depo StoklarÄ±nÄ± Siteye EÅŸitle');
+                                        alert('Eşitleme sırasında hata oluştu: ' + (stepRes.data.message || 'Bilinmeyen Hata'));
+                                        btn.prop('disabled', false).text('Depo Stoklarını Siteye Eşitle');
                                     }
                                 }).fail(function() {
-                                    alert('BaÄŸlantÄ± hatasÄ± oluÅŸtu, iÅŸlem durduruldu.');
-                                    btn.prop('disabled', false).text('Depo StoklarÄ±nÄ± Siteye EÅŸitle');
+                                    alert('Bağlantı hatası oluştu, işlem durduruldu.');
+                                    btn.prop('disabled', false).text('Depo Stoklarını Siteye Eşitle');
                                 });
                             }
                             
@@ -136,8 +136,8 @@
                     });
 
                     $('#btn-hizli-kasa-reset').on('click', function() {
-                        if(!confirm('DÄ°KKAT! TÃ¼m veriler silinecek. Bu iÅŸlem geri alÄ±namaz. Emin misiniz?')) return;
-                        if(!confirm('SON UYARI: GerÃ§ekten her ÅŸeyi silmek istiyor musunuz?')) return;
+                        if(!confirm('DİKKAT! Tüm veriler silinecek. Bu işlem geri alınamaz. Emin misiniz?')) return;
+                        if(!confirm('SON UYARI: Gerçekten her şeyi silmek istiyor musunuz?')) return;
 
                         $(this).prop('disabled', true).text('Siliniyor...');
                         $.post(ajaxurl, { action: 'hizli_kasa_reset' }, function(res) {
@@ -147,7 +147,7 @@
                     });
 
                     $('#btn-hizli-kasa-repair').on('click', function() {
-                        $(this).prop('disabled', true).text('OnarÄ±lÄ±yor...');
+                        $(this).prop('disabled', true).text('Onarılıyor...');
                         $.post(ajaxurl, { action: 'hizli_kasa_repair_db' }, function(res) {
                             alert(res.data.message);
                             location.reload();

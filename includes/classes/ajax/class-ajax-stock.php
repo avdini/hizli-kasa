@@ -15,7 +15,7 @@ public static function get_list() {
         hizli_kasa_admin_log("ADMIN_STOCK_LIST START");
         if (!current_user_can('manage_options')) {
             hizli_kasa_admin_log("Access denied for current user");
-            wp_send_json_error(['message' => 'Yetkisiz eriÅŸim']);
+            wp_send_json_error(['message' => 'Yetkisiz erişim']);
         }
 
         global $wpdb;
@@ -77,10 +77,10 @@ public static function get_list() {
                 WHERE $where_sql";
         }
 
-        // Toplam sayÄ±yÄ± bul
+        // Toplam sayıyı bul
         $total_items = $wpdb->get_var($wpdb->prepare("SELECT COUNT(DISTINCT main_id) FROM ($base_sql) as t", $params));
         
-        // SayfalanmÄ±ÅŸ ana ID'leri Ã§ek
+        // Sayfalanmış ana ID'leri çek
         $main_ids = $wpdb->get_col($wpdb->prepare("SELECT DISTINCT main_id FROM ($base_sql) as ids ORDER BY main_id DESC LIMIT %d OFFSET %d", array_merge($params, [$per_page, $offset])));
         
         hizli_kasa_admin_log("Main IDs Found: " . count($main_ids));
@@ -90,23 +90,23 @@ public static function get_list() {
 
         if ($wpdb->last_error) {
             hizli_kasa_admin_log("SQL Error: " . $wpdb->last_error);
-            wp_send_json_error(['message' => 'VeritabanÄ± hatasÄ±: ' . $wpdb->last_error]);
+            wp_send_json_error(['message' => 'Veritabanı hatası: ' . $wpdb->last_error]);
         }
 
     if (empty($main_ids)) {
         wp_send_json_success(['products' => [], 'total_pages' => 0]);
     }
 
-    // ADIM 2: DetaylarÄ± Topla (Ana Ã¼rÃ¼nler + OnlarÄ±n tÃ¼m varyasyonlarÄ±)
+    // ADIM 2: Detayları Topla (Ana ürünler + Onların tüm varyasyonları)
     $main_placeholders = implode(',', array_fill(0, count($main_ids), '%d'));
     
-    // VaryasyonlarÄ± bul
+    // Varyasyonları bul
     $variation_ids = $wpdb->get_col($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_type = 'product_variation' AND post_parent IN ($main_placeholders)", $main_ids));
     
     $all_target_ids = array_unique(array_merge($main_ids, $variation_ids));
     $all_placeholders = implode(',', array_fill(0, count($all_target_ids), '%d'));
 
-    // MetatalarÄ± Ã§ek (Nitelikler dahil)
+    // Metataları çek (Nitelikler dahil)
     $meta_results = $wpdb->get_results($wpdb->prepare("
         SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta} 
         WHERE post_id IN ($all_placeholders) 
@@ -123,7 +123,7 @@ public static function get_list() {
         }
     }
 
-    // Term isimlerini Ã§Ã¶z (SÄ±ralama iÃ§in)
+    // Term isimlerini çöz (Sıralama için)
     $term_names = [];
     foreach ($tax_slug_map as $tax => $slugs) {
         $slugs = array_unique($slugs);
@@ -133,12 +133,12 @@ public static function get_list() {
         }
     }
 
-    // Post detaylarÄ±nÄ± Ã§ek
+    // Post detaylarını çek
     $p_details = $wpdb->get_results($wpdb->prepare("SELECT ID, post_title, post_type, post_parent FROM {$wpdb->posts} WHERE ID IN ($all_placeholders)", $all_target_ids));
     $details_by_id = [];
     foreach ($p_details as $pd) { $details_by_id[$pd->ID] = $pd; }
 
-    // ADIM 3: Depo StoklarÄ±nÄ± Topla
+    // ADIM 3: Depo Stoklarını Topla
     $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priority DESC");
     $stock_results = $wpdb->get_results($wpdb->prepare("SELECT location_id, product_id, variation_id, quantity FROM $stok_table WHERE (product_id IN ($all_placeholders) OR variation_id IN ($all_placeholders))", array_merge($all_target_ids, $all_target_ids)));
 
@@ -158,7 +158,7 @@ public static function get_list() {
         $thumb_id = $m['_thumbnail_id'] ?? 0;
         $thumbnail = $thumb_id ? wp_get_attachment_image_url($thumb_id, 'thumbnail') : wc_placeholder_img_src();
 
-        // VaryasyonlarÄ± yapÄ±landÄ±r
+        // Varyasyonları yapılandır
         $children = [];
         foreach ($variation_ids as $v_id) {
             $v_post = $details_by_id[$v_id] ?? null;
@@ -192,7 +192,7 @@ public static function get_list() {
                 $v_item['warehouse_stocks'][] = ['depo_id' => $d->id, 'qty' => (float)$qty];
             }
             
-            // Mismatch kontrolÃ¼
+            // Mismatch kontrolü
             $v_total_wh = array_sum(array_column($v_item['warehouse_stocks'], 'qty'));
             $v_item['total_warehouse_stock'] = $v_total_wh;
             $v_item['has_mismatch'] = (round((float)$v_total_wh, 4) != round((float)$v_item['wc_stock'], 4));
@@ -202,7 +202,7 @@ public static function get_list() {
 
         if (!empty($children)) {
             usort($children, function ($a, $b) use ($s) {
-                // 1. Arama PuanÄ± (EÄŸer arama yapÄ±lÄ±yorsa)
+                // 1. Arama Puanı (Eğer arama yapılıyorsa)
                 if (!empty($s)) {
                     $needle = function_exists('mb_strtolower') ? mb_strtolower($s) : strtolower($s);
                     $a_name = function_exists('mb_strtolower') ? mb_strtolower((string) $a['name']) : strtolower((string) $a['name']);
@@ -218,7 +218,7 @@ public static function get_list() {
                     }
                 }
 
-                // 2. Renk ve Beden/Numara BazlÄ± SÄ±ralama
+                // 2. Renk ve Beden/Numara Bazlı Sıralama
                 $attrs_a = $a['attributes'] ?? [];
                 $attrs_b = $b['attributes'] ?? [];
 
@@ -236,12 +236,12 @@ public static function get_list() {
                     if (strpos($k_low, 'beden') !== false || strpos($k_low, 'size') !== false || strpos($k_low, 'numara') !== false) $size_b = $val;
                 }
 
-                // Ã–nce Renk
+                // Önce Renk
                 if ($color_a !== $color_b) {
                     return strnatcasecmp($color_a, $color_b);
                 }
 
-                // Sonra Beden/Numara (Ã–zel SÄ±ralama: XS, S, M, L, XL...)
+                // Sonra Beden/Numara (Özel Sıralama: XS, S, M, L, XL...)
                 if ($size_a !== $size_b) {
                     $size_map = [
                         'xs'  => 1,
@@ -272,7 +272,7 @@ public static function get_list() {
                     return strnatcasecmp((string)$size_a, (string)$size_b);
                 }
 
-                // Fallback: BaÅŸlÄ±k
+                // Fallback: Başlık
                 return strnatcasecmp((string) $a['name'], (string) $b['name']);
             });
         }
@@ -294,14 +294,14 @@ public static function get_list() {
             $item['warehouse_stocks'][] = ['depo_id' => $d->id, 'qty' => (float)$qty];
         }
 
-        // Mismatch kontrolÃ¼ (Basit Ã¼rÃ¼n iÃ§in veya deÄŸiÅŸken Ã¼rÃ¼nÃ¼n genel durumu iÃ§in)
+        // Mismatch kontrolü (Basit ürün için veya değişken ürünün genel durumu için)
         $total_wh = array_sum(array_column($item['warehouse_stocks'], 'qty'));
         $item['total_warehouse_stock'] = $total_wh;
         
         if ($item['type'] === 'simple') {
             $item['has_mismatch'] = (round((float)$total_wh, 4) != round((float)$item['wc_stock'], 4));
         } else {
-            // DeÄŸiÅŸken Ã¼rÃ¼nde herhangi bir varyasyonda uyuÅŸmazlÄ±k varsa true dÃ¶n
+            // Değişken üründe herhangi bir varyasyonda uyuşmazlık varsa true dön
             $item['has_mismatch'] = false;
             foreach($children as $child) {
                 if ($child['has_mismatch']) {
@@ -323,16 +323,16 @@ public static function get_list() {
     hizli_kasa_admin_log("Response Sent Successfully");
 
     } catch (Exception $e) {
-        hizli_kasa_admin_log("AJAX HatasÄ±: " . $e->getMessage());
-        wp_send_json_error(['message' => 'Ä°stisnai bir hata oluÅŸtu: ' . $e->getMessage()]);
+        hizli_kasa_admin_log("AJAX Hatası: " . $e->getMessage());
+        wp_send_json_error(['message' => 'İstisnai bir hata oluştu: ' . $e->getMessage()]);
     }
 }
 
 /**
- * Manuel Stok GÃ¼ncelleme
+ * Manuel Stok Güncelleme
  */
 public static function update() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz eriÅŸim!']);
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim!']);
 
     $pid    = intval($_POST['product_id']);
     $vid    = intval($_POST['variation_id']);
@@ -343,9 +343,9 @@ public static function update() {
 
     require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
     
-    // Stok GÃ¼ncelle (Stock Manager metodunu kullan ki log tutulsun)
-    // variation_id 0 ise basit Ã¼rÃ¼n, deÄŸilse varyasyondur.
-    // product_id her zaman parent ID (veya basit Ã¼rÃ¼n ID) olmalÄ±dÄ±r.
+    // Stok Güncelle (Stock Manager metodunu kullan ki log tutulsun)
+    // variation_id 0 ise basit ürün, değilse varyasyondur.
+    // product_id her zaman parent ID (veya basit ürün ID) olmalıdır.
     
     $change = isset($_POST['change']) ? floatval($_POST['change']) : 0;
     $set_qty = isset($_POST['set_qty']) ? sanitize_text_field($_POST['set_qty']) : null;
@@ -360,7 +360,7 @@ public static function update() {
     )) ?: 0;
     $current = floatval($current);
 
-    // AkÄ±llÄ± miktar belirleme (Smart Syntax)
+    // Akıllı miktar belirleme (Smart Syntax)
     if ($set_qty !== null && $set_qty !== '') {
         $new_val = floatval($set_qty);
         $change = $new_val - $current;
@@ -370,7 +370,7 @@ public static function update() {
     if ($new_qty < 0) $new_qty = 0;
 
     $user = wp_get_current_user();
-    $reason = "Admin Manuel MÃ¼dahale (KullanÄ±cÄ±: " . $user->display_name . ")";
+    $reason = "Admin Manuel Müdahale (Kullanıcı: " . $user->display_name . ")";
 
     Hizli_Kasa_Stock_Manager::update_warehouse_stock(
         ($vid > 0 ? get_post_field('post_parent', $vid) : $pid), 
@@ -384,13 +384,13 @@ public static function update() {
 }
 
 /**
- * Toplu (Batch) Stok GÃ¼ncelleme
+ * Toplu (Batch) Stok Güncelleme
  */
 public static function batch_update() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz eriÅŸim!']);
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim!']);
     
     $changes = json_decode(stripslashes($_POST['changes']), true);
-    if (!is_array($changes)) wp_send_json_error(['message' => 'GeÃ§ersiz veri']);
+    if (!is_array($changes)) wp_send_json_error(['message' => 'Geçersiz veri']);
     
     $updated = 0;
     $errors  = [];
@@ -402,13 +402,13 @@ public static function batch_update() {
         $newQty = floatval($c['new_qty']);
         
         if ($type === 'wc_stock') {
-            // WooCommerce site stoÄŸunu gÃ¼ncelle â€” log tutulmaz, WC kendi hook'larÄ±nÄ± Ã§alÄ±ÅŸtÄ±rÄ±r
+            // WooCommerce site stoğunu güncelle — log tutulmaz, WC kendi hook'larını çalıştırır
             $target_id = $vid > 0 ? $vid : $pid;
             wc_update_product_stock($target_id, $newQty, 'set');
             $updated++;
         } elseif ($type === 'warehouse') {
             $did = intval($c['did']);
-            // Mevcut stok deÄŸerini al, farkÄ± hesapla
+            // Mevcut stok değerini al, farkı hesapla
             global $wpdb;
             $table = Hizli_Kasa_Database::get_tables()['stok_konumlari'];
             $parent_id = $vid > 0 ? get_post_field('post_parent', $vid) : $pid;
@@ -417,10 +417,10 @@ public static function batch_update() {
                 $did, $parent_id, $vid
             ));
             $change = $newQty - $current;
-            // Depo stok gÃ¼ncellemesi â€” stok_hareketleri tablosuna log dÃ¼ÅŸer
+            // Depo stok güncellemesi — stok_hareketleri tablosuna log düşer
             Hizli_Kasa_Stock_Manager::update_warehouse_stock(
                 $parent_id, $vid, $did, $change,
-                "Admin Batch GÃ¼ncelleme"
+                "Admin Batch Güncelleme"
             );
             $updated++;
         }

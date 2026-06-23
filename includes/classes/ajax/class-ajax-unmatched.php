@@ -9,12 +9,12 @@ class Hizli_Kasa_Ajax_Unmatched {
     }
 
 public static function get_list() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz eriÅŸim']);
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
     
     global $wpdb;
     $table = $wpdb->prefix . 'hizli_kasa_unmatched_items';
     
-    // Tablo kontrolÃ¼ ve gerekirse oluÅŸturma
+    // Tablo kontrolü ve gerekirse oluşturma
     if (!$wpdb->get_var("SHOW TABLES LIKE '$table'")) {
         require_once HIZLI_KASA_PATH . 'includes/classes/class-database.php';
         Hizli_Kasa_Database::init();
@@ -26,34 +26,34 @@ public static function get_list() {
 }
 
 /**
- * EÅŸleÅŸmeyen ÃœrÃ¼nÃ¼ Sil
+ * Eşleşmeyen Ürünü Sil
  */
 public static function delete() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz eriÅŸim']);
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
     
     $id = intval($_POST['id']);
     global $wpdb;
     $table = $wpdb->prefix . 'hizli_kasa_unmatched_items';
     
-    // EÄŸer ID -1 gelirse bu "TÃ¼mÃ¼nÃ¼ Temizle" demektir
+    // Eğer ID -1 gelirse bu "Tümünü Temizle" demektir
     if ($id === -1) {
         $wpdb->query("TRUNCATE TABLE $table");
     } else {
         $wpdb->delete($table, ['id' => $id]);
     }
     
-    wp_send_json_success(['message' => 'Ä°ÅŸlem baÅŸarÄ±lÄ±.']);
+    wp_send_json_success(['message' => 'İşlem başarılı.']);
 }
 
 /**
- * TÃ¼m EÅŸleÅŸmeyen ÃœrÃ¼nleri Sil (Ekstra GÃ¼venlik)
+ * Tüm Eşleşmeyen Ürünleri Sil (Ekstra Güvenlik)
  */
 public static function clear_all() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz eriÅŸim']);
+    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
     
     global $wpdb;
     $table = $wpdb->prefix . 'hizli_kasa_unmatched_items';
     $wpdb->query("TRUNCATE TABLE $table");
-    wp_send_json_success(['message' => 'TÃ¼m liste temizlendi.']);
+    wp_send_json_success(['message' => 'Tüm liste temizlendi.']);
 }
 }

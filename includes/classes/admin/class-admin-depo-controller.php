@@ -12,27 +12,27 @@ class Hizli_Kasa_Admin_Depo_Controller {
     global $wpdb;
     $table_name = $wpdb->prefix . 'hizli_kasa_depolar';
 
-    // MesajlarÄ± YÃ¶net (YÃ¶nlendirme sonrasÄ± gÃ¶sterim iÃ§in)
+    // Mesajları Yönet (Yönlendirme sonrası gösterim için)
     if (isset($_GET['hizli_kasa_msg'])) {
         switch ($_GET['hizli_kasa_msg']) {
             case 'depo_eklendi':
-                add_settings_error('hizli_kasa_messages', 'depo_eklendi', 'Yeni depo baÅŸarÄ±yla eklendi.', 'updated');
+                add_settings_error('hizli_kasa_messages', 'depo_eklendi', 'Yeni depo başarıyla eklendi.', 'updated');
                 break;
             case 'depo_hata':
-                $err = isset($_GET['hizli_kasa_err']) ? sanitize_text_field($_GET['hizli_kasa_err']) : 'Depo eklenirken bir hata oluÅŸtu.';
+                $err = isset($_GET['hizli_kasa_err']) ? sanitize_text_field($_GET['hizli_kasa_err']) : 'Depo eklenirken bir hata oluştu.';
                 add_settings_error('hizli_kasa_messages', 'depo_hata', $err, 'error');
                 break;
             case 'depo_silindi':
-                add_settings_error('hizli_kasa_messages', 'depo_silindi', 'Depo baÅŸarÄ±yla silindi.', 'updated');
+                add_settings_error('hizli_kasa_messages', 'depo_silindi', 'Depo başarıyla silindi.', 'updated');
                 break;
             case 'depo_silme_hata':
-                add_settings_error('hizli_kasa_messages', 'depo_silme_hata', 'Depo silinirken bir hata oluÅŸtu.', 'error');
+                add_settings_error('hizli_kasa_messages', 'depo_silme_hata', 'Depo silinirken bir hata oluştu.', 'error');
                 break;
             case 'db_onarildi':
-                add_settings_error('hizli_kasa_messages', 'db_onarildi', 'VeritabanÄ± tablolarÄ± kontrol edildi ve onarÄ±ldÄ±.', 'updated');
+                add_settings_error('hizli_kasa_messages', 'db_onarildi', 'Veritabanı tabloları kontrol edildi ve onarıldı.', 'updated');
                 break;
             case 'depo_guncellendi':
-                add_settings_error('hizli_kasa_messages', 'depo_guncellendi', 'Depo bilgileri baÅŸarÄ±yla gÃ¼ncellendi.', 'updated');
+                add_settings_error('hizli_kasa_messages', 'depo_guncellendi', 'Depo bilgileri başarıyla güncellendi.', 'updated');
                 break;
         }
     }
@@ -43,7 +43,7 @@ class Hizli_Kasa_Admin_Depo_Controller {
         
         $name = sanitize_text_field($_POST['depo_name']);
         
-        // MÃ¼kerrer KayÄ±t KontrolÃ¼
+        // Mükerrer Kayıt Kontrolü
         $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table_name WHERE name = %s", $name));
         if ($exists) {
             wp_safe_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=depo_hata&hizli_kasa_err=' . urlencode('Bu isimde bir depo zaten mevcut.')));
@@ -59,7 +59,7 @@ class Hizli_Kasa_Admin_Depo_Controller {
         ]);
 
         if ($inserted === false) {
-            $error_msg = $wpdb->last_error ?: "VeritabanÄ± hatasÄ±.";
+            $error_msg = $wpdb->last_error ?: "Veritabanı hatası.";
             wp_safe_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=depo_hata&hizli_kasa_err=' . urlencode($error_msg)));
             exit;
         }
@@ -70,17 +70,17 @@ class Hizli_Kasa_Admin_Depo_Controller {
         exit;
     }
 
-    // Depo GÃ¼ncelleme
+    // Depo Güncelleme
     if (isset($_POST['hizli_kasa_depo_guncelle'])) {
         check_admin_referer('depo_guncelle_action', 'depo_guncelle_nonce');
         
         $id = intval($_POST['depo_id']);
         $name = sanitize_text_field($_POST['depo_name']);
         
-        // Ä°sim Ã§akÄ±ÅŸma kontrolÃ¼ (Kendi ID'si hariÃ§)
+        // İsim çakışma kontrolü (Kendi ID'si hariç)
         $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table_name WHERE name = %s AND id != %d", $name, $id));
         if ($exists) {
-            wp_safe_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=depo_hata&hizli_kasa_err=' . urlencode('Bu isimde baÅŸka bir depo zaten mevcut.')));
+            wp_safe_redirect(admin_url('admin.php?page=hizli-kasa&tab=depolar&hizli_kasa_msg=depo_hata&hizli_kasa_err=' . urlencode('Bu isimde başka bir depo zaten mevcut.')));
             exit;
         }
 
@@ -106,7 +106,7 @@ class Hizli_Kasa_Admin_Depo_Controller {
         $deleted = $wpdb->delete($table_name, ['id' => $depo_id]);
 
         if ($deleted) {
-            // SÄ±kÄ± Ä°zolasyon: Deponun tÃ¼m stoklarÄ±nÄ±, loglarÄ±nÄ± ve uyuÅŸmazlÄ±klarÄ±nÄ± sil
+            // Sıkı İzolasyon: Deponun tüm stoklarını, loglarını ve uyuşmazlıklarını sil
             $wpdb->delete($wpdb->prefix . 'hizli_kasa_stok_konumlari',  ['location_id' => $depo_id]);
             $wpdb->delete($wpdb->prefix . 'hizli_kasa_stok_hareketleri', ['location_id' => $depo_id]);
             if ($depo_name) {
