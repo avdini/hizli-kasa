@@ -2,22 +2,67 @@ import os
 import json
 import base64
 import sys
+import threading
+import subprocess
 from io import BytesIO
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-# Import windows specific printing libraries
+# Import windows specific printing and UI libraries
 try:
     import win32print
     import win32ui
     import win32con
-    from PIL import Image, ImageWin
+    import winreg
+    from PIL import Image, ImageDraw, ImageWin
+    import pystray
 except ImportError:
-    print("Warning: Windows printing libraries not found. Running in mock/development mode.")
+    print("Warning: Required desktop libraries not found. Running in mock/development mode.")
     win32print = None
+    winreg = None
+    pystray = None
 
 # Config location: %APPDATA%/HizliKasa/config.json
 APPDATA_DIR = os.path.join(os.environ.get('APPDATA', ''), 'HizliKasa')
 CONFIG_PATH = os.path.join(APPDATA_DIR, 'config.json')
+
+# Windows Startup Registry Configuration
+REG_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
+REG_NAME = "HizliKasaPrintHelper"
+
+def is_startup_enabled():
+    if winreg is None:
+        return False
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_KEY, 0, winreg.KEY_READ)
+        value, _ = winreg.QueryValueEx(key, REG_NAME)
+        winreg.CloseKey(key)
+        return True
+    except FileNotFoundError:
+        return False
+    except Exception:
+        return False
+
+def toggle_startup(icon, item):
+    if winreg is None:
+        return
+    enabled = not item.checked
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_KEY, 0, winreg.KEY_WRITE)
+        if enabled:
+            exe_path = os.path.abspath(sys.argv[0])
+            winreg.SetValueEx(key, REG_NAME, 0, winreg.REG_SZ, f'"{exe_path}"')
+            print("Registered to Windows Startup")
+        else:
+            try:
+                winreg.DeleteValue(key, REG_NAME)
+                print("Removed from Windows Startup")
+            except FileNotFoundError:
+                pass
+        winreg.CloseKey(key)
+    except Exception as e:
+        print(f"Error modifying startup registry: {e}")
+        
+    icon.update_menu()
 
 def load_config():
     if not os.path.exists(CONFIG_PATH):
@@ -45,7 +90,6 @@ config = load_config()
 class PrintHelperHandler(BaseHTTPRequestHandler):
     
     def log_message(self, format, *args):
-        # Silence default terminal logs to keep console clean
         pass
 
     def send_cors_headers(self, origin=None):
@@ -64,26 +108,19 @@ class PrintHelperHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def check_auth(self, origin):
-        # Verify Token-based Handshake
         global config
-        
-        # 1. Check if token is registered
         token = config.get('token')
         allowed_origin = config.get('origin')
         
         if not token:
-            # Not paired yet
             return False, "Not paired yet"
             
-        # 2. Check Origin (CORS security)
-        # Check if the origin matches or starts with the registered origin (handling subdomains or www)
         if allowed_origin != '*' and origin:
             origin_clean = origin.replace('https://', '').replace('http://', '').split('/')[0].split(':')[0]
             allowed_clean = allowed_origin.replace('https://', '').replace('http://', '').split('/')[0].split(':')[0]
             if allowed_clean not in origin_clean and origin_clean not in allowed_clean:
                 return False, "Unauthorized Origin"
                 
-        # 3. Check Authorization header
         auth_header = self.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
             return False, "Missing or invalid authorization header format"
@@ -114,18 +151,15 @@ class PrintHelperHandler(BaseHTTPRequestHandler):
             return
             
         if self.path == '/printers':
-            # Check authentication
             authorized, msg = self.check_auth(origin)
             if not authorized:
                 self.respond_json(403, {'error': msg}, origin)
                 return
                 
-            # Fetch local Windows printers
             if win32print is None:
                 printers = ["Mock Printer 1", "Mock Printer 2"]
             else:
                 try:
-                    # Enumerate local and network connection printers
                     flags = win32print.PRINTER_ENUM_LOCAL | win32print.PRINTER_ENUM_CONNECTIONS
                     printer_tuples = win32print.EnumPrinters(flags, None, 1)
                     printers = [p[2] for p in printer_tuples]
@@ -151,9 +185,7 @@ class PrintHelperHandler(BaseHTTPRequestHandler):
             self.respond_json(400, {'error': 'Invalid JSON body'}, origin)
             return
 
-        # 1. Pairing endpoint (Allows initial handshake)
         if self.path == '/pair':
-            # If already paired, we don't allow re-pairing without authentication
             if 'token' in config and config['token']:
                 authorized, msg = self.check_auth(origin)
                 if not authorized:
@@ -176,7 +208,6 @@ class PrintHelperHandler(BaseHTTPRequestHandler):
                 self.respond_json(500, {'error': 'Failed to save pairing configuration'}, origin)
             return
 
-        # 2. Printing endpoint
         if self.path == '/print':
             authorized, msg = self.check_auth(origin)
             if not authorized:
@@ -184,27 +215,36 @@ class PrintHelperHandler(BaseHTTPRequestHandler):
                 return
                 
             printer_name = body.get('printer_name')
-            image_data = body.get('image') # Base64 PNG image string
+            image_data = body.get('image')
             
             if not printer_name or not image_data:
                 self.respond_json(400, {'error': 'printer_name and image are required'}, origin)
                 return
 
             if win32print is None:
-                # Mock print success for dev mode
                 print(f"Mock Printing to: {printer_name}")
                 self.respond_json(200, {'success': True, 'message': 'Mock print successful'}, origin)
                 return
                 
             try:
-                # Clean base64 header if present
                 if ',' in image_data:
                     image_data = image_data.split(',')[1]
                     
                 image_bytes = base64.b64decode(image_data)
                 img = Image.open(BytesIO(image_bytes))
                 
-                # Perform silent printing via GDI
+                rotate_angle = body.get('rotate', 0)
+                if rotate_angle:
+                    try:
+                        angle = int(rotate_angle)
+                        if angle in [90, 180, 270]:
+                            img = img.rotate(angle, expand=True)
+                    except Exception as ex:
+                        print(f"Rotation error: {ex}")
+
+                img = img.convert('L')
+                img = img.point(lambda x: 0 if x < 180 else 255, '1')
+
                 hprinter = win32print.OpenPrinter(printer_name)
                 try:
                     hdc = win32ui.CreateDC()
@@ -213,16 +253,13 @@ class PrintHelperHandler(BaseHTTPRequestHandler):
                     hdc.StartDoc("Hizli Kasa Print Job")
                     hdc.StartPage()
                     
-                    # Calculate printable area dimensions
                     printable_width = hdc.GetDeviceCaps(win32con.HORZRES)
                     img_w, img_h = img.size
                     
-                    # Scale image to fit printer width while maintaining aspect ratio
                     scale = printable_width / img_w
                     print_w = printable_width
                     print_h = int(img_h * scale)
                     
-                    # Draw DIB (Device Independent Bitmap) directly to printer DC
                     dib = ImageWin.Dib(img)
                     dib.draw(hdc.GetHandleAttrib(), (0, 0, print_w, print_h))
                     
@@ -240,16 +277,90 @@ class PrintHelperHandler(BaseHTTPRequestHandler):
         self.respond_json(404, {'error': 'Not found'}, origin)
 
 
-def run(server_class=HTTPServer, handler_class=PrintHelperHandler, port=5001):
-    server_address = ('127.0.0.1', port)
-    httpd = server_class(server_address, handler_class)
+def create_tray_icon_image():
+    image = Image.new('RGB', (64, 64), color='#00A32A')
+    dc = ImageDraw.Draw(image)
+    dc.rectangle([16, 24, 48, 52], fill='white')
+    dc.line([20, 36, 44, 36], fill='black', width=3)
+    dc.rectangle([22, 12, 42, 24], fill='white')
+    dc.rectangle([24, 44, 40, 58], fill='white')
+    dc.ellipse([20, 28, 24, 32], fill='#00A32A')
+    return image
+
+httpd_server = None
+
+def exit_action(icon, item):
+    global httpd_server
+    print("Exiting Print Helper...")
+    if httpd_server:
+        threading.Thread(target=httpd_server.shutdown).start()
+    icon.stop()
+
+def run(server_class=HTTPServer, handler_class=PrintHelperHandler, start_port=5001):
+    global httpd_server
+    
+    port = start_port
+    max_port = start_port + 10
+    bound = False
+    
+    # Try multiple ports dynamically if 5001 is already taken
+    while port < max_port:
+        try:
+            server_address = ('127.0.0.1', port)
+            httpd_server = server_class(server_address, handler_class)
+            bound = True
+            break
+        except OSError:
+            print(f"Port {port} busy, trying next port...")
+            port += 1
+            
+    if not bound:
+        print("Error: Could not bind to any port in range 5001-5010.")
+        return
+        
+    server_thread = threading.Thread(target=httpd_server.serve_forever)
+    server_thread.daemon = True
+    server_thread.start()
+    
     print(f"Hızlı Kasa Print Helper active on http://127.0.0.1:{port}")
+    
+    if pystray is not None:
+        try:
+            icon_image = create_tray_icon_image()
+            icon = pystray.Icon(
+                "hizli_kasa_print_helper",
+                icon_image,
+                title=f"Hızlı Kasa Yazdırma Yardımcısı (Port: {port})",
+                menu=pystray.Menu(
+                    pystray.MenuItem(f"Durum: Çalışıyor (Port: {port})", lambda: None, enabled=False),
+                    pystray.MenuItem("Windows ile Birlikte Başlat", toggle_startup, checked=lambda item: is_startup_enabled()),
+                    pystray.MenuItem("Kapat / Çıkış", exit_action)
+                )
+            )
+            icon.run()
+        except Exception as e:
+            print(f"Error starting system tray icon: {e}")
+            try:
+                httpd_server.serve_forever()
+            except KeyboardInterrupt:
+                pass
+    else:
+        try:
+            httpd_server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+            
+    if httpd_server:
+        httpd_server.server_close()
+
+def kill_older_instances():
+    my_pid = os.getpid()
     try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        httpd.server_close()
+        subprocess.run(f'taskkill /F /IM hizli-kasa-print-helper.exe /FI "PID ne {my_pid}"', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(f'taskkill /F /IM print_helper.exe /FI "PID ne {my_pid}"', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as e:
+        print(f"Error killing older instances: {e}")
 
 if __name__ == '__main__':
+    kill_older_instances()
     run()

@@ -60,6 +60,7 @@
                 callback(false);
                 return;
             }
+            var self = this;
 
             // Elementin görünürlüğünü geçici olarak aç (off-screen)
             var originalStyle = element.getAttribute('style') || '';
@@ -84,43 +85,123 @@
 
                 var imageData = canvas.toDataURL('image/png');
                 
-                // Servise gönder
-                var port = 5001;
-                var url = 'http://127.0.0.1:' + port + '/print';
+                // Barkodlar için resmi 90 derece saat yönünde çevir (Pillow için 270 derece)
+                var rotate = isBarcode ? 270 : 0;
 
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', url, true);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-                xhr.timeout = 3000; // 3 saniye zaman aşımı
-
-                xhr.onreadystatechange = function() {
-                    if (xhr.readyState === 4) {
-                        if (xhr.status === 200) {
-                            console.log('Sessiz yazdırma başarılı:', printerName);
-                            callback(true);
-                        } else {
-                            console.error('Yazdırma servisi hata verdi:', xhr.responseText);
-                            callback(false);
-                        }
+                // Dinamik aktif portu bul ve servise gönder
+                self.findActivePort(function(activePort) {
+                    if (!activePort) {
+                        console.error('Yazdırma servisi aktif portta bulunamadı.');
+                        callback(false);
+                        return;
                     }
-                };
 
-                xhr.ontimeout = function() {
-                    console.error('Yazdırma servisi zaman aşımına uğradı.');
-                    callback(false);
-                };
+                    var url = 'http://127.0.0.1:' + activePort + '/print';
 
-                xhr.send(JSON.stringify({
-                    printer_name: printerName,
-                    image: imageData
-                }));
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', url, true);
+                    xhr.setRequestHeader('Content-Type', 'application/json');
+                    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                    xhr.timeout = 3000; // 3 saniye zaman aşımı
+
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState === 4) {
+                            if (xhr.status === 200) {
+                                console.log('Sessiz yazdırma başarılı:', printerName);
+                                callback(true);
+                            } else {
+                                console.error('Yazdırma servisi hata verdi:', xhr.responseText);
+                                callback(false);
+                            }
+                        }
+                    };
+
+                    xhr.ontimeout = function() {
+                        console.error('Yazdırma servisi zaman aşımına uğradı.');
+                        callback(false);
+                    };
+
+                    xhr.send(JSON.stringify({
+                        printer_name: printerName,
+                        image: imageData,
+                        rotate: rotate
+                    }));
+                });
 
             }).catch(function(err) {
                 console.error('Görsel dönüştürme hatası:', err);
                 element.setAttribute('style', originalStyle);
                 callback(false);
             });
+        },
+
+        /**
+         * Aktif portu tespit eder (5001-5010 aralığında)
+         */
+        findActivePort: function(callback) {
+            var cachedPort = localStorage.getItem('hk_print_port') || 5001;
+            
+            // İlk olarak cache'deki portu hızlıca kontrol et (500ms timeout)
+            var controller = new AbortController();
+            var timeoutId = setTimeout(function() { controller.abort(); }, 500);
+            
+            fetch('http://127.0.0.1:' + cachedPort + '/status', {
+                method: 'GET',
+                signal: controller.signal
+            }).then(function(res) {
+                clearTimeout(timeoutId);
+                if (res.ok) {
+                    callback(cachedPort);
+                } else {
+                    scanAll();
+                }
+            }).catch(function() {
+                clearTimeout(timeoutId);
+                scanAll();
+            });
+
+            function scanAll() {
+                var ports = [5001, 5002, 5003, 5004, 5005, 5006, 5007, 5008, 5009, 5010];
+                var found = false;
+                var checkedCount = 0;
+
+                ports.forEach(function(p) {
+                    if (p == cachedPort) {
+                        checkedCount++;
+                        if (checkedCount === ports.length && !found) {
+                            callback(null);
+                        }
+                        return;
+                    }
+                    
+                    var ctrl = new AbortController();
+                    var tId = setTimeout(function() { ctrl.abort(); }, 800);
+                    
+                    fetch('http://127.0.0.1:' + p + '/status', {
+                        method: 'GET',
+                        signal: ctrl.signal
+                    }).then(function(res) {
+                        clearTimeout(tId);
+                        if (res.ok && !found) {
+                            found = true;
+                            localStorage.setItem('hk_print_port', p);
+                            callback(p);
+                        } else {
+                            doneCheck();
+                        }
+                    }).catch(function() {
+                        clearTimeout(tId);
+                        doneCheck();
+                    });
+
+                    function doneCheck() {
+                        checkedCount++;
+                        if (checkedCount === ports.length && !found) {
+                            callback(null);
+                        }
+                    }
+                });
+            }
         },
 
         /**

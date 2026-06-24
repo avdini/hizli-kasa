@@ -134,9 +134,10 @@
         margin: 0 !important;
         padding: 0 !important;
     }
+}
 
-    /* Etiket Tasarımı (50x35mm) */
-    .barcode-label {
+/* Etiket Tasarımı (50x35mm) hem ekranda (canvas çizimi için) hem baskıda geçerli */
+.barcode-label {
         width: 50mm;
         height: 35mm;
         max-height: 35mm;
@@ -350,4 +351,3 @@
         letter-spacing: -0.8px;
         line-height: 1;
     }
-}

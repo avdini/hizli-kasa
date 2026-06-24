@@ -62,8 +62,8 @@
 
 <script type="text/javascript">
 jQuery(document).ready(function($) {
-    const defaultPort = 5001;
-    const helperUrl = `http://127.0.0.1:${defaultPort}`;
+    let currentPort = localStorage.getItem('hk_print_port') || 5001;
+    let helperUrl = `http://127.0.0.1:${currentPort}`;
     
     // 1. Get or Generate Security Token in LocalStorage
     let token = localStorage.getItem('hk_print_token');
@@ -81,44 +81,93 @@ jQuery(document).ready(function($) {
     // Check helper status
     checkHelperStatus();
 
-    function checkHelperStatus() {
+    // Scan ports to find the active print helper
+    function scanActivePort(callback) {
+        const ports = [5001, 5002, 5003, 5004, 5005, 5006, 5007, 5008, 5009, 5010];
+        let found = false;
+        let checked = 0;
+        
+        // Try cached port first for speed
         $.ajax({
-            url: `${helperUrl}/status`,
+            url: `http://127.0.0.1:${currentPort}/status`,
             type: 'GET',
-            timeout: 2000,
-            success: function(response) {
-                // Connected!
-                $('#hk-helper-status-card')
-                    .css({
-                        'border-left-color': '#00a32a',
-                        'background': '#f0fcf5'
-                    });
-                
-                if (response.paired) {
-                    // Paired, load printers
-                    $('#hk-status-title').text('Durum: Bağlantı Aktif (Eşleşti)');
-                    $('#hk-status-desc').html('Yazdırma yardımcısı başarıyla bağlandı ve kullanıma hazır.');
-                    $('#hk-download-action').hide();
-                    $('#hk-settings-form-wrapper').show();
-                    loadPrinters();
-                } else {
-                    // Running but not paired
-                    $('#hk-status-title').text('Durum: Bağlantı Var (Eşleşme Bekleniyor)');
-                    $('#hk-status-desc').html('Yerel program çalışıyor ancak bu web sitesiyle güvenli el sıkışma yapmadı. Lütfen <strong>Eşleştir</strong> butonuna basın.');
-                    $('#hk-download-action').hide();
-                    $('#hk-settings-form-wrapper').show();
-                    $('#hk-pair-btn').text('Eşleştir ve Yetkilendir').addClass('button-primary');
-                }
+            timeout: 600,
+            success: function() {
+                found = true;
+                callback(currentPort);
             },
             error: function() {
-                // Not running
+                // If cached port failed, scan all ports in the range
+                ports.forEach(function(p) {
+                    if (p == currentPort) {
+                        checked++;
+                        if (checked === ports.length && !found) callback(null);
+                        return;
+                    }
+                    $.ajax({
+                        url: `http://127.0.0.1:${p}/status`,
+                        type: 'GET',
+                        timeout: 800,
+                        success: function(response) {
+                            if (!found) {
+                                found = true;
+                                currentPort = p;
+                                localStorage.setItem('hk_print_port', p);
+                                helperUrl = `http://127.0.0.1:${p}`;
+                                callback(p);
+                            }
+                        },
+                        complete: function() {
+                            checked++;
+                            if (checked === ports.length && !found) {
+                                callback(null);
+                            }
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    function checkHelperStatus() {
+        scanActivePort(function(activePort) {
+            if (activePort) {
+                $.ajax({
+                    url: `${helperUrl}/status`,
+                    type: 'GET',
+                    timeout: 2000,
+                    success: function(response) {
+                        // Connected!
+                        $('#hk-helper-status-card')
+                            .css({
+                                'border-left-color': '#00a32a',
+                                'background': '#f0fcf5'
+                            });
+                        
+                        if (response.paired) {
+                            $('#hk-status-title').text(`Durum: Bağlantı Aktif (Port: ${activePort})`);
+                            $('#hk-status-desc').html('Yazdırma yardımcısı başarıyla bağlandı ve kullanıma hazır.');
+                            $('#hk-download-action').hide();
+                            $('#hk-settings-form-wrapper').show();
+                            loadPrinters();
+                        } else {
+                            $('#hk-status-title').text(`Durum: Bağlantı Var (Port: ${activePort} - Eşleşme Bekleniyor)`);
+                            $('#hk-status-desc').html('Yerel program çalışıyor ancak bu web sitesiyle güvenli el sıkışma yapmadı. Lütfen <strong>Eşleştir</strong> butonuna basın.');
+                            $('#hk-download-action').hide();
+                            $('#hk-settings-form-wrapper').show();
+                            $('#hk-pair-btn').text('Eşleştir ve Yetkilendir').addClass('button-primary');
+                        }
+                    }
+                });
+            } else {
+                // Not running on any port
                 $('#hk-helper-status-card')
                     .css({
                         'border-left-color': '#d63638',
                         'background': '#fcf0f1'
                     });
                 $('#hk-status-title').text('Durum: Yazdırma Yardımcısı Çalışmıyor');
-                $('#hk-status-desc').html('Yazdırma yardımcısı bilgisayarınızda açık değil veya henüz kurulmamış. Fişlerin doğrudan basılması için programın çalışması gerekmektedir.');
+                $('#hk-status-desc').html('Yazdırma yardımcısı bilgisayarınızda açık değil veya henüz kurulmamış. Fişlerin doğrudan basılması için programın çalışmaktadır.');
                 $('#hk-download-action').show();
                 $('#hk-settings-form-wrapper').hide();
             }
@@ -139,7 +188,7 @@ jQuery(document).ready(function($) {
                 origin: window.location.origin
             }),
             headers: {
-                'Authorization': `Bearer ${token}` // If already paired, we need this
+                'Authorization': `Bearer ${token}`
             },
             success: function() {
                 alert('Eşleştirme Başarılı! Yazıcı listesi alınıyor...');
@@ -165,7 +214,6 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 const printers = response.printers || [];
                 
-                // Clear and populate dropdowns
                 const selects = $('#hk-receipt-printer, #hk-barcode-printer, #hk-report-printer');
                 selects.find('option:not(:first)').remove();
                 
@@ -173,7 +221,6 @@ jQuery(document).ready(function($) {
                     selects.append(new Option(printer, printer));
                 });
 
-                // Restore saved choices
                 $('#hk-receipt-printer').val(savedReceiptPrinter);
                 $('#hk-barcode-printer').val(savedBarcodePrinter);
                 $('#hk-report-printer').val(savedReportPrinter);
