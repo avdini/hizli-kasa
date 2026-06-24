@@ -3,7 +3,7 @@
 $current_user_id = get_current_user_id();
 $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'light'; 
 ?>
-<div class="terminal-ayarlar-konteyner" style="padding: 30px; max-width: 900px; margin: 0 auto; color: var(--hk-text-main);">
+<div class="terminal-ayarlar-konteyner hk-tab-scrollable-container" style="padding: 30px; max-width: 900px; margin: 0 auto; color: var(--hk-text-main); height: 100%; overflow-y: auto; box-sizing: border-box;">
     
     <!-- Alt Sekme Navigasyonu -->
     <div class="ayarlar-alt-sekmeler" style="display: flex; gap: 15px; margin-bottom: 25px; border-bottom: 2px solid var(--hk-border); padding-bottom: 5px;">
