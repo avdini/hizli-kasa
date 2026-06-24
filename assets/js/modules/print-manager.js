@@ -33,13 +33,14 @@
          */
         print: function(mode) {
             var self = this;
+            var silentEnabled = localStorage.getItem('hk_silent_print_enabled') === '1';
             var token = localStorage.getItem('hk_print_token');
             var printerName = localStorage.getItem(this.modeToPrinterKey[mode] || '');
             var selector = this.modeToElement[mode];
             var element = selector ? document.querySelector(selector) : null;
 
-            // Eğer yerel yazıcı kurulmuşsa ve element mevcutsa doğrudan sessiz yazdır
-            if (token && printerName && element) {
+            // Eğer sessiz yazdırma aktifse, token varsa, yazıcı seçilmişse ve element mevcutsa sessiz yazdır
+            if (silentEnabled && token && printerName && element) {
                 this.printSilently(element, printerName, token, function(success) {
                     if (!success) {
                         console.warn('Yerel servis yazdıramadı, normal yazdırmaya geçiliyor...');
@@ -47,7 +48,7 @@
                     }
                 });
             } else {
-                // Yerel servis yok veya ayarlanmamışsa normal tarayıcı yazdırmasına geç
+                // Değilse doğrudan tarayıcı yazdırmasına geç (hiç bekleme/tarama yapma)
                 this.printNative(mode);
             }
         },
@@ -244,7 +245,244 @@
             setTimeout(function() {
                 window.print();
             }, 50);
+        },
+
+        init: function() {
+            var self = this;
+            document.addEventListener('hkTabLoaded', function(e) {
+                if (e.detail.tab === 'ayarlar') {
+                    self.initSettingsTab();
+                }
+            });
+
+            // Eğer ayarlar sekmesi zaten açık yüklenirse
+            if (document.querySelector('.terminal-ayarlar-konteyner')) {
+                self.initSettingsTab();
+            }
+        },
+
+        /**
+         * Hızlı Kasa Terminal Ayarları sekmesi yüklendiğinde ayarlar panelini ve olayları başlatır.
+         */
+        initSettingsTab: function() {
+            var $ = window.jQuery;
+            if (!$) return;
+
+            // 1. Alt Sekme Geçişleri (Sub-tab switching)
+            $('.ayarlar-alt-btn').on('click', function() {
+                var target = $(this).data('target');
+                $('.ayarlar-alt-btn').removeClass('aktif');
+                $(this).addClass('aktif');
+                
+                $('.ayarlar-icerik-paneli').hide();
+                $('#' + target).show();
+            });
+
+            // 2. Yazdırma Ayarları Mantığı
+            var currentPort = localStorage.getItem('hk_print_port') || 5001;
+            var helperUrl = 'http://127.0.0.1:' + currentPort;
+            
+            // Güvenlik Token'ını al veya üret
+            var token = localStorage.getItem('hk_print_token');
+            if (!token) {
+                token = 'hk_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                localStorage.setItem('hk_print_token', token);
+            }
+            $('#hk-print-token').val(token);
+
+            // Kaydedilmiş yazıcıları al
+            var savedReceiptPrinter = localStorage.getItem('hk_receipt_printer') || '';
+            var savedBarcodePrinter = localStorage.getItem('hk_barcode_printer') || '';
+            var savedReportPrinter = localStorage.getItem('hk_report_printer') || '';
+
+            // Sessiz Yazdırma Durumunu Yükle
+            var silentEnabled = localStorage.getItem('hk_silent_print_enabled') === '1';
+            $('#hk-silent-print-enabled').prop('checked', silentEnabled);
+            
+            if (silentEnabled) {
+                $('#hk-helper-config-container').show();
+                checkHelperStatus();
+            } else {
+                $('#hk-helper-config-container').hide();
+            }
+
+            // Checkbox durum değişimini izle
+            $('#hk-silent-print-enabled').on('change', function() {
+                if (this.checked) {
+                    $('#hk-helper-config-container').fadeIn();
+                    checkHelperStatus();
+                } else {
+                    $('#hk-helper-config-container').fadeOut();
+                }
+            });
+
+            // Port tarama fonksiyonu
+            function scanActivePort(callback) {
+                var ports = [5001, 5002, 5003, 5004, 5005, 5006, 5007, 5008, 5009, 5010];
+                var found = false;
+                var checked = 0;
+                
+                // Cache'deki portu hızlıca dene
+                $.ajax({
+                    url: 'http://127.0.0.1:' + currentPort + '/status',
+                    type: 'GET',
+                    timeout: 600,
+                    success: function() {
+                        found = true;
+                        callback(currentPort);
+                    },
+                    error: function() {
+                        // Cache'deki port başarısız olursa tüm aralığı tara
+                        ports.forEach(function(p) {
+                            if (p == currentPort) {
+                                checked++;
+                                if (checked === ports.length && !found) callback(null);
+                                return;
+                            }
+                            $.ajax({
+                                url: 'http://127.0.0.1:' + p + '/status',
+                                type: 'GET',
+                                timeout: 800,
+                                success: function(response) {
+                                    if (!found) {
+                                        found = true;
+                                        currentPort = p;
+                                        localStorage.setItem('hk_print_port', p);
+                                        helperUrl = 'http://127.0.0.1:' + p;
+                                        callback(p);
+                                    }
+                                },
+                                complete: function() {
+                                    checked++;
+                                    if (checked === ports.length && !found) {
+                                        callback(null);
+                                    }
+                                }
+                            });
+                        });
+                    }
+                });
+            }
+
+            function checkHelperStatus() {
+                scanActivePort(function(activePort) {
+                    if (activePort) {
+                        $.ajax({
+                            url: helperUrl + '/status',
+                            type: 'GET',
+                            timeout: 2000,
+                            success: function(response) {
+                                $('#hk-helper-status-card').css({
+                                    'border-left-color': '#00a32a',
+                                    'background': 'var(--hk-bg-card)'
+                                });
+                                
+                                if (response.paired) {
+                                    $('#hk-status-title').text('Durum: Bağlantı Aktif (Port: ' + activePort + ')');
+                                    $('#hk-status-desc').html('Yazdırma yardımcısı başarıyla bağlandı ve kullanıma hazır.');
+                                    $('#hk-download-action').hide();
+                                    $('#hk-settings-form-wrapper').show();
+                                    loadPrinters();
+                                } else {
+                                    $('#hk-status-title').text('Durum: Bağlantı Var (Port: ' + activePort + ' - Eşleşme Bekleniyor)');
+                                    $('#hk-status-desc').html('Yerel program çalışıyor ancak bu web sitesiyle güvenli el sıkışma yapmadı. Lütfen <strong>Eşleştir</strong> butonuna basın.');
+                                    $('#hk-download-action').hide();
+                                    $('#hk-settings-form-wrapper').show();
+                                    $('#hk-pair-btn').text('Eşleştir ve Yetkilendir').css({
+                                        'background': 'var(--hk-accent)',
+                                        'color': 'white',
+                                        'border': 'none'
+                                    });
+                                }
+                            }
+                        });
+                    } else {
+                        $('#hk-helper-status-card').css({
+                            'border-left-color': '#d63638',
+                            'background': 'var(--hk-bg-card)'
+                        });
+                        $('#hk-status-title').text('Durum: Yazdırma Yardımcısı Çalışmıyor');
+                        $('#hk-status-desc').html('Yazdırma yardımcısı bilgisayarınızda açık değil veya henüz kurulmamış. Fişlerin doğrudan basılması için programın çalışıyor olması gerekmektedir.');
+                        $('#hk-download-action').show();
+                        $('#hk-settings-form-wrapper').hide();
+                    }
+                });
+            }
+
+            // Eşleştirme (Pairing) tetikleyici
+            $('#hk-pair-btn').on('click', function() {
+                var selfBtn = $(this);
+                selfBtn.prop('disabled', true).text('Eşleştiriliyor...');
+                
+                $.ajax({
+                    url: helperUrl + '/pair',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        token: token,
+                        origin: window.location.origin
+                    }),
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    },
+                    success: function() {
+                        alert('Eşleştirme Başarılı! Yazıcı listesi alınıyor...');
+                        checkHelperStatus();
+                    },
+                    error: function(xhr) {
+                        alert('Eşleştirme başarısız: ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Sunucu yanıt vermedi.'));
+                    },
+                    complete: function() {
+                        selfBtn.prop('disabled', false).text('Yeniden Eşleştir').css({
+                            'background': 'var(--hk-bg-body)',
+                            'color': 'var(--hk-text-main)',
+                            'border': '1px solid var(--hk-border)'
+                        });
+                    }
+                });
+            });
+
+            // Yazıcı listesini çek
+            function loadPrinters() {
+                $.ajax({
+                    url: helperUrl + '/printers',
+                    type: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    },
+                    success: function(response) {
+                        var printers = response.printers || [];
+                        var selects = $('#hk-receipt-printer, #hk-barcode-printer, #hk-report-printer');
+                        
+                        selects.find('option:not(:first)').remove();
+                        printers.forEach(function(printer) {
+                            selects.append(new Option(printer, printer));
+                        });
+
+                        $('#hk-receipt-printer').val(savedReceiptPrinter);
+                        $('#hk-barcode-printer').val(savedBarcodePrinter);
+                        $('#hk-report-printer').val(savedReportPrinter);
+                    },
+                    error: function() {
+                        console.error('Yazıcı listesi yüklenemedi.');
+                    }
+                });
+            }
+
+            // Ayarları kaydet
+            $('#hk-save-print-settings').on('click', function() {
+                var isEnabled = $('#hk-silent-print-enabled').is(':checked') ? '1' : '0';
+                localStorage.setItem('hk_silent_print_enabled', isEnabled);
+                localStorage.setItem('hk_receipt_printer', $('#hk-receipt-printer').val());
+                localStorage.setItem('hk_barcode_printer', $('#hk-barcode-printer').val());
+                localStorage.setItem('hk_report_printer', $('#hk-report-printer').val());
+                
+                $('#hk-save-success-msg').fadeIn().delay(2000).fadeOut();
+            });
         }
     };
 
+    HK.PrintManager.init();
+
+    // Export variables or close IIFE cleanly
 })(window.HizliKasa = window.HizliKasa || {});
