@@ -8,8 +8,8 @@
         <h3 style="margin-top:0;" id="hk-status-title">Durum: Bağlantı Kuruluyor...</h3>
         <p id="hk-status-desc">Yerel yazdırma servisi kontrol ediliyor.</p>
         <div id="hk-download-action" style="display:none; margin-top:15px;">
-            <a href="<?php echo esc_url(HIZLI_KASA_URL . 'scratch/print_helper.py'); ?>" download="print_helper.py" class="button button-primary" style="margin-right:10px;">Yazdırma Yardımcısını İndir (.py)</a>
-            <span class="description">İndirdikten sonra terminalde <code>pip install pywin32 Pillow</code> kurun ve <code>python print_helper.py</code> ile çalıştırın.</span>
+            <a href="<?php echo esc_url(HIZLI_KASA_URL . 'assets/bin/hizli-kasa-print-helper.exe'); ?>" download="hizli-kasa-print-helper.exe" class="button button-primary" style="margin-right:10px;">Yazdırma Yardımcısını İndir (.exe)</a>
+            <span class="description">İndirdiğiniz dosyayı çalıştırın. Arka planda sessizce çalışacaktır (saat simgesinin yanında görünmez modda çalışır). Windows başlangıcına eklemeniz tavsiye edilir.</span>
         </div>
     </div>
 
