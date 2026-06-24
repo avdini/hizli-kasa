@@ -242,9 +242,6 @@ class PrintHelperHandler(BaseHTTPRequestHandler):
                     except Exception as ex:
                         print(f"Rotation error: {ex}")
 
-                img = img.convert('L')
-                img = img.point(lambda x: 0 if x < 180 else 255, '1')
-
                 hprinter = win32print.OpenPrinter(printer_name)
                 try:
                     hdc = win32ui.CreateDC()
@@ -260,7 +257,20 @@ class PrintHelperHandler(BaseHTTPRequestHandler):
                     print_w = printable_width
                     print_h = int(img_h * scale)
                     
-                    dib = ImageWin.Dib(img)
+                    # High-quality resize before B&W conversion to prevent GDI scaling artifacts
+                    try:
+                        resample_filter = Image.Resampling.LANCZOS
+                    except AttributeError:
+                        resample_filter = Image.LANCZOS if hasattr(Image, 'LANCZOS') else Image.BICUBIC
+                    
+                    img_resized = img.resize((print_w, print_h), resample_filter)
+                    
+                    # Convert to grayscale and apply custom threshold
+                    threshold = int(body.get('threshold', 180))
+                    img_gray = img_resized.convert('L')
+                    img_bw = img_gray.point(lambda x: 0 if x < threshold else 255, '1')
+                    
+                    dib = ImageWin.Dib(img_bw)
                     dib.draw(hdc.GetHandleAttrib(), (0, 0, print_w, print_h))
                     
                     hdc.EndPage()
