@@ -25,6 +25,7 @@ class Hizli_Kasa_Admin_Settings_Page {
                 <a href="?page=hizli-kasa&tab=genel" class="nav-tab <?php echo $active_tab == 'genel' ? 'nav-tab-active' : ''; ?>">Genel Ayarlar</a>
                 <a href="?page=hizli-kasa&tab=onbellek" class="nav-tab <?php echo $active_tab == 'onbellek' ? 'nav-tab-active' : ''; ?>">Önbellek (Cache)</a>
                 <a href="?page=hizli-kasa&tab=araclar" class="nav-tab <?php echo $active_tab == 'araclar' ? 'nav-tab-active' : ''; ?>">Sistem Araçları</a>
+                <a href="?page=hizli-kasa&tab=yazdirma" class="nav-tab <?php echo $active_tab == 'yazdirma' ? 'nav-tab-active' : ''; ?>">Yazdırma Ayarları</a>
             </h2>
             <div style="margin-top: 20px;">
                 <?php
@@ -42,6 +43,8 @@ class Hizli_Kasa_Admin_Settings_Page {
                     include HIZLI_KASA_PATH . 'includes/views/admin-settings-onbellek.php';
                 } elseif ($active_tab === 'araclar') {
                     include HIZLI_KASA_PATH . 'includes/views/admin-settings-araclar.php';
+                } elseif ($active_tab === 'yazdirma') {
+                    include HIZLI_KASA_PATH . 'includes/views/admin-settings-yazdirma.php';
                 }
                 ?>
             </div>
