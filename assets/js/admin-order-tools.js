@@ -106,7 +106,8 @@
             depo_id: depoSelect ? depoSelect.value : '',
             depo_adi: depoOption && depoOption.value ? (depoOption.getAttribute('data-name') || depoOption.text) : '',
             original_order: (qs('#hk-oi-orijinal-siparis', root) || {}).value || '',
-            toplam_iskonto: (qs('#hk-oi-toplam-iskonto', root) || {}).value || '0'
+            toplam_iskonto: (qs('#hk-oi-toplam-iskonto', root) || {}).value || '0',
+            date_created: (qs('#hk-oi-date-created', root) || {}).value || ''
         };
     }
 

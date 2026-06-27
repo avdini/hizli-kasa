@@ -542,6 +542,13 @@ class Hizli_Kasa_Admin_Order_Tools
         if (isset($info['rapor_kaynak'])) {
             $order->update_meta_data('_hk_kaynak', sanitize_text_field($info['rapor_kaynak']));
         }
+        if (!empty($info['date_created'])) {
+            $date_created = str_replace('T', ' ', sanitize_text_field($info['date_created']));
+            if (strlen($date_created) === 16) {
+                $date_created .= ':00';
+            }
+            $order->set_date_created($date_created);
+        }
 
         // Musteri Bilgileri
         if (isset($info['telefon'])) {

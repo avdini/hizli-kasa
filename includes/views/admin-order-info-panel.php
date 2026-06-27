@@ -30,6 +30,10 @@
                             <label for="hk-oi-rapor-kaynak">Rapor Etiketi</label>
                             <input type="text" id="hk-oi-rapor-kaynak" value="<?php echo esc_attr($order->get_meta('_hk_kaynak')); ?>" placeholder="Rapor kaynagi">
                         </div>
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-date-created">Sipariş Tarihi</label>
+                            <input type="datetime-local" id="hk-oi-date-created" value="<?php echo esc_attr($order->get_date_created() ? $order->get_date_created()->date('Y-m-d\TH:i') : ''); ?>">
+                        </div>
                     </div>
                 </div>
             </div>
