@@ -127,9 +127,6 @@ $hizli_kasa_update_checker = PucFactory::buildUpdateChecker(
     'hizli-kasa'
 );
 
-// Private Repo izinleri için GitHub Token
-// Hangi branch'i takip edeceğini belirliyoruz (main)
-$hizli_kasa_update_checker->setAuthentication('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');
 $hizli_kasa_update_checker->setBranch('main');
 
 // Laragon gibi yerel ortamlarda DNS çözümleme gecikmelerini (cURL error 28) önlemek için zaman aşımını artırıyoruz.
