@@ -42,3 +42,41 @@ Bu klasör projenin "hafızasıdır". Çalıştığınız alanda daha önce bir 
 - **CodeGraph Önceliği:** Projede CodeGraph dizini (`.codegraph/`) oluşturulmuştur. CodeGraph aracını/komutlarını kullanabilen (bu yeteneğe sahip olan) tüm AI ajanları, grep/find yapmak veya doğrudan dosyaları okumak yerine öncelikle CodeGraph'i kullanmalıdır.
 - **Dürüstlük İlkesi:** Eğer çalışan AI ajanı teknik kısıtlamalar veya yetersizlikler sebebiyle CodeGraph araçlarını kullanamıyorsa (örneğin MCP entegrasyonu o oturumda aktif değilse veya desteklemiyorsa), bunu kullanıcıya dürüstçe belirtmeli ve alternatif arama/analiz yöntemlerine geçmelidir.
 
+---
+
+## 5. Git Repository Yapısı ve Çoklu Remote Yönetimi
+
+Hızlı Kasa eklentisi, tek bir yerel dizin üzerinden iki farklı GitHub deposuna (remote) bağlı olarak geliştirilmektedir:
+
+- **`origin`**: Özel (Private) depo (`https://github.com/Seyfullahkurt9/hizli-kasa.git`). Ana geliştirme dalı **`main`**'dir.
+- **`public`**: Halka açık (Public) depo (`https://github.com/Seyfullahkurt9/woo-quick-pos.git`). Ana dalı **`master`**'dır.
+
+### 5.1. Değişiklikleri Yayma ve Patch Yönetimi
+
+Yerel olarak `main` dalında yapılan bir geliştirme veya hata çözümü test edildikten sonra her iki depoya da yansıtılmalıdır:
+1. Değişiklikleri önce `main` dalında commit'leyip `origin` deposuna gönderin:
+   ```bash
+   git push origin main
+   ```
+2. Public depoya göndermek için, `public/master` dalından geçici bir dal oluşturun:
+   ```bash
+   git checkout -b temp-public-patch public/master
+   ```
+3. `main` dalında yaptığınız commit'i bu geçici dala cherry-pick yapın:
+   ```bash
+   git cherry-pick <commit-hash>
+   ```
+4. Geçici dalı `public` deposunun `master` dalına push'layın:
+   ```bash
+   git push public temp-public-patch:master
+   ```
+5. İşlem bittikten sonra yerel `main` dalına geri dönüp geçici dalı silin.
+
+### 5.2. Kritik Konfigürasyon Farkı (Update Checker)
+
+İki depo arasında otomatik güncelleme kontrolü (`hizli-kasa.php` içindeki `Plugin Update Checker`) için kritik bir yapılandırma farkı vardır:
+
+- **Private (`main`) Sürümünde:** `PucFactory::buildUpdateChecker` adresi `https://github.com/Seyfullahkurt9/hizli-kasa/` olmalı ve dal `main` olarak ayarlanmalıdır.
+- **Public (`master`) Sürümünde:** `PucFactory::buildUpdateChecker` adresi `https://github.com/Seyfullahkurt9/woo-quick-pos/` olmalı ve dal `master` olarak ayarlanmalıdır. 
+  *(Aksi takdirde, public sürümü kullanan siteler özel depoya erişemediği için GitHub API'sinden 404 hatası alacaktır.)*
+
