@@ -93,3 +93,13 @@ Projeye yapılan tüm commit'ler semantik kurallara uygun olarak yazılmalıdır
 
 Mesajlar olabildiğince kısa, öz ve net olmalıdır.
 
+### 5.4. Semantik Versiyonlama (SemVer) ve Commit İlişkisi
+
+Eklenti versiyon numaraları (**`MAJOR.MINOR.PATCH`** formatında, örn: `11.5.1`), semantik commit'lerle uyumlu olarak artırılmalıdır:
+
+- **`PATCH` (En Sağdaki Hane - örn: `11.5.0` -> `11.5.1`):** Sadece geriye dönük uyumlu hata düzeltmeleri yapıldığında artırılır. Bu artış, **`fix:`** commit'leriyle tetiklenir.
+- **`MINOR` (Ortadaki Hane - örn: `11.5.0` -> `11.6.0`):** Geriye dönük uyumlu yeni özellikler/fonksiyonlar eklendiğinde artırılır. Bu artış, **`feat:`** commit'leriyle tetiklenir.
+- **`MAJOR` (En Soldaki Hane - örn: `11.5.0` -> `12.0.0`):** Geriye dönük uyumsuz API/altyapı değişiklikleri yapıldığında artırılır. Bu artış, commit mesajında **`BREAKING CHANGE`** uyarısı veya **`feat!:`** / **`fix!:`** etiketleri kullanıldığında tetiklenir.
+
+Geliştiriciler ve yapay zeka ajanları, yaptıkları değişikliğin türüne göre `hizli-kasa.php` içerisindeki `Version` başlığını ve `HIZLI_KASA_VERSION` sabitini bu kurallara göre güncellemelidir.
+
