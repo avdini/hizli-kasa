@@ -58,19 +58,18 @@ Yerel olarak `main` dalında yapılan bir geliştirme veya hata çözümü test 
    ```bash
    git push origin main
    ```
-2. Public depoya göndermek için, `public/master` dalından geçici bir dal oluşturun:
-   ```bash
-   git checkout -b temp-public-patch public/master
+2. Bu değişikliği otomatik olarak `public` (Woo Quick POS) deposunun `master` dalına aktarmak (patch) için, projedeki hazır PowerShell betiğini çalıştırın:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File scripts/patch-public.ps1 <commit-hash>
    ```
-3. `main` dalında yaptığınız commit'i bu geçici dala cherry-pick yapın:
-   ```bash
-   git cherry-pick <commit-hash>
-   ```
-4. Geçici dalı `public` deposunun `master` dalına push'layın:
-   ```bash
-   git push public temp-public-patch:master
-   ```
-5. İşlem bittikten sonra yerel `main` dalına geri dönüp geçici dalı silin.
+   *(Eğer `<commit-hash>` parametresi belirtilmezse, varsayılan olarak son commit (`HEAD`) baz alınır.)*
+   
+   Bu betik arka planda otomatik olarak:
+   - Uzak sunucudan (`public`) son değişiklikleri çeker.
+   - `public/master` tabanlı geçici bir dal açar.
+   - Belirttiğiniz commit'i bu dala cherry-pick yapar.
+   - Değişikliği `public` remote'un `master` dalına push'lar.
+   - Eski yerel dalınıza geri dönerek geçici dalı siler ve temizlik yapar.
 
 ### 5.2. Kritik Konfigürasyon Farkı (Update Checker)
 
