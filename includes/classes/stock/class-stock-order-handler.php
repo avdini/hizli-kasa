@@ -25,10 +25,9 @@ class Hizli_Kasa_Stock_Order_Handler {
         if (!$kasiyer_name) return;
 
         $depo_id = $order->get_meta('_hk_cikis_depo_id');
+        $user_id = get_current_user_id();
 
         if (!$depo_id) {
-            $user_id = get_current_user_id();
-
             if (!$user_id) {
                  hizli_kasa_log("Uyarı: current_user_id 0 döndü. REST API auth kontrol edilmeli.");
             }
