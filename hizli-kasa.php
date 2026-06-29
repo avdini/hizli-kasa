@@ -18,14 +18,6 @@ define('HIZLI_KASA_VERSION', '11.5');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
-// WooCommerce Dependency Check
-if (!class_exists('WooCommerce')) {
-    add_action('admin_notices', function () {
-        echo '<div class="notice notice-error"><p>' . esc_html__('Hızlı Kasa eklentisinin çalışabilmesi için WooCommerce aktif olmalıdır.', 'hizli-kasa') . '</p></div>';
-    });
-    return;
-}
-
 function hizli_kasa_log($message, $filename = 'hizli-kasa-debug.log')
 {
     // Production'da log tamamen devre dışı — Ayarlar > Hızlı Kasa > "Debug Logu Aktif" ile açılabilir.
@@ -59,66 +51,81 @@ function hizli_kasa_admin_log($message)
     hizli_kasa_log($message, 'hizli-kasa-admin.log');
 }
 
-// Sınıfları Yükle
-require_once HIZLI_KASA_PATH . 'includes/classes/class-database.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-hooks.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-user-warehouse-permissions.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/stock/class-stock-manager.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/stock/class-stock-order-handler.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/stock/class-stock-import-export.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/stock/class-stock-allocation.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-menu.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-settings-register.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-settings-page.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-depo-controller.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-mismatch-bubble.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-stock.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-import-export.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-unmatched.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-tools.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-admin-settings.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-mismatch-notifier.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-rest-api.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-shortcode.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-barcode-helper.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-menu-filter.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-mobile-handler.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-user-handler.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-admin-order-tools.php';
-require_once HIZLI_KASA_PATH . 'includes/classes/class-email-modifier.php';
+// Sınıfları Yükle ve Başlat (WooCommerce Yüklendikten Sonra)
+add_action('plugins_loaded', 'hizli_kasa_init');
 
-
-// Başlatıcılar
-// Hizli_Kasa_Database::init(); // Performans ve SEO için her istekte çalıştırılması engellendi (aktivasyon kancası kullanılmalıdır).
-Hizli_Kasa_Hooks::init();
-Hizli_Kasa_Admin_Menu::init();
-Hizli_Kasa_Admin_Settings_Register::init();
-Hizli_Kasa_Admin_Depo_Controller::init();
-Hizli_Kasa_Admin_Mismatch_Bubble::init();
-Hizli_Kasa_User_Warehouse_Permissions::init();
-Hizli_Kasa_Ajax_Stock::init();
-Hizli_Kasa_Ajax_Import_Export::init();
-Hizli_Kasa_Ajax_Unmatched::init();
-Hizli_Kasa_Ajax_Tools::init();
-Hizli_Kasa_Stock_Order_Handler::listen();
-Hizli_Kasa_Mismatch_Notifier::init();
-Hizli_Kasa_Mobile_Handler::init();
-Hizli_Kasa_User_Handler::init();
-Hizli_Kasa_Admin_Order_Tools::init();
-Hizli_Kasa_Email_Modifier::init();
-
-
-// Canary Log: Sadece WP hazır olduğunda çalıştır
-add_action('init', function () {
-    hizli_kasa_log("--- Eklenti Başarıyla Başlatıldı (init) ---");
-    if (get_option('hizli_kasa_db_version_sayim') !== '2.0') {
-        Hizli_Kasa_Database::init();
-        update_option('hizli_kasa_db_version_sayim', '2.0');
+function hizli_kasa_init() {
+    // WooCommerce Dependency Check
+    if (!class_exists('WooCommerce')) {
+        add_action('admin_notices', function () {
+            echo '<div class="notice notice-error"><p>' . esc_html__('Hızlı Kasa eklentisinin çalışabilmesi için WooCommerce aktif olmalıdır.', 'hizli-kasa') . '</p></div>';
+        });
+        return;
     }
-});
+
+    // Sınıfları Yükle
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-database.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-hooks.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-user-warehouse-permissions.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/stock/class-stock-manager.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/stock/class-stock-order-handler.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/stock/class-stock-import-export.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/stock/class-stock-allocation.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-menu.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-settings-register.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-settings-page.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-depo-controller.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-mismatch-bubble.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-stock.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-import-export.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-unmatched.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-tools.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-admin-settings.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-mismatch-notifier.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-rest-api.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-shortcode.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-barcode-helper.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-menu-filter.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-mobile-handler.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-user-handler.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-admin-order-tools.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-email-modifier.php';
+
+    // Başlatıcılar
+    Hizli_Kasa_Hooks::init();
+    Hizli_Kasa_Admin_Menu::init();
+    Hizli_Kasa_Admin_Settings_Register::init();
+    Hizli_Kasa_Admin_Depo_Controller::init();
+    Hizli_Kasa_Admin_Mismatch_Bubble::init();
+    Hizli_Kasa_User_Warehouse_Permissions::init();
+    Hizli_Kasa_Ajax_Stock::init();
+    Hizli_Kasa_Ajax_Import_Export::init();
+    Hizli_Kasa_Ajax_Unmatched::init();
+    Hizli_Kasa_Ajax_Tools::init();
+    Hizli_Kasa_Stock_Order_Handler::listen();
+    Hizli_Kasa_Mismatch_Notifier::init();
+    Hizli_Kasa_Mobile_Handler::init();
+    Hizli_Kasa_User_Handler::init();
+    Hizli_Kasa_Admin_Order_Tools::init();
+    Hizli_Kasa_Email_Modifier::init();
+
+    // Canary Log: Sadece WP hazır olduğunda çalıştır
+    add_action('init', function () {
+        hizli_kasa_log("--- Eklenti Başarıyla Başlatıldı (init) ---");
+        if (get_option('hizli_kasa_db_version_sayim') !== '2.0') {
+            Hizli_Kasa_Database::init();
+            update_option('hizli_kasa_db_version_sayim', '2.0');
+        }
+    });
+}
 
 // Veritabanı Aktivasyonu
-register_activation_hook(__FILE__, ['Hizli_Kasa_Database', 'init']);
+register_activation_hook(__FILE__, 'hizli_kasa_db_activation');
+
+function hizli_kasa_db_activation() {
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-database.php';
+    Hizli_Kasa_Database::init();
+}
 
 // Otomatik Güncelleme Sistemi (Plugin Update Checker)
 require_once HIZLI_KASA_PATH . 'includes/plugin-update-checker/plugin-update-checker.php';
