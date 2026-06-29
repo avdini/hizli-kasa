@@ -102,3 +102,21 @@ Eklenti versiyon numaraları (**`MAJOR.MINOR.PATCH`** formatında, örn: `11.5.1
 
 Geliştiriciler ve yapay zeka ajanları, yaptıkları değişikliğin türüne göre `hizli-kasa.php` içerisindeki `Version` başlığını ve `HIZLI_KASA_VERSION` sabitini bu kurallara göre güncellemelidir.
 
+### 5.5. GitHub Süreçleri ve GitHub CLI (gh) Teşviki
+
+GitHub üzerindeki yönetimsel süreçleri (PR, Release, Issue vb.) yürütürken API isteklerini ve sayfa karmaşasını azaltmak için **GitHub CLI (`gh`)** kullanımı teşvik edilmektedir. Geliştiriciler ve yapay zeka ajanları şu kurallara uymalıdır:
+
+- **Sürüm Yayınlama (Release):** Eklenti versiyonu güncellenip ana depoda yayınlandıktan sonra, GitHub üzerinde yeni bir sürüm (Release) oluşturmak için `gh release` kullanılmalıdır:
+  ```bash
+  gh release create v11.5.1 --title "v11.5.1" --notes "Sürüm detayları ve hata düzeltmeleri..."
+  ```
+- **Çekme İstekleri (Pull Request):** Public depoya doğrudan push yapmak yerine bir inceleme (code review) süreci işletilecekse, `gh pr` ile hızlıca PR oluşturulmalıdır:
+  ```bash
+  gh pr create --repo Seyfullahkurt9/woo-quick-pos --title "fix(stock): resolve user_id warning" --body "Açıklama..."
+  ```
+- **Hata Kayıtları (Issues):** Depolardaki açık hata kayıtlarını veya yapılacak işleri listelemek için:
+  ```bash
+  gh issue list
+  ```
+  *(Not: Eğer ajanların çalıştığı yerel ortamda `gh` yetkilendirmesi (login) yapılmamışsa veya `gh` yüklü değilse, ajanlar hata vermeden güvenli bir şekilde standart Git komutlarına veya kullanıcıyı bilgilendirme yöntemine geri dönmelidir.)*
+
