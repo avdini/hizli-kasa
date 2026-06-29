@@ -5,6 +5,9 @@
  * Description: avdini için hızlı POS sistemi.
  * Version: 11.5
  * Author: Seyfullah Kurt
+ * Requires Plugins: woocommerce
+ * Requires at least: 5.8
+ * Requires PHP: 7.4
  */
 
 if (!defined('ABSPATH'))
@@ -14,6 +17,14 @@ if (!defined('ABSPATH'))
 define('HIZLI_KASA_VERSION', '11.5');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
+
+// WooCommerce Dependency Check
+if (!class_exists('WooCommerce')) {
+    add_action('admin_notices', function () {
+        echo '<div class="notice notice-error"><p>' . esc_html__('Hızlı Kasa eklentisinin çalışabilmesi için WooCommerce aktif olmalıdır.', 'hizli-kasa') . '</p></div>';
+    });
+    return;
+}
 
 function hizli_kasa_log($message, $filename = 'hizli-kasa-debug.log')
 {
