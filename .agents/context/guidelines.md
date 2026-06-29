@@ -44,79 +44,9 @@ Bu klasör projenin "hafızasıdır". Çalıştığınız alanda daha önce bir 
 
 ---
 
-## 5. Git Repository Yapısı ve Çoklu Remote Yönetimi
+## 5. Git, Sürüm Kontrolü ve GitHub Yönetim Standartları
 
-Hızlı Kasa eklentisi, tek bir yerel dizin üzerinden iki farklı GitHub deposuna (remote) bağlı olarak geliştirilmektedir:
+Çoklu remote yönetimi (origin/public), sürüm/patch süreçleri, semantik commit/versiyonlama kuralları ve GitHub CLI (`gh`) kullanım yönergeleri ayrı bir dosyaya taşınmıştır. Geliştirme ve yayınlama yapmadan önce lütfen bu rehberi inceleyin:
 
-- **`origin`**: Özel (Private) depo (`https://github.com/Seyfullahkurt9/hizli-kasa.git`). Ana geliştirme dalı **`main`**'dir.
-- **`public`**: Halka açık (Public) depo (`https://github.com/Seyfullahkurt9/woo-quick-pos.git`). Ana dalı **`master`**'dır.
-
-### 5.1. Değişiklikleri Yayma ve Patch Yönetimi
-
-Yerel olarak `main` dalında yapılan bir geliştirme veya hata çözümü test edildikten sonra her iki depoya da yansıtılmalıdır:
-1. Değişiklikleri önce `main` dalında commit'leyip `origin` deposuna gönderin:
-   ```bash
-   git push origin main
-   ```
-2. Bu değişikliği otomatik olarak `public` (Woo Quick POS) deposunun `master` dalına aktarmak (patch) için, projedeki hazır PowerShell betiğini çalıştırın:
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File scripts/patch-public.ps1 <commit-hash>
-   ```
-   *(Eğer `<commit-hash>` parametresi belirtilmezse, varsayılan olarak son commit (`HEAD`) baz alınır.)*
-   
-   Bu betik arka planda otomatik olarak:
-   - Uzak sunucudan (`public`) son değişiklikleri çeker.
-   - `public/master` tabanlı geçici bir dal açar.
-   - Belirttiğiniz commit'i bu dala cherry-pick yapar.
-   - Değişikliği `public` remote'un `master` dalına push'lar.
-   - Eski yerel dalınıza geri dönerek geçici dalı siler ve temizlik yapar.
-
-### 5.2. Kritik Konfigürasyon Farkı (Update Checker)
-
-İki depo arasında otomatik güncelleme kontrolü (`hizli-kasa.php` içindeki `Plugin Update Checker`) için kritik bir yapılandırma farkı vardır:
-
-- **Private (`main`) Sürümünde:** `PucFactory::buildUpdateChecker` adresi `https://github.com/Seyfullahkurt9/hizli-kasa/` olmalı ve dal `main` olarak ayarlanmalıdır.
-- **Public (`master`) Sürümünde:** `PucFactory::buildUpdateChecker` adresi `https://github.com/Seyfullahkurt9/woo-quick-pos/` olmalı ve dal `master` olarak ayarlanmalıdır. 
-  *(Aksi takdirde, public sürümü kullanan siteler özel depoya erişemediği için GitHub API'sinden 404 hatası alacaktır.)*
-
-### 5.3. Semantik Commit (Conventional Commits) Standartları
-
-Projeye yapılan tüm commit'ler semantik kurallara uygun olarak yazılmalıdır. Diğer ajanlar ve geliştiriciler commit mesajlarını şu şablona göre oluşturmalıdır:
-
-- **`feat:`**: Yeni bir özellik veya fonksiyon eklendiğinde kullanılır. (Örn: `feat(api): add warehouse stock export endpoint`)
-- **`fix:`**: Bir hata düzeltildiğinde kullanılır. (Örn: `fix(stock): resolve undefined variable $user_id warning`)
-- **`docs:`**: Yalnızca dokümantasyon, kılavuzlar veya açıklama satırlarında değişiklik yapıldığında kullanılır. (Örn: `docs(guidelines): add semantic commit guidelines`)
-- **`refactor:`**: Kodun işlevselliğini değiştirmeden yapılan yapısal düzenlemeler ve iyileştirmelerde kullanılır. (Örn: `refactor(db): optimize warehouse select query`)
-- **`style:`**: Kodun çalışmasını etkilemeyen biçimlendirme, boşluk veya noktalı virgül gibi görsel düzenlemelerde kullanılır. (Örn: `style: format indentation in class-database.php`)
-- **`chore:`**: Yapılandırma dosyaları, bağımlılık güncellemeleri veya rutin bakım görevlerinde kullanılır. (Örn: `chore(updater): update plugin update checker library`)
-
-Mesajlar olabildiğince kısa, öz ve net olmalıdır.
-
-### 5.4. Semantik Versiyonlama (SemVer) ve Commit İlişkisi
-
-Eklenti versiyon numaraları (**`MAJOR.MINOR.PATCH`** formatında, örn: `11.5.1`), semantik commit'lerle uyumlu olarak artırılmalıdır:
-
-- **`PATCH` (En Sağdaki Hane - örn: `11.5.0` -> `11.5.1`):** Sadece geriye dönük uyumlu hata düzeltmeleri yapıldığında artırılır. Bu artış, **`fix:`** commit'leriyle tetiklenir.
-- **`MINOR` (Ortadaki Hane - örn: `11.5.0` -> `11.6.0`):** Geriye dönük uyumlu yeni özellikler/fonksiyonlar eklendiğinde artırılır. Bu artış, **`feat:`** commit'leriyle tetiklenir.
-- **`MAJOR` (En Soldaki Hane - örn: `11.5.0` -> `12.0.0`):** Geriye dönük uyumsuz API/altyapı değişiklikleri yapıldığında artırılır. Bu artış, commit mesajında **`BREAKING CHANGE`** uyarısı veya **`feat!:`** / **`fix!:`** etiketleri kullanıldığında tetiklenir.
-
-Geliştiriciler ve yapay zeka ajanları, yaptıkları değişikliğin türüne göre `hizli-kasa.php` içerisindeki `Version` başlığını ve `HIZLI_KASA_VERSION` sabitini bu kurallara göre güncellemelidir.
-
-### 5.5. GitHub Süreçleri ve GitHub CLI (gh) Teşviki
-
-GitHub üzerindeki yönetimsel süreçleri (PR, Release, Issue vb.) yürütürken API isteklerini ve sayfa karmaşasını azaltmak için **GitHub CLI (`gh`)** kullanımı teşvik edilmektedir. Geliştiriciler ve yapay zeka ajanları şu kurallara uymalıdır:
-
-- **Sürüm Yayınlama (Release):** Eklenti versiyonu güncellenip ana depoda yayınlandıktan sonra, GitHub üzerinde yeni bir sürüm (Release) oluşturmak için `gh release` kullanılmalıdır:
-  ```bash
-  gh release create v11.5.1 --title "v11.5.1" --notes "Sürüm detayları ve hata düzeltmeleri..."
-  ```
-- **Çekme İstekleri (Pull Request):** Public depoya doğrudan push yapmak yerine bir inceleme (code review) süreci işletilecekse, `gh pr` ile hızlıca PR oluşturulmalıdır:
-  ```bash
-  gh pr create --repo Seyfullahkurt9/woo-quick-pos --title "fix(stock): resolve user_id warning" --body "Açıklama..."
-  ```
-- **Hata Kayıtları (Issues):** Depolardaki açık hata kayıtlarını veya yapılacak işleri listelemek için:
-  ```bash
-  gh issue list
-  ```
-  *(Not: Eğer ajanların çalıştığı yerel ortamda `gh` yetkilendirmesi (login) yapılmamışsa veya `gh` yüklü değilse, ajanlar hata vermeden güvenli bir şekilde standart Git komutlarına veya kullanıcıyı bilgilendirme yöntemine geri dönmelidir.)*
+- [git-standards.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/context/git-standards.md)
 
