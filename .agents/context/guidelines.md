@@ -80,3 +80,16 @@ Yerel olarak `main` dalında yapılan bir geliştirme veya hata çözümü test 
 - **Public (`master`) Sürümünde:** `PucFactory::buildUpdateChecker` adresi `https://github.com/Seyfullahkurt9/woo-quick-pos/` olmalı ve dal `master` olarak ayarlanmalıdır. 
   *(Aksi takdirde, public sürümü kullanan siteler özel depoya erişemediği için GitHub API'sinden 404 hatası alacaktır.)*
 
+### 5.3. Semantik Commit (Conventional Commits) Standartları
+
+Projeye yapılan tüm commit'ler semantik kurallara uygun olarak yazılmalıdır. Diğer ajanlar ve geliştiriciler commit mesajlarını şu şablona göre oluşturmalıdır:
+
+- **`feat:`**: Yeni bir özellik veya fonksiyon eklendiğinde kullanılır. (Örn: `feat(api): add warehouse stock export endpoint`)
+- **`fix:`**: Bir hata düzeltildiğinde kullanılır. (Örn: `fix(stock): resolve undefined variable $user_id warning`)
+- **`docs:`**: Yalnızca dokümantasyon, kılavuzlar veya açıklama satırlarında değişiklik yapıldığında kullanılır. (Örn: `docs(guidelines): add semantic commit guidelines`)
+- **`refactor:`**: Kodun işlevselliğini değiştirmeden yapılan yapısal düzenlemeler ve iyileştirmelerde kullanılır. (Örn: `refactor(db): optimize warehouse select query`)
+- **`style:`**: Kodun çalışmasını etkilemeyen biçimlendirme, boşluk veya noktalı virgül gibi görsel düzenlemelerde kullanılır. (Örn: `style: format indentation in class-database.php`)
+- **`chore:`**: Yapılandırma dosyaları, bağımlılık güncellemeleri veya rutin bakım görevlerinde kullanılır. (Örn: `chore(updater): update plugin update checker library`)
+
+Mesajlar olabildiğince kısa, öz ve net olmalıdır.
+
