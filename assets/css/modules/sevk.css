@@ -611,3 +611,12 @@
     -webkit-appearance: none;
     margin: 0;
 }
+
+/* Sevk Çıkış ve Malkabul Yeni Sipariş için sabit yükseklikte tablolar */
+.sevk-step-panel[data-step="2"] .sevk-table-wrap.compact,
+.hk-malkabul-yeni-urun-ekle .sevk-table-wrap.compact {
+    height: 285px;
+    min-height: 285px;
+    max-height: 285px;
+    flex: none;
+}
