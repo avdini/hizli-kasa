@@ -836,31 +836,9 @@ class Hizli_Kasa_API_Shipments extends Hizli_Kasa_API_Controller_Base {
     }
 
     protected function format_mutation_response(object $sevk, ?object $kalem = null): array {
-        $result = [
-            'sevk_id'      => (int) $sevk->id,
-            'toplam_cesit' => (int) $sevk->toplam_cesit,
-            'toplam_adet'  => (float) $sevk->toplam_adet,
-            'durum'        => $sevk->durum,
-            'durum_label'  => $this->status_label($sevk->durum),
-            'updated_at'   => $sevk->updated_at,
+        return [
+            'sevk' => $this->format_shipment($sevk, true),
         ];
-
-        if ($kalem) {
-            $pid             = (int) ($kalem->variation_id ?: $kalem->product_id);
-            $image_map       = $this->get_product_image_map([$pid]);
-            $result['kalem'] = [
-                'id'                 => (int) $kalem->id,
-                'product_id'         => (int) $kalem->product_id,
-                'variation_id'       => (int) $kalem->variation_id,
-                'sku'                => $kalem->sku,
-                'urun_adi'           => $kalem->urun_adi,
-                'gonderilen_adet'    => (float) $kalem->gonderilen_adet,
-                'teslim_alinan_adet' => $kalem->teslim_alinan_adet === null ? null : (float) $kalem->teslim_alinan_adet,
-                'image'              => $image_map[$pid] ?? '',
-            ];
-        }
-
-        return $result;
     }
 
     protected function find_product_by_sku(string $sku): array|false {
