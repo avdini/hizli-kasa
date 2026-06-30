@@ -13,6 +13,9 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
         <button class="ayarlar-alt-btn" data-target="ayarlar-yazdirma" style="padding: 12px 20px; border: none; background: none; font-size: 16px; font-weight: bold; cursor: pointer; color: var(--hk-text-muted); border-bottom: 3px solid transparent; transition: all 0.3s ease;">
             🖨️ Yazdırma Ayarları
         </button>
+        <button class="ayarlar-alt-btn" data-target="ayarlar-ses" style="padding: 12px 20px; border: none; background: none; font-size: 16px; font-weight: bold; cursor: pointer; color: var(--hk-text-muted); border-bottom: 3px solid transparent; transition: all 0.3s ease;">
+            🔊 Ses Ayarları
+        </button>
     </div>
 
     <!-- 1. GENEL AYARLAR PANELI -->
@@ -120,6 +123,48 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
             <div style="display: flex; align-items: center; gap: 15px; border-top: 1px solid var(--hk-border); padding-top: 20px;">
                 <button type="button" id="hk-save-print-settings" style="padding: 12px 25px; border: none; border-radius: 6px; background: var(--hk-accent); color: white; font-weight: bold; cursor: pointer; font-size: 15px; transition: all 0.3s ease;">Yazdırma Ayarlarını Kaydet</button>
                 <span id="hk-save-success-msg" style="color: #00a32a; font-weight: bold; display: none; font-size: 15px;">✓ Ayarlar kaydedildi!</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. SES AYARLARI PANELI -->
+    <div id="ayarlar-ses" class="ayarlar-icerik-paneli" style="display: none;">
+        <div style="background: var(--hk-bg-card); padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--hk-border);">
+            <h2 style="margin-top: 0; border-bottom: 2px solid var(--hk-border); padding-bottom: 10px; margin-bottom: 20px; font-size: 20px;">Bildirim Sesleri</h2>
+            <p style="color: var(--hk-text-muted); font-size: 14px; margin-bottom: 20px;">Terminal bildirim seslerinin seviyesini ve çeşidini özelleştirin. Bu ayarlar hesabınıza kaydedilir.</p>
+
+            <div style="display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 25px;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label for="hk-sound-volume" style="font-weight: bold; font-size: 15px; display: flex; justify-content: space-between;">
+                        <span>Ses Seviyesi</span>
+                        <span id="hk-sound-volume-val">80%</span>
+                    </label>
+                    <input type="range" id="hk-sound-volume" min="0" max="100" value="80" style="width: 100%; height: 6px; border-radius: 3px; cursor: pointer; accent-color: var(--hk-accent);">
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <label for="hk-sound-preset" style="font-weight: bold; font-size: 15px;">Ses Efekti</label>
+                    <select id="hk-sound-preset" style="padding: 12px; border: 1px solid var(--hk-border); border-radius: 6px; background: var(--hk-bg-body); color: var(--hk-text-main); font-size: 15px;">
+                        <option value="classic">Klasik Bip (Varsayılan)</option>
+                        <option value="soft">Yumuşak Melodi (Market Kasa)</option>
+                        <option value="retro">Retro Atari (Oyun Tarzı)</option>
+                        <option value="digital">Dijital Çift Bip</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-top: 10px;">
+                    <button type="button" id="hk-test-success-sound" style="flex: 1; padding: 12px; border: 1px solid var(--hk-border); border-radius: 6px; background: var(--hk-bg-body); color: var(--hk-text-main); font-weight: bold; cursor: pointer; transition: all 0.2s;">
+                        🟢 Başarılı Sesi Test Et
+                    </button>
+                    <button type="button" id="hk-test-error-sound" style="flex: 1; padding: 12px; border: 1px solid var(--hk-border); border-radius: 6px; background: var(--hk-bg-body); color: var(--hk-text-main); font-weight: bold; cursor: pointer; transition: all 0.2s;">
+                        🔴 Hata Sesi Test Et
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 15px; border-top: 1px solid var(--hk-border); padding-top: 20px;">
+                <button type="button" id="hk-save-sound-settings" style="padding: 12px 25px; border: none; border-radius: 6px; background: var(--hk-accent); color: white; font-weight: bold; cursor: pointer; font-size: 15px; transition: all 0.3s ease;">Ses Ayarlarını Kaydet</button>
+                <span id="hk-sound-save-success-msg" style="color: #00a32a; font-weight: bold; display: none; font-size: 15px;">✓ Ayarlar kaydedildi!</span>
             </div>
         </div>
     </div>

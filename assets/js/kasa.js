@@ -44,6 +44,11 @@ document.addEventListener("DOMContentLoaded", function() {
         HK.ThemeManager.init();
     }
 
+    // 7.1 Ses Yöneticisini başlat
+    if (HK.Sound && HK.Sound.init) {
+        HK.Sound.init();
+    }
+
     // 7.5 Barkod Render Motorunu başlat
     if (HK.BarcodeRenderer) {
         HK.BarcodeRenderer.init();

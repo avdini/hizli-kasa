@@ -273,4 +273,45 @@ Bir sevkin tüm detaylarını ve içerdiği tüm kalemleri görselleriyle birlik
 }
 ```
 
+---
+
+### 3.3. Kullanıcı Ses Ayarları (User Sound Settings)
+Kullanıcının terminal bildirim ses seviyesini ve ses çeşidini (preset) kaydeder.
+
+- **URL:** `/wp-json/hizli-kasa/v2/user/sound-settings`
+- **Metot:** `POST`
+- **İçerik Tipi (Header):** `Content-Type: application/json`
+
+#### Girdi Parametreleri (JSON):
+| Parametre | Tip | Zorunlu | Açıklama |
+| :--- | :--- | :--- | :--- |
+| `volume` | `int` | Evet | 0 ile 100 arasında ses seviyesi yüzdesi. |
+| `preset` | `string` | Evet | Ses efekti tipi (`classic`, `soft`, `retro`, `digital`). |
+
+#### Örnek İstek Gövdesi (Payload):
+```json
+{
+  "volume": 80,
+  "preset": "soft"
+}
+```
+
+#### Örnek Başarılı Yanıt (200 OK):
+```json
+{
+  "success": true,
+  "data": {
+    "volume": 80,
+    "preset": "soft",
+    "message": "Ses ayarları kaydedildi."
+  },
+  "errors": null,
+  "meta": {
+    "timestamp": "2026-06-30 15:58:00",
+    "version": "v2"
+  }
+}
+```
+
+
 
