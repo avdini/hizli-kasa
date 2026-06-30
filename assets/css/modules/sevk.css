@@ -612,30 +612,10 @@
     margin: 0;
 }
 
-/* Sevk Çıkış ve Malkabul Yeni Sipariş için sabit yükseklikte tablolar */
-.sevk-step-panel[data-step="2"] .sevk-table-wrap.compact,
-.hk-malkabul-yeni-urun-ekle .sevk-table-wrap.compact {
-    height: 280px;
-    min-height: 280px;
-    max-height: 280px;
-    flex: none;
-}
-
-/* Küçük ekranlar (Laptop vb.) için yükseklik kısıtlaması */
-@media (max-height: 800px) {
-    .sevk-step-panel[data-step="2"] .sevk-table-wrap.compact,
-    .hk-malkabul-yeni-urun-ekle .sevk-table-wrap.compact {
-        height: 200px;
-        min-height: 200px;
-        max-height: 200px;
-    }
-}
-
-@media (max-height: 680px) {
-    .sevk-step-panel[data-step="2"] .sevk-table-wrap.compact,
-    .hk-malkabul-yeni-urun-ekle .sevk-table-wrap.compact {
-        height: 140px;
-        min-height: 140px;
-        max-height: 140px;
-    }
+.hk-malkabul-yeni-urun-ekle {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
 }
