@@ -13,7 +13,7 @@ class Hizli_Kasa_API_User_Sound extends Hizli_Kasa_API_Controller_Base {
                 'volume' => [
                     'required'          => true,
                     'type'              => 'integer',
-                    'sanitize_callback' => 'intval',
+                    'sanitize_callback' => 'absint',
                     'validate_callback' => function($param) {
                         return $param >= 0 && $param <= 100;
                     }
