@@ -434,6 +434,10 @@
         renderIncomingDetail: function(sevk) {
             var panel = document.getElementById('sevk-kabul-detay');
             if (!panel) return;
+
+            var tableWrap = panel.querySelector('.sevk-table-wrap');
+            var savedScrollTop = tableWrap ? tableWrap.scrollTop : 0;
+
             var actions = '';
             if (sevk.durum === 'onay_bekliyor') {
                 actions = '<textarea id="sevk-alici-not" class="hk-input" rows="2" placeholder="Alıcı notu / red sebebi"></textarea>' +
@@ -450,6 +454,11 @@
             panel.innerHTML = '<div class="sevk-panel-title"><div><h3>' + escapeHtml(sevk.sevk_no) + '</h3><p>' + escapeHtml(sevk.kaynak_depo_adi) + ' → ' + escapeHtml(sevk.hedef_depo_adi) + '</p></div>' + statusBadge(sevk) + '</div>' +
                 '<div class="sevk-table-wrap compact" style="margin:14px 0;">' + this.renderCompareTable(sevk.kalemler || [], sevk, isReceiptEditable) + '</div>' +
                 actions;
+
+            var newTableWrap = panel.querySelector('.sevk-table-wrap');
+            if (newTableWrap) {
+                newTableWrap.scrollTop = savedScrollTop;
+            }
 
             var self = this;
             panel.querySelectorAll('[data-action]').forEach(function(btn) {
