@@ -23,7 +23,7 @@ class Hizli_Kasa_API_User_Sound extends Hizli_Kasa_API_Controller_Base {
                     'type'              => 'string',
                     'sanitize_callback' => 'sanitize_text_field',
                     'validate_callback' => function($param) {
-                        return in_array($param, ['classic', 'soft', 'retro', 'digital'], true);
+                        return in_array($param, ['classic', 'soft', 'retro', 'digital', 'sharp_click', 'high_alert'], true);
                     }
                 ],
             ],

@@ -149,6 +149,8 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
                         <option value="soft">Yumuşak Melodi (Market Kasa)</option>
                         <option value="retro">Retro Atari (Oyun Tarzı)</option>
                         <option value="digital">Dijital Çift Bip</option>
+                        <option value="sharp_click">Keskin Klik (Tarayıcı Tipi)</option>
+                        <option value="high_alert">Keskin Alarm (Yüksek Frekans)</option>
                     </select>
                 </div>
 

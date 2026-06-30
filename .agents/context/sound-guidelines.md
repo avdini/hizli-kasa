@@ -58,7 +58,7 @@ presets: {
 5. [class-api-user-sound.php](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/includes/api/v2/controllers/class-api-user-sound.php) dosyasındaki input validasyonuna yeni preset ismini ekleyin:
 ```php
 'validate_callback' => function($param) {
-    return in_array($param, ['classic', 'soft', 'retro', 'digital', 'futuristic'], true);
+    return in_array($param, ['classic', 'soft', 'retro', 'digital', 'sharp_click', 'high_alert', 'futuristic'], true);
 }
 ```
 

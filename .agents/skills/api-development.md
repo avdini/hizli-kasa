@@ -286,7 +286,7 @@ Kullanıcının terminal bildirim ses seviyesini ve ses çeşidini (preset) kayd
 | Parametre | Tip | Zorunlu | Açıklama |
 | :--- | :--- | :--- | :--- |
 | `volume` | `int` | Evet | 0 ile 100 arasında ses seviyesi yüzdesi. |
-| `preset` | `string` | Evet | Ses efekti tipi (`classic`, `soft`, `retro`, `digital`). |
+| `preset` | `string` | Evet | Ses efekti tipi (`classic`, `soft`, `retro`, `digital`, `sharp_click`, `high_alert`). |
 
 #### Örnek İstek Gövdesi (Payload):
 ```json
