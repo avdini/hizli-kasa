@@ -26,6 +26,21 @@ Fiziki mağaza operasyonları için tasarlanmış; hızlı, hafif ve modern bir 
 3.  WordPress 'Eklentiler' menüsünden eklentiyi etkinleştirin.
 4.  POS ayarlarını, depoları ve yazıcı ayarlarını yapılandırmak için WordPress panelinizden **WooCommerce > Hızlı Kasa Ayarları** sayfasına gidin.
 
+## Proje Yapısı
+
+Proje dizin yapısı ve dosyaların görevleri aşağıdaki gibidir:
+
+*   **`.agents/`**: Yapay zeka asistanı talimatları, kurallar ve standartlar.
+*   **`assets/`**: POS arayüzü (kasa ekranı) için gerekli CSS, JS, kütüphaneler ve görseller.
+*   **`includes/`**: Eklentinin çekirdek PHP kodları.
+    *   **`includes/api/`**: WooCommerce REST API entegrasyonu ve POS uç noktaları.
+    *   **`includes/classes/`**: OOP tabanlı yardımcı sınıflar (stok kontrolü, hook yönetimi vb.).
+    *   **`includes/views/`**: WordPress admin paneli ekran şablonları.
+*   **`scripts/`**: Depo yönetimi ve sürüm dağıtımı için yardımcı betikler.
+*   **`hizli-kasa.php`**: Eklentinin ana giriş dosyası (WP Bootstrap).
+*   **`[Konfigürasyonlar]`**: PHPStan, Psalm ve Rector araçlarının ana dizindeki ayar dosyaları (`phpstan.neon`, `psalm.xml`, `rector.php`).
+*   **`composer.json`**: Bağımlılık yönetimi ve statik analiz tetikleyicileri.
+
 ## Lisans
 
 Bu proje çift lisanslama (dual-licensing) modeline tabidir:

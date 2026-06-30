@@ -26,6 +26,21 @@ A fast, lightweight, and modern WooCommerce Point of Sale (POS) plugin designed 
 3.  Activate the plugin through the 'Plugins' menu in WordPress.
 4.  Navigate to **WooCommerce > Hızlı Kasa Settings** in your WordPress dashboard to configure your POS, warehouses, and printer settings.
 
+## Project Structure
+
+The directory layout of the repository is structured as follows:
+
+*   **`.agents/`**: AI agent instructions, rules, and guidelines.
+*   **`assets/`**: Assets needed for the POS interface (CSS, JS, libraries, and images).
+*   **`includes/`**: Core PHP files of the plugin.
+    *   **`includes/api/`**: WooCommerce REST API integration and POS endpoints.
+    *   **`includes/classes/`**: OOP helper classes (stock management, hook handler, etc.).
+    *   **`includes/views/`**: WordPress admin dashboard panel views.
+*   **`scripts/`**: Helper scripts for deployment and repository patching.
+*   **`hizli-kasa.php`**: The main entry point file of the plugin (WP Bootstrap).
+*   **`[Configurations]`**: Static analysis and refactoring configs at the root level (`phpstan.neon`, `psalm.xml`, `rector.php`).
+*   **`composer.json`**: Dependency management and static analysis scripts.
+
 ## License
 
 This project is dual-licensed:
