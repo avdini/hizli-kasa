@@ -16,11 +16,21 @@
             console.log("HK.ReportHub: Init started");
 
             document.addEventListener('hkTabLoaded', function(e) {
+                console.log("HK.ReportHub: hkTabLoaded triggered", e.detail.tab);
                 if (e.detail.tab === 'raporlar') {
                     self.setupHub();
                     self.updateAnlikKasaSummary();
                 }
             });
+
+            // Sayfa yenilendiğinde veya sekme zaten DOM'da hazırsa direkt başlat (event kaçırılmasını engeller)
+            if (document.getElementById('rapor-hub-root')) {
+                console.log("HK.ReportHub: #rapor-hub-root found in DOM on init, running setup immediately");
+                setTimeout(function() {
+                    self.setupHub();
+                    self.updateAnlikKasaSummary();
+                }, 50);
+            }
 
             // ESC ile geri dönme
             document.addEventListener('keydown', function(e) {
@@ -45,6 +55,12 @@
                 order: cat.order || 99,
                 badge: cat.badge || ''
             };
+            
+            // Eğer hub çizilmişse kategorileri güncelle
+            var grid = document.getElementById('rhub-categories-grid');
+            if (grid) {
+                this.renderCategories();
+            }
         },
 
         registerReport: function(rep) {
@@ -59,15 +75,30 @@
                 hasSearch: rep.hasSearch || false,
                 searchPlaceholder: rep.searchPlaceholder || 'Ara...'
             };
+
+            // Eğer aktif kategoride bir rapor eklendiyse sidebar'ı yenile
+            if (this.activeCategory === rep.categoryId) {
+                this.renderSidebarMenu();
+            }
+            // Kategorilerdeki rapor sayısını güncellemek için grid'i de yenile
+            var grid = document.getElementById('rhub-categories-grid');
+            if (grid) {
+                this.renderCategories();
+            }
         },
 
         setupHub: function() {
             var self = this;
+            console.log("HK.ReportHub: setupHub started");
             var container = document.getElementById('rapor-hub-root');
-            if (!container) return;
+            if (!container) {
+                console.error("HK.ReportHub: #rapor-hub-root not found in DOM!");
+                return;
+            }
 
             // Eğer hub zaten kurulmuşsa sadece ana sayfaya dön
             if (container.dataset.initialized === 'true') {
+                console.log("HK.ReportHub: already initialized, showing home page");
                 this.anaSayfayaDon(true);
                 return;
             }
@@ -188,10 +219,16 @@
 
         renderCategories: function() {
             var self = this;
+            console.log("HK.ReportHub: renderCategories started");
             var grid = document.getElementById('rhub-categories-grid');
-            if (!grid) return;
+            if (!grid) {
+                console.error("HK.ReportHub: #rhub-categories-grid not found in DOM!");
+                return;
+            }
 
             var cats = Object.values(this.categories).sort((a, b) => a.order - b.order);
+            console.log("HK.ReportHub: Available categories for rendering:", cats);
+            
             grid.innerHTML = cats.map(cat => {
                 var isComingSoon = cat.badge === 'yakinda';
                 var badgeHtml = isComingSoon ? `<span class="rhub-badge-yk">Yakında</span>` : '';
