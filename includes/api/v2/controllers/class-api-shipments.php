@@ -584,20 +584,31 @@ class Hizli_Kasa_API_Shipments extends Hizli_Kasa_API_Controller_Base {
         $date_end   = sanitize_text_field($request->get_param('date_end') ?: '');
 
         if ($date_start) {
-            $where .= $wpdb->prepare(' AND DATE(s.created_at) >= %s', $date_start);
+            $where .= $wpdb->prepare(' AND s.created_at >= %s', $date_start . ' 00:00:00');
         }
         if ($date_end) {
-            $where .= $wpdb->prepare(' AND DATE(s.created_at) <= %s', $date_end);
+            $where .= $wpdb->prepare(' AND s.created_at <= %s', $date_end . ' 23:59:59');
         }
 
-        $rows = $wpdb->get_results("
+        $total_items = (int) $wpdb->get_var("
+            SELECT COUNT(*)
+            FROM {$tables['sevkler']} s
+            WHERE $where
+        ");
+
+        $page = max(1, intval($request->get_param('page') ?: 1));
+        $per_page = max(1, intval($request->get_param('per_page') ?: 20));
+        $offset = ($page - 1) * $per_page;
+
+        $rows = $wpdb->get_results($wpdb->prepare("
             SELECT s.*, kd.name as kaynak_depo_adi, hd.name as hedef_depo_adi
             FROM {$tables['sevkler']} s
             LEFT JOIN {$tables['depolar']} kd ON kd.id = s.kaynak_depo_id
             LEFT JOIN {$tables['depolar']} hd ON hd.id = s.hedef_depo_id
             WHERE $where
-            ORDER BY s.updated_at DESC LIMIT 100
-        ");
+            ORDER BY s.updated_at DESC
+            LIMIT %d OFFSET %d
+        ", $per_page, $offset));
 
         $stats_rows = $wpdb->get_results("
             SELECT s.durum, COUNT(*) as cnt
@@ -623,6 +634,12 @@ class Hizli_Kasa_API_Shipments extends Hizli_Kasa_API_Controller_Base {
         return Hizli_Kasa_API_Response::success([
             'items' => array_map(fn($row) => $this->format_shipment($row, false), $rows),
             'stats' => $stats,
+            'pagination' => [
+                'total'       => $total_items,
+                'page'        => $page,
+                'per_page'    => $per_page,
+                'total_pages' => ceil($total_items / $per_page),
+            ],
         ]);
     }
 

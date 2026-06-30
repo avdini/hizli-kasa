@@ -358,6 +358,12 @@
     border-color: var(--hk-accent);
 }
 
+.sevk-card-item.aktif {
+    border-color: var(--hk-accent);
+    background: var(--hk-bg-hover);
+    box-shadow: 0 0 0 1px var(--hk-accent);
+}
+
 .sevk-card-item strong,
 .sevk-current-card strong {
     display: block;

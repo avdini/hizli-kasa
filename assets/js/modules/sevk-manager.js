@@ -56,6 +56,9 @@
         incoming: [],
         allItems: [],
         pollTimer: null,
+        currentPage: 1,
+        perPage: 20,
+        activeIncomingId: null,
 
         init: function() {
             var self = this;
@@ -76,7 +79,8 @@
             this.bindModal();
             this.bindImagePreview();
             this.refreshDepoUi();
-            this.loadAll();
+            this.initDefaultDates();
+            this.loadAll(1);
             this.startPolling();
             this.checkForActiveDraft();
 
@@ -85,6 +89,26 @@
                 self.resetCikis();
                 self.checkForActiveDraft();
             });
+        },
+
+        initDefaultDates: function() {
+            var dateStart = document.getElementById('sevk-genel-date-start');
+            var dateEnd = document.getElementById('sevk-genel-date-end');
+            if (dateStart && dateEnd) {
+                var today = new Date();
+                var oneMonthAgo = new Date();
+                oneMonthAgo.setMonth(today.getMonth() - 1);
+                
+                var format = function(d) {
+                    var year = d.getFullYear();
+                    var month = String(d.getMonth() + 1).padStart(2, '0');
+                    var day = String(d.getDate()).padStart(2, '0');
+                    return year + '-' + month + '-' + day;
+                };
+                
+                if (!dateStart.value) dateStart.value = format(oneMonthAgo);
+                if (!dateEnd.value) dateEnd.value = format(today);
+            }
         },
 
         bindTabs: function() {
@@ -142,6 +166,17 @@
             var self = this;
             var refresh = document.getElementById('sevk-kabul-yenile');
             if (refresh) refresh.addEventListener('click', function() { self.loadIncoming(); });
+
+            var search = document.getElementById('sevk-kabul-arama');
+            if (search) {
+                search.addEventListener('input', function() {
+                    var val = search.value.trim().toLowerCase();
+                    document.querySelectorAll('#sevk-kabul-listesi .sevk-card-item').forEach(function(card) {
+                        var text = card.textContent.toLowerCase();
+                        card.style.display = text.includes(val) ? '' : 'none';
+                    });
+                });
+            }
         },
 
         bindGenel: function() {
@@ -150,10 +185,10 @@
             var filter = document.getElementById('sevk-genel-durum');
             var dateStart = document.getElementById('sevk-genel-date-start');
             var dateEnd = document.getElementById('sevk-genel-date-end');
-            if (refresh) refresh.addEventListener('click', function() { self.loadAll(); });
-            if (filter) filter.addEventListener('change', function() { self.loadAll(); });
-            if (dateStart) dateStart.addEventListener('change', function() { self.loadAll(); });
-            if (dateEnd) dateEnd.addEventListener('change', function() { self.loadAll(); });
+            if (refresh) refresh.addEventListener('click', function() { self.loadAll(1); });
+            if (filter) filter.addEventListener('change', function() { self.loadAll(1); });
+            if (dateStart) dateStart.addEventListener('change', function() { self.loadAll(1); });
+            if (dateEnd) dateEnd.addEventListener('change', function() { self.loadAll(1); });
         },
 
         bindModal: function() {
@@ -350,12 +385,13 @@
             this.checkForActiveDraft();
         },
 
-        loadAll: async function() {
+        loadAll: async function(page) {
+            this.currentPage = page || 1;
             var filter = document.getElementById('sevk-genel-durum');
             var durum = filter ? filter.value : 'all';
             var dateStart = document.getElementById('sevk-genel-date-start');
             var dateEnd = document.getElementById('sevk-genel-date-end');
-            var query = 'durum=' + encodeURIComponent(durum);
+            var query = 'durum=' + encodeURIComponent(durum) + '&page=' + this.currentPage + '&per_page=' + this.perPage;
             if (dateStart && dateStart.value) query += '&date_start=' + encodeURIComponent(dateStart.value);
             if (dateEnd && dateEnd.value) query += '&date_end=' + encodeURIComponent(dateEnd.value);
             try {
@@ -363,6 +399,7 @@
                 this.allItems = data.items || [];
                 this.renderStats(data.stats || {});
                 this.renderGeneral();
+                this.renderPagination(data.pagination);
             } catch (e) {
                 var list = document.getElementById('sevk-genel-listesi');
                 if (list) list.innerHTML = '<tr><td colspan="6" class="sevk-empty">' + escapeHtml(e.message) + '</td></tr>';
@@ -400,6 +437,85 @@
             });
         },
 
+        renderPagination: function(pagination) {
+            var container = document.getElementById('sevk-genel-pagination');
+            if (!container) return;
+            container.innerHTML = '';
+            if (!pagination || pagination.total_pages <= 1) return;
+
+            var self = this;
+            var maxPages = pagination.total_pages;
+            var currentPage = pagination.page;
+
+            if (currentPage > 1) {
+                var prevBtn = document.createElement('button');
+                prevBtn.type = 'button';
+                prevBtn.className = 'hk-page-btn';
+                prevBtn.innerHTML = '&laquo;';
+                prevBtn.addEventListener('click', function() { self.loadAll(currentPage - 1); });
+                container.appendChild(prevBtn);
+            }
+
+            var startPage = Math.max(1, currentPage - 2);
+            var endPage = Math.min(maxPages, currentPage + 2);
+
+            if (startPage > 1) {
+                var firstBtn = document.createElement('button');
+                firstBtn.type = 'button';
+                firstBtn.className = 'hk-page-btn';
+                firstBtn.textContent = '1';
+                firstBtn.addEventListener('click', function() { self.loadAll(1); });
+                container.appendChild(firstBtn);
+
+                if (startPage > 2) {
+                    var dots = document.createElement('span');
+                    dots.textContent = '...';
+                    dots.style.alignSelf = 'center';
+                    dots.style.margin = '0 5px';
+                    dots.style.color = 'var(--hk-text-muted)';
+                    container.appendChild(dots);
+                }
+            }
+
+            for (var i = startPage; i <= endPage; i++) {
+                (function(pageNum) {
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'hk-page-btn' + (pageNum === currentPage ? ' aktif' : '');
+                    btn.textContent = pageNum;
+                    btn.addEventListener('click', function() { self.loadAll(pageNum); });
+                    container.appendChild(btn);
+                })(i);
+            }
+
+            if (endPage < maxPages) {
+                if (endPage < maxPages - 1) {
+                    var dots = document.createElement('span');
+                    dots.textContent = '...';
+                    dots.style.alignSelf = 'center';
+                    dots.style.margin = '0 5px';
+                    dots.style.color = 'var(--hk-text-muted)';
+                    container.appendChild(dots);
+                }
+
+                var lastBtn = document.createElement('button');
+                lastBtn.type = 'button';
+                lastBtn.className = 'hk-page-btn';
+                lastBtn.textContent = maxPages;
+                lastBtn.addEventListener('click', function() { self.loadAll(maxPages); });
+                container.appendChild(lastBtn);
+            }
+
+            if (currentPage < maxPages) {
+                var nextBtn = document.createElement('button');
+                nextBtn.type = 'button';
+                nextBtn.className = 'hk-page-btn';
+                nextBtn.innerHTML = '&raquo;';
+                nextBtn.addEventListener('click', function() { self.loadAll(currentPage + 1); });
+                container.appendChild(nextBtn);
+            }
+        },
+
         loadIncoming: async function() {
             try {
                 var data = await api('sevk/liste?scope=incoming', { method: 'GET', headers: { 'X-WP-Nonce': kasaAyar.nonce } });
@@ -420,18 +536,35 @@
             }
             var self = this;
             list.innerHTML = this.incoming.map(function(item) {
-                return '<div class="sevk-card-item" data-incoming-id="' + item.id + '">' +
+                var isAktif = (item.id === self.activeIncomingId) ? ' aktif' : '';
+                return '<div class="sevk-card-item' + isAktif + '" data-incoming-id="' + item.id + '">' +
                     '<span>' + escapeHtml(item.sevk_no) + '</span>' +
                     '<strong>' + escapeHtml(item.kaynak_depo_adi) + ' → ' + escapeHtml(item.hedef_depo_adi) + '</strong>' +
                     '<div class="sevk-card-meta"><span>' + statusBadge(item) + '</span><span>' + item.toplam_adet + ' adet</span></div>' +
                     '</div>';
             }).join('');
+
             list.querySelectorAll('[data-incoming-id]').forEach(function(card) {
-                card.addEventListener('click', function() { self.loadIncomingDetail(parseInt(card.dataset.incomingId)); });
+                card.addEventListener('click', function() {
+                    list.querySelectorAll('.sevk-card-item').forEach(function(c) { c.classList.remove('aktif'); });
+                    card.classList.add('aktif');
+                    self.activeIncomingId = parseInt(card.dataset.incomingId);
+                    self.loadIncomingDetail(self.activeIncomingId);
+                });
             });
+
+            var search = document.getElementById('sevk-kabul-arama');
+            var val = search ? search.value.trim().toLowerCase() : '';
+            if (val) {
+                list.querySelectorAll('.sevk-card-item').forEach(function(card) {
+                    var text = card.textContent.toLowerCase();
+                    card.style.display = text.includes(val) ? '' : 'none';
+                });
+            }
         },
 
         loadIncomingDetail: async function(id) {
+            this.activeIncomingId = id;
             try {
                 var data = await api('sevk/detay/' + id, { method: 'GET', headers: { 'X-WP-Nonce': kasaAyar.nonce } });
                 this.renderIncomingDetail(data.sevk);

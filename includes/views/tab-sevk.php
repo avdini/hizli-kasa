@@ -98,6 +98,7 @@ if (!defined('ABSPATH'))
                 </tbody>
             </table>
         </div>
+        <div id="sevk-genel-pagination" class="hk-pagination" style="margin-top: 15px; display: flex; justify-content: center; gap: 5px;"></div>
     </section>
 
     <section id="sevk-kabul" class="sevk-icerik-paneli" style="display:none;">
@@ -106,6 +107,9 @@ if (!defined('ABSPATH'))
                 <div class="sevk-panel-title">
                     <h3>Gelen Sevkler</h3>
                     <button type="button" id="sevk-kabul-yenile" class="sevk-icon-btn" title="Yenile">↻</button>
+                </div>
+                <div class="sevk-search-bar" style="margin-bottom: 10px;">
+                    <input type="text" id="sevk-kabul-arama" class="hk-input" placeholder="Sevk No veya Depo Ara..." style="width: 100%; box-sizing: border-box;">
                 </div>
                 <div id="sevk-kabul-listesi" class="sevk-card-list"></div>
             </div>
