@@ -186,7 +186,7 @@
 
         setStep: function(step) {
             document.querySelectorAll('[data-step]').forEach(function(panel) {
-                panel.style.display = panel.dataset.step === String(step) ? 'block' : 'none';
+                panel.style.display = panel.dataset.step === String(step) ? 'flex' : 'none';
             });
             document.querySelectorAll('[data-step-indicator]').forEach(function(item) {
                 item.classList.toggle('active', item.dataset.stepIndicator === String(step));
