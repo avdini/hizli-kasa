@@ -3,8 +3,8 @@
 
     var apiBase = function() {
         return (typeof kasaAyar !== 'undefined' && kasaAyar.rootApiUrl)
-            ? kasaAyar.rootApiUrl + 'hizli-kasa/v1/'
-            : window.location.origin + '/wp-json/hizli-kasa/v1/';
+            ? kasaAyar.rootApiUrl + 'hizli-kasa/v2/'
+            : window.location.origin + '/wp-json/hizli-kasa/v2/';
     };
 
     var api = async function(path, options) {
@@ -15,11 +15,12 @@
         }, options.headers || {});
 
         var response = await fetch(apiBase() + path, options);
-        var data = await response.json().catch(function() { return {}; });
-        if (!response.ok) {
-            throw new Error(data.message || 'İşlem tamamlanamadı');
+        var resData = await response.json().catch(function() { return {}; });
+        if (!response.ok || !resData.success) {
+            var errMsg = (resData.errors && resData.errors.length) ? resData.errors[0] : (resData.message || 'İşlem tamamlanamadı');
+            throw new Error(errMsg);
         }
-        return data;
+        return resData.data;
     };
 
     var escapeHtml = function(value) {
@@ -77,10 +78,12 @@
             this.refreshDepoUi();
             this.loadAll();
             this.startPolling();
+            this.checkForActiveDraft();
 
             document.addEventListener('hkActiveDepoChanged', function() {
                 self.refreshDepoUi();
                 self.resetCikis();
+                self.checkForActiveDraft();
             });
         },
 
@@ -102,10 +105,13 @@
                     }
                     if (targetId === 'sevk-kabul') self.loadIncoming();
                     if (targetId === 'sevk-genel') self.loadAll();
-                    if (targetId === 'sevk-cikis') setTimeout(function() {
-                        var input = document.getElementById('sevk-cikis-barkod');
-                        if (input && self.activeSevk) input.focus();
-                    }, 50);
+                    if (targetId === 'sevk-cikis') {
+                        self.checkForActiveDraft();
+                        setTimeout(function() {
+                            var input = document.getElementById('sevk-cikis-barkod');
+                            if (input && self.activeSevk) input.focus();
+                        }, 50);
+                    }
                 });
             });
         },
@@ -333,12 +339,15 @@
             this.activeSevk = null;
             this.refreshDepoUi();
             this.setStep(1);
+            var banner = document.getElementById('sevk-taslak-banner');
+            if (banner) banner.style.display = 'none';
             var note = document.getElementById('sevk-cikis-not');
             var input = document.getElementById('sevk-cikis-barkod');
             var list = document.getElementById('sevk-cikis-kalemler');
             if (note) note.value = '';
             if (input) input.value = '';
             if (list) list.innerHTML = '';
+            this.checkForActiveDraft();
         },
 
         loadAll: async function() {
@@ -565,15 +574,40 @@
                 var modal = document.getElementById('sevk-detay-modal');
                 var body = document.getElementById('sevk-modal-body');
                 var sevk = data.sevk;
-                var shipAction = sevk.durum === 'onaylandi'
-                    ? '<div style="margin-top:14px;"><button type="button" class="sevk-btn primary" id="sevk-yola-cikart-btn">Gönder / Yola Çıkart</button></div>'
-                    : '';
+                var shipAction = '';
+                if (sevk.durum === 'onaylandi') {
+                    shipAction = '<div style="margin-top:14px;"><button type="button" class="sevk-btn primary" id="sevk-yola-cikart-btn">Gönder / Yola Çıkart</button></div>';
+                } else if (sevk.durum === 'taslak') {
+                    shipAction = '<div style="margin-top:14px; display:flex; gap:8px;">' +
+                        '<button type="button" class="sevk-btn primary" id="sevk-modal-taslak-devam-btn">Sevke Devam Et</button>' +
+                        '<button type="button" class="sevk-btn secondary" id="sevk-modal-taslak-sil-btn">Taslağı Sil</button>' +
+                        '</div>';
+                }
                 body.innerHTML = '<h3>' + escapeHtml(sevk.sevk_no) + '</h3><p>' + escapeHtml(sevk.kaynak_depo_adi) + ' → ' + escapeHtml(sevk.hedef_depo_adi) + ' ' + statusBadge(sevk) + '</p><div class="sevk-table-wrap">' + this.renderCompareTable(sevk.kalemler || [], sevk, false) + '</div>' + shipAction;
                 modal.style.display = 'flex';
                 var shipBtn = document.getElementById('sevk-yola-cikart-btn');
                 if (shipBtn) {
                     var self = this;
                     shipBtn.addEventListener('click', function() { self.shipSevk(sevk.id); });
+                }
+                var modalDevamBtn = document.getElementById('sevk-modal-taslak-devam-btn');
+                var modalSilBtn = document.getElementById('sevk-modal-taslak-sil-btn');
+                var self = this;
+                if (modalDevamBtn) {
+                    modalDevamBtn.addEventListener('click', function() {
+                        modal.style.display = 'none';
+                        var tabBtn = document.querySelector('.sevk-alt-btn[data-target="sevk-cikis"]');
+                        if (tabBtn) tabBtn.click();
+                        self.resumeDraft(sevk);
+                    });
+                }
+                if (modalSilBtn) {
+                    modalSilBtn.addEventListener('click', function() {
+                        if (confirm('Bu sevk taslağını tamamen silmek istediğinize emin misiniz?')) {
+                            self.deleteDraft(sevk.id);
+                            modal.style.display = 'none';
+                        }
+                    });
                 }
             } catch (e) {
                 toast(e.message, 'error');
@@ -731,6 +765,79 @@
                     body: JSON.stringify({ sevk_id: sevkId, kalem_id: kalemId, qty: qty })
                 });
                 this.renderIncomingDetail(data.sevk);
+            } catch (e) {
+                toast(e.message, 'error');
+            }
+        },
+
+        checkForActiveDraft: async function() {
+            var depo = HK.DepoManager;
+            if (!depo || !depo.getActiveDepo()) return;
+            if (this.activeSevk) return;
+
+            var banner = document.getElementById('sevk-taslak-banner');
+            if (!banner) return;
+
+            try {
+                var data = await api('sevk/active-draft?kaynak_depo_id=' + depo.getActiveDepo(), { method: 'GET', headers: { 'X-WP-Nonce': kasaAyar.nonce } });
+                if (data && data.sevk) {
+                    var draft = data.sevk;
+                    var noSpan = document.getElementById('sevk-taslak-banner-no');
+                    if (noSpan) noSpan.textContent = draft.sevk_no;
+                    banner.style.display = 'flex';
+                    
+                    var self = this;
+                    var devamBtn = document.getElementById('sevk-taslak-devam-btn');
+                    var silBtn = document.getElementById('sevk-taslak-sil-btn');
+                    
+                    var newDevam = devamBtn.cloneNode(true);
+                    var newSil = silBtn.cloneNode(true);
+                    devamBtn.parentNode.replaceChild(newDevam, devamBtn);
+                    silBtn.parentNode.replaceChild(newSil, silBtn);
+
+                    newDevam.addEventListener('click', function() {
+                        self.resumeDraft(draft);
+                    });
+                    newSil.addEventListener('click', function() {
+                        if (confirm('Bu sevk taslağını tamamen silmek istediğinize emin misiniz?')) {
+                            self.deleteDraft(draft.id);
+                        }
+                    });
+                } else {
+                    banner.style.display = 'none';
+                }
+            } catch (e) {
+                console.error('Taslak kontrolü başarısız:', e);
+            }
+        },
+
+        resumeDraft: function(sevk) {
+            this.activeSevk = sevk;
+            this.renderCikis();
+            this.setStep(2);
+            var banner = document.getElementById('sevk-taslak-banner');
+            if (banner) banner.style.display = 'none';
+            setTimeout(function() {
+                var input = document.getElementById('sevk-cikis-barkod');
+                if (input) input.focus();
+            }, 50);
+        },
+
+        deleteDraft: async function(id) {
+            try {
+                await api('sevk/delete-draft', {
+                    method: 'POST',
+                    body: JSON.stringify({ sevk_id: id })
+                });
+                toast('Taslak sevk silindi.');
+                var banner = document.getElementById('sevk-taslak-banner');
+                if (banner) banner.style.display = 'none';
+                if (this.activeSevk && this.activeSevk.id === id) {
+                    this.activeSevk = null;
+                    this.setStep(1);
+                }
+                this.loadAll();
+                this.checkForActiveDraft();
             } catch (e) {
                 toast(e.message, 'error');
             }

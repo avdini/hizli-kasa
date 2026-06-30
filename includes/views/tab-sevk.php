@@ -63,6 +63,7 @@ if (!defined('ABSPATH'))
                 Durum
                 <select id="sevk-genel-durum" class="hk-input">
                     <option value="all">Tümü</option>
+                    <option value="taslak">Taslak</option>
                     <option value="onay_bekliyor">Bekleyen</option>
                     <option value="gonderildi">Yolda</option>
                     <option value="tamamlandi">Tamamlanan</option>
@@ -133,6 +134,20 @@ if (!defined('ABSPATH'))
             </div>
 
             <div class="sevk-step-panel" data-step="1">
+                <div id="sevk-taslak-banner" class="sevk-banner" style="display:none; margin-bottom:16px; width:100%; box-sizing:border-box;">
+                    <div class="sevk-banner-content">
+                        <span>ℹ️</span>
+                        <div>
+                            <strong>Yarım Kalan Sevk Taslağı Tespit Edildi</strong>
+                            <p><span id="sevk-taslak-banner-no" style="font-weight:bold;">SVK-XXXX</span> numaralı sevk taslağına devam edebilir veya bu taslağı silerek yeni bir sevk başlatabilirsiniz.</p>
+                        </div>
+                    </div>
+                    <div class="sevk-banner-actions">
+                        <button type="button" id="sevk-taslak-devam-btn" class="sevk-btn primary small">Taslağa Devam Et</button>
+                        <button type="button" id="sevk-taslak-sil-btn" class="sevk-btn secondary small">Taslağı Sil</button>
+                    </div>
+                </div>
+
                 <div class="sevk-form-grid">
                     <label>
                         Kaynak Depo

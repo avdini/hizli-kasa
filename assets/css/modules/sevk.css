@@ -617,3 +617,43 @@
     flex-direction: column;
     margin-top: 20px;
 }
+
+.sevk-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-radius: 10px;
+    background: var(--hk-bg-sidebar);
+    border-left: 4px solid var(--hk-warning);
+    gap: 16px;
+}
+.sevk-banner-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.sevk-banner-content span {
+    font-size: 20px;
+    line-height: 1;
+}
+.sevk-banner-content div strong {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 2px;
+}
+.sevk-banner-content div p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--hk-text-muted);
+}
+.sevk-banner-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.sevk-btn.small {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 6px;
+}

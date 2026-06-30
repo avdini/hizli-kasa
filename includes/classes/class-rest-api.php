@@ -18,7 +18,7 @@ require_once $api_dir . 'api-user.php';
 require_once $api_dir . 'api-kasa.php';
 require_once $api_dir . 'api-siparis.php';
 require_once $api_dir . 'api-iade.php';
-require_once $api_dir . 'api-sevk.php';
+// require_once $api_dir . 'api-sevk.php'; // V1 Disabled - Migrated to V2
 require_once $api_dir . 'api-masraf.php';
 require_once $api_dir . 'api-raporlar.php';
 require_once $api_dir . 'api-terminal.php';
@@ -32,6 +32,7 @@ require_once $api_dir . 'v2/controllers/class-api-product-codes.php';
 require_once $api_dir . 'v2/controllers/class-api-suppliers.php';
 require_once $api_dir . 'v2/controllers/class-api-purchase-orders.php';
 require_once $api_dir . 'v2/controllers/class-api-validate-coupon.php';
+require_once $api_dir . 'v2/controllers/class-api-shipments.php';
 
 // Register V2 REST Routes
 add_action('rest_api_init', function () {
@@ -46,6 +47,9 @@ add_action('rest_api_init', function () {
 
     $validate_coupon_controller = new Hizli_Kasa_API_Validate_Coupon();
     $validate_coupon_controller->register_routes();
+
+    $shipments_controller = new Hizli_Kasa_API_Shipments();
+    $shipments_controller->register_routes();
 });
 
 

@@ -88,3 +88,71 @@ Her deponun her ürüne veya varyasyona kendi belirlediği depo kodunu (konum/ra
   }
 }
 ```
+
+---
+
+## 3.2. Sevk (Shipment) Yönetimi (V2)
+Tüm sevk işlemleri `/wp-json/hizli-kasa/v2/sevk/` önekiyle nesne yönelimli controller üzerinden yürütülmektedir.
+
+### 3.2.1. Aktif Taslak Sevk Kontrolü
+Seçilen kaynak depodan çıkış yapılmış aktif bir taslak sevk olup olmadığını denetler.
+
+- **URL:** `/wp-json/hizli-kasa/v2/sevk/active-draft`
+- **Metot:** `GET`
+- **Parametreler:** `kaynak_depo_id` (Zorunlu, int)
+
+#### Örnek Başarılı Yanıt (Taslak Var):
+```json
+{
+  "success": true,
+  "data": {
+    "sevk": {
+      "id": 14,
+      "sevk_no": "SVK-20260630-0001",
+      "kaynak_depo_id": 1,
+      "kaynak_depo_adi": "Merkez Depo",
+      "hedef_depo_id": 2,
+      "hedef_depo_adi": "Şube Depo",
+      "durum": "taslak",
+      "durum_label": "Taslak",
+      "toplam_cesit": 0,
+      "toplam_adet": 0,
+      "created_at": "2026-06-30 14:40:00",
+      "updated_at": "2026-06-30 14:40:00"
+    }
+  },
+  "errors": null,
+  "meta": {
+    "timestamp": "2026-06-30 14:41:00",
+    "version": "v2"
+  }
+}
+```
+
+### 3.2.2. Taslak Sevk Silme / İptali
+Oluşturulmuş ancak onay sürecine gönderilmemiş taslak sevki ve tüm kalemlerini veritabanından siler.
+
+- **URL:** `/wp-json/hizli-kasa/v2/sevk/delete-draft`
+- **Metot:** `POST`
+- **Girdi Gövdesi (JSON):**
+  ```json
+  {
+    "sevk_id": 14
+  }
+  ```
+
+#### Örnek Başarılı Yanıt:
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Taslak sevk başarıyla silindi."
+  },
+  "errors": null,
+  "meta": {
+    "timestamp": "2026-06-30 14:42:00",
+    "version": "v2"
+  }
+}
+```
+
