@@ -4,6 +4,9 @@ param (
 
 $ErrorActionPreference = "Stop"
 
+# Resolve the commit hash before switching branches so "HEAD" points to the correct starting commit
+$ResolvedCommit = (git rev-parse $CommitHash).Trim()
+
 # Get current branch to return to it later
 $CurrentBranch = (git branch --show-current).Trim()
 
@@ -18,8 +21,8 @@ try {
     Write-Host "Creating temporary branch from public/master..." -ForegroundColor Cyan
     git checkout -b $TempBranch public/master
     
-    Write-Host "Cherry-picking commit $CommitHash..." -ForegroundColor Cyan
-    git cherry-pick $CommitHash
+    Write-Host "Cherry-picking commit $ResolvedCommit..." -ForegroundColor Cyan
+    git cherry-pick $ResolvedCommit
     
     Write-Host "Pushing changes to public master..." -ForegroundColor Cyan
     git push public "${TempBranch}:master"
