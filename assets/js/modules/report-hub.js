@@ -4,6 +4,18 @@
 (function(HK) {
     'use strict';
 
+    // Debounce helper to limit search requests
+    function debounce(func, wait) {
+        var timeout;
+        return function() {
+            var context = this, args = arguments;
+            clearTimeout(timeout);
+            timeout = setTimeout(function() {
+                func.apply(context, args);
+            }, wait);
+        };
+    }
+
     HK.ReportHub = {
         categories: {},
         reports: {},
@@ -198,7 +210,7 @@
 
             var searchInput = document.getElementById('rhub-arama-input');
             if (searchInput) {
-                searchInput.addEventListener('keyup', HK.utils.debounce(function() {
+                searchInput.addEventListener('keyup', debounce(function() {
                     if (self.activeReport) {
                         var rep = self.reports[self.activeReport];
                         if (rep && typeof rep.onActivate === 'function') {
