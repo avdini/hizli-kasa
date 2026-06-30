@@ -187,6 +187,7 @@ class Hizli_Kasa_Database {
             gonderilen_adet decimal(15,4) DEFAULT 0.0000,
             teslim_alinan_adet decimal(15,4) DEFAULT NULL,
             created_at datetime NOT NULL,
+            updated_at datetime DEFAULT NULL,
             PRIMARY KEY  (id),
             KEY sevk_id (sevk_id),
             KEY product_id (product_id),

@@ -114,6 +114,9 @@ function hizli_kasa_uygulamasi()
     // Önbellek Yıkıcı (Cache Buster) — HER ŞEYDEN ÖNCE yüklenmeli
     wp_enqueue_script('kasa-cache-buster', $js_base . 'modules/cache-buster.js', [], $pos_version, true);
 
+    // Ses Yöneticisi (Sound Manager)
+    wp_enqueue_script('kasa-sound-manager', $js_base . 'modules/sound-manager.js', [], $pos_version, true);
+
     wp_enqueue_script('kasa-html2canvas', $js_base . 'lib/html2canvas.min.js', [], $pos_version, true);
     wp_enqueue_script('kasa-print-manager', $js_base . 'modules/print-manager.js', ['kasa-html2canvas'], $pos_version, true);
     wp_enqueue_script('kasa-currency-mask', $js_base . 'modules/currency-mask.js', [], $pos_version, true);
@@ -129,7 +132,7 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-refund-manager', $js_base . 'modules/refund-manager.js', ['kasa-ui-renderer'], $pos_version, true);
     wp_enqueue_script('kasa-expense-manager', $js_base . 'modules/expense-manager.js', ['kasa-ui-renderer'], $pos_version, true);
     wp_enqueue_script('kasa-stock-terminal', $js_base . 'modules/stock-terminal.js', ['kasa-ui-renderer'], $pos_version, true);
-    wp_enqueue_script('kasa-sayim-manager', $js_base . 'modules/sayim-manager.js', ['kasa-ui-renderer', 'kasa-depo-manager'], $pos_version, true);
+    wp_enqueue_script('kasa-sayim-manager', $js_base . 'modules/sayim-manager.js', ['kasa-ui-renderer', 'kasa-depo-manager', 'kasa-sound-manager'], $pos_version, true);
     wp_enqueue_script('kasa-theme-manager', $js_base . 'modules/theme-manager.js', ['kasa-ui-renderer'], $pos_version, true);
     wp_enqueue_script('kasa-depo-manager',   $js_base . 'modules/depo-manager.js',   ['kasa-ui-renderer'], $pos_version, true);
     wp_enqueue_script('kasa-barcode-renderer', $js_base . 'modules/barcode-renderer.js', ['kasa-ui-renderer', 'jsbarcode'], $pos_version, true);
@@ -137,7 +140,7 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-order-edit-reports', $js_base . 'modules/order-edit-reports.js', ['kasa-ui-renderer'], $pos_version, true);
     wp_enqueue_script('kasa-detailed-reports', $js_base . 'modules/detailed-reports.js', ['kasa-ui-renderer'], $pos_version, true);
     wp_enqueue_script('kasa-report-receipt-printer', $js_base . 'modules/report-receipt-printer.js', ['kasa-detailed-reports', 'kasa-print-manager', 'jsbarcode'], $pos_version, true);
-    wp_enqueue_script('kasa-sevk-manager', $js_base . 'modules/sevk-manager.js', ['kasa-ui-renderer', 'kasa-depo-manager'], $pos_version, true);
+    wp_enqueue_script('kasa-sevk-manager', $js_base . 'modules/sevk-manager.js', ['kasa-ui-renderer', 'kasa-depo-manager', 'kasa-sound-manager'], $pos_version, true);
     wp_enqueue_script('kasa-malkabul-manager', $js_base . 'modules/malkabul-manager.js', ['kasa-ui-renderer', 'kasa-depo-manager'], $pos_version, true);
     wp_enqueue_script('kasa-statistics-dashboard', $js_base . 'modules/statistics-dashboard.js', ['kasa-ui-renderer', 'kasa-depo-manager', 'chartjs'], $pos_version, true);
     wp_enqueue_script('kasa-js', $js_base . 'kasa.js', [

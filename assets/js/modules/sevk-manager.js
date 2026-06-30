@@ -226,7 +226,9 @@
                 });
                 this.activeSevk = data.sevk;
                 this.renderCikis();
+                this.playFeedbackSound('success');
             } catch (e) {
+                this.playFeedbackSound('error');
                 toast(e.message, 'error');
             }
         },
@@ -265,15 +267,47 @@
             var self = this;
             list.innerHTML = sevk.kalemler.map(function(item) {
                 var img = item.image ? '<img src="' + escapeHtml(item.image) + '" alt="">' : '<span></span>';
+                var qtyHtml = '<div class="sevk-qty-ctrl">' +
+                    '<button type="button" class="sevk-qty-btn dec" data-qty-dec="' + item.id + '">-</button>' +
+                    '<input type="number" class="sevk-qty-input" data-qty-input="' + item.id + '" value="' + item.gonderilen_adet + '" min="0" step="any">' +
+                    '<button type="button" class="sevk-qty-btn inc" data-qty-inc="' + item.id + '">+</button>' +
+                    '</div>';
                 return '<tr>' +
                     '<td><div class="sevk-product-cell">' + img + '<strong>' + escapeHtml(item.urun_adi) + '</strong></div></td>' +
                     '<td>' + escapeHtml(item.sku) + '</td>' +
-                    '<td>' + item.gonderilen_adet + '</td>' +
+                    '<td>' + qtyHtml + '</td>' +
                     '<td><button type="button" class="sevk-btn secondary" data-delete-item="' + item.id + '">Sil</button></td>' +
                     '</tr>';
             }).join('');
             list.querySelectorAll('[data-delete-item]').forEach(function(btn) {
                 btn.addEventListener('click', function() { self.deleteItem(parseInt(btn.dataset.deleteItem)); });
+            });
+            list.querySelectorAll('[data-qty-dec]').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = parseInt(btn.dataset.qtyDec);
+                    var item = sevk.kalemler.find(function(k) { return k.id === id; });
+                    if (item) {
+                        var newQty = Math.max(0, item.gonderilen_adet - 1);
+                        self.updateItemQty(id, newQty);
+                    }
+                });
+            });
+            list.querySelectorAll('[data-qty-inc]').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = parseInt(btn.dataset.qtyInc);
+                    var item = sevk.kalemler.find(function(k) { return k.id === id; });
+                    if (item) {
+                        self.updateItemQty(id, item.gonderilen_adet + 1);
+                    }
+                });
+            });
+            list.querySelectorAll('[data-qty-input]').forEach(function(input) {
+                input.addEventListener('change', function() {
+                    var id = parseInt(input.dataset.qtyInput);
+                    var val = parseFloat(input.value);
+                    if (isNaN(val) || val < 0) val = 0;
+                    self.updateItemQty(id, val);
+                });
             });
         },
 
@@ -412,14 +446,44 @@
                 actions = '<p class="sevk-empty">Göndericinin yola çıkarma işlemi bekleniyor.</p>';
             }
 
+            var isReceiptEditable = ['gonderildi', 'teslim_kontrol', 'uyusmazlik'].includes(sevk.durum);
             panel.innerHTML = '<div class="sevk-panel-title"><div><h3>' + escapeHtml(sevk.sevk_no) + '</h3><p>' + escapeHtml(sevk.kaynak_depo_adi) + ' → ' + escapeHtml(sevk.hedef_depo_adi) + '</p></div>' + statusBadge(sevk) + '</div>' +
-                '<div class="sevk-table-wrap compact" style="margin:14px 0;">' + this.renderCompareTable(sevk.kalemler || []) + '</div>' +
+                '<div class="sevk-table-wrap compact" style="margin:14px 0;">' + this.renderCompareTable(sevk.kalemler || [], sevk, isReceiptEditable) + '</div>' +
                 actions;
 
             var self = this;
             panel.querySelectorAll('[data-action]').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     self.handleIncomingAction(sevk, btn.dataset.action);
+                });
+            });
+            panel.querySelectorAll('[data-qty-dec]').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = parseInt(btn.dataset.qtyDec);
+                    var item = sevk.kalemler.find(function(k) { return k.id === id; });
+                    if (item) {
+                        var received = item.teslim_alinan_adet == null ? 0 : item.teslim_alinan_adet;
+                        var newQty = Math.max(0, received - 1);
+                        self.updateIncomingQty(sevk.id, id, newQty);
+                    }
+                });
+            });
+            panel.querySelectorAll('[data-qty-inc]').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = parseInt(btn.dataset.qtyInc);
+                    var item = sevk.kalemler.find(function(k) { return k.id === id; });
+                    if (item) {
+                        var received = item.teslim_alinan_adet == null ? 0 : item.teslim_alinan_adet;
+                        self.updateIncomingQty(sevk.id, id, received + 1);
+                    }
+                });
+            });
+            panel.querySelectorAll('[data-qty-input]').forEach(function(input) {
+                input.addEventListener('change', function() {
+                    var id = parseInt(input.dataset.qtyInput);
+                    var val = parseFloat(input.value);
+                    if (isNaN(val) || val < 0) val = 0;
+                    self.updateIncomingQty(sevk.id, id, val);
                 });
             });
             var barcode = document.getElementById('sevk-teslim-barkod');
@@ -436,14 +500,22 @@
             }
         },
 
-        renderCompareTable: function(items) {
+        renderCompareTable: function(items, sevk, isReceiptEditable) {
             if (!items.length) return '<div class="sevk-empty">Kalem yok.</div>';
             return '<table class="sevk-table"><thead><tr><th>Ürün</th><th>SKU</th><th>Gönderilen</th><th>Teslim</th></tr></thead><tbody>' +
                 items.map(function(item) {
                     var received = item.teslim_alinan_adet == null ? 0 : item.teslim_alinan_adet;
                     var cls = received === item.gonderilen_adet ? 'sevk-compare-ok' : (received < item.gonderilen_adet ? 'sevk-compare-missing' : 'sevk-compare-extra');
                     var img = item.image ? '<img src="' + escapeHtml(item.image) + '" alt="">' : '<span></span>';
-                    return '<tr class="' + cls + '"><td><div class="sevk-product-cell">' + img + '<strong>' + escapeHtml(item.urun_adi) + '</strong></div></td><td>' + escapeHtml(item.sku) + '</td><td>' + item.gonderilen_adet + '</td><td>' + received + '</td></tr>';
+                    
+                    var receivedHtml = isReceiptEditable ?
+                        '<div class="sevk-qty-ctrl">' +
+                        '<button type="button" class="sevk-qty-btn dec" data-qty-dec="' + item.id + '">-</button>' +
+                        '<input type="number" class="sevk-qty-input" data-qty-input="' + item.id + '" value="' + received + '" min="0" step="any">' +
+                        '<button type="button" class="sevk-qty-btn inc" data-qty-inc="' + item.id + '">+</button>' +
+                        '</div>' : received;
+
+                    return '<tr class="' + cls + '"><td><div class="sevk-product-cell">' + img + '<strong>' + escapeHtml(item.urun_adi) + '</strong></div></td><td>' + escapeHtml(item.sku) + '</td><td>' + item.gonderilen_adet + '</td><td>' + receivedHtml + '</td></tr>';
                 }).join('') + '</tbody></table>';
         },
 
@@ -471,7 +543,9 @@
             try {
                 var data = await api('sevk/teslim-barkod', { method: 'POST', body: JSON.stringify({ sevk_id: sevkId, sku: sku, qty: 1 }) });
                 this.renderIncomingDetail(data.sevk);
+                this.playFeedbackSound('success');
             } catch (e) {
+                this.playFeedbackSound('error');
                 toast(e.message, 'error');
             }
         },
@@ -485,7 +559,7 @@
                 var shipAction = sevk.durum === 'onaylandi'
                     ? '<div style="margin-top:14px;"><button type="button" class="sevk-btn primary" id="sevk-yola-cikart-btn">Gönder / Yola Çıkart</button></div>'
                     : '';
-                body.innerHTML = '<h3>' + escapeHtml(sevk.sevk_no) + '</h3><p>' + escapeHtml(sevk.kaynak_depo_adi) + ' → ' + escapeHtml(sevk.hedef_depo_adi) + ' ' + statusBadge(sevk) + '</p><div class="sevk-table-wrap">' + this.renderCompareTable(sevk.kalemler || []) + '</div>' + shipAction;
+                body.innerHTML = '<h3>' + escapeHtml(sevk.sevk_no) + '</h3><p>' + escapeHtml(sevk.kaynak_depo_adi) + ' → ' + escapeHtml(sevk.hedef_depo_adi) + ' ' + statusBadge(sevk) + '</p><div class="sevk-table-wrap">' + this.renderCompareTable(sevk.kalemler || [], sevk, false) + '</div>' + shipAction;
                 modal.style.display = 'flex';
                 var shipBtn = document.getElementById('sevk-yola-cikart-btn');
                 if (shipBtn) {
@@ -619,6 +693,38 @@
             };
             
             imgEl.src = fullSrc;
+        },
+
+        playFeedbackSound: function(type) {
+            if (window.HizliKasa && window.HizliKasa.Sound) {
+                window.HizliKasa.Sound.play(type);
+            }
+        },
+
+        updateItemQty: async function(kalemId, qty) {
+            if (!this.activeSevk) return;
+            try {
+                var data = await api('sevk/kalem-miktar-guncelle', {
+                    method: 'POST',
+                    body: JSON.stringify({ sevk_id: this.activeSevk.id, kalem_id: kalemId, qty: qty })
+                });
+                this.activeSevk = data.sevk;
+                this.renderCikis();
+            } catch (e) {
+                toast(e.message, 'error');
+            }
+        },
+
+        updateIncomingQty: async function(sevkId, kalemId, qty) {
+            try {
+                var data = await api('sevk/teslim-miktar-guncelle', {
+                    method: 'POST',
+                    body: JSON.stringify({ sevk_id: sevkId, kalem_id: kalemId, qty: qty })
+                });
+                this.renderIncomingDetail(data.sevk);
+            } catch (e) {
+                toast(e.message, 'error');
+            }
         }
     };
 

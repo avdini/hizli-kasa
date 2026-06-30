@@ -11,6 +11,10 @@ add_action('rest_api_init', function () {
 
     register_rest_route('hizli-kasa/v1', '/sevk/kalem-sil', ['methods' => 'POST', 'callback' => 'hizli_kasa_sevk_kalem_sil', 'permission_callback' => $sevk_permission]);
 
+    register_rest_route('hizli-kasa/v1', '/sevk/kalem-miktar-guncelle', ['methods' => 'POST', 'callback' => 'hizli_kasa_sevk_kalem_miktar_guncelle', 'permission_callback' => $sevk_permission]);
+
+    register_rest_route('hizli-kasa/v1', '/sevk/teslim-miktar-guncelle', ['methods' => 'POST', 'callback' => 'hizli_kasa_sevk_teslim_miktar_guncelle', 'permission_callback' => $sevk_permission]);
+
     register_rest_route('hizli-kasa/v1', '/sevk/gonder-onayla', ['methods' => 'POST', 'callback' => 'hizli_kasa_sevk_gonder_onayla', 'permission_callback' => $sevk_permission]);
 
     register_rest_route('hizli-kasa/v1', '/sevk/alici-onayla', ['methods' => 'POST', 'callback' => 'hizli_kasa_sevk_alici_onayla', 'permission_callback' => $sevk_permission]);
@@ -87,7 +91,7 @@ function hizli_kasa_sevk_format($sevk, $with_items = false) {
     $tables = hizli_kasa_sevk_tables();
     $row = ['id' => (int) $sevk->id, 'sevk_no' => $sevk->sevk_no, 'kaynak_depo_id' => (int) $sevk->kaynak_depo_id, 'kaynak_depo_adi' => $sevk->kaynak_depo_adi ?: '', 'hedef_depo_id' => (int) $sevk->hedef_depo_id, 'hedef_depo_adi' => $sevk->hedef_depo_adi ?: '', 'durum' => $sevk->durum, 'durum_label' => hizli_kasa_sevk_status_label($sevk->durum), 'toplam_cesit' => (int) $sevk->toplam_cesit, 'toplam_adet' => (float) $sevk->toplam_adet, 'not_gonderici' => $sevk->not_gonderici ?: '', 'not_alici' => $sevk->not_alici ?: '', 'created_at' => $sevk->created_at, 'updated_at' => $sevk->updated_at];
     if ($with_items) {
-        $items = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$tables['sevk_kalemleri']} WHERE sevk_id = %d ORDER BY id ASC", $sevk->id));
+        $items = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$tables['sevk_kalemleri']} WHERE sevk_id = %d ORDER BY COALESCE(updated_at, created_at) DESC, id DESC", $sevk->id));
         $row['kalemler'] = array_map(function($item) {
             $product = wc_get_product($item->variation_id ?: $item->product_id);
             $image = '';
@@ -162,9 +166,9 @@ function hizli_kasa_sevk_kalem_ekle($request) {
     $tables = hizli_kasa_sevk_tables();
     $existing = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$tables['sevk_kalemleri']} WHERE sevk_id = %d AND product_id = %d AND variation_id = %d", $sevk_id, $product['product_id'], $product['variation_id']));
     if ($existing) {
-        $wpdb->update($tables['sevk_kalemleri'], ['gonderilen_adet' => (float) $existing->gonderilen_adet + $qty], ['id' => $existing->id]);
+        $wpdb->update($tables['sevk_kalemleri'], ['gonderilen_adet' => (float) $existing->gonderilen_adet + $qty, 'updated_at' => current_time('mysql')], ['id' => $existing->id]);
     } else {
-        $wpdb->insert($tables['sevk_kalemleri'], ['sevk_id' => $sevk_id, 'product_id' => $product['product_id'], 'variation_id' => $product['variation_id'], 'sku' => $product['sku'], 'urun_adi' => $product['name'], 'gonderilen_adet' => $qty, 'created_at' => current_time('mysql')]);
+        $wpdb->insert($tables['sevk_kalemleri'], ['sevk_id' => $sevk_id, 'product_id' => $product['product_id'], 'variation_id' => $product['variation_id'], 'sku' => $product['sku'], 'urun_adi' => $product['name'], 'gonderilen_adet' => $qty, 'created_at' => current_time('mysql'), 'updated_at' => current_time('mysql')]);
     }
     hizli_kasa_sevk_refresh_totals($sevk_id);
     return ['success' => true, 'sevk' => hizli_kasa_sevk_format(hizli_kasa_sevk_get($sevk_id), true)];
@@ -180,6 +184,45 @@ function hizli_kasa_sevk_kalem_sil($request) {
     $tables = hizli_kasa_sevk_tables();
     $wpdb->delete($tables['sevk_kalemleri'], ['id' => intval($data['kalem_id'] ?? 0), 'sevk_id' => $sevk->id]);
     hizli_kasa_sevk_refresh_totals($sevk->id);
+    return ['success' => true, 'sevk' => hizli_kasa_sevk_format(hizli_kasa_sevk_get($sevk->id), true)];
+}
+
+function hizli_kasa_sevk_kalem_miktar_guncelle($request) {
+    global $wpdb;
+    $data = $request->get_json_params();
+    $sevk_id = intval($data['sevk_id'] ?? 0);
+    $kalem_id = intval($data['kalem_id'] ?? 0);
+    $qty = max(0.0, (float) ($data['qty'] ?? 0));
+    $sevk = hizli_kasa_sevk_get($sevk_id);
+    if (!$sevk || $sevk->durum !== 'taslak') {
+        return new WP_Error('invalid_sevk', 'Sadece taslak sevke ürün miktarı güncellenebilir.', ['status' => 400]);
+    }
+    if (!hizli_kasa_sevk_user_can_source($sevk, true)) {
+        return new WP_Error('no_permission', 'Bu sevki düzenleme yetkiniz yok.', ['status' => 403]);
+    }
+    $tables = hizli_kasa_sevk_tables();
+    if ($qty <= 0) {
+        $wpdb->delete($tables['sevk_kalemleri'], ['id' => $kalem_id, 'sevk_id' => $sevk_id]);
+    } else {
+        $wpdb->update($tables['sevk_kalemleri'], ['gonderilen_adet' => $qty, 'updated_at' => current_time('mysql')], ['id' => $kalem_id, 'sevk_id' => $sevk_id]);
+    }
+    hizli_kasa_sevk_refresh_totals($sevk_id);
+    return ['success' => true, 'sevk' => hizli_kasa_sevk_format(hizli_kasa_sevk_get($sevk_id), true)];
+}
+
+function hizli_kasa_sevk_teslim_miktar_guncelle($request) {
+    global $wpdb;
+    $data = $request->get_json_params();
+    $sevk = hizli_kasa_sevk_get(intval($data['sevk_id'] ?? 0));
+    $kalem_id = intval($data['kalem_id'] ?? 0);
+    $qty = max(0.0, (float) ($data['qty'] ?? 0));
+    if (!$sevk || !in_array($sevk->durum, ['gonderildi', 'teslim_kontrol', 'uyusmazlik'], true) || !hizli_kasa_sevk_user_can_target($sevk, true)) {
+        return new WP_Error('invalid_state', 'Teslim miktarı güncellenemez.', ['status' => 400]);
+    }
+    $tables = hizli_kasa_sevk_tables();
+    $wpdb->update($tables['sevk_kalemleri'], ['teslim_alinan_adet' => $qty, 'updated_at' => current_time('mysql')], ['id' => $kalem_id, 'sevk_id' => $sevk->id]);
+    $status = hizli_kasa_sevk_has_mismatch($sevk->id) ? 'uyusmazlik' : 'teslim_kontrol';
+    $wpdb->update($tables['sevkler'], ['durum' => $status, 'updated_at' => current_time('mysql')], ['id' => $sevk->id]);
     return ['success' => true, 'sevk' => hizli_kasa_sevk_format(hizli_kasa_sevk_get($sevk->id), true)];
 }
 
@@ -258,7 +301,7 @@ function hizli_kasa_sevk_teslim_barkod($request) {
         return new WP_Error('not_in_list', 'Bu barkod sevk listesinde yok.', ['status' => 404]);
     }
     $new_qty = ($item->teslim_alinan_adet === null ? 0 : (float) $item->teslim_alinan_adet) + (float) ($data['qty'] ?? 1);
-    $wpdb->update($tables['sevk_kalemleri'], ['teslim_alinan_adet' => $new_qty], ['id' => $item->id]);
+    $wpdb->update($tables['sevk_kalemleri'], ['teslim_alinan_adet' => $new_qty, 'updated_at' => current_time('mysql')], ['id' => $item->id]);
     $status = hizli_kasa_sevk_has_mismatch($sevk->id) ? 'uyusmazlik' : 'teslim_kontrol';
     $wpdb->update($tables['sevkler'], ['durum' => $status, 'updated_at' => current_time('mysql')], ['id' => $sevk->id]);
     return ['success' => true, 'sevk' => hizli_kasa_sevk_format(hizli_kasa_sevk_get($sevk->id), true)];
