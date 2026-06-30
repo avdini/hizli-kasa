@@ -1,6 +1,9 @@
 <?php
-if (!defined('ABSPATH')) exit;
+declare(strict_types=1);
 
+if (!defined('ABSPATH')) {
+    exit;
+}
 require_once HIZLI_KASA_PATH . 'includes/classes/class-user-warehouse-permissions.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-menu.php';
 require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-settings-register.php';

@@ -3,10 +3,10 @@ if (!defined('ABSPATH')) exit;
 
 class Hizli_Kasa_User_Warehouse_Permissions {
     public static function init() {
-        add_action('show_user_profile', [__CLASS__, 'render_field']);
-        add_action('edit_user_profile', [__CLASS__, 'render_field']);
-        add_action('personal_options_update', [__CLASS__, 'save_field']);
-        add_action('edit_user_profile_update', [__CLASS__, 'save_field']);
+        add_action('show_user_profile', [self::class, 'render_field']);
+        add_action('edit_user_profile', [self::class, 'render_field']);
+        add_action('personal_options_update', [self::class, 'save_field']);
+        add_action('edit_user_profile_update', [self::class, 'save_field']);
     }
 
 public static function get_view_depos($user_id) {
@@ -96,13 +96,13 @@ public static function get_active_depo($user_id) {
     // Admin ise global admin deposunu veya ilk depoya bak
     $active = intval(get_user_meta($user_id, '_hizli_kasa_active_depo', true));
     
-    if (!$active) return null;
+    if ($active === 0) return null;
     
     // Hala bu depoya yetkisi var mı kontrol et
     if (!self::can_view($user_id, $active)) {
         // Yetkisi kaldırılmış, ilk yetkili depoya dön
         $view_ids = self::get_view_depos($user_id);
-        return !empty($view_ids) ? $view_ids[0] : null;
+        return empty($view_ids) ? null : $view_ids[0];
     }
     
     return $active;
@@ -232,7 +232,7 @@ public static function save_field($user_id) {
         // Eğer checkboxlar gönderilmediyse (hepsi işaretsiz) �? boşalt
         update_user_meta($user_id, '_hizli_kasa_depo_ids_view',   json_encode([]));
         update_user_meta($user_id, '_hizli_kasa_depo_ids_manage', json_encode([]));
-        return;
+        return null;
     }
     
     $view_ids   = isset($_POST['hizli_kasa_depo_ids_view'])
@@ -255,11 +255,12 @@ public static function save_field($user_id) {
     // Aktif depo artık görüntüleme listesinde değilse temizle
     $active = intval(get_user_meta($user_id, '_hizli_kasa_active_depo', true));
     if ($active && !in_array($active, $view_ids)) {
-        $new_active = !empty($view_ids) ? $view_ids[0] : 0;
+        $new_active = $view_ids === [] ? 0 : $view_ids[0];
         update_user_meta($user_id, '_hizli_kasa_active_depo', $new_active);
     }
     
     // Eski meta varsa temizle
     delete_user_meta($user_id, '_hizli_kasa_depo_id');
+    return null;
 }
 }

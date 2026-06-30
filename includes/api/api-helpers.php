@@ -1,5 +1,7 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 function hizli_kasa_is_manual_discount_fee($fee)
 {
@@ -82,15 +84,16 @@ function hizli_kasa_get_order_total_discount($order)
 function hizli_kasa_hydrate_products_batch($ids, $depo_id)
 {
     global $wpdb;
-    if (empty($ids))
+    if (empty($ids)) {
         return [];
+    }
 
     $raw_ids_str = implode(',', array_map('intval', $ids));
 
     // Adım 1: Gelen ID'lerin varyasyonlarını, parent'larını ve o parent'ların TÜM çocuklarını belirle
     // Bu sayede dropdown'ların her zaman dolu olduğundan emin oluruz.
     $all_ids = array_map('intval', $ids);
-    if (!empty($all_ids)) {
+    if ($all_ids !== []) {
         $raw_ids_str = implode(',', $all_ids);
         $relations = $wpdb->get_results("SELECT ID, post_parent, post_type FROM {$wpdb->posts} WHERE ID IN ($raw_ids_str)");
 
@@ -103,7 +106,7 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id)
             }
         }
 
-        if (!empty($parents_to_expand)) {
+        if ($parents_to_expand !== []) {
             $parents_to_expand = array_unique($parents_to_expand);
             $parents_str = implode(',', $parents_to_expand);
 
@@ -316,7 +319,7 @@ function hizli_kasa_get_aws_ranked_product_ids($search, $depo_id = 0)
         }
     }
 
-    if (empty($raw_ids)) {
+    if ($raw_ids === []) {
         return [];
     }
 
@@ -347,7 +350,7 @@ function hizli_kasa_get_aws_ranked_product_ids($search, $depo_id = 0)
         }
     }
 
-    if (empty($ranked_ids) || !$depo_id) {
+    if ($ranked_ids === [] || !$depo_id) {
         return $ranked_ids;
     }
 
@@ -364,9 +367,7 @@ function hizli_kasa_get_aws_ranked_product_ids($search, $depo_id = 0)
     }
 
     $allowed_map = array_fill_keys(array_map('intval', $allowed_ids), true);
-    return array_values(array_filter($ranked_ids, function ($id) use ($allowed_map) {
-        return isset($allowed_map[(int) $id]);
-    }));
+    return array_values(array_filter($ranked_ids, fn($id) => isset($allowed_map[(int) $id])));
 }
 
 /**
@@ -461,7 +462,7 @@ function hizli_kasa_get_local_ranked_product_ids($search, $depo_id = 0, $limit =
         $score_params[] = $like;
     }
 
-    if (empty($or_parts)) {
+    if ($or_parts === []) {
         return [];
     }
 
@@ -490,9 +491,7 @@ function hizli_kasa_get_local_ranked_product_ids($search, $depo_id = 0, $limit =
         return [];
     }
 
-    return array_map(function ($row) {
-        return (int) $row->ID;
-    }, $rows);
+    return array_map(fn($row) => (int) $row->ID, $rows);
 }
 
 /**

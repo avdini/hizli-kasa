@@ -1,14 +1,16 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Hizli_Kasa_Stock_Order_Handler {
     public static function listen() {
-        add_action('woocommerce_order_status_processing', [__CLASS__, 'handle_reservation'], 10, 2);
-        add_action('woocommerce_order_status_completed', [__CLASS__, 'handle_completion'], 10, 2);
-        add_action('woocommerce_order_status_cancelled', [__CLASS__, 'handle_cancellation'], 10, 2);
-        add_action('woocommerce_order_status_refunded', [__CLASS__, 'handle_cancellation'], 10, 2);
-        add_action('woocommerce_order_status_failed', [__CLASS__, 'handle_cancellation'], 10, 2);
-        add_action('woocommerce_new_order', [__CLASS__, 'handle_pos_order'], 10, 2);
+        add_action('woocommerce_order_status_processing', [self::class, 'handle_reservation'], 10, 2);
+        add_action('woocommerce_order_status_completed', [self::class, 'handle_completion'], 10, 2);
+        add_action('woocommerce_order_status_cancelled', [self::class, 'handle_cancellation'], 10, 2);
+        add_action('woocommerce_order_status_refunded', [self::class, 'handle_cancellation'], 10, 2);
+        add_action('woocommerce_order_status_failed', [self::class, 'handle_cancellation'], 10, 2);
+        add_action('woocommerce_new_order', [self::class, 'handle_pos_order'], 10, 2);
     }
 
     public static function handle_pos_order($order_id, $order = false) {
@@ -16,13 +18,17 @@ class Hizli_Kasa_Stock_Order_Handler {
             $order = wc_get_order($order_id);
         }
 
-        if (!$order) return;
+        if (!$order) {
+            return;
+        }
 
         $kasiyer_name = $order->get_meta('_hizli_kasa_kasiyer');
 
         hizli_kasa_log("handle_pos_order_stock tetiklendi. Sipariş ID: $order_id, Kasiyer: " . ($kasiyer_name ?: 'Yok'));
 
-        if (!$kasiyer_name) return;
+        if (!$kasiyer_name) {
+            return;
+        }
 
         $depo_id = $order->get_meta('_hk_cikis_depo_id');
         $user_id = get_current_user_id();
@@ -54,6 +60,9 @@ class Hizli_Kasa_Stock_Order_Handler {
         ));
 
         foreach ($order->get_items() as $item_id => $item) {
+            if (!$item instanceof WC_Order_Item_Product) {
+                continue;
+            }
             $product_id = $item->get_product_id();
             $variation_id = $item->get_variation_id();
             $qty = $item->get_quantity();
@@ -75,14 +84,23 @@ class Hizli_Kasa_Stock_Order_Handler {
     }
 
     public static function handle_reservation($order_id, $order = false) {
-        if (!$order) $order = wc_get_order($order_id);
-        if (!$order) return;
+        if (!$order) {
+            $order = wc_get_order($order_id);
+        }
+        if (!$order) {
+            return;
+        }
 
-        if ($order->get_meta('_hizli_kasa_kasiyer')) return;
+        if ($order->get_meta('_hizli_kasa_kasiyer')) {
+            return;
+        }
 
         hizli_kasa_log("handle_online_order_reservation tetiklendi. Sipariş ID: $order_id");
 
         foreach ($order->get_items() as $item) {
+            if (!$item instanceof WC_Order_Item_Product) {
+                continue;
+            }
             $product_id = $item->get_product_id();
             $variation_id = $item->get_variation_id();
             $qty = $item->get_quantity();
@@ -92,19 +110,30 @@ class Hizli_Kasa_Stock_Order_Handler {
     }
 
     public static function handle_completion($order_id, $order = false) {
-        if (!$order) $order = wc_get_order($order_id);
-        if (!$order) return;
+        if (!$order) {
+            $order = wc_get_order($order_id);
+        }
+        if (!$order) {
+            return;
+        }
 
-        if ($order->get_meta('_hizli_kasa_kasiyer')) return;
+        if ($order->get_meta('_hizli_kasa_kasiyer')) {
+            return;
+        }
 
         hizli_kasa_log("handle_online_order_completion tetiklendi. Sipariş ID: $order_id");
 
         foreach ($order->get_items() as $item_id => $item) {
+            if (!$item instanceof WC_Order_Item_Product) {
+                continue;
+            }
             $product_id = $item->get_product_id();
             $variation_id = $item->get_variation_id();
 
             $reservations = wc_get_order_item_meta($item_id, '_hk_reservations', true);
-            if (empty($reservations)) continue;
+            if (empty($reservations)) {
+                continue;
+            }
 
             foreach ($reservations as $res) {
                 $depo_id = intval($res['depo_id']);
@@ -120,15 +149,22 @@ class Hizli_Kasa_Stock_Order_Handler {
         if (!$order) {
             $order = wc_get_order($order_id);
         }
-        if (!$order) return;
+        if (!$order) {
+            return;
+        }
 
         hizli_kasa_log("handle_cancelled_order_stock tetiklendi. Sipariş ID: $order_id");
 
         foreach ($order->get_items() as $item_id => $item) {
+            if (!$item instanceof WC_Order_Item_Product) {
+                continue;
+            }
             $product_id = $item->get_product_id();
             $variation_id = $item->get_variation_id();
 
-            if ($item->get_meta('_hk_restocked_on_cancel')) continue;
+            if ($item->get_meta('_hk_restocked_on_cancel')) {
+                continue;
+            }
 
             $reservations = wc_get_order_item_meta($item_id, '_hk_reservations', true);
 
@@ -146,13 +182,15 @@ class Hizli_Kasa_Stock_Order_Handler {
             } else {
                 $depo_id = (int) wc_get_order_item_meta($item_id, '_hk_cikis_depo_id', true);
 
-                if (!$depo_id) {
+                if ($depo_id === 0) {
                     $depo_id = (int) $order->get_meta('_hk_cikis_depo_id');
                 }
 
                 $qty = (float) wc_get_order_item_meta($item_id, '_hk_cikis_depo_adet', true);
 
-                if (!$qty) $qty = $item->get_quantity();
+                if ($qty === 0.0) {
+                    $qty = $item->get_quantity();
+                }
 
                 if ($depo_id && $qty > 0) {
                     Hizli_Kasa_Stock_Manager::update_warehouse_stock($product_id, $variation_id, $depo_id, $qty, "Sipariş İptali/İade (#$order_id)");
@@ -185,7 +223,9 @@ class Hizli_Kasa_Stock_Order_Handler {
         $remaining_to_fix = $conflict_qty;
 
         foreach ($results as $row) {
-            if ($remaining_to_fix <= 0) break;
+            if ($remaining_to_fix <= 0) {
+                break;
+            }
 
             $item_variation_id = (int) wc_get_order_item_meta($row->order_item_id, '_variation_id', true);
             if ($variation_id > 0 && $item_variation_id != $variation_id) {
@@ -196,12 +236,16 @@ class Hizli_Kasa_Stock_Order_Handler {
             }
 
             $reservations = maybe_unserialize($row->reservations);
-            if (!is_array($reservations)) continue;
+            if (!is_array($reservations)) {
+                continue;
+            }
 
             foreach ($reservations as &$res) {
                 if ($res['depo_id'] == $location_id) {
                     $order = wc_get_order($row->order_id);
-                    if (!$order) continue;
+                    if (!$order) {
+                        continue;
+                    }
 
                     $res_qty = floatval($res['qty']);
                     $to_cancel = min($res_qty, $remaining_to_fix);

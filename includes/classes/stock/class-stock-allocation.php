@@ -1,5 +1,7 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Hizli_Kasa_Stock_Allocation {
     public static function priority_reservation($product_id, $variation_id, $total_to_deduct, $item = null) {
@@ -16,7 +18,9 @@ class Hizli_Kasa_Stock_Allocation {
         $reservations = [];
 
         foreach ($depolar as $d) {
-            if ($remaining <= 0) break;
+            if ($remaining <= 0) {
+                break;
+            }
 
             $stock_data = $wpdb->get_row($wpdb->prepare("
                 SELECT quantity, reserved FROM {$tables['stok_konumlari']}
@@ -27,7 +31,9 @@ class Hizli_Kasa_Stock_Allocation {
             $res = $stock_data ? floatval($stock_data->reserved) : 0;
             $available = $qty - $res;
 
-            if ($available <= 0) continue;
+            if ($available <= 0) {
+                continue;
+            }
 
             $to_take = min($available, $remaining);
             Hizli_Kasa_Stock_Manager::update_warehouse_stock_reservation($product_id, $variation_id, $d->id, $to_take);
@@ -52,7 +58,7 @@ class Hizli_Kasa_Stock_Allocation {
             }
         }
 
-        if ($item && !empty($reservations)) {
+        if ($item && $reservations !== []) {
             wc_update_order_item_meta($item->get_id(), '_hk_reservations', $reservations);
         }
     }
@@ -71,14 +77,18 @@ class Hizli_Kasa_Stock_Allocation {
         $deductions = [];
 
         foreach ($depolar as $d) {
-            if ($remaining <= 0) break;
+            if ($remaining <= 0) {
+                break;
+            }
 
             $stock = $wpdb->get_var($wpdb->prepare("
                 SELECT quantity FROM {$tables['stok_konumlari']}
                 WHERE product_id = %d AND variation_id = %d AND location_id = %d
             ", $product_id, $variation_id, $d->id));
 
-            if (!$stock || $stock <= 0) continue;
+            if (!$stock || $stock <= 0) {
+                continue;
+            }
 
             $to_take = min($stock, $remaining);
             Hizli_Kasa_Stock_Manager::update_warehouse_stock($product_id, $variation_id, $d->id, -$to_take, "Online Satış (Otomatik)");
@@ -91,13 +101,11 @@ class Hizli_Kasa_Stock_Allocation {
             Hizli_Kasa_Stock_Manager::update_warehouse_stock($product_id, $variation_id, $online_depo_id, -$remaining, "Online Satış (Stok Yetersiz - Eksiye Düştü)");
 
             $found = false;
-            if (!empty($deductions)) {
-                foreach ($deductions as &$ded) {
-                    if ($ded['depo_id'] == $online_depo_id) {
-                        $ded['qty'] += $remaining;
-                        $found = true;
-                        break;
-                    }
+            foreach ($deductions as &$ded) {
+                if ($ded['depo_id'] == $online_depo_id) {
+                    $ded['qty'] += $remaining;
+                    $found = true;
+                    break;
                 }
             }
             if (!$found) {
@@ -105,7 +113,7 @@ class Hizli_Kasa_Stock_Allocation {
             }
         }
 
-        if ($item && !empty($deductions)) {
+        if ($item && $deductions !== []) {
             wc_update_order_item_meta($item->get_id(), '_hk_deductions', $deductions);
         }
     }

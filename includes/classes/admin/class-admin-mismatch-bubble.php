@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) exit;
 
 class Hizli_Kasa_Admin_Mismatch_Bubble {
     public static function init() {
-        add_action('admin_footer', [__CLASS__, 'render']);
+        add_action('admin_footer', [self::class, 'render']);
     }
 
     public static function render() {

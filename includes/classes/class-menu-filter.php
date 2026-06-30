@@ -8,15 +8,16 @@
  * @package HizliKasa
  */
 
-if (!defined('ABSPATH'))
+if (!defined('ABSPATH')) {
     exit;
+}
 
 // Menü Bağlantısını Yetkisiz Kişilerden Gizleme
 add_filter('wp_nav_menu_objects', 'hizli_kasa_menuyu_gizle', 10, 2);
 function hizli_kasa_menuyu_gizle($items, $args)
 {
     $user = wp_get_current_user();
-    $yetkili_roller = get_option('hizli_kasa_yetkili_roller', array('administrator', 'shop_manager'));
+    $yetkili_roller = get_option('hizli_kasa_yetkili_roller', ['administrator', 'shop_manager']);
 
     $yetkili_mi = false;
     foreach ((array) $user->roles as $role) {

@@ -7,8 +7,9 @@
  * @package HizliKasa
  */
 
-if (!defined('ABSPATH'))
+if (!defined('ABSPATH')) {
     exit;
+}
 
 class Hizli_Kasa_Database {
 

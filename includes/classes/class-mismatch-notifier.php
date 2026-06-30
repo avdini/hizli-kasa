@@ -7,7 +7,9 @@
  * @package HizliKasa
  */
 
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Hizli_Kasa_Mismatch_Notifier {
 
@@ -126,7 +128,7 @@ class Hizli_Kasa_Mismatch_Notifier {
         update_option('hizli_kasa_mismatch_found', $mismatch_exists ? '1' : '0');
         update_option('hizli_kasa_mismatch_last_check', current_time('mysql'));
         
-        return (bool)$mismatch_exists;
+        return $mismatch_exists;
     }
 
     /**

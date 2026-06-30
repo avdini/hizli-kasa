@@ -7,11 +7,11 @@ if (!defined('ABSPATH')) {
 class Hizli_Kasa_Email_Modifier {
     public static function init() {
         // Admin'e giden yeni sipariş maili
-        add_filter('woocommerce_email_subject_new_order', [__CLASS__, 'modify_subject'], 99, 3);
+        add_filter('woocommerce_email_subject_new_order', [self::class, 'modify_subject'], 99, 2);
         // Müşteriye giden tamamlandı maili
-        add_filter('woocommerce_email_subject_customer_completed_order', [__CLASS__, 'modify_subject'], 99, 3);
+        add_filter('woocommerce_email_subject_customer_completed_order', [self::class, 'modify_subject'], 99, 2);
         // Müşteriye giden işleniyor maili
-        add_filter('woocommerce_email_subject_customer_processing_order', [__CLASS__, 'modify_subject'], 99, 3);
+        add_filter('woocommerce_email_subject_customer_processing_order', [self::class, 'modify_subject'], 99, 2);
     }
 
     public static function modify_subject($subject, $order, $email) {

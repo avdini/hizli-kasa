@@ -72,6 +72,9 @@ function hizli_kasa_get_order_details($request)
     $is_fully_refunded = ($order->get_meta('_hk_is_fully_refunded') === 'yes');
 
     foreach ($order->get_items() as $item_id => $item) {
+        if (!$item instanceof WC_Order_Item_Product) {
+            continue;
+        }
         $product = $item->get_product();
         $cikis_depo_id = (int) wc_get_order_item_meta($item_id, '_hk_cikis_depo_id', true);
         $cikis_depo_adi = wc_get_order_item_meta($item_id, '_hk_cikis_depo_adi', true);
@@ -230,6 +233,9 @@ function hizli_kasa_search_orders($request)
         if (!empty($barcode)) {
             $found = false;
             foreach ($order->get_items() as $item) {
+                if (!$item instanceof WC_Order_Item_Product) {
+                    continue;
+                }
                 $product = $item->get_product();
                 if ($product && ($product->get_sku() === $barcode || (string) $product->get_id() === $barcode)) {
                     $found = true;
@@ -321,6 +327,9 @@ function hizli_kasa_get_recent_orders($request)
 
         $items = [];
         foreach ($order->get_items() as $item_id => $item) {
+            if (!$item instanceof WC_Order_Item_Product) {
+                continue;
+            }
             $p_id = $item->get_product_id();
             $v_id = $item->get_variation_id();
             $target_id = $v_id ?: $p_id;
@@ -428,6 +437,9 @@ function hizli_kasa_update_order($request)
         // Ürün bazlı indirimlerin toplamını bul
         $product_discount_total = 0;
         foreach ($order->get_items() as $item_id => $item) {
+            if (!$item instanceof WC_Order_Item_Product) {
+                continue;
+            }
             $product_discount_total += (float) wc_get_order_item_meta($item_id, '_hk_item_discount', true);
         }
         
@@ -437,7 +449,7 @@ function hizli_kasa_update_order($request)
             $item_fee = new WC_Order_Item_Fee();
             $item_fee->set_name('Düzenlenmiş İskonto');
             $item_fee->set_amount(-$fee_amount);
-            $item_fee->set_total(-$fee_amount);
+            $item_fee->set_total(wc_format_decimal(-$fee_amount));
             $item_fee->add_meta_data('_hk_manual_discount', 'yes', true);
             $order->add_item($item_fee);
         }
@@ -503,8 +515,8 @@ function hizli_kasa_update_order($request)
                     $log_details[] = $item->get_name() . " çıkarıldı.";
                 } else {
                     $item->set_quantity($new_qty);
-                    $item->set_subtotal(($item->get_subtotal() / $old_qty) * $new_qty);
-                    $item->set_total(($item->get_total() / $old_qty) * $new_qty);
+                    $item->set_subtotal(wc_format_decimal(($item->get_subtotal() / $old_qty) * $new_qty));
+                    $item->set_total(wc_format_decimal(($item->get_total() / $old_qty) * $new_qty));
                     $item->save();
                     $log_details[] = $item->get_name() . ": $old_qty -> $new_qty";
                 }
@@ -529,8 +541,8 @@ function hizli_kasa_update_order($request)
                 }
 
                 $item->set_quantity($new_qty);
-                $item->set_subtotal(($item->get_subtotal() / $old_qty) * $new_qty);
-                $item->set_total(($item->get_total() / $old_qty) * $new_qty);
+                $item->set_subtotal(wc_format_decimal(($item->get_subtotal() / $old_qty) * $new_qty));
+                $item->set_total(wc_format_decimal(($item->get_total() / $old_qty) * $new_qty));
                 $item->save();
                 $log_details[] = $item->get_name() . ": $old_qty -> $new_qty";
             }

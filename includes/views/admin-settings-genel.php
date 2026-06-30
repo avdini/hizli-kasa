@@ -17,7 +17,7 @@
                             <th scope="row">Erişim Yetkisi Olan Roller</th>
                             <td>
                                 <?php
-                                 $secili_roller = get_option('hizli_kasa_yetkili_roller', array('administrator', 'shop_manager', 'hizli_kasa'));
+                                 $secili_roller = get_option('hizli_kasa_yetkili_roller', ['administrator', 'shop_manager', 'hizli_kasa']);
                                 $tum_roller = wp_roles()->get_names();
 
                                 foreach ($tum_roller as $rol_slug => $rol_adi):

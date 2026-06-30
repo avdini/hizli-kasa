@@ -7,8 +7,9 @@
  * @package HizliKasa
  */
 
-if (!defined('ABSPATH'))
+if (!defined('ABSPATH')) {
     exit;
+}
 
 $api_dir = HIZLI_KASA_PATH . 'includes/api/';
 

@@ -1,15 +1,19 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Hizli_Kasa_Ajax_Stock {
     public static function init() {
-        add_action('wp_ajax_hizli_kasa_get_admin_stock_list', [__CLASS__, 'get_list']);
-        add_action('wp_ajax_hizli_kasa_admin_update_stock', [__CLASS__, 'update']);
-        add_action('wp_ajax_hizli_kasa_batch_update_stock', [__CLASS__, 'batch_update']);
+        add_action('wp_ajax_hizli_kasa_get_admin_stock_list', [self::class, 'get_list']);
+        add_action('wp_ajax_hizli_kasa_admin_update_stock', [self::class, 'update']);
+        add_action('wp_ajax_hizli_kasa_batch_update_stock', [self::class, 'batch_update']);
     }
 
 public static function get_list() {
-    if (!defined('DONOTCACHEPAGE')) define('DONOTCACHEPAGE', true);
+    if (!defined('DONOTCACHEPAGE')) {
+        define('DONOTCACHEPAGE', true);
+    }
     nocache_headers(); // Cache engelle
     try {
         hizli_kasa_admin_log("ADMIN_STOCK_LIST START");
@@ -54,7 +58,7 @@ public static function get_list() {
             if ($filter_mismatch) {
                 $having_clauses[] = "(total_wh_stock != wc_stock OR min_wh_stock < 0)";
             }
-            $having_sql = !empty($having_clauses) ? "HAVING " . implode(" AND ", $having_clauses) : "";
+            $having_sql = $having_clauses === [] ? "" : "HAVING " . implode(" AND ", $having_clauses);
             
             $base_sql = "
                 SELECT 
@@ -152,7 +156,9 @@ public static function get_list() {
     $output = [];
     foreach ($main_ids as $m_id) {
         $parent = $details_by_id[$m_id] ?? null;
-        if (!$parent) continue;
+        if (!$parent) {
+            continue;
+        }
 
         $m = $metas_by_id[$m_id] ?? [];
         $thumb_id = $m['_thumbnail_id'] ?? 0;
@@ -162,7 +168,9 @@ public static function get_list() {
         $children = [];
         foreach ($variation_ids as $v_id) {
             $v_post = $details_by_id[$v_id] ?? null;
-            if (!$v_post || $v_post->post_parent != $m_id) continue;
+            if (!$v_post || $v_post->post_parent != $m_id) {
+                continue;
+            }
 
             $vm = $metas_by_id[$v_id] ?? [];
             $v_thumb_id = $vm['_thumbnail_id'] ?? 0;
@@ -173,7 +181,7 @@ public static function get_list() {
                 if (strpos($ak, 'attribute_') === 0) {
                     $tax = str_replace('attribute_', '', $ak);
                     $clean_k = str_replace('pa_', '', $tax);
-                    $clean_attrs[$clean_k] = isset($term_names[$tax][$av]) ? $term_names[$tax][$av] : $av;
+                    $clean_attrs[$clean_k] = $term_names[$tax][$av] ?? $av;
                 }
             }
 
@@ -195,12 +203,12 @@ public static function get_list() {
             // Mismatch kontrolü
             $v_total_wh = array_sum(array_column($v_item['warehouse_stocks'], 'qty'));
             $v_item['total_warehouse_stock'] = $v_total_wh;
-            $v_item['has_mismatch'] = (round((float)$v_total_wh, 4) != round((float)$v_item['wc_stock'], 4));
+            $v_item['has_mismatch'] = (round((float)$v_total_wh, 4) !== round($v_item['wc_stock'], 4));
 
             $children[] = $v_item;
         }
 
-        if (!empty($children)) {
+        if ($children !== []) {
             usort($children, function ($a, $b) use ($s) {
                 // 1. Arama Puanı (Eğer arama yapılıyorsa)
                 if (!empty($s)) {
@@ -227,13 +235,21 @@ public static function get_list() {
 
                 foreach ($attrs_a as $k => $val) {
                     $k_low = strtolower($k);
-                    if (strpos($k_low, 'renk') !== false || strpos($k_low, 'color') !== false) $color_a = $val;
-                    if (strpos($k_low, 'beden') !== false || strpos($k_low, 'size') !== false || strpos($k_low, 'numara') !== false) $size_a = $val;
+                    if (strpos($k_low, 'renk') !== false || strpos($k_low, 'color') !== false) {
+                        $color_a = $val;
+                    }
+                    if (strpos($k_low, 'beden') !== false || strpos($k_low, 'size') !== false || strpos($k_low, 'numara') !== false) {
+                        $size_a = $val;
+                    }
                 }
                 foreach ($attrs_b as $k => $val) {
                     $k_low = strtolower($k);
-                    if (strpos($k_low, 'renk') !== false || strpos($k_low, 'color') !== false) $color_b = $val;
-                    if (strpos($k_low, 'beden') !== false || strpos($k_low, 'size') !== false || strpos($k_low, 'numara') !== false) $size_b = $val;
+                    if (strpos($k_low, 'renk') !== false || strpos($k_low, 'color') !== false) {
+                        $color_b = $val;
+                    }
+                    if (strpos($k_low, 'beden') !== false || strpos($k_low, 'size') !== false || strpos($k_low, 'numara') !== false) {
+                        $size_b = $val;
+                    }
                 }
 
                 // Önce Renk
@@ -258,7 +274,9 @@ public static function get_list() {
 
                     $get_weight = function($val) use ($size_map) {
                         $v = strtolower(trim((string)$val));
-                        if (is_numeric($v)) return (float)$v;
+                        if (is_numeric($v)) {
+                            return (float)$v;
+                        }
                         return isset($size_map[$v]) ? (float)$size_map[$v] : 999;
                     };
 
@@ -284,7 +302,7 @@ public static function get_list() {
             'sku' => $m['_sku'] ?? '',
             'wc_stock' => (float)($m['_stock'] ?? 0),
             'thumbnail' => $thumbnail,
-            'type' => empty($children) ? 'simple' : 'variable',
+            'type' => $children === [] ? 'simple' : 'variable',
             'variations' => $children,
             'warehouse_stocks' => []
         ];
@@ -299,7 +317,7 @@ public static function get_list() {
         $item['total_warehouse_stock'] = $total_wh;
         
         if ($item['type'] === 'simple') {
-            $item['has_mismatch'] = (round((float)$total_wh, 4) != round((float)$item['wc_stock'], 4));
+            $item['has_mismatch'] = (round((float)$total_wh, 4) !== round($item['wc_stock'], 4));
         } else {
             // Değişken üründe herhangi bir varyasyonda uyuşmazlık varsa true dön
             $item['has_mismatch'] = false;
@@ -332,14 +350,18 @@ public static function get_list() {
  * Manuel Stok Güncelleme
  */
 public static function update() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim!']);
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Yetkisiz erişim!']);
+    }
 
     $pid    = intval($_POST['product_id']);
     $vid    = intval($_POST['variation_id']);
     $did    = intval($_POST['depo_id']);
     $change = intval($_POST['change']);
 
-    if (!$did || !$pid) wp_send_json_error(['message' => 'Eksik veri!']);
+    if (!$did || !$pid) {
+        wp_send_json_error(['message' => 'Eksik veri!']);
+    }
 
     require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
     
@@ -367,7 +389,9 @@ public static function update() {
     }
 
     $new_qty = $current + $change;
-    if ($new_qty < 0) $new_qty = 0;
+    if ($new_qty < 0) {
+        $new_qty = 0;
+    }
 
     $user = wp_get_current_user();
     $reason = "Admin Manuel Müdahale (Kullanıcı: " . $user->display_name . ")";
@@ -387,10 +411,14 @@ public static function update() {
  * Toplu (Batch) Stok Güncelleme
  */
 public static function batch_update() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim!']);
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Yetkisiz erişim!']);
+    }
     
     $changes = json_decode(stripslashes($_POST['changes']), true);
-    if (!is_array($changes)) wp_send_json_error(['message' => 'Geçersiz veri']);
+    if (!is_array($changes)) {
+        wp_send_json_error(['message' => 'Geçersiz veri']);
+    }
     
     $updated = 0;
     $errors  = [];

@@ -1,38 +1,32 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 add_action('rest_api_init', function () {
-    register_rest_route('hizli-kasa/v1', '/load-tab', array(
+    register_rest_route('hizli-kasa/v1', '/load-tab', [
         'methods' => 'GET',
         'callback' => 'hizli_kasa_load_tab_content',
-        'permission_callback' => function () {
-            return hizli_kasa_can_access_app();
-        }
-    ));
+        'permission_callback' => fn() => hizli_kasa_can_access_app()
+    ]);
 
-    register_rest_route('hizli-kasa/v1', '/user/depolar', array(
+    register_rest_route('hizli-kasa/v1', '/user/depolar', [
         'methods' => 'GET',
         'callback' => 'hizli_kasa_api_user_depolar',
-        'permission_callback' => function () {
-            return hizli_kasa_can_access_app();
-        }
-    ));
+        'permission_callback' => fn() => hizli_kasa_can_access_app()
+    ]);
 
-    register_rest_route('hizli-kasa/v1', '/user/set-active-depo', array(
+    register_rest_route('hizli-kasa/v1', '/user/set-active-depo', [
         'methods' => 'POST',
         'callback' => 'hizli_kasa_api_set_active_depo',
-        'permission_callback' => function () {
-            return hizli_kasa_can_access_app();
-        }
-    ));
+        'permission_callback' => fn() => hizli_kasa_can_access_app()
+    ]);
 
-    register_rest_route('hizli-kasa/v1', '/user/set-theme', array(
+    register_rest_route('hizli-kasa/v1', '/user/set-theme', [
         'methods' => 'POST',
         'callback' => 'hizli_kasa_api_set_user_theme',
-        'permission_callback' => function () {
-            return hizli_kasa_can_access_app();
-        }
-    ));
+        'permission_callback' => fn() => hizli_kasa_can_access_app()
+    ]);
 
 });
 
@@ -93,7 +87,7 @@ function hizli_kasa_api_user_depolar($request)
     $active_depo_id = hizli_kasa_get_user_active_depo($user_id);
 
     // Aktif depo yoksa ilk görüntüleme deposunu seç
-    if (!$active_depo_id && !empty($view)) {
+    if (!$active_depo_id && $view !== []) {
         $active_depo_id = $view[0]['id'];
         update_user_meta($user_id, '_hizli_kasa_active_depo', $active_depo_id);
     }
@@ -114,7 +108,7 @@ function hizli_kasa_api_set_active_depo($request)
     $depo_id = intval($data['depo_id'] ?? 0);
     $user_id = get_current_user_id();
 
-    if (!$depo_id) {
+    if ($depo_id === 0) {
         return new WP_Error('invalid_depo', 'Geçersiz depo ID.', ['status' => 400]);
     }
 
@@ -159,14 +153,14 @@ function hizli_kasa_load_tab_content($request)
     $tab = sanitize_text_field($request->get_param('tab'));
     $allowed_tabs = ['kasa', 'urunler', 'raporlar', 'ayarlar', 'iade', 'masraf', 'sevk'];
     if (!in_array($tab, $allowed_tabs)) {
-        return new WP_Error('invalid_tab', 'Geçersiz sekme adı.', array('status' => 400));
+        return new WP_Error('invalid_tab', 'Geçersiz sekme adı.', ['status' => 400]);
     }
 
     $template_file = HIZLI_KASA_PATH . "includes/views/tab-{$tab}.php";
     if (!file_exists($template_file)) {
-        return array(
+        return [
             'html' => "<div style='padding:40px; text-align:center;'><h3>{$tab} Sayfası Hazırlanıyor...</h3><p>Bu modül yakında aktif edilecek.</p></div>"
-        );
+        ];
     }
 
     $user_id = get_current_user_id();
@@ -176,6 +170,6 @@ function hizli_kasa_load_tab_content($request)
     include $template_file;
     $html = ob_get_clean();
 
-    return array('html' => $html);
+    return ['html' => $html];
 }
 

@@ -1,14 +1,14 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 add_action('rest_api_init', function () {
-    register_rest_route('hizli-kasa/v1', '/statistics/summary', array(
+    register_rest_route('hizli-kasa/v1', '/statistics/summary', [
         'methods'             => 'GET',
         'callback'            => 'hizli_kasa_statistics_summary',
-        'permission_callback' => function () {
-            return hizli_kasa_can_access_app();
-        }
-    ));
+        'permission_callback' => fn() => hizli_kasa_can_access_app()
+    ]);
 
 });
 
@@ -88,24 +88,33 @@ function hizli_kasa_statistics_summary($request) {
 
         // Saatlik dağılım
         $saat_key = $created_dt->date('H:00');
-        if (!isset($saat_map[$saat_key])) $saat_map[$saat_key] = ['count' => 0, 'total' => 0];
+        if (!isset($saat_map[$saat_key])) {
+            $saat_map[$saat_key] = ['count' => 0, 'total' => 0];
+        }
         $saat_map[$saat_key]['count']++;
         $saat_map[$saat_key]['total'] += $order_total;
 
         // Günlük trend
         $gun_key = $created_dt->date('Y-m-d');
-        if (!isset($gun_map[$gun_key])) $gun_map[$gun_key] = ['count' => 0, 'total' => 0];
+        if (!isset($gun_map[$gun_key])) {
+            $gun_map[$gun_key] = ['count' => 0, 'total' => 0];
+        }
         $gun_map[$gun_key]['count']++;
         $gun_map[$gun_key]['total'] += $order_total;
 
         // Kasiyer performansı
         $kasiyer = $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmeyen';
-        if (!isset($kasiyer_map[$kasiyer])) $kasiyer_map[$kasiyer] = ['count' => 0, 'total' => 0];
+        if (!isset($kasiyer_map[$kasiyer])) {
+            $kasiyer_map[$kasiyer] = ['count' => 0, 'total' => 0];
+        }
         $kasiyer_map[$kasiyer]['count']++;
         $kasiyer_map[$kasiyer]['total'] += $order_total;
 
         // Ürün dağılımı
         foreach ($order->get_items() as $item) {
+            if (!$item instanceof WC_Order_Item_Product) {
+                continue;
+            }
             $product = $item->get_product();
             $sku  = $product ? $product->get_sku() : '';
             $name = $item->get_name();
@@ -198,7 +207,7 @@ function hizli_kasa_statistics_summary($request) {
         'top_urunler'     => $top_urunler,
     ];
 
-    if (isset($cache_aktif) && $cache_aktif) {
+    if ($cache_aktif) {
         $ttl_mins = (int) get_option('hizli_kasa_reports_cache_ttl', 15);
         set_transient($cache_key, $response_data, $ttl_mins * MINUTE_IN_SECONDS);
     }

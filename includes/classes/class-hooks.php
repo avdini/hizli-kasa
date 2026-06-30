@@ -3,15 +3,15 @@ if (!defined('ABSPATH')) exit;
 
 class Hizli_Kasa_Hooks {
     public static function init() {
-        add_action('woocommerce_new_order', [__CLASS__, 'invalidate_reports_cache']);
-        add_action('woocommerce_update_order', [__CLASS__, 'invalidate_reports_cache']);
-        add_action('woocommerce_order_refunded', [__CLASS__, 'invalidate_reports_cache']);
-        add_action('profile_update', [__CLASS__, 'invalidate_user_perms_cache']);
-        add_action('user_register', [__CLASS__, 'invalidate_user_perms_cache']);
-        add_filter('rest_pre_serve_request', [__CLASS__, 'enforce_no_cache'], 10, 4);
-        add_action('woocommerce_new_order', [__CLASS__, 'handle_coupon_use'], 10, 2);
-        add_action('woocommerce_coupon_options', [__CLASS__, 'render_coupon_print_button']);
-        add_action('wp_ajax_hk_print_coupon', [__CLASS__, 'ajax_print_coupon']);
+        add_action('woocommerce_new_order', [self::class, 'invalidate_reports_cache']);
+        add_action('woocommerce_update_order', [self::class, 'invalidate_reports_cache']);
+        add_action('woocommerce_order_refunded', [self::class, 'invalidate_reports_cache']);
+        add_action('profile_update', [self::class, 'invalidate_user_perms_cache']);
+        add_action('user_register', [self::class, 'invalidate_user_perms_cache']);
+        add_filter('rest_pre_serve_request', [self::class, 'enforce_no_cache'], 10, 4);
+        add_action('woocommerce_new_order', [self::class, 'handle_coupon_use'], 10, 2);
+        add_action('woocommerce_coupon_options', [self::class, 'render_coupon_print_button']);
+        add_action('wp_ajax_hk_print_coupon', [self::class, 'ajax_print_coupon']);
     }
 
     public static function invalidate_reports_cache() {
@@ -96,7 +96,7 @@ class Hizli_Kasa_Hooks {
         }
 
         $coupon_id = isset($_GET['coupon_id']) ? intval($_GET['coupon_id']) : 0;
-        if (!$coupon_id) {
+        if ($coupon_id === 0) {
             wp_die('Geçersiz Kupon ID.');
         }
 

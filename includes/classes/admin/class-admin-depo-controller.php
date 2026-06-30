@@ -1,13 +1,17 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Hizli_Kasa_Admin_Depo_Controller {
     public static function init() {
-        add_action('admin_init', [__CLASS__, 'handle_actions']);
+        add_action('admin_init', [self::class, 'handle_actions']);
     }
 
     public static function handle_actions() {
-    if (!isset($_GET['page']) || $_GET['page'] !== 'hizli-kasa') return;
+    if (!isset($_GET['page']) || $_GET['page'] !== 'hizli-kasa') {
+        return;
+    }
     
     global $wpdb;
     $table_name = $wpdb->prefix . 'hizli_kasa_depolar';

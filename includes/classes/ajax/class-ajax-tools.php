@@ -1,20 +1,24 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Hizli_Kasa_Ajax_Tools {
     public static function init() {
-        add_action('wp_ajax_hizli_kasa_setup', [__CLASS__, 'setup']);
-        add_action('wp_ajax_hizli_kasa_reset', [__CLASS__, 'reset']);
-        add_action('wp_ajax_hizli_kasa_repair_db', [__CLASS__, 'repair_db']);
-        add_action('wp_ajax_hizli_kasa_debug_db', [__CLASS__, 'debug_db']);
-        add_action('wp_ajax_hizli_kasa_manual_mismatch_check', [__CLASS__, 'mismatch_check']);
-        add_action('wp_ajax_hizli_kasa_clear_cache', [__CLASS__, 'clear_cache']);
-        add_action('wp_ajax_hizli_kasa_sync_wh_to_wc_start', [__CLASS__, 'sync_start']);
-        add_action('wp_ajax_hizli_kasa_sync_wh_to_wc_step', [__CLASS__, 'sync_step']);
+        add_action('wp_ajax_hizli_kasa_setup', [self::class, 'setup']);
+        add_action('wp_ajax_hizli_kasa_reset', [self::class, 'reset']);
+        add_action('wp_ajax_hizli_kasa_repair_db', [self::class, 'repair_db']);
+        add_action('wp_ajax_hizli_kasa_debug_db', [self::class, 'debug_db']);
+        add_action('wp_ajax_hizli_kasa_manual_mismatch_check', [self::class, 'mismatch_check']);
+        add_action('wp_ajax_hizli_kasa_clear_cache', [self::class, 'clear_cache']);
+        add_action('wp_ajax_hizli_kasa_sync_wh_to_wc_start', [self::class, 'sync_start']);
+        add_action('wp_ajax_hizli_kasa_sync_wh_to_wc_step', [self::class, 'sync_step']);
     }
 
 public static function clear_cache() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    }
     
     $type = isset($_POST['cache_type']) ? sanitize_text_field($_POST['cache_type']) : '';
     
@@ -61,7 +65,7 @@ public static function sync_start() {
         FROM $table
     ");
 
-    $ids = array_map(function($r) { return (int)$r->id; }, $results);
+    $ids = array_map(fn($r) => (int)$r->id, $results);
 
     wp_send_json_success(['ids' => $ids]);
 }
@@ -76,7 +80,7 @@ public static function sync_step() {
 
     $ids = isset($_POST['ids']) ? array_map('intval', $_POST['ids']) : [];
 
-    if (empty($ids)) {
+    if ($ids === []) {
         wp_send_json_success(['processed' => 0]);
     }
 
@@ -112,7 +116,9 @@ public static function sync_step() {
  * Manuel Uyuşmazlık Kontrolü AJAX
  */
 public static function mismatch_check() {
-    if (!current_user_can('manage_options')) wp_send_json_error();
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error();
+    }
     
     require_once HIZLI_KASA_PATH . 'includes/classes/class-mismatch-notifier.php';
     $found = Hizli_Kasa_Mismatch_Notifier::run_check();
@@ -124,7 +130,9 @@ public static function mismatch_check() {
 }
 
 public static function repair_db() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz işlem!']);
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Yetkisiz işlem!']);
+    }
     
     require_once HIZLI_KASA_PATH . 'includes/classes/class-database.php';
     Hizli_Kasa_Database::init(); // Tabloları eksikse oluşturur, varsa günceller
@@ -133,7 +141,9 @@ public static function repair_db() {
 }
 
 public static function debug_db() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    }
     
     global $wpdb;
     $tables = Hizli_Kasa_Database::get_tables();
@@ -144,7 +154,7 @@ public static function debug_db() {
         $count = $exists ? $wpdb->get_var("SELECT COUNT(*) FROM $table") : 'TABLE MISSING';
         $report[$key] = [
             'table' => $table,
-            'exists' => $exists ? true : false,
+            'exists' => (bool) $exists,
             'row_count' => $count
         ];
     }
@@ -153,10 +163,14 @@ public static function debug_db() {
 }
 
 public static function setup() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz işlem!']);
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Yetkisiz işlem!']);
+    }
     
     $depo_id = intval($_POST['depo_id']);
-    if (!$depo_id) wp_send_json_error(['message' => 'Geçersiz depo ID.']);
+    if ($depo_id === 0) {
+        wp_send_json_error(['message' => 'Geçersiz depo ID.']);
+    }
 
     require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
     $result = Hizli_Kasa_Stock_Manager::initial_sync($depo_id);
@@ -169,7 +183,9 @@ public static function setup() {
 }
 
 public static function reset() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz işlem!']);
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Yetkisiz işlem!']);
+    }
     
     require_once HIZLI_KASA_PATH . 'includes/classes/class-database.php';
     Hizli_Kasa_Database::drop_everything();

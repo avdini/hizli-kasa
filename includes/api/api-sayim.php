@@ -1,66 +1,66 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 add_action('rest_api_init', function () {
-    $permission = function () {
-        return hizli_kasa_can_access_app();
-    };
+    $permission = (fn() => hizli_kasa_can_access_app());
 
     // Aktif sayım oturumunu getir
-    register_rest_route('hizli-kasa/v1', '/sayim/active', array(
+    register_rest_route('hizli-kasa/v1', '/sayim/active', [
         'methods' => 'GET',
         'callback' => 'hizli_kasa_sayim_get_active',
         'permission_callback' => $permission
-    ));
+    ]);
 
     // Yeni sayım oturumu başlat
-    register_rest_route('hizli-kasa/v1', '/sayim/start', array(
+    register_rest_route('hizli-kasa/v1', '/sayim/start', [
         'methods' => 'POST',
         'callback' => 'hizli_kasa_sayim_start',
         'permission_callback' => $permission
-    ));
+    ]);
 
     // Barkod okutarak ürün ekle/artır
-    register_rest_route('hizli-kasa/v1', '/sayim/scan-item', array(
+    register_rest_route('hizli-kasa/v1', '/sayim/scan-item', [
         'methods' => 'POST',
         'callback' => 'hizli_kasa_sayim_scan_item',
         'permission_callback' => $permission
-    ));
+    ]);
 
     // Sayım kalemi miktarını el ile güncelle
-    register_rest_route('hizli-kasa/v1', '/sayim/update-item-qty', array(
+    register_rest_route('hizli-kasa/v1', '/sayim/update-item-qty', [
         'methods' => 'POST',
         'callback' => 'hizli_kasa_sayim_update_item_qty',
         'permission_callback' => $permission
-    ));
+    ]);
 
     // Sayım kalemini sil
-    register_rest_route('hizli-kasa/v1', '/sayim/delete-item', array(
+    register_rest_route('hizli-kasa/v1', '/sayim/delete-item', [
         'methods' => 'POST',
         'callback' => 'hizli_kasa_sayim_delete_item',
         'permission_callback' => $permission
-    ));
+    ]);
 
     // Sayımı iptal et
-    register_rest_route('hizli-kasa/v1', '/sayim/discard', array(
+    register_rest_route('hizli-kasa/v1', '/sayim/discard', [
         'methods' => 'POST',
         'callback' => 'hizli_kasa_sayim_discard',
         'permission_callback' => $permission
-    ));
+    ]);
 
     // Sayımı tamamla (Stok eşitleme)
-    register_rest_route('hizli-kasa/v1', '/sayim/complete', array(
+    register_rest_route('hizli-kasa/v1', '/sayim/complete', [
         'methods' => 'POST',
         'callback' => 'hizli_kasa_sayim_complete',
         'permission_callback' => $permission
-    ));
+    ]);
 
     // Sayım geçmişini getir
-    register_rest_route('hizli-kasa/v1', '/reports/sayim-history', array(
+    register_rest_route('hizli-kasa/v1', '/reports/sayim-history', [
         'methods' => 'GET',
         'callback' => 'hizli_kasa_sayim_history',
         'permission_callback' => $permission
-    ));
+    ]);
 });
 
 /**
@@ -172,7 +172,7 @@ function hizli_kasa_sayim_format_kalem($row) {
 function hizli_kasa_sayim_get_active($request) {
     global $wpdb;
     $depo_id = intval($request->get_param('depo_id'));
-    if (!$depo_id) {
+    if ($depo_id === 0) {
         return new WP_Error('missing_depo', 'Depo ID gerekli.', ['status' => 400]);
     }
 
@@ -262,7 +262,7 @@ function hizli_kasa_sayim_start($request) {
     $params = $request->get_json_params();
     $depo_id = intval($params['depo_id'] ?? 0);
 
-    if (!$depo_id) {
+    if ($depo_id === 0) {
         return new WP_Error('missing_depo', 'Depo ID gerekli.', ['status' => 400]);
     }
 
@@ -488,7 +488,7 @@ function hizli_kasa_sayim_discard($request) {
     $params = $request->get_json_params();
     $session_id = intval($params['session_id'] ?? 0);
 
-    if (!$session_id) {
+    if ($session_id === 0) {
         return new WP_Error('invalid_params', 'Geçersiz parametreler.', ['status' => 400]);
     }
 
@@ -610,16 +610,16 @@ function hizli_kasa_sayim_complete($request) {
     }
 
     // Tek seferlik WP Cron olayını planla
-    wp_schedule_single_event(time(), 'hizli_kasa_sayim_background_sync', array($session_id));
+    wp_schedule_single_event(time(), 'hizli_kasa_sayim_background_sync', [$session_id]);
 
     // Cron'u tetikle (asenkron istek atarak hemen başlat)
     wp_remote_post(
         site_url('wp-cron.php'),
-        array(
+        [
             'timeout'   => 0.01,
             'blocking'  => false,
             'sslverify' => false,
-        )
+        ]
     );
 
     return [
@@ -733,16 +733,16 @@ function hizli_kasa_sayim_background_sync_callback($session_id) {
     $wpdb->query("DELETE FROM {$tables['sayim_kalemleri']} WHERE id IN ($id_list)");
 
     // Sonraki 100 kalem için kendisini 1 saniye sonra tekrar planla
-    wp_schedule_single_event(time() + 1, 'hizli_kasa_sayim_background_sync', array($session_id));
+    wp_schedule_single_event(time() + 1, 'hizli_kasa_sayim_background_sync', [$session_id]);
 
     // Cron'u tetikle
     wp_remote_post(
         site_url('wp-cron.php'),
-        array(
+        [
             'timeout'   => 0.01,
             'blocking'  => false,
             'sslverify' => false,
-        )
+        ]
     );
 }
 
@@ -777,11 +777,7 @@ function hizli_kasa_sayim_history($request) {
 
     $query = "SELECT * FROM {$tables['sayim_sessions']} WHERE $where ORDER BY created_at DESC";
 
-    if (!empty($params)) {
-        $results = $wpdb->get_results($wpdb->prepare($query, ...$params));
-    } else {
-        $results = $wpdb->get_results($query);
-    }
+    $results = $params === [] ? $wpdb->get_results($query) : $wpdb->get_results($wpdb->prepare($query, ...$params));
 
     $history = [];
     foreach ($results as $row) {

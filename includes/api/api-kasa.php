@@ -1,30 +1,26 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 add_action('rest_api_init', function () {
-    register_rest_route('hizli-kasa/v1', '/search', array(
+    register_rest_route('hizli-kasa/v1', '/search', [
         'methods' => 'GET',
         'callback' => 'hizli_kasa_ozel_arama',
-        'permission_callback' => function () {
-            return hizli_kasa_can_access_app();
-        }
-    ));
+        'permission_callback' => fn() => hizli_kasa_can_access_app()
+    ]);
 
-    register_rest_route('hizli-kasa/v1', '/warehouse-stock-check', array(
+    register_rest_route('hizli-kasa/v1', '/warehouse-stock-check', [
         'methods' => 'POST',
         'callback' => 'hizli_kasa_warehouse_stock_check',
-        'permission_callback' => function () {
-            return hizli_kasa_can_access_app();
-        }
-    ));
+        'permission_callback' => fn() => hizli_kasa_can_access_app()
+    ]);
 
-    register_rest_route('hizli-kasa/v1', '/barcode/label-data', array(
+    register_rest_route('hizli-kasa/v1', '/barcode/label-data', [
         'methods' => 'GET',
         'callback' => 'hizli_kasa_api_get_barcode_data',
-        'permission_callback' => function () {
-            return hizli_kasa_can_access_app();
-        }
-    ));
+        'permission_callback' => fn() => hizli_kasa_can_access_app()
+    ]);
 
 });
 
@@ -35,8 +31,9 @@ function hizli_kasa_ozel_arama($data)
 {
     global $wpdb;
     $s = sanitize_text_field($data['s']);
-    if (empty($s))
+    if (empty($s)) {
         return [];
+    }
 
     $depo_id = $data->get_param('depo_id');
     $exact = $data->get_param('exact');
@@ -73,8 +70,9 @@ function hizli_kasa_ozel_arama($data)
         }
     }
 
-    if (empty($found_ids))
+    if (empty($found_ids)) {
         return [];
+    }
 
     // 3. Batch Hydration (Tek seferde verileri çek)
     $results_map = hizli_kasa_hydrate_products_batch($found_ids, $depo_id);
@@ -84,24 +82,22 @@ function hizli_kasa_ozel_arama($data)
     $seen_parents = [];
 
     foreach ($found_ids as $fid) {
-        if (!isset($results_map[$fid]))
+        if (!isset($results_map[$fid])) {
             continue;
+        }
 
         $item = $results_map[$fid];
         $target_id = ($item['type'] === 'variation') ? $item['parent_id'] : $item['id'];
 
-        if ($target_id > 0 && !isset($seen_parents[$target_id])) {
-            // Ana ürünü bul ve ekle
-            if (isset($results_map[$target_id])) {
-                $parent_item = $results_map[$target_id];
-                $final_flat[] = $parent_item;
-                $seen_parents[$target_id] = true;
-
-                // Bu ana ürünün TÜM varyasyonlarını hemen arkasına ekle (JS gruplama için flat liste gerekiyor)
-                foreach ($results_map as $v) {
-                    if ($v['parent_id'] === $target_id) {
-                        $final_flat[] = $v;
-                    }
+        // Ana ürünü bul ve ekle
+        if ($target_id > 0 && !isset($seen_parents[$target_id]) && isset($results_map[$target_id])) {
+            $parent_item = $results_map[$target_id];
+            $final_flat[] = $parent_item;
+            $seen_parents[$target_id] = true;
+            // Bu ana ürünün TÜM varyasyonlarını hemen arkasına ekle (JS gruplama için flat liste gerekiyor)
+            foreach ($results_map as $v) {
+                if ($v['parent_id'] === $target_id) {
+                    $final_flat[] = $v;
                 }
             }
         }
@@ -145,13 +141,15 @@ function hizli_kasa_warehouse_stock_check($request)
         $pid = intval($item['product_id'] ?? 0);
         $vid = intval($item['variation_id'] ?? 0);
         $qty = intval($item['qty'] ?? 0);
-        if (!$pid) continue;
+        if ($pid === 0) {
+            continue;
+        }
         $tid          = $vid ?: $pid;
         $target_ids[] = $tid;
         $item_map[$tid] = ['product_id' => $pid, 'variation_id' => $vid, 'qty' => $qty];
     }
 
-    if (empty($target_ids)) {
+    if ($target_ids === []) {
         return [];
     }
 
@@ -256,7 +254,7 @@ function hizli_kasa_warehouse_stock_check($request)
             $site_ok = false;
         }
 
-        if ($depo_id) {
+        if ($depo_id !== 0) {
             $depo_ok = ($requested_qty <= $available_depo);
         }
 
@@ -306,8 +304,9 @@ function hizli_kasa_api_get_barcode_data($request)
         $results = [];
         foreach ($variation_ids as $vid) {
             $data = Hizli_Kasa_Barcode_Helper::prepare_label_data($product_id, intval($vid));
-            if ($data)
+            if ($data) {
                 $results[] = $data;
+            }
         }
         return $results;
     }

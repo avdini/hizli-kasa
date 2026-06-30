@@ -1,0 +1,13 @@
+parameters:
+    level: 6
+    paths:
+        - hizli-kasa.php
+        - includes/
+    excludePaths:
+        - includes/plugin-update-checker/
+        - includes/views/
+    bootstrapFiles:
+        - vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php
+    treatPhpDocTypesAsCertain: false
+    universalObjectCratesClasses:
+        - WP_Post

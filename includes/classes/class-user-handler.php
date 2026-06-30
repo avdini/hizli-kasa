@@ -7,22 +7,24 @@
  * @package HizliKasa
  */
 
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Hizli_Kasa_User_Handler {
 
     public static function init() {
         // Rol oluşturma
-        add_action('init', [__CLASS__, 'ensure_kasa_role']);
+        add_action('init', [self::class, 'ensure_kasa_role']);
         
         // Admin paneli erişim kısıtlaması
-        add_action('admin_init', [__CLASS__, 'restrict_admin_access']);
+        add_action('admin_init', [self::class, 'restrict_admin_access']);
         
         // Admin barı gizle
-        add_filter('show_admin_bar', [__CLASS__, 'hide_admin_bar']);
+        add_filter('show_admin_bar', [self::class, 'hide_admin_bar']);
 
         // WooCommerce REST API yetki kontrolüne müdahale (Öncelik artırıldı: 20)
-        add_filter('user_has_cap', [__CLASS__, 'bypass_woo_rest_permissions'], 20, 4);
+        add_filter('user_has_cap', [self::class, 'bypass_woo_rest_permissions'], 20, 4);
     }
 
     /**
@@ -122,12 +124,10 @@ class Hizli_Kasa_User_Handler {
             'assign_shop_order_terms'
         ];
 
-        if (in_array($requested_cap, $allowed_caps)) {
-            // EK GÜVENLİK: Sadece WooCommerce sipariş API yolu üzerindeysek bu yetkiyi havada oluştur
-            // /wc/v3/orders veya /wc/v2/orders veya query param olarak rest_route=/wc/v3/orders
-            if (stripos($uri, 'wc/v') !== false && stripos($uri, 'orders') !== false) {
-                $allcaps[$requested_cap] = true;
-            }
+        // EK GÜVENLİK: Sadece WooCommerce sipariş API yolu üzerindeysek bu yetkiyi havada oluştur
+        // /wc/v3/orders veya /wc/v2/orders veya query param olarak rest_route=/wc/v3/orders
+        if (in_array($requested_cap, $allowed_caps) && (stripos($uri, 'wc/v') !== false && stripos($uri, 'orders') !== false)) {
+            $allcaps[$requested_cap] = true;
         }
 
         return $allcaps;

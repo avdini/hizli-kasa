@@ -1,14 +1,18 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Hizli_Kasa_Ajax_Import_Export {
     public static function init() {
-        add_action('wp_ajax_hizli_kasa_export_stocks', [__CLASS__, 'export']);
-        add_action('wp_ajax_hizli_kasa_import_stocks', [__CLASS__, 'import']);
+        add_action('wp_ajax_hizli_kasa_export_stocks', [self::class, 'export']);
+        add_action('wp_ajax_hizli_kasa_import_stocks', [self::class, 'import']);
     }
 
 public static function export() {
-    if (!current_user_can('manage_options')) wp_die('Yetkisiz erişim');
+    if (!current_user_can('manage_options')) {
+        wp_die('Yetkisiz erişim');
+    }
     
     $format = isset($_GET['format']) ? sanitize_text_field($_GET['format']) : 'csv';
     $depo_id = isset($_GET['depo_id']) ? intval($_GET['depo_id']) : 0;
@@ -34,7 +38,9 @@ public static function export() {
  * Stok İçe Aktarma (Import)
  */
 public static function import() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    }
     
     if (!isset($_FILES['import_file'])) {
         wp_send_json_error(['message' => 'Dosya seçilmedi.']);

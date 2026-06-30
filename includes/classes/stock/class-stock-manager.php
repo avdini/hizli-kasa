@@ -1,6 +1,7 @@
 <?php
-if (!defined('ABSPATH'))
+if (!defined('ABSPATH')) {
     exit;
+}
 
 class Hizli_Kasa_Stock_Manager {
 
@@ -32,7 +33,9 @@ class Hizli_Kasa_Stock_Manager {
 
         foreach ($products as $p) {
             $stock_qty = floatval($p->stock);
-            if ($stock_qty == 0) continue;
+            if ($stock_qty == 0) {
+                continue;
+            }
 
             $product_id = ($p->post_type === 'product_variation') ? $p->post_parent : $p->ID;
             $variation_id = ($p->post_type === 'product_variation') ? $p->ID : 0;
@@ -183,8 +186,8 @@ class Hizli_Kasa_Stock_Manager {
     /**
      * @deprecated Devre dışı.
      */
-    public static function sync_to_wc_stock($product_id, $variation_id) {
-        return;
+    public static function sync_to_wc_stock($product_id, $variation_id)
+    {
     }
 
     // --- Backward compatibility wrappers ---

@@ -5,7 +5,9 @@
  * Ürün verilerini barkod etiketine uygun formata dönüştürür.
  */
 
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Hizli_Kasa_Barcode_Helper {
 
@@ -16,20 +18,13 @@ class Hizli_Kasa_Barcode_Helper {
         $id = $variation_id ?: $product_id;
         $product = wc_get_product($id);
 
-        if (!$product) return null;
+        if (!$product) {
+            return null;
+        }
 
         $parent_id = ($product->is_type('variation')) ? $product->get_parent_id() : $product->get_id();
         $parent = ($product->is_type('variation')) ? wc_get_product($parent_id) : $product;
-
-        // 1. Barkod No (SKU yoksa ID)
-        // WooCommerce varyasyonlarda SKU boşsa otomatik olarak parent SKU'yu miras alır.
-        // Varyasyonun kendi SKU'su yoksa parent SKU yerine varyasyonun kendi ID'sini (child ID) kullanıyoruz.
-        $sku = '';
-        if ($product->is_type('variation')) {
-            $sku = get_post_meta($id, '_sku', true);
-        } else {
-            $sku = $product->get_sku();
-        }
+        $sku = $product->is_type('variation') ? get_post_meta($id, '_sku', true) : $product->get_sku();
 
         $barcode_no = $sku ?: (string)$id;
 
@@ -99,9 +94,9 @@ class Hizli_Kasa_Barcode_Helper {
 
             if (mb_stripos($clean_name, 'renk') !== false || mb_stripos($clean_name, 'color') !== false) {
                 $formatted['color'] = mb_convert_case($display_value, MB_CASE_TITLE, "UTF-8");
-            } else if (mb_stripos($clean_name, 'beden') !== false || mb_stripos($clean_name, 'size') !== false || mb_stripos($clean_name, 'numara') !== false) {
+            } elseif (mb_stripos($clean_name, 'beden') !== false || mb_stripos($clean_name, 'size') !== false || mb_stripos($clean_name, 'numara') !== false) {
                 $formatted['size'] = mb_strtoupper($display_value, "UTF-8");
-            } else if (mb_stripos($clean_name, 'ölçü') !== false || mb_stripos($clean_name, 'olcu') !== false || mb_stripos($clean_name, 'boy') !== false) {
+            } elseif (mb_stripos($clean_name, 'ölçü') !== false || mb_stripos($clean_name, 'olcu') !== false || mb_stripos($clean_name, 'boy') !== false) {
                 $formatted['size'] = mb_strtoupper($display_value, "UTF-8");
                 $formatted['label'] = 'Ölçü';
             }

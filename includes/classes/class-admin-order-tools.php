@@ -9,11 +9,11 @@ class Hizli_Kasa_Admin_Order_Tools
 
     public static function init()
     {
-        add_action('add_meta_boxes', [__CLASS__, 'add_meta_boxes'], 20, 2);
-        add_action('add_meta_boxes_shop_order', [__CLASS__, 'add_meta_box_to_current_screen'], 20, 1);
-        add_action('add_meta_boxes_woocommerce_page_wc-orders', [__CLASS__, 'add_meta_box_to_current_screen'], 20, 1);
-        add_action('admin_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
-        add_action('wp_ajax_hk_admin_order_tools_save', [__CLASS__, 'ajax_save_order']);
+        add_action('add_meta_boxes', [self::class, 'add_meta_boxes'], 20, 2);
+        add_action('add_meta_boxes_shop_order', [self::class, 'add_meta_box_to_current_screen'], 20, 1);
+        add_action('add_meta_boxes_woocommerce_page_wc-orders', [self::class, 'add_meta_box_to_current_screen'], 20, 1);
+        add_action('admin_enqueue_scripts', [self::class, 'enqueue_assets']);
+        add_action('wp_ajax_hk_admin_order_tools_save', [self::class, 'ajax_save_order']);
     }
 
     public static function add_meta_boxes($screen_id, $post_or_order_object)
@@ -33,7 +33,7 @@ class Hizli_Kasa_Admin_Order_Tools
             add_meta_box(
                 'hizli-kasa-admin-order-tools',
                 'Hizli Kasa Gelismis Siparis Paneli',
-                [__CLASS__, 'render_meta_box'],
+                [self::class, 'render_meta_box'],
                 $screen,
                 'normal',
                 'low'
@@ -55,7 +55,7 @@ class Hizli_Kasa_Admin_Order_Tools
         add_meta_box(
             'hizli-kasa-admin-order-tools',
             'Hizli Kasa Gelismis Siparis Paneli',
-            [__CLASS__, 'render_meta_box'],
+            [self::class, 'render_meta_box'],
             $screen->id,
             'normal',
             'low'
@@ -211,8 +211,8 @@ class Hizli_Kasa_Admin_Order_Tools
             $item = new WC_Order_Item_Product();
             $item->set_product($product);
             $item->set_quantity($qty);
-            $item->set_subtotal($total);
-            $item->set_total($total);
+            $item->set_subtotal(wc_format_decimal($total));
+            $item->set_total(wc_format_decimal($total));
             $item->add_meta_data('_hk_admin_added', 'yes', true);
             $order->add_item($item);
         }
@@ -235,7 +235,7 @@ class Hizli_Kasa_Admin_Order_Tools
             $total = wc_format_decimal($row['total'] ?? 0);
             $fee->set_name(sanitize_text_field($row['name'] ?? $fee->get_name()));
             $fee->set_amount($total);
-            $fee->set_total($total);
+            $fee->set_total(wc_format_decimal($total));
             $fee->save();
         }
     }
@@ -252,7 +252,7 @@ class Hizli_Kasa_Admin_Order_Tools
             $fee = new WC_Order_Item_Fee();
             $fee->set_name($name);
             $fee->set_amount($total);
-            $fee->set_total($total);
+            $fee->set_total(wc_format_decimal($total));
             $order->add_item($fee);
         }
     }
@@ -356,29 +356,6 @@ class Hizli_Kasa_Admin_Order_Tools
                 '_hk_admin_added' => ['label' => 'Admin panelden eklendi', 'default' => 'yes'],
             ],
         ];
-    }
-
-    private static function format_meta_value($value)
-    {
-        if (is_array($value) || is_object($value)) {
-            return wp_json_encode($value, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-        }
-
-        return (string) $value;
-    }
-
-    private static function format_item_meta($item)
-    {
-        $rows = [];
-        foreach ($item->get_meta_data() as $meta) {
-            $data = $meta->get_data();
-            $rows[] = [
-                'key' => $data['key'],
-                'value' => $data['value'],
-            ];
-        }
-
-        return wp_json_encode($rows, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
 
     private static function save_item_meta($item, $raw_meta)

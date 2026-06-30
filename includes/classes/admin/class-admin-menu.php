@@ -1,9 +1,11 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Hizli_Kasa_Admin_Menu {
     public static function init() {
-        add_action('admin_menu', [__CLASS__, 'register']);
+        add_action('admin_menu', [self::class, 'register']);
     }
 
     public static function register()

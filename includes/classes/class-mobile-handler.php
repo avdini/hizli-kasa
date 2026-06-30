@@ -5,13 +5,15 @@
  * Mobil envanter sayfasının yönlendirmesini ve asset yüklemelerini yönetir.
  */
 
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Hizli_Kasa_Mobile_Handler {
 
     public static function init() {
-        add_action('template_redirect', [__CLASS__, 'handle_mobile_mode']);
-        add_action('template_redirect', [__CLASS__, 'serve_dynamic_manifest']);
+        add_action('template_redirect', [self::class, 'handle_mobile_mode']);
+        add_action('template_redirect', [self::class, 'serve_dynamic_manifest']);
     }
 
     public static function serve_dynamic_manifest() {
@@ -71,17 +73,17 @@ class Hizli_Kasa_Mobile_Handler {
 
             // Mobil Assetleri Yükle
             add_action('wp_enqueue_scripts', function() use ($pos_version, $display_name, $user, $tema) {
-                wp_enqueue_style('kasa-theme-vars', HIZLI_KASA_URL . 'assets/css/modules/theme-vars.css', array(), $pos_version);
-                wp_enqueue_style('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/css/modules/mobile-inventory.css', array(), $pos_version);
+                wp_enqueue_style('kasa-theme-vars', HIZLI_KASA_URL . 'assets/css/modules/theme-vars.css', [], $pos_version);
+                wp_enqueue_style('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/css/modules/mobile-inventory.css', [], $pos_version);
                 
                 // Kütüphaneler
-                wp_enqueue_script('html5-qrcode', 'https://cdn.jsdelivr.net/npm/html5-qrcode/html5-qrcode.min.js', array(), '2.3.8', true);
+                wp_enqueue_script('html5-qrcode', 'https://cdn.jsdelivr.net/npm/html5-qrcode/html5-qrcode.min.js', [], '2.3.8', true);
 
                 // Önbellek Yıkıcı — Mobile fetch isteklerini de kapsar
-                wp_enqueue_script('kasa-cache-buster', HIZLI_KASA_URL . 'assets/js/modules/cache-buster.js', array(), $pos_version, true);
+                wp_enqueue_script('kasa-cache-buster', HIZLI_KASA_URL . 'assets/js/modules/cache-buster.js', [], $pos_version, true);
 
                 // Mobil JS
-                wp_enqueue_script('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/js/modules/mobile-inventory.js', array('html5-qrcode', 'kasa-cache-buster'), $pos_version, true);
+                wp_enqueue_script('kasa-mobile-inventory', HIZLI_KASA_URL . 'assets/js/modules/mobile-inventory.js', ['html5-qrcode', 'kasa-cache-buster'], $pos_version, true);
 
                 // Kullanıcının yetkili olduğu depoları çek
                 $view_depos = get_user_meta($user->ID, '_hizli_kasa_depo_ids_view', true);
@@ -111,10 +113,10 @@ class Hizli_Kasa_Mobile_Handler {
                 // Aktif deponun yetkili listede olduğundan emin ol (Güvenlik ve iOS 0 Stok Önlemi)
                 $allowed_ids = wp_list_pluck($depolar, 'id');
                 if (!$aktif_depo_id || !in_array((int)$aktif_depo_id, array_map('intval', $allowed_ids))) {
-                    $aktif_depo_id = !empty($depolar) ? $depolar[0]->id : 0;
+                    $aktif_depo_id = empty($depolar) ? 0 : $depolar[0]->id;
                 }
 
-                wp_localize_script('kasa-mobile-inventory', 'kasaAyar', array(
+                wp_localize_script('kasa-mobile-inventory', 'kasaAyar', [
                     'rootApiUrl' => rest_url(),
                     'nonce'      => wp_create_nonce('wp_rest'),
                     'userName'   => $display_name,
@@ -123,7 +125,7 @@ class Hizli_Kasa_Mobile_Handler {
                     'tema'       => $tema,
                     'depolar'    => $depolar,
                     'aktifDepo'  => (int)$aktif_depo_id
-                ));
+                ]);
             });
 
             // Standalone Şablonu Yükle

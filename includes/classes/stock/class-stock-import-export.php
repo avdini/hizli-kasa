@@ -1,5 +1,7 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Hizli_Kasa_Stock_Import_Export {
     public static function export($format = 'csv', $depo_id = 0) {
@@ -39,9 +41,7 @@ class Hizli_Kasa_Stock_Import_Export {
 
         $output = "Depo Adı,Öncelik,Depo Adresi,Ürün Adı,SKU,Stok Miktarı\n";
         foreach ($data as $row) {
-            $clean_row = array_map(function($v) {
-                return '"' . str_replace('"', '""', $v) . '"';
-            }, $row);
+            $clean_row = array_map(fn($v) => '"' . str_replace('"', '""', $v) . '"', $row);
             $output .= implode(',', $clean_row) . "\n";
         }
         return $output;
@@ -65,7 +65,9 @@ class Hizli_Kasa_Stock_Import_Export {
             unset($h);
 
             foreach ($lines as $line) {
-                if (empty($line)) continue;
+                if (empty($line)) {
+                    continue;
+                }
                 $row_data = str_getcsv($line);
                 if (count($row_data) === count($headers)) {
                     $rows[] = array_combine($headers, $row_data);
@@ -73,7 +75,9 @@ class Hizli_Kasa_Stock_Import_Export {
             }
         }
 
-        if (empty($rows)) return ['success' => false, 'message' => 'Dosya boş veya geçersiz format.'];
+        if (empty($rows)) {
+            return ['success' => false, 'message' => 'Dosya boş veya geçersiz format.'];
+        }
 
         $stats = ['updated' => 0, 'unmatched' => 0, 'new_warehouses' => 0];
 
@@ -100,7 +104,9 @@ class Hizli_Kasa_Stock_Import_Export {
 
             $product_name   = $safe_row['urunadi'] ?? $safe_row['productname'] ?? $row['Ürün Adı'] ?? '';
 
-            if (empty($warehouse_name) || (empty($sku) && empty($product_name))) continue;
+            if (empty($warehouse_name) || (empty($sku) && empty($product_name))) {
+                continue;
+            }
 
             $depo_id = self::get_or_create_warehouse($warehouse_name, $stats, $priority, $address);
 
@@ -141,10 +147,14 @@ class Hizli_Kasa_Stock_Import_Export {
             $stats['new_warehouses']++;
         } else {
             $update_data = [];
-            if (!empty($address)) $update_data['address'] = $address;
-            if ($priority > 0) $update_data['priority'] = $priority;
+            if (!empty($address)) {
+                $update_data['address'] = $address;
+            }
+            if ($priority > 0) {
+                $update_data['priority'] = $priority;
+            }
 
-            if (!empty($update_data)) {
+            if ($update_data !== []) {
                 $wpdb->update($table, $update_data, ['id' => $id]);
             }
         }
@@ -153,15 +163,21 @@ class Hizli_Kasa_Stock_Import_Export {
     }
 
     private static function find_product_by_sku($sku) {
-        if (empty($sku)) return false;
+        if (empty($sku)) {
+            return false;
+        }
         global $wpdb;
 
         $id = $wpdb->get_var($wpdb->prepare("SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value = %s LIMIT 1", $sku));
 
-        if (!$id) return false;
+        if (!$id) {
+            return false;
+        }
 
         $post = get_post($id);
-        if (!$post || ($post->post_type !== 'product' && $post->post_type !== 'product_variation')) return false;
+        if (!$post || ($post->post_type !== 'product' && $post->post_type !== 'product_variation')) {
+            return false;
+        }
 
         if ($post->post_type === 'product_variation') {
             return ['product_id' => $post->post_parent, 'variation_id' => $id];
@@ -171,15 +187,21 @@ class Hizli_Kasa_Stock_Import_Export {
     }
 
     private static function find_product_by_name($product_name) {
-        if (empty($product_name)) return false;
+        if (empty($product_name)) {
+            return false;
+        }
         global $wpdb;
 
         $id = $wpdb->get_var($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_title = %s AND post_type IN ('product', 'product_variation') AND post_status IN ('publish', 'private') LIMIT 1", $product_name));
 
-        if (!$id) return false;
+        if (!$id) {
+            return false;
+        }
 
         $post = get_post($id);
-        if (!$post) return false;
+        if (!$post) {
+            return false;
+        }
 
         if ($post->post_type === 'product_variation') {
             return ['product_id' => $post->post_parent, 'variation_id' => $id];

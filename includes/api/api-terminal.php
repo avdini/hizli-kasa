@@ -1,30 +1,26 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 add_action('rest_api_init', function () {
-    register_rest_route('hizli-kasa/v1', '/terminal/products', array(
+    register_rest_route('hizli-kasa/v1', '/terminal/products', [
         'methods' => 'GET',
         'callback' => 'hizli_kasa_terminal_products',
-        'permission_callback' => function () {
-            return hizli_kasa_can_access_app();
-        }
-    ));
+        'permission_callback' => fn() => hizli_kasa_can_access_app()
+    ]);
 
-    register_rest_route('hizli-kasa/v1', '/terminal/update-stock', array(
+    register_rest_route('hizli-kasa/v1', '/terminal/update-stock', [
         'methods' => 'POST',
         'callback' => 'hizli_kasa_terminal_update_stock',
-        'permission_callback' => function () {
-            return hizli_kasa_can_access_app();
-        }
-    ));
+        'permission_callback' => fn() => hizli_kasa_can_access_app()
+    ]);
 
-    register_rest_route('hizli-kasa/v1', '/terminal/filters', array(
+    register_rest_route('hizli-kasa/v1', '/terminal/filters', [
         'methods' => 'GET',
         'callback' => 'hizli_kasa_terminal_get_filters',
-        'permission_callback' => function () {
-            return hizli_kasa_can_access_app();
-        }
-    ));
+        'permission_callback' => fn() => hizli_kasa_can_access_app()
+    ]);
 
 });
 
@@ -65,14 +61,17 @@ function hizli_kasa_terminal_products($request)
     if ($brand_id > 0) {
         $brand_tax = 'product_brand';
         if (!taxonomy_exists($brand_tax)) {
-            if (taxonomy_exists('pwb-brand')) $brand_tax = 'pwb-brand';
-            elseif (taxonomy_exists('brand')) $brand_tax = 'brand';
+            if (taxonomy_exists('pwb-brand')) {
+                $brand_tax = 'pwb-brand';
+            } elseif (taxonomy_exists('brand')) {
+                $brand_tax = 'brand';
+            }
         }
         $join_extra .= " INNER JOIN {$wpdb->term_relationships} tr_brand ON (p.ID = tr_brand.object_id)";
         $join_extra .= $wpdb->prepare(" INNER JOIN {$wpdb->term_taxonomy} tt_brand ON (tr_brand.term_taxonomy_id = tt_brand.term_taxonomy_id AND tt_brand.taxonomy = %s AND tt_brand.term_id = %d)", $brand_tax, $brand_id);
     }
 
-    if ($depo_id) {
+    if ($depo_id !== 0) {
         $stock_join_type = (!empty($s) || $cat_id > 0 || $brand_id > 0) ? 'LEFT JOIN' : 'INNER JOIN';
         
         // Stok Durumu Filtresi
@@ -100,7 +99,9 @@ function hizli_kasa_terminal_products($request)
     // --- Sıralama Ayarları ---
     $orderby = $request->get_param('orderby');
     $order   = strtoupper($request->get_param('order') ?: 'DESC');
-    if (!in_array($order, ['ASC', 'DESC'])) $order = 'DESC';
+    if (!in_array($order, ['ASC', 'DESC'])) {
+        $order = 'DESC';
+    }
 
     // Varsayılan: Yayın Tarihi (Yeni -> Eski)
     $order_by = "p.post_date DESC";
@@ -140,16 +141,18 @@ function hizli_kasa_terminal_products($request)
     }
 
     $total_query = "SELECT COUNT(DISTINCT p.ID) FROM {$wpdb->posts} p $join_extra WHERE $where";
-    $total = $wpdb->get_var(empty($params) ? $total_query : $wpdb->prepare($total_query, ...$params));
-    if (!$total)
+    $total = $wpdb->get_var($params === [] ? $total_query : $wpdb->prepare($total_query, ...$params));
+    if (!$total) {
         return ['products' => [], 'total' => 0, 'has_more' => false, 'simple_count' => 0, 'variable_count' => 0, 'grand_total_items' => 0, 'critical_count' => 0];
+    }
 
     $id_query = $wpdb->prepare("
         SELECT DISTINCT p.ID FROM {$wpdb->posts} p $join_extra WHERE $where ORDER BY $order_by LIMIT %d OFFSET %d", array_merge($params, [$limit, $offset]));
     $target_ids = $wpdb->get_col($id_query);
 
-    if (empty($target_ids))
+    if (empty($target_ids)) {
         return ['products' => [], 'total' => (int) $total, 'has_more' => false, 'simple_count' => 0, 'variable_count' => 0, 'grand_total_items' => 0, 'critical_count' => 0];
+    }
 
     $placeholders = implode(',', array_fill(0, count($target_ids), '%d'));
     $sql = $wpdb->prepare("
@@ -194,10 +197,10 @@ function hizli_kasa_terminal_products($request)
 
         // --- Multi-Warehouse Stock & Code Fetch ---
         $all_warehouses = $wpdb->get_results("SELECT id, name FROM {$wpdb->prefix}hizli_kasa_depolar ORDER BY priority DESC");
-        $all_item_ids = array_merge($parent_ids, !empty($v_results) ? wp_list_pluck($v_results, 'ID') : []);
+        $all_item_ids = array_merge($parent_ids, empty($v_results) ? [] : wp_list_pluck($v_results, 'ID'));
         $all_stocks = [];
         $all_codes = [];
-        if (!empty($all_item_ids)) {
+        if ($all_item_ids !== []) {
             $ids_ph_all = implode(',', array_fill(0, count($all_item_ids), '%d'));
             $stocks_raw = $wpdb->get_results($wpdb->prepare("
                 SELECT location_id, product_id, variation_id, quantity, depo_kodu 
@@ -246,12 +249,12 @@ function hizli_kasa_terminal_products($request)
             }
 
             foreach ($v_results as $v) {
-                $raw_attrs = isset($v_meta_map[$v->ID]) ? $v_meta_map[$v->ID] : [];
+                $raw_attrs = $v_meta_map[$v->ID] ?? [];
                 $clean_attrs = [];
                 foreach ($raw_attrs as $ak => $av) {
                     $tax = str_replace('attribute_', '', $ak);
                     $clean_k = str_replace('pa_', '', $tax); // pa_renk -> renk
-                    $clean_attrs[$clean_k] = isset($term_names[$tax][$av]) ? $term_names[$tax][$av] : $av;
+                    $clean_attrs[$clean_k] = $term_names[$tax][$av] ?? $av;
                 }
                 $v->attributes = $clean_attrs;
                 $v->all_stocks = (object) ($all_stocks[$v->ID] ?? []);
@@ -260,7 +263,7 @@ function hizli_kasa_terminal_products($request)
             }
 
             // --- Sıralama Mantığı: Renk -> Beden/Numara -> Başlık ---
-            foreach ($variations_by_parent as $parent_id => &$variation_rows) {
+            foreach ($variations_by_parent as &$variation_rows) {
                 usort($variation_rows, function ($a, $b) use ($s) {
                     // 1. Arama Puanı (Eğer arama yapılıyorsa)
                     if (!empty($s)) {
@@ -287,13 +290,21 @@ function hizli_kasa_terminal_products($request)
 
                     foreach ($attrs_a as $k => $val) {
                         $k_low = strtolower($k);
-                        if (strpos($k_low, 'renk') !== false || strpos($k_low, 'color') !== false) $color_a = $val;
-                        if (strpos($k_low, 'beden') !== false || strpos($k_low, 'size') !== false || strpos($k_low, 'numara') !== false) $size_a = $val;
+                        if (strpos($k_low, 'renk') !== false || strpos($k_low, 'color') !== false) {
+                            $color_a = $val;
+                        }
+                        if (strpos($k_low, 'beden') !== false || strpos($k_low, 'size') !== false || strpos($k_low, 'numara') !== false) {
+                            $size_a = $val;
+                        }
                     }
                     foreach ($attrs_b as $k => $val) {
                         $k_low = strtolower($k);
-                        if (strpos($k_low, 'renk') !== false || strpos($k_low, 'color') !== false) $color_b = $val;
-                        if (strpos($k_low, 'beden') !== false || strpos($k_low, 'size') !== false || strpos($k_low, 'numara') !== false) $size_b = $val;
+                        if (strpos($k_low, 'renk') !== false || strpos($k_low, 'color') !== false) {
+                            $color_b = $val;
+                        }
+                        if (strpos($k_low, 'beden') !== false || strpos($k_low, 'size') !== false || strpos($k_low, 'numara') !== false) {
+                            $size_b = $val;
+                        }
                     }
 
                     // Önce Renk
@@ -318,7 +329,9 @@ function hizli_kasa_terminal_products($request)
 
                         $get_weight = function($val) use ($size_map) {
                             $v = strtolower(trim((string)$val));
-                            if (is_numeric($v)) return (float)$v;
+                            if (is_numeric($v)) {
+                                return (float)$v;
+                            }
                             return isset($size_map[$v]) ? (float)$size_map[$v] : 999;
                         };
 
@@ -345,8 +358,9 @@ function hizli_kasa_terminal_products($request)
         $row->all_stocks = (object) ($all_stocks[$row->ID] ?? []);
         $row->all_codes = (object) ($all_codes[$row->ID] ?? []);
         $item = hizli_kasa_format_urun_row($row, $depo_id, $variations_by_parent);
-        if ($item)
+        if ($item) {
             $formatted[] = $item;
+        }
     }
 
     // --- İstatistikleri Hesapla (Performans için sadece ilk sayfa yüklemesinde) ---
@@ -367,14 +381,16 @@ function hizli_kasa_terminal_products($request)
             WHERE $where
             GROUP BY tt_type.slug
         ";
-        $type_stats = $wpdb->get_results(empty($params) ? $type_stats_query : $wpdb->prepare($type_stats_query, ...$params));
+        $type_stats = $wpdb->get_results($params === [] ? $type_stats_query : $wpdb->prepare($type_stats_query, ...$params));
 
         if ($type_stats) {
             foreach ($type_stats as $ts) {
-                if ($ts->p_type === 'simple')
+                if ($ts->p_type === 'simple') {
                     $simple_count = (int) $ts->cnt;
-                if ($ts->p_type === 'variable')
+                }
+                if ($ts->p_type === 'variable') {
                     $variable_count = (int) $ts->cnt;
+                }
             }
         }
 
@@ -393,7 +409,7 @@ function hizli_kasa_terminal_products($request)
             AND p.post_type = 'product'
             AND t.term_id IS NULL
         ";
-        $count_simple = (int) $wpdb->get_var(empty($params) ? $grand_query_simple : $wpdb->prepare($grand_query_simple, ...$params));
+        $count_simple = (int) $wpdb->get_var($params === [] ? $grand_query_simple : $wpdb->prepare($grand_query_simple, ...$params));
 
         // 2b. Varyasyonlar
         $grand_query_vars = "
@@ -405,7 +421,7 @@ function hizli_kasa_terminal_products($request)
             AND p2.post_status IN ('publish', 'private') 
             AND p2.post_type = 'product_variation'
         ";
-        $count_vars = (int) $wpdb->get_var(empty($params) ? $grand_query_vars : $wpdb->prepare($grand_query_vars, ...$params));
+        $count_vars = (int) $wpdb->get_var($params === [] ? $grand_query_vars : $wpdb->prepare($grand_query_vars, ...$params));
 
         $grand_total_items = $count_simple + $count_vars;
 
@@ -449,8 +465,8 @@ function hizli_kasa_terminal_products($request)
         'has_more' => ($offset + $limit) < $total,
         'simple_count' => $simple_count,
         'variable_count' => $variable_count,
-        'grand_total_items' => (int) $grand_total_items,
-        'critical_count' => (int) $critical_count
+        'grand_total_items' => $grand_total_items,
+        'critical_count' => $critical_count
     ];
 }
 
@@ -468,7 +484,7 @@ function hizli_kasa_terminal_update_stock($request)
 
     $user_id = get_current_user_id();
 
-    if (!$depo_id) {
+    if ($depo_id === 0) {
         return new WP_Error('no_depo', 'active_depo_id belirtilmedi.', ['status' => 400]);
     }
 
@@ -505,8 +521,11 @@ function hizli_kasa_terminal_get_filters($request) {
     // Markalar (Çeşitli eklenti destekleri)
     $brand_tax = 'product_brand';
     if (!taxonomy_exists($brand_tax)) {
-        if (taxonomy_exists('pwb-brand')) $brand_tax = 'pwb-brand';
-        elseif (taxonomy_exists('brand')) $brand_tax = 'brand';
+        if (taxonomy_exists('pwb-brand')) {
+            $brand_tax = 'pwb-brand';
+        } elseif (taxonomy_exists('brand')) {
+            $brand_tax = 'brand';
+        }
     }
 
     $formatted_brands = [];
@@ -535,7 +554,7 @@ function hizli_kasa_terminal_get_filters($request) {
  * Kategorileri hiyerarşik olarak sıralar ve önüne tire ekler.
  */
 function hizli_kasa_sort_terms_hierarchicaly(array &$terms, $parentId = 0, $depth = 0) {
-    $branch = array();
+    $branch = [];
 
     foreach ($terms as $term) {
         if ($term->parent == $parentId) {

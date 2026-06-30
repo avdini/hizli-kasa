@@ -1,15 +1,19 @@
 <?php
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 class Hizli_Kasa_Ajax_Unmatched {
     public static function init() {
-        add_action('wp_ajax_hizli_kasa_get_unmatched', [__CLASS__, 'get_list']);
-        add_action('wp_ajax_hizli_kasa_delete_unmatched', [__CLASS__, 'delete']);
-        add_action('wp_ajax_hizli_kasa_clear_all_unmatched', [__CLASS__, 'clear_all']);
+        add_action('wp_ajax_hizli_kasa_get_unmatched', [self::class, 'get_list']);
+        add_action('wp_ajax_hizli_kasa_delete_unmatched', [self::class, 'delete']);
+        add_action('wp_ajax_hizli_kasa_clear_all_unmatched', [self::class, 'clear_all']);
     }
 
 public static function get_list() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    }
     
     global $wpdb;
     $table = $wpdb->prefix . 'hizli_kasa_unmatched_items';
@@ -29,7 +33,9 @@ public static function get_list() {
  * Eşleşmeyen Ürünü Sil
  */
 public static function delete() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    }
     
     $id = intval($_POST['id']);
     global $wpdb;
@@ -49,7 +55,9 @@ public static function delete() {
  * Tüm Eşleşmeyen Ürünleri Sil (Ekstra Güvenlik)
  */
 public static function clear_all() {
-    if (!current_user_can('manage_options')) wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Yetkisiz erişim']);
+    }
     
     global $wpdb;
     $table = $wpdb->prefix . 'hizli_kasa_unmatched_items';

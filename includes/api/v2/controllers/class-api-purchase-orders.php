@@ -147,7 +147,7 @@ class Hizli_Kasa_API_Purchase_Orders extends Hizli_Kasa_API_Controller_Base {
             'reference_no'  => $reference_no,
             'status'        => 'pending',
             'order_date'    => current_time('Y-m-d'),
-            'expected_date' => $expected_date ? $expected_date : null,
+            'expected_date' => $expected_date ?: null,
             'created_by'    => get_current_user_id(),
             'notes'         => $notes,
             'created_at'    => current_time('mysql'),
@@ -169,8 +169,12 @@ class Hizli_Kasa_API_Purchase_Orders extends Hizli_Kasa_API_Controller_Base {
             $unit_cost = isset($item['unit_cost']) ? floatval($item['unit_cost']) : 0;
             $custom_name = isset($item['custom_product_name']) ? sanitize_text_field($item['custom_product_name']) : '';
 
-            if ($expected_qty <= 0) continue;
-            if ($product_id <= 0 && empty($custom_name)) continue;
+            if ($expected_qty <= 0) {
+                continue;
+            }
+            if ($product_id <= 0 && empty($custom_name)) {
+                continue;
+            }
 
             $item_data = [
                 'purchase_order_id'   => $po_id,
@@ -225,10 +229,14 @@ class Hizli_Kasa_API_Purchase_Orders extends Hizli_Kasa_API_Controller_Base {
             $item_id = absint($r_item['id']);
             $new_received_qty = floatval($r_item['received_qty']); // Gelen ek miktar
 
-            if ($new_received_qty <= 0) continue;
+            if ($new_received_qty <= 0) {
+                continue;
+            }
 
             $db_item = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$tables['purchase_order_items']} WHERE id = %d AND purchase_order_id = %d", $item_id, $po_id));
-            if (!$db_item) continue;
+            if (!$db_item) {
+                continue;
+            }
 
             $total_received = $db_item->received_qty + $new_received_qty;
             if ($total_received > $db_item->expected_qty) {
@@ -256,8 +264,7 @@ class Hizli_Kasa_API_Purchase_Orders extends Hizli_Kasa_API_Controller_Base {
                         $depo_id,
                         get_current_user_id(),
                         $current_stock,
-                        $new_stock,
-                        "Mal Kabul - Sipariş #{$po_id}"
+                        $new_stock
                     );
                 }
             }

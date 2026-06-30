@@ -130,7 +130,7 @@ function hizli_kasa_process_refund($request)
             /** @var WC_Order_Item_Product $refund_item */
             $refund_item = $refund_order->get_item($item_id);
             $refund_item->set_quantity($neg_qty);
-            $refund_item->set_total($line_total);
+            $refund_item->set_total(wc_format_decimal($line_total));
             $refund_item->save();
             $total_refund += $line_total;
 
@@ -149,7 +149,7 @@ function hizli_kasa_process_refund($request)
         $fee = new WC_Order_Item_Fee();
         $fee->set_name('İade İskonto Kesintisi');
         $fee->set_amount($refund_discount);
-        $fee->set_total($refund_discount);
+        $fee->set_total(wc_format_decimal($refund_discount));
         $refund_order->add_item($fee);
 
         // Orijinal siparişteki iade edilen iskonto bilgisini güncelle
@@ -276,7 +276,9 @@ function hizli_kasa_process_refund($request)
         // 2. Fallback: Orijinal siparişin item meta'sından çıkış deposunu bul
         if (!$target_depo_id && $original_order) {
             foreach ($original_order->get_items() as $orig_item_id => $orig_item) {
-                /** @var WC_Order_Item_Product $orig_item */
+                if (!$orig_item instanceof WC_Order_Item_Product) {
+                    continue;
+                }
                 $match_product = ($orig_item->get_product_id() == $product_id);
                 $match_variation = ($orig_item->get_variation_id() == $variation_id);
                 if ($match_product && ($variation_id == 0 || $match_variation)) {
@@ -330,6 +332,9 @@ function hizli_kasa_process_refund($request)
     if ($original_order) {
         $all_refunded = true;
         foreach ($original_order->get_items() as $orig_item_id => $orig_item) {
+            if (!$orig_item instanceof WC_Order_Item_Product) {
+                continue;
+            }
             $orig_qty = $orig_item->get_quantity();
             $total_refunded = (int) wc_get_order_item_meta($orig_item_id, '_hk_refunded_qty', true);
 
@@ -379,7 +384,9 @@ function hizli_kasa_send_custom_refund_email($order)
 
     $items_html = '';
     foreach ($order->get_items() as $item) {
-        /** @var WC_Order_Item_Product $item */
+        if (!$item instanceof WC_Order_Item_Product) {
+            continue;
+        }
         $items_html .= sprintf(
             '<li style="margin-bottom: 8px;"><strong>%s</strong><br><span style="color:#7f8c8d; font-size:13px;">%d adet x %s TL</span></li>',
             $item->get_name(),
