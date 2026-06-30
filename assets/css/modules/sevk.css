@@ -1,9 +1,11 @@
 .sevk-shell {
     height: 100%;
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
     padding: 20px;
     box-sizing: border-box;
     color: var(--hk-text-main);
+    overflow: hidden;
 }
 
 .sevk-header,
@@ -18,8 +20,21 @@
 }
 
 .sevk-header {
+    flex-shrink: 0;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--hk-border);
+    margin-bottom: 14px;
+}
+
+.sevk-icerik-paneli {
+    flex: 1;
+    min-height: 0;
+    display: none;
+    flex-direction: column;
+}
+
+.sevk-icerik-paneli.aktif {
+    display: flex !important;
 }
 
 .sevk-header h2,
@@ -237,7 +252,9 @@
 }
 
 .sevk-table-wrap.compact {
-    max-height: 360px;
+    flex: 1;
+    min-height: 150px;
+    max-height: none;
 }
 
 .sevk-table {
@@ -303,7 +320,9 @@
     display: grid;
     grid-template-columns: minmax(280px, 360px) 1fr;
     gap: 14px;
-    min-height: 540px;
+    flex: 1;
+    min-height: 0;
+    height: 100%;
 }
 
 .sevk-list-panel,
@@ -311,11 +330,19 @@
 .sevk-wizard,
 .sevk-placeholder {
     padding: 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
 }
 
 .sevk-card-list {
+    flex: 1;
+    overflow-y: auto;
     display: grid;
     gap: 10px;
+    padding-right: 4px;
 }
 
 .sevk-card-item {
@@ -386,6 +413,19 @@
     border: 1px solid var(--hk-border);
     border-radius: 8px;
     background: var(--hk-bg-body);
+}
+
+.sevk-step-panel {
+    flex: 1;
+    min-height: 0;
+    display: none;
+    flex-direction: column;
+    height: 100%;
+}
+
+.sevk-step-panel[style*="display: block"],
+.sevk-step-panel[style*="display: flex"] {
+    display: flex !important;
 }
 
 .sevk-current-card span {
