@@ -340,7 +340,8 @@
 .sevk-card-list {
     flex: 1;
     overflow-y: auto;
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 10px;
     padding-right: 4px;
 }
@@ -351,6 +352,7 @@
     border-radius: 8px;
     padding: 12px;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
 .sevk-card-item:hover {
@@ -418,14 +420,13 @@
 .sevk-step-panel {
     flex: 1;
     min-height: 0;
-    display: none;
+    display: flex;
     flex-direction: column;
     height: 100%;
 }
 
-.sevk-step-panel[style*="display: block"],
-.sevk-step-panel[style*="display: flex"] {
-    display: flex !important;
+.sevk-step-panel[style*="display: none"] {
+    display: none !important;
 }
 
 .sevk-current-card span {
