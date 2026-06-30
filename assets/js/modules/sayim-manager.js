@@ -239,7 +239,7 @@
                 this.loadActiveSession();
             } else {
                 // Hide sayim panel, show products list panel
-                this.elements.listePaneli.style.display = 'block';
+                this.elements.listePaneli.style.display = '';
                 this.elements.sayimPaneli.style.display = 'none';
 
                 // Change toggle button text
