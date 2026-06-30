@@ -448,12 +448,13 @@
             var savedScrollTop = tableWrap ? tableWrap.scrollTop : 0;
 
             var actions = '';
+            var barcodeHtml = '';
             if (sevk.durum === 'onay_bekliyor') {
                 actions = '<textarea id="sevk-alici-not" class="hk-input" rows="2" placeholder="Alıcı notu / red sebebi"></textarea>' +
                     '<div class="sevk-summary-row"><button type="button" class="sevk-btn primary" data-action="accept">Onayla</button><button type="button" class="sevk-btn secondary" data-action="reject">Reddet</button></div>';
             } else if (['gonderildi', 'teslim_kontrol', 'uyusmazlik'].includes(sevk.durum)) {
-                actions = '<input type="text" id="sevk-teslim-barkod" class="hk-input sevk-barcode-input" placeholder="Teslim barkodu okutun">' +
-                    (sevk.durum === 'uyusmazlik' ? '<label style="display:flex; gap:8px; align-items:center; margin:10px 0;"><input type="checkbox" id="sevk-force-approve"> Uyuşmazlığa rağmen onayla</label>' : '') +
+                barcodeHtml = '<input type="text" id="sevk-teslim-barkod" class="hk-input sevk-barcode-input" style="margin-bottom: 12px;" placeholder="Teslim barkodu okutun veya yazıp Enter\'a basın">';
+                actions = (sevk.durum === 'uyusmazlik' ? '<label style="display:flex; gap:8px; align-items:center; margin:10px 0;"><input type="checkbox" id="sevk-force-approve"> Uyuşmazlığa rağmen onayla</label>' : '') +
                     '<button type="button" class="sevk-btn primary" data-action="deliver">Teslim Onayla</button>';
             } else if (sevk.durum === 'onaylandi') {
                 actions = '<p class="sevk-empty">Göndericinin yola çıkarma işlemi bekleniyor.</p>';
@@ -461,6 +462,7 @@
 
             var isReceiptEditable = ['gonderildi', 'teslim_kontrol', 'uyusmazlik'].includes(sevk.durum);
             panel.innerHTML = '<div class="sevk-panel-title"><div><h3>' + escapeHtml(sevk.sevk_no) + '</h3><p>' + escapeHtml(sevk.kaynak_depo_adi) + ' → ' + escapeHtml(sevk.hedef_depo_adi) + '</p></div>' + statusBadge(sevk) + '</div>' +
+                barcodeHtml +
                 '<div class="sevk-table-wrap compact" style="margin:14px 0;">' + this.renderCompareTable(sevk.kalemler || [], sevk, isReceiptEditable) + '</div>' +
                 actions;
 
