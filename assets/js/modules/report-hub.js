@@ -40,7 +40,7 @@
             });
 
             // Diğer modüllerden Anlık Kasa güncellendiğinde ciro kartlarını yenile
-            $(document).on('hk:anlik-kasa-guncellendi', function(e, ozet) {
+            jQuery(document).on('hk:anlik-kasa-guncellendi', function(e, ozet) {
                 self.renderAnlikKasaSummary(ozet);
             });
         },
