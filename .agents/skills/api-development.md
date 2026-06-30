@@ -156,3 +156,121 @@ Oluşturulmuş ancak onay sürecine gönderilmemiş taslak sevki ve tüm kalemle
 }
 ```
 
+### 3.2.3. Sevk Mutasyon İşlemleri (Performans Uyumlu)
+Barkod tarama, kalem ekleme, silme ve adet güncellemeleri gibi sık tetiklenen mutasyon isteklerinde (kalem-ekle, kalem-sil, kalem-miktar-guncelle, teslim-miktar-guncelle) tüm listeyi dönmek yerine sadece sevk özetini ve işlem yapılan ilgili kalemi döner.
+
+#### A. Kalem Ekleme
+- **URL:** `/wp-json/hizli-kasa/v2/sevk/kalem-ekle`
+- **Metot:** `POST`
+- **Girdi Gövdesi (JSON):**
+  ```json
+  {
+    "sevk_id": 14,
+    "sku": "BARKOD123",
+    "qty": 1
+  }
+  ```
+
+##### Örnek Başarılı Yanıt:
+```json
+{
+  "success": true,
+  "data": {
+    "sevk_id": 14,
+    "toplam_cesit": 1,
+    "toplam_adet": 1.0,
+    "durum": "taslak",
+    "durum_label": "Taslak",
+    "updated_at": "2026-06-30 15:20:00",
+    "kalem": {
+      "id": 45,
+      "product_id": 12,
+      "variation_id": 0,
+      "sku": "BARKOD123",
+      "urun_adi": "Örnek Ürün",
+      "gonderilen_adet": 1.0,
+      "teslim_alinan_adet": null,
+      "image": "http://site.com/wp-content/uploads/img.jpg"
+    }
+  },
+  "errors": null,
+  "meta": {
+    "timestamp": "2026-06-30 15:20:00",
+    "version": "v2"
+  }
+}
+```
+
+#### B. Miktar Güncelleme
+- **URL:** `/wp-json/hizli-kasa/v2/sevk/kalem-miktar-guncelle`
+- **Metot:** `POST`
+- **Girdi Gövdesi (JSON):**
+  ```json
+  {
+    "sevk_id": 14,
+    "kalem_id": 45,
+    "qty": 5
+  }
+  ```
+
+#### C. Kalem Silme
+- **URL:** `/wp-json/hizli-kasa/v2/sevk/kalem-sil`
+- **Metot:** `POST`
+- **Girdi Gövdesi (JSON):**
+  ```json
+  {
+    "sevk_id": 14,
+    "kalem_id": 45
+  }
+  ```
+*(Not: Kalem silme başarılı yanıtında `kalem` alanı `null` döner.)*
+
+### 3.2.4. Sevk Detay Sorgusu (Tüm Kalemler & Görseller)
+Bir sevkin tüm detaylarını ve içerdiği tüm kalemleri görselleriyle birlikte çeker. Bu endpoint görselleri batch (toplu) SQL JOIN sorgusu ile N+1 problemine yol açmadan performanslı bir şekilde çeker.
+
+- **URL:** `/wp-json/hizli-kasa/v2/sevk/detay/{id}`
+- **Metot:** `GET`
+
+##### Örnek Başarılı Yanıt:
+```json
+{
+  "success": true,
+  "data": {
+    "sevk": {
+      "id": 14,
+      "sevk_no": "SVK-20260630-0001",
+      "kaynak_depo_id": 1,
+      "kaynak_depo_adi": "Merkez Depo",
+      "hedef_depo_id": 2,
+      "hedef_depo_adi": "Şube Depo",
+      "durum": "taslak",
+      "durum_label": "Taslak",
+      "toplam_cesit": 2,
+      "toplam_adet": 6.0,
+      "not_gonderici": "",
+      "not_alici": "",
+      "created_at": "2026-06-30 14:40:00",
+      "updated_at": "2026-06-30 15:20:00",
+      "kalemler": [
+        {
+          "id": 45,
+          "product_id": 12,
+          "variation_id": 0,
+          "sku": "BARKOD123",
+          "urun_adi": "Örnek Ürün",
+          "gonderilen_adet": 5.0,
+          "teslim_alinan_adet": null,
+          "image": "http://site.com/wp-content/uploads/img.jpg"
+        }
+      ]
+    }
+  },
+  "errors": null,
+  "meta": {
+    "timestamp": "2026-06-30 15:21:00",
+    "version": "v2"
+  }
+}
+```
+
+
