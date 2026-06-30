@@ -11,51 +11,17 @@
         init: function() {
             var self = this;
             
-            // Sekme yüklendiğinde (lazy-load) tetiklenmesi için dinle
-            document.addEventListener('hkTabLoaded', function(e) {
-                if (e.detail.tab === 'raporlar') {
-                    self.bindSubTabEvents();
-                    self.loadLogs();
-                }
-            });
-
-            // Eğer sayfa yüklendiğinde elementler zaten varsa (sayfa yenileme)
-            this.bindSubTabEvents();
-            this.loadLogs();
-        },
-
-        bindSubTabEvents: function() {
-            var self = this;
-            
-            // Alt Sekme Geçişleri
-            document.querySelectorAll(".rapor-alt-btn").forEach(function(btn) {
-                if (btn.dataset.bound) return;
-                btn.dataset.bound = "true";
-
-                btn.addEventListener("click", function() {
-                    var target = this.dataset.target;
-                    
-                    // Butonları güncelle
-                    document.querySelectorAll(".rapor-alt-btn").forEach(b => b.classList.remove("aktif"));
-                    this.classList.add("aktif");
-                    
-                    // Panelleri güncelle
-                    document.querySelectorAll(".rapor-icerik-paneli").forEach(p => p.style.display = "none");
-                    var panel = document.getElementById(target);
-                    if (panel) panel.style.display = "block";
-                    
-                    if (target === 'rapor-siparis-duzenleme') {
-                        self.loadLogs();
-                    }
-                });
-            });
-
-            // Yenile Butonu
-            var refreshBtn = document.getElementById("rapor-yenile");
-            if (refreshBtn && !refreshBtn.dataset.bound) {
-                refreshBtn.dataset.bound = "true";
-                refreshBtn.addEventListener("click", function() {
-                    self.loadLogs();
+            // Raporu Hub'a Kaydet
+            if (HK.ReportHub) {
+                HK.ReportHub.registerReport({
+                    id: 'siparis-duzenleme',
+                    categoryId: 'iade',
+                    title: 'Sipariş Düzenlemeleri',
+                    icon: '✏️',
+                    panelId: 'rapor-siparis-duzenleme',
+                    onActivate: function() { self.loadLogs(); },
+                    hasDateFilter: true,
+                    hasSearch: false
                 });
             }
         },
@@ -64,8 +30,8 @@
             var tbody = document.getElementById("edit-logs-body");
             if (!tbody) return;
 
-            var elStart = document.getElementById("rapor-tarih-bas");
-            var elEnd = document.getElementById("rapor-tarih-bit");
+            var elStart = document.getElementById("rhub-tarih-bas");
+            var elEnd = document.getElementById("rhub-tarih-bit");
             var dateStart = elStart ? elStart.value : "";
             var dateEnd = elEnd ? elEnd.value : "";
 
@@ -112,5 +78,7 @@
             }
         }
     };
+
+    HK.OrderEditReports.init();
 
 })(window.HizliKasa);

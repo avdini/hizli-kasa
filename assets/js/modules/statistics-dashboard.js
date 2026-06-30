@@ -22,16 +22,23 @@
         init: function () {
             var self = this;
 
-            document.addEventListener('hkTabLoaded', function (e) {
-                if (e.detail.tab === 'raporlar') {
-                    self._bindTabButton();
-                }
-            });
+            // Raporu Hub'a Kaydet
+            if (HK.ReportHub) {
+                HK.ReportHub.registerReport({
+                    id: 'ozet-istatistik',
+                    categoryId: 'istatistik',
+                    title: 'İstatistik Dashboardu',
+                    icon: '📈',
+                    panelId: 'rapor-ozet-istatistik',
+                    onActivate: function() { self.load(); },
+                    hasDateFilter: true,
+                    hasSearch: false
+                });
+            }
 
             // Depo değişince ve rapor sekmesi açıksa yenile
             document.addEventListener('hkActiveDepoChanged', function () {
-                var panel = document.getElementById('rapor-ozet-istatistik');
-                if (panel && panel.style.display !== 'none' && panel.classList.contains('aktif')) {
+                if (HK.ReportHub && HK.ReportHub.activeCategory === 'istatistik' && HK.ReportHub.activeReport === 'ozet-istatistik') {
                     self.load();
                 }
             });
@@ -43,41 +50,6 @@
                     self._renderCharts(self.lastData);
                 }
             });
-
-            // Sayfa zaten yüklenmiş olabilir
-            if (document.querySelector('.rapor-alt-sekmeler')) {
-                self._bindTabButton();
-            }
-        },
-
-        /* -------------------------------------------------
-           SEKMEYİ BAĞLA
-        ------------------------------------------------- */
-        _bindTabButton: function () {
-            var self = this;
-            var btn = document.querySelector('.rapor-alt-btn[data-target="rapor-ozet-istatistik"]');
-            if (!btn || btn.dataset.statBound) return;
-            btn.dataset.statBound = 'true';
-
-            btn.addEventListener('click', function () {
-                // Diğer paneller zaten detailed-reports.js tarafından gizlenir
-                // Ama istatistik panelini bizim açmamız gerekiyor
-                setTimeout(function () {
-                    self.load();
-                }, 50);
-            });
-
-            // Global rapor yenile butonuna hook
-            var refreshBtn = document.getElementById('rapor-yenile');
-            if (refreshBtn && !refreshBtn.dataset.statBound) {
-                refreshBtn.dataset.statBound = 'true';
-                refreshBtn.addEventListener('click', function () {
-                    var activeBtn = document.querySelector('.rapor-alt-btn.aktif');
-                    if (activeBtn && activeBtn.dataset.target === 'rapor-ozet-istatistik') {
-                        self.load();
-                    }
-                });
-            }
         },
 
         /* -------------------------------------------------
@@ -88,8 +60,8 @@
             var panel = document.getElementById('rapor-ozet-istatistik');
             if (!panel) return;
 
-            var dateStart = (document.getElementById('rapor-tarih-bas') || {}).value || self._today();
-            var dateEnd   = (document.getElementById('rapor-tarih-bit') || {}).value || self._today();
+            var dateStart = (document.getElementById('rhub-tarih-bas') || {}).value || self._today();
+            var dateEnd   = (document.getElementById('rhub-tarih-bit') || {}).value || self._today();
             var depoId    = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
 
             self._showLoading(panel);

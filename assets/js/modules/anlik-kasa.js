@@ -92,6 +92,9 @@
                     if (response && response.ozet) {
                         var ozet = response.ozet;
                         
+                        // Hub'ı güncellemesi için olayı tetikle
+                        $(document).trigger('hk:anlik-kasa-guncellendi', [ozet]);
+                        
                         // Yeni hesaplama: Toplam - Sadece İade (Masraflar düşülmüyor)
                         var nakitGosterilecek = ozet.nakit_toplam - ozet.iade_nakit;
                         var kartGosterilecek = ozet.kart_toplam - ozet.iade_kart;
