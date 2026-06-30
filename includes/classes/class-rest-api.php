@@ -18,7 +18,6 @@ require_once $api_dir . 'api-user.php';
 require_once $api_dir . 'api-kasa.php';
 require_once $api_dir . 'api-siparis.php';
 require_once $api_dir . 'api-iade.php';
-// require_once $api_dir . 'api-sevk.php'; // V1 Disabled - Migrated to V2
 require_once $api_dir . 'api-masraf.php';
 require_once $api_dir . 'api-raporlar.php';
 require_once $api_dir . 'api-terminal.php';
