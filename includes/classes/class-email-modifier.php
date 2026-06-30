@@ -14,7 +14,7 @@ class Hizli_Kasa_Email_Modifier {
         add_filter('woocommerce_email_subject_customer_processing_order', [self::class, 'modify_subject'], 99, 2);
     }
 
-    public static function modify_subject($subject, $order, $email) {
+    public static function modify_subject($subject, $order, $email = null) {
         if (!$order || !is_a($order, 'WC_Order')) {
             return $subject;
         }
