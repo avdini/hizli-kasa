@@ -25,17 +25,37 @@
     font-family: var(--hk-font-family, inherit);
 }
 
-/* Home view layout wrapper - no header spacing when header is removed */
+/* Home view layout wrapper */
 #rhub-anasayfa-view {
     display: flex;
     flex-direction: column;
     width: 100%;
 }
 
+/* Two-column Dashboard Layout */
+.rhub-home-layout {
+    display: flex;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.rhub-home-main {
+    flex: 3;
+    min-width: 0;
+}
+
+.rhub-home-sidebar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 15rem;
+}
+
 /* Grid & Cards Layout */
 .rhub-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(16.25rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
     gap: 1rem;
     margin-bottom: 1.875rem;
     opacity: 1;
@@ -192,7 +212,7 @@
 .rhub-card-report-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: space-between;
     padding: 0.375rem 0.5rem;
     border-radius: 0.375rem;
     color: var(--hk-text-muted);
@@ -200,16 +220,120 @@
     font-weight: 600;
     transition: all 0.15s ease;
     background: transparent;
-    border: none;
-    text-align: left;
     width: 100%;
-    cursor: pointer;
+    box-sizing: border-box;
 }
 
 .rhub-card-report-item:hover {
-    color: var(--cat-color);
     background: var(--hk-bg-hover);
-    padding-left: 0.75rem;
+}
+
+.rhub-report-item-click {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    cursor: pointer;
+    color: inherit;
+    transition: color 0.15s ease;
+}
+
+.rhub-card-report-item:hover .rhub-report-item-click {
+    color: var(--cat-color);
+}
+
+/* Favorite Stars */
+.rhub-favorite-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    padding: 0.125rem;
+    opacity: 0.25;
+    transition: opacity 0.15s ease, transform 0.1s ease, color 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--hk-text-muted);
+    user-select: none;
+}
+
+.rhub-favorite-toggle:hover {
+    transform: scale(1.25);
+    opacity: 1 !important;
+    color: #f59e0b;
+}
+
+.rhub-favorite-toggle.is-fav {
+    opacity: 1;
+    color: #f59e0b; /* Golden Yellow */
+}
+
+/* Sidebar Widgets on Homepage */
+.rhub-panel-widget {
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    box-shadow: var(--hk-shadow-sm);
+    display: flex;
+    flex-direction: column;
+}
+
+.rhub-panel-widget h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.8125rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--hk-text-muted);
+    letter-spacing: 0.05em;
+    border-bottom: 1px dashed var(--hk-border);
+    padding-bottom: 0.5rem;
+}
+
+.rhub-widget-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rhub-widget-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    border: 1px solid var(--hk-border);
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--hk-text-main);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.rhub-widget-item:hover {
+    background: var(--hk-bg-hover);
+    border-color: var(--hk-accent);
+    color: var(--hk-accent);
+    transform: translateX(0.1875rem);
+}
+
+.rhub-widget-item-meta {
+    font-size: 0.6875rem;
+    color: var(--hk-text-muted);
+    font-weight: 500;
+}
+
+.rhub-empty-widget {
+    font-size: 0.75rem;
+    color: var(--hk-text-muted);
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    font-style: italic;
 }
 
 /* Category & Workspace View */
@@ -303,6 +427,32 @@
     border-bottom: 1px dashed var(--hk-border);
 }
 
+.rhub-sidebar-item {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.rhub-sidebar-item .rhub-side-btn {
+    flex: 1;
+    padding-right: 2rem !important; /* Make room for absolute star */
+}
+
+.rhub-sidebar-item .rhub-favorite-toggle {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    z-index: 5;
+}
+
+.rhub-sidebar-item:hover .rhub-favorite-toggle,
+.rhub-sidebar-item .rhub-favorite-toggle.is-fav {
+    opacity: 1;
+}
+
 .rhub-side-btn {
     background: var(--hk-bg-card);
     border: 1px solid var(--hk-border);
@@ -384,6 +534,14 @@
 
 /* Responsive adjustments using em */
 @media (max-width: 59.875em) {
+    .rhub-home-layout {
+        flex-direction: column;
+    }
+    
+    .rhub-home-sidebar {
+        width: 100%;
+    }
+
     .rhub-workspace {
         flex-direction: column;
     }
@@ -401,11 +559,21 @@
     .rhub-sidebar-header {
         display: none; /* Hide header when sidebar becomes a top tabs bar */
     }
+
+    .rhub-sidebar-item {
+        width: auto;
+        flex-shrink: 0;
+    }
+
+    .rhub-sidebar-item .rhub-favorite-toggle {
+        display: none; /* Hide favorite toggling from sidebar in mobile layout to save space */
+    }
     
     .rhub-side-btn {
         flex-shrink: 0;
         width: auto;
         padding: 0.5rem 0.75rem;
+        padding-right: 0.75rem !important;
     }
 
     .rhub-side-btn.aktif {

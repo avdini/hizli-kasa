@@ -33,6 +33,7 @@ require_once $api_dir . 'v2/controllers/class-api-purchase-orders.php';
 require_once $api_dir . 'v2/controllers/class-api-validate-coupon.php';
 require_once $api_dir . 'v2/controllers/class-api-shipments.php';
 require_once $api_dir . 'v2/controllers/class-api-user-sound.php';
+require_once $api_dir . 'v2/controllers/class-api-user-favorites.php';
 
 // Register V2 REST Routes
 add_action('rest_api_init', function () {
@@ -53,6 +54,9 @@ add_action('rest_api_init', function () {
 
     $user_sound_controller = new Hizli_Kasa_API_User_Sound();
     $user_sound_controller->register_routes();
+
+    $user_favorites_controller = new Hizli_Kasa_API_User_Favorites();
+    $user_favorites_controller->register_routes();
 });
 
 

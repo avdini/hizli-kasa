@@ -22,6 +22,7 @@
         activeCategory: null,
         activeReport: null,
         history: [],
+        favorites: [],
 
         init: function() {
             var self = this;
@@ -111,12 +112,30 @@
 
             container.dataset.initialized = 'true';
 
-            // HTML yapısını kur
+            // HTML yapısını kur (İki sütunlu Dashboard yerleşimi)
             container.innerHTML = `
                 <div class="rhub-wrapper">
-                    <!-- Sadece Kategoriler Grid'i (Header ve Anlık Kasa tamamen kaldırıldı) -->
+                    <!-- Üst Başlık ve Yardımcı Sütun Layoutu -->
                     <div id="rhub-anasayfa-view">
-                        <div class="rhub-grid" id="rhub-categories-grid"></div>
+                        <div class="rhub-home-layout">
+                            <!-- Sol Sütun: Kategoriler Izgarası -->
+                            <div class="rhub-home-main">
+                                <div class="rhub-grid" id="rhub-categories-grid"></div>
+                            </div>
+
+                            <!-- Sağ Sütun: Hızlı Erişim ve Geçmiş -->
+                            <div class="rhub-home-sidebar">
+                                <div class="rhub-panel-widget">
+                                    <h4>⭐ Hızlı Erişim</h4>
+                                    <div class="rhub-widget-list" id="rhub-favorites-list"></div>
+                                </div>
+
+                                <div class="rhub-panel-widget">
+                                    <h4>🕒 Son Kullanılanlar</h4>
+                                    <div class="rhub-widget-list" id="rhub-recents-list"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Kategori Rapor Görünümü -->
@@ -181,8 +200,188 @@
             document.getElementById('rhub-tarih-bas').value = bugun;
             document.getElementById('rhub-tarih-bit').value = bugun;
 
-            // Kategorileri listele
+            // Favorileri sunucudan/tarayıcıdan yükle, geçmişi yükle ve kategorileri çiz
+            this.loadFavorites();
+            this.renderRecents();
             this.renderCategories();
+        },
+
+        loadFavorites: function() {
+            var self = this;
+            var local = localStorage.getItem('hk_favori_raporlar');
+            if (local) {
+                try {
+                    self.favorites = JSON.parse(local);
+                    self.renderFavorites();
+                } catch(e) {
+                    self.fetchFavoritesFromServer();
+                }
+            } else {
+                self.fetchFavoritesFromServer();
+            }
+        },
+
+        fetchFavoritesFromServer: function() {
+            var self = this;
+            if (typeof wp === 'undefined' || !wp.apiFetch) {
+                self.favorites = ['tum-siparisler', 'ozet-istatistik', 'gun-sonu-arsivi'];
+                localStorage.setItem('hk_favori_raporlar', JSON.stringify(self.favorites));
+                self.renderFavorites();
+                return;
+            }
+
+            wp.apiFetch({ path: '/hizli-kasa/v2/user/favorite-reports' })
+                .then(function(response) {
+                    if (response && response.success) {
+                        self.favorites = response.data || [];
+                    } else {
+                        self.favorites = ['tum-siparisler', 'ozet-istatistik', 'gun-sonu-arsivi'];
+                    }
+                    localStorage.setItem('hk_favori_raporlar', JSON.stringify(self.favorites));
+                    self.renderFavorites();
+                    self.renderCategories();
+                })
+                .catch(function(err) {
+                    console.error("Error fetching favorites:", err);
+                    self.favorites = ['tum-siparisler', 'ozet-istatistik', 'gun-sonu-arsivi'];
+                    localStorage.setItem('hk_favori_raporlar', JSON.stringify(self.favorites));
+                    self.renderFavorites();
+                });
+        },
+
+        saveFavoritesToServer: function() {
+            var self = this;
+            localStorage.setItem('hk_favori_raporlar', JSON.stringify(self.favorites));
+            
+            if (typeof wp !== 'undefined' && wp.apiFetch) {
+                wp.apiFetch({
+                    path: '/hizli-kasa/v2/user/favorite-reports',
+                    method: 'POST',
+                    data: { favorites: self.favorites }
+                }).then(function(res) {
+                    console.log("Favorites saved to server:", res);
+                }).catch(function(err) {
+                    console.error("Error saving favorites to server:", err);
+                });
+            }
+        },
+
+        toggleFavorite: function(repId) {
+            var self = this;
+            var idx = self.favorites.indexOf(repId);
+            if (idx > -1) {
+                self.favorites.splice(idx, 1);
+            } else {
+                self.favorites.push(repId);
+            }
+            self.saveFavoritesToServer();
+            
+            // Tüm favori ikonlarını ve listelerini güncelle
+            self.renderFavorites();
+            self.renderCategories();
+            if (self.activeCategory) {
+                self.renderSidebarMenu();
+            }
+        },
+
+        renderFavorites: function() {
+            var self = this;
+            var container = document.getElementById('rhub-favorites-list');
+            if (!container) return;
+
+            if (self.favorites.length === 0) {
+                container.innerHTML = `<div class="rhub-empty-widget">Favori rapor bulunmuyor.</div>`;
+                return;
+            }
+
+            var html = self.favorites.map(repId => {
+                var rep = self.reports[repId];
+                if (!rep) return '';
+                return `
+                    <button class="rhub-widget-item" data-rep-id="${rep.id}" data-cat-id="${rep.categoryId}">
+                        <span>${rep.icon} ${rep.title}</span>
+                        <span class="rhub-widget-item-meta">Aç</span>
+                    </button>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+
+            container.querySelectorAll('.rhub-widget-item').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    var catId = this.dataset.catId;
+                    var repId = this.dataset.repId;
+                    self.kategoriAc(catId, repId);
+                });
+            });
+        },
+
+        addToRecents: function(repId) {
+            var self = this;
+            var recents = [];
+            var local = localStorage.getItem('hk_son_raporlar');
+            if (local) {
+                try {
+                    recents = JSON.parse(local);
+                } catch(e) {}
+            }
+
+            // Eğer zaten varsa sil (listenin en üstüne taşımak için)
+            var idx = recents.indexOf(repId);
+            if (idx > -1) {
+                recents.splice(idx, 1);
+            }
+
+            // Başa ekle
+            recents.unshift(repId);
+
+            // Maksimum 4 kayıt limitine tabi tut
+            if (recents.length > 4) {
+                recents = recents.slice(0, 4);
+            }
+
+            localStorage.setItem('hk_son_raporlar', JSON.stringify(recents));
+            self.renderRecents();
+        },
+
+        renderRecents: function() {
+            var self = this;
+            var container = document.getElementById('rhub-recents-list');
+            if (!container) return;
+
+            var recents = [];
+            var local = localStorage.getItem('hk_son_raporlar');
+            if (local) {
+                try {
+                    recents = JSON.parse(local);
+                } catch(e) {}
+            }
+
+            if (recents.length === 0) {
+                container.innerHTML = `<div class="rhub-empty-widget">Henüz geçmiş yok.</div>`;
+                return;
+            }
+
+            var html = recents.map(repId => {
+                var rep = self.reports[repId];
+                if (!rep) return '';
+                return `
+                    <button class="rhub-widget-item" data-rep-id="${rep.id}" data-cat-id="${rep.categoryId}">
+                        <span>${rep.icon} ${rep.title}</span>
+                        <span class="rhub-widget-item-meta">Görüntüle</span>
+                    </button>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+
+            container.querySelectorAll('.rhub-widget-item').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    var catId = this.dataset.catId;
+                    var repId = this.dataset.repId;
+                    self.kategoriAc(catId, repId);
+                });
+            });
         },
 
         renderCategories: function() {
@@ -215,12 +414,20 @@
                 if (!isComingSoon && catReports.length > 0) {
                     reportsListHtml = `
                         <div class="rhub-card-reports">
-                            ${catReports.map(rep => `
-                                <button class="rhub-card-report-item" data-rep-id="${rep.id}" data-cat-id="${cat.id}">
-                                    <span>${rep.icon}</span>
-                                    <span>${rep.title}</span>
-                                </button>
-                            `).join('')}
+                            ${catReports.map(rep => {
+                                var isFav = self.favorites.indexOf(rep.id) > -1;
+                                return `
+                                    <div class="rhub-card-report-item">
+                                        <div class="rhub-report-item-click" data-rep-id="${rep.id}" data-cat-id="${cat.id}">
+                                            <span>${rep.icon}</span>
+                                            <span>${rep.title}</span>
+                                        </div>
+                                        <button class="rhub-favorite-toggle ${isFav ? 'is-fav' : ''}" data-rep-id="${rep.id}">
+                                            ${isFav ? '★' : '☆'}
+                                        </button>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     `;
                 }
@@ -246,21 +453,30 @@
             // Kartın geneline tıklama (alt raporlar hariç)
             grid.querySelectorAll('.rhub-card:not(.coming-soon)').forEach(card => {
                 card.addEventListener('click', function(e) {
-                    // Eğer alt butona tıklanmadıysa kategoriyi aç
-                    if (!e.target.closest('.rhub-card-report-item')) {
+                    // Eğer alt butona veya yıldıza tıklanmadıysa kategoriyi aç
+                    if (!e.target.closest('.rhub-card-report-item') && !e.target.closest('.rhub-favorite-toggle')) {
                         var catId = this.dataset.id;
                         self.kategoriAc(catId);
                     }
                 });
             });
 
-            // Alt rapor öğelerine tıklama olayı
-            grid.querySelectorAll('.rhub-card-report-item').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.stopPropagation(); // Kartın genel tıklama event'ini tetikleme
+            // Alt rapor öğelerine tıklama (gitme) olayı
+            grid.querySelectorAll('.rhub-report-item-click').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     var catId = this.dataset.catId;
                     var repId = this.dataset.repId;
                     self.kategoriAc(catId, repId); // Doğrudan o rapora odaklan
+                });
+            });
+
+            // Yıldız butonlarına tıklama (favorileme) olayı
+            grid.querySelectorAll('.rhub-favorite-toggle').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var repId = this.dataset.repId;
+                    self.toggleFavorite(repId);
                 });
             });
         },
@@ -316,21 +532,38 @@
 
             var headerHtml = cat ? `<div class="rhub-sidebar-header">${cat.title}</div>` : '';
 
-            sidebar.innerHTML = headerHtml + catReports.map(rep => `
-                <button class="rhub-side-btn" id="rhub-btn-${rep.id}" data-id="${rep.id}">
-                    <span class="rhub-side-icon">${rep.icon}</span>
-                    <span class="rhub-side-title">${rep.title}</span>
-                </button>
-            `).join('');
+            sidebar.innerHTML = headerHtml + catReports.map(rep => {
+                var isFav = self.favorites.indexOf(rep.id) > -1;
+                return `
+                    <div class="rhub-sidebar-item">
+                        <button class="rhub-side-btn" id="rhub-btn-${rep.id}" data-id="${rep.id}">
+                            <span class="rhub-side-icon">${rep.icon}</span>
+                            <span class="rhub-side-title">${rep.title}</span>
+                        </button>
+                        <button class="rhub-favorite-toggle sidebar-fav ${isFav ? 'is-fav' : ''}" data-rep-id="${rep.id}">
+                            ${isFav ? '★' : '☆'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
 
             sidebar.querySelectorAll('.rhub-side-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     self.raporAc(this.dataset.id);
                 });
             });
+
+            sidebar.querySelectorAll('.rhub-favorite-toggle').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var repId = this.dataset.repId;
+                    self.toggleFavorite(repId);
+                });
+            });
         },
 
         raporAc: function(repId) {
+            var self = this;
             var rep = this.reports[repId];
             if (!rep) return;
 
@@ -397,6 +630,9 @@
                 originalPanel.classList.add('aktif');
                 targetContainer.appendChild(originalPanel);
 
+                // Son kullanılanlar geçmişine ekle
+                self.addToRecents(repId);
+
                 // Rapor verisini yükle
                 if (typeof rep.onActivate === 'function') {
                     rep.onActivate();
@@ -453,6 +689,10 @@
                 setTimeout(function() {
                     hubView.style.transform = 'translateY(0)';
                     hubView.style.opacity = '1';
+                    
+                    // Ana sayfaya dönüldüğünde dynamic listeleri yenile
+                    self.renderFavorites();
+                    self.renderRecents();
                 }, 50);
             }, 150);
         }
