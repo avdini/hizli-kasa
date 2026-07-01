@@ -879,10 +879,99 @@
     gap: 16px;
 }
 
+.psr-relation-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--hk-border);
+    padding-bottom: 14px;
+}
+
 .psr-relation-title {
     font-size: 14px;
     font-weight: 700;
     color: var(--hk-text-main);
+}
+
+.psr-toggle-siblings-btn {
+    white-space: nowrap;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 8px;
+    border: 1px solid var(--hk-border);
+    background: var(--hk-bg-body);
+    color: var(--hk-accent, #3b82f6);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.psr-toggle-siblings-btn:hover {
+    background: var(--hk-bg-hover);
+    border-color: var(--hk-accent, #3b82f6);
+}
+
+.psr-toggle-siblings-btn.active {
+    background: var(--hk-accent, #3b82f6);
+    color: #fff;
+    border-color: var(--hk-accent, #3b82f6);
+}
+
+.psr-siblings-collapse-panel {
+    background: var(--hk-bg-body);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px dashed var(--hk-border);
+    margin-top: 4px;
+    animation: psr-slide-down 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.psr-collapse-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    color: var(--hk-text-muted);
+    margin-bottom: 12px;
+}
+
+.scrollable-x {
+    overflow-x: auto;
+    display: flex;
+    gap: 12px;
+    padding-bottom: 10px;
+    scrollbar-width: thin;
+}
+
+.scrollable-x::-webkit-scrollbar {
+    height: 6px;
+}
+
+.scrollable-x::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollable-x::-webkit-scrollbar-thumb {
+    background-color: var(--hk-border);
+    border-radius: 10px;
+}
+
+.psr-node-role {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--hk-text-muted);
+    margin-bottom: 2px;
+}
+
+.psr-node-role.active {
+    color: var(--hk-accent, #3b82f6);
 }
 
 .psr-relation-tree {
