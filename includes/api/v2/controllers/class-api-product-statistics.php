@@ -255,6 +255,71 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
             $all_variation_ids = [$product_id];
         }
 
+        // Fetch image details
+        $image_id = $product->get_image_id();
+        if (!$image_id && $type === 'variation') {
+            $parent_temp = wc_get_product($parent_id);
+            if ($parent_temp) {
+                $image_id = $parent_temp->get_image_id();
+            }
+        }
+        $image_url = $image_id ? wp_get_attachment_image_url($image_id, 'thumbnail') : wc_placeholder_img_src();
+        $image_full_url = $image_id ? wp_get_attachment_image_url($image_id, 'full') : wc_placeholder_img_src();
+
+        // Build relations
+        $relations = [
+            'parent'   => null,
+            'siblings' => [],
+            'children' => [],
+        ];
+
+        if ($type === 'variation' && $parent_id) {
+            $parent_product = wc_get_product($parent_id);
+            if ($parent_product) {
+                $p_img_id = $parent_product->get_image_id();
+                $relations['parent'] = [
+                    'id'             => $parent_id,
+                    'name'           => $parent_product->get_name(),
+                    'sku'            => $parent_product->get_sku(),
+                    'image_url'      => $p_img_id ? wp_get_attachment_image_url($p_img_id, 'thumbnail') : wc_placeholder_img_src(),
+                    'image_full_url' => $p_img_id ? wp_get_attachment_image_url($p_img_id, 'full') : wc_placeholder_img_src(),
+                ];
+
+                $sibling_ids = $parent_product->get_children();
+                foreach ($sibling_ids as $sib_id) {
+                    if ($sib_id === $product_id) {
+                        continue;
+                    }
+                    $sib_product = wc_get_product($sib_id);
+                    if ($sib_product) {
+                        $s_img_id = $sib_product->get_image_id() ?: $p_img_id;
+                        $relations['siblings'][] = [
+                            'id'             => $sib_id,
+                            'name'           => $sib_product->get_name(),
+                            'sku'            => $sib_product->get_sku(),
+                            'image_url'      => $s_img_id ? wp_get_attachment_image_url($s_img_id, 'thumbnail') : wc_placeholder_img_src(),
+                            'image_full_url' => $s_img_id ? wp_get_attachment_image_url($s_img_id, 'full') : wc_placeholder_img_src(),
+                        ];
+                    }
+                }
+            }
+        } elseif ($type === 'variable') {
+            $child_ids = $product->get_children();
+            foreach ($child_ids as $c_id) {
+                $c_product = wc_get_product($c_id);
+                if ($c_product) {
+                    $c_img_id = $c_product->get_image_id() ?: $image_id;
+                    $relations['children'][] = [
+                        'id'             => $c_id,
+                        'name'           => $c_product->get_name(),
+                        'sku'            => $c_product->get_sku(),
+                        'image_url'      => $c_img_id ? wp_get_attachment_image_url($c_img_id, 'thumbnail') : wc_placeholder_img_src(),
+                        'image_full_url' => $c_img_id ? wp_get_attachment_image_url($c_img_id, 'full') : wc_placeholder_img_src(),
+                    ];
+                }
+            }
+        }
+
         return [
             'id'                  => $product_id,
             'name'                => $product->get_name(),
@@ -263,6 +328,9 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
             'parent_id'           => $parent_id,
             'all_variation_ids'   => $all_variation_ids,
             'wc_cost'             => get_post_meta($product_id, '_wc_cog_cost', true),
+            'image_url'           => $image_url,
+            'image_full_url_real' => $image_full_url,
+            'relations'           => $relations,
         ];
     }
 

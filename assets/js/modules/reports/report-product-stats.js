@@ -118,13 +118,29 @@
                 var typeLabel = { simple: 'Basit Ürün', variable: 'Varyasyonlu Ürün (Parent)', variation: 'Varyasyon' };
                 previewEl.innerHTML = [
                     '<div class="psr-preview-card">',
-                      '<span class="psr-preview-icon">✅</span>',
+                      '<div class="psr-preview-img-wrap" title="Resmi Büyüt">',
+                        '<img src="' + p.image_url + '" class="psr-preview-img" alt="' + self._esc(p.name) + '">',
+                        '<span class="psr-zoom-overlay">🔍</span>',
+                      '</div>',
                       '<div class="psr-preview-info">',
-                        '<strong>' + self._esc(p.name) + '</strong>',
+                        '<div class="psr-preview-title-row">',
+                          '<strong>' + self._esc(p.name) + '</strong>',
+                          '<span class="psr-preview-badge">Aktif Ürün</span>',
+                        '</div>',
                         '<span class="psr-preview-meta">SKU: ' + self._esc(p.sku) + ' &bull; ' + (typeLabel[p.type] || p.type) + '</span>',
                       '</div>',
                     '</div>'
                 ].join('');
+
+                var imgWrap = previewEl.querySelector('.psr-preview-img-wrap');
+                if (imgWrap) {
+                    imgWrap.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        if (HK.UIRenderer && typeof HK.UIRenderer.openImagePreview === 'function') {
+                            HK.UIRenderer.openImagePreview(p.image_full_url_real || p.image_url);
+                        }
+                    });
+                }
             })
             .catch(function () {
                 previewEl.innerHTML = '<span class="psr-preview-notfound">Ürün önizlemesi alınamadı.</span>';
@@ -187,12 +203,25 @@
             var html = '';
 
             html += '<div class="psr-product-header">';
-            html +=   '<div class="psr-product-title">';
-            html +=     '<h3>' + self._esc(p.name) + '</h3>';
-            html +=     '<span class="psr-type-badge">' + (typeLabel[p.type] || p.type) + '</span>';
+            html +=   '<div class="psr-product-header-left">';
+            if (p.image_url) {
+                html +=     '<div class="psr-header-img-wrap" data-full-src="' + p.image_full_url_real + '" title="Resmi Büyüt">';
+                html +=       '<img src="' + p.image_url + '" class="psr-header-img" alt="' + self._esc(p.name) + '">';
+                html +=       '<span class="psr-zoom-overlay">🔍</span>';
+                html +=     '</div>';
+            }
+            html +=     '<div class="psr-product-title-group">';
+            html +=       '<div class="psr-product-title">';
+            html +=         '<h3>' + self._esc(p.name) + '</h3>';
+            html +=         '<span class="psr-type-badge">' + (typeLabel[p.type] || p.type) + '</span>';
+            html +=       '</div>';
+            html +=       '<span class="psr-sku-chip">SKU: ' + self._esc(p.sku) + '</span>';
+            html +=     '</div>';
             html +=   '</div>';
-            html +=   '<span class="psr-sku-chip">SKU: ' + self._esc(p.sku) + '</span>';
             html += '</div>';
+
+            // Add interactive relation tree
+            html += self._renderRelationTree(p);
 
             if (!kpi.toplam_satis_adet && !kpi.toplam_iade_adet) {
                 html += '<div class="psr-empty"><span>📦</span><p>Seçili tarih aralığında bu ürün için kayıt bulunamadı.</p></div>';
@@ -263,6 +292,37 @@
             }
 
             dashboard.innerHTML = html;
+
+            // Bind relation tree and header image preview events
+            var dashEl = document.getElementById('psr-dashboard');
+            if (dashEl) {
+                dashEl.querySelectorAll('.psr-clickable-card').forEach(function (card) {
+                    card.addEventListener('click', function (e) {
+                        if (e.target.closest('.psr-node-img-wrap')) {
+                            return;
+                        }
+                        var clickedSku = this.dataset.sku;
+                        if (clickedSku) {
+                            var inputEl = document.getElementById('psr-sku-input');
+                            if (inputEl) {
+                                inputEl.value = clickedSku;
+                            }
+                            self._loadStats(clickedSku);
+                            self._fetchPreview(clickedSku);
+                        }
+                    });
+                });
+
+                dashEl.querySelectorAll('.psr-node-img-wrap, .psr-header-img-wrap').forEach(function (wrap) {
+                    wrap.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        var fullSrc = this.dataset.fullSrc;
+                        if (fullSrc && HK.UIRenderer && typeof HK.UIRenderer.openImagePreview === 'function') {
+                            HK.UIRenderer.openImagePreview(fullSrc);
+                        }
+                    });
+                });
+            }
 
             self._bindCharts(data);
         },
@@ -523,6 +583,134 @@
             });
 
             accordion.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        },
+
+        _renderRelationTree: function (p) {
+            var self = this;
+            var relations = p.relations;
+            if (!relations) return '';
+
+            var typeLabel = { simple: 'Basit Ürün', variable: 'Varyasyonlu Ürün', variation: 'Varyasyon' };
+            var html = '';
+
+            if (p.type === 'variation') {
+                html += '<div class="psr-relation-section">';
+                html +=   '<div class="psr-relation-title">🔗 Ürün Varyasyon İlişkileri</div>';
+                html +=   '<div class="psr-relation-tree">';
+                
+                // Render Parent Card
+                if (relations.parent) {
+                    var parentNode = relations.parent;
+                    html += '<div class="psr-node psr-node-parent">';
+                    html +=   '<div class="psr-node-label">Ebeveyn Ürün (Parent)</div>';
+                    html +=   '<div class="psr-node-card psr-clickable-card" data-sku="' + self._esc(parentNode.sku) + '">';
+                    html +=     '<div class="psr-node-img-wrap" data-full-src="' + parentNode.image_full_url + '">';
+                    html +=       '<img src="' + parentNode.image_url + '" class="psr-node-img">';
+                    html +=       '<span class="psr-zoom-overlay-small">🔍</span>';
+                    html +=     '</div>';
+                    html +=     '<div class="psr-node-info">';
+                    html +=       '<span class="psr-node-name">' + self._esc(parentNode.name) + '</span>';
+                    html +=       '<span class="psr-node-sku">SKU: ' + self._esc(parentNode.sku) + '</span>';
+                    html +=     '</div>';
+                    html +=   '</div>';
+                    html += '</div>';
+
+                    // Arrow
+                    html += '<div class="psr-relation-arrow">➡️</div>';
+                }
+
+                // Render Active Variation & Siblings Container
+                html += '<div class="psr-node-group">';
+                html +=   '<div class="psr-node-label">Varyasyonlar (Children)</div>';
+                html +=   '<div class="psr-node-list">';
+
+                // Active Node first (current product)
+                html +=     '<div class="psr-node-card psr-active-node-card">';
+                html +=       '<div class="psr-node-img-wrap" data-full-src="' + p.image_full_url_real + '">';
+                html +=         '<img src="' + p.image_url + '" class="psr-node-img">';
+                html +=         '<span class="psr-zoom-overlay-small">🔍</span>';
+                html +=       '</div>';
+                html +=       '<div class="psr-node-info">';
+                html +=         '<span class="psr-node-name">' + self._esc(p.name) + '</span>';
+                html +=         '<span class="psr-node-sku">SKU: ' + self._esc(p.sku) + '</span>';
+                html +=         '<span class="psr-node-badge">Mevcut Analiz</span>';
+                html +=       '</div>';
+                html +=     '</div>';
+
+                // Siblings
+                if (relations.siblings && relations.siblings.length > 0) {
+                    relations.siblings.forEach(function (sib) {
+                        html +=     '<div class="psr-node-card psr-clickable-card" data-sku="' + self._esc(sib.sku) + '">';
+                        html +=       '<div class="psr-node-img-wrap" data-full-src="' + sib.image_full_url + '">';
+                        html +=         '<img src="' + sib.image_url + '" class="psr-node-img">';
+                        html +=         '<span class="psr-zoom-overlay-small">🔍</span>';
+                        html +=       '</div>';
+                        html +=       '<div class="psr-node-info">';
+                        html +=         '<span class="psr-node-name">' + self._esc(sib.name) + '</span>';
+                        html +=         '<span class="psr-node-sku">SKU: ' + self._esc(sib.sku) + '</span>';
+                        html +=       '</div>';
+                        html +=     '</div>';
+                    });
+                }
+
+                html +=   '</div>';
+                html += '</div>';
+                html += '</div>'; // psr-relation-tree
+                html += '</div>'; // psr-relation-section
+            } else if (p.type === 'variable') {
+                html += '<div class="psr-relation-section">';
+                html +=   '<div class="psr-relation-title">🔗 Ürün Varyasyon İlişkileri</div>';
+                html +=   '<div class="psr-relation-tree">';
+
+                // Render Parent Card (Active Variable product)
+                html += '<div class="psr-node psr-node-parent">';
+                html +=   '<div class="psr-node-label">Ebeveyn Ürün (Parent)</div>';
+                html +=   '<div class="psr-node-card psr-active-node-card">';
+                html +=     '<div class="psr-node-img-wrap" data-full-src="' + p.image_full_url_real + '">';
+                html +=       '<img src="' + p.image_url + '" class="psr-node-img">';
+                html +=       '<span class="psr-zoom-overlay-small">🔍</span>';
+                html +=     '</div>';
+                html +=     '<div class="psr-node-info">';
+                html +=       '<span class="psr-node-name">' + self._esc(p.name) + '</span>';
+                html +=       '<span class="psr-node-sku">SKU: ' + self._esc(p.sku) + '</span>';
+                html +=       '<span class="psr-node-badge">Mevcut Analiz</span>';
+                html +=     '</div>';
+                html +=   '</div>';
+                html += '</div>';
+
+                // Arrow
+                html += '<div class="psr-relation-arrow">➡️</div>';
+
+                // Render Child Variations
+                html += '<div class="psr-node-group">';
+                html +=   '<div class="psr-node-label">Alt Varyasyonlar (Children)</div>';
+                html +=   '<div class="psr-node-list">';
+
+                if (relations.children && relations.children.length > 0) {
+                    relations.children.forEach(function (child) {
+                        html +=     '<div class="psr-node-card psr-clickable-card" data-sku="' + self._esc(child.sku) + '">';
+                        html +=       '<div class="psr-node-img-wrap" data-full-src="' + child.image_full_url + '">';
+                        html +=         '<img src="' + child.image_url + '" class="psr-node-img">';
+                        html +=         '<span class="psr-zoom-overlay-small">🔍</span>';
+                        html +=       '</div>';
+                        html +=       '<div class="psr-node-info">';
+                        html +=         '<span class="psr-node-name">' + self._esc(child.name) + '</span>';
+                        html +=         '<span class="psr-node-sku">SKU: ' + self._esc(child.sku) + '</span>';
+                        html +=       '</div>';
+                        html +=     '</div>';
+                    });
+                } else {
+                    html += '<div class="psr-no-children">Alt varyasyon bulunamadı.</div>';
+                }
+
+                html +=   '</div>';
+                html += '</div>';
+
+                html += '</div>'; // psr-relation-tree
+                html += '</div>'; // psr-relation-section
+            }
+
+            return html;
         },
 
         _renderVarTable: function (vars) {
