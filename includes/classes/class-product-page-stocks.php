@@ -153,10 +153,11 @@ class Hizli_Kasa_Product_Page_Stocks {
                 $attributes = $variation->get_variation_attributes();
                 $formatted = [];
                 foreach ($attributes as $taxonomy => $value) {
-                    $label = wc_attribute_label($taxonomy, $product);
-                    if (taxonomy_exists($taxonomy)) {
-                        $term = get_term_by('slug', $value, $taxonomy);
-                        $val_label = $term ? $term->name : $value;
+                    $clean_taxonomy = str_replace('attribute_', '', $taxonomy);
+                    $label = wc_attribute_label($clean_taxonomy, $product);
+                    if (taxonomy_exists($clean_taxonomy)) {
+                        $term = get_term_by('slug', $value, $clean_taxonomy);
+                        $val_label = ($term && !is_wp_error($term)) ? $term->name : $value;
                     } else {
                         $val_label = $value;
                     }
