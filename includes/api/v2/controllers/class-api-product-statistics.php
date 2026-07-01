@@ -232,7 +232,43 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
     }
 
     private function resolve_product_by_sku($sku) {
+        $sku = trim($sku);
+        if (empty($sku)) {
+            return null;
+        }
+
+        // Strategy 1: Exact SKU match
         $product_id = wc_get_product_id_by_sku($sku);
+
+        // Strategy 2: Numeric ID match (if SKU input matches a product/variation ID directly)
+        if (!$product_id && is_numeric($sku)) {
+            $temp_product = wc_get_product(intval($sku));
+            if ($temp_product) {
+                $product_id = $temp_product->get_id();
+            }
+        }
+
+        // Strategy 3: Partial SKU match (LIKE search on _sku postmeta)
+        if (!$product_id) {
+            global $wpdb;
+            $like_sku = '%' . $wpdb->esc_like($sku) . '%';
+            $product_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s LIMIT 1",
+                $like_sku
+            ));
+        }
+
+        // Strategy 4: Fallback to text search (search by title/description like the products tab)
+        if (!$product_id) {
+            $search_results = wc_get_products([
+                'limit'  => 1,
+                'status' => 'any',
+                's'      => $sku,
+            ]);
+            if (!empty($search_results)) {
+                $product_id = $search_results[0]->get_id();
+            }
+        }
 
         if (!$product_id) {
             return null;
