@@ -112,18 +112,13 @@
 
             container.dataset.initialized = 'true';
 
-            // HTML yapısını kur (İki sütunlu Dashboard yerleşimi)
+            // HTML yapısını kur (İki sütunlu Dashboard yerleşimi - Yardımcı sütun solda)
             container.innerHTML = `
                 <div class="rhub-wrapper">
                     <!-- Üst Başlık ve Yardımcı Sütun Layoutu -->
                     <div id="rhub-anasayfa-view">
                         <div class="rhub-home-layout">
-                            <!-- Sol Sütun: Kategoriler Izgarası -->
-                            <div class="rhub-home-main">
-                                <div class="rhub-grid" id="rhub-categories-grid"></div>
-                            </div>
-
-                            <!-- Sağ Sütun: Hızlı Erişim ve Geçmiş -->
+                            <!-- Sol Sütun: Hızlı Erişim ve Geçmiş -->
                             <div class="rhub-home-sidebar">
                                 <div class="rhub-panel-widget">
                                     <h4>⭐ Hızlı Erişim</h4>
@@ -134,6 +129,11 @@
                                     <h4>🕒 Son Kullanılanlar</h4>
                                     <div class="rhub-widget-list" id="rhub-recents-list"></div>
                                 </div>
+                            </div>
+
+                            <!-- Sağ Sütun: Kategoriler Izgarası -->
+                            <div class="rhub-home-main">
+                                <div class="rhub-grid" id="rhub-categories-grid"></div>
                             </div>
                         </div>
                     </div>
