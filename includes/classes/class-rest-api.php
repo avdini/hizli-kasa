@@ -34,6 +34,7 @@ require_once $api_dir . 'v2/controllers/class-api-validate-coupon.php';
 require_once $api_dir . 'v2/controllers/class-api-shipments.php';
 require_once $api_dir . 'v2/controllers/class-api-user-sound.php';
 require_once $api_dir . 'v2/controllers/class-api-user-favorites.php';
+require_once $api_dir . 'v2/controllers/class-api-product-statistics.php';
 
 // Register V2 REST Routes
 add_action('rest_api_init', function () {
@@ -57,6 +58,9 @@ add_action('rest_api_init', function () {
 
     $user_favorites_controller = new Hizli_Kasa_API_User_Favorites();
     $user_favorites_controller->register_routes();
+
+    $product_statistics_controller = new Hizli_Kasa_API_Product_Statistics();
+    $product_statistics_controller->register_routes();
 });
 
 

@@ -301,3 +301,368 @@
     margin: 0;
     font-size: 15px;
 }
+
+/* =============================================
+   ÜRÜN İSTATİSTİK PANELİ (PSR)
+   ============================================= */
+
+#rapor-urun-istatistik {
+    display: none;
+    animation: hk-fade-in 0.3s ease;
+}
+
+#rapor-urun-istatistik.aktif {
+    display: block;
+}
+
+.psr-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 4px 0;
+}
+
+/* --- Arama Çubuğu --- */
+.psr-search-bar {
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    border-radius: 14px;
+    padding: 20px;
+}
+
+.psr-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 700;
+    color: var(--hk-text-muted);
+    display: block;
+    margin-bottom: 10px;
+}
+
+.psr-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.psr-sku-input {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.psr-sorgula-btn {
+    white-space: nowrap;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* --- Ürün Önizleme --- */
+.psr-product-preview {
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.psr-preview-loading,
+.psr-preview-notfound {
+    color: var(--hk-text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.psr-preview-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    animation: hk-fade-in 0.2s ease;
+}
+
+.psr-preview-icon {
+    font-size: 18px;
+}
+
+.psr-preview-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.psr-preview-info strong {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--hk-text-main);
+}
+
+.psr-preview-meta {
+    font-size: 11px;
+    color: var(--hk-text-muted);
+}
+
+/* --- Ürün Başlığı --- */
+.psr-product-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.psr-product-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.psr-product-title h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--hk-text-main);
+}
+
+.psr-type-badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(59,130,246,0.12);
+    color: #3b82f6;
+    font-weight: 700;
+    border: 1px solid rgba(59,130,246,0.25);
+}
+
+.psr-sku-chip {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    color: var(--hk-text-muted);
+    font-weight: 700;
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
+/* --- KPI Grid (PSR kendi renkleri) --- */
+.psr-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 900px) { .psr-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px) { .psr-kpi-grid { grid-template-columns: 1fr; } }
+
+.psr-kpi-card.kpi-satis        { --kpi-color: #10b981; }
+.psr-kpi-card.kpi-iade         { --kpi-color: #ef4444; }
+.psr-kpi-card.kpi-net          { --kpi-color: #3b82f6; }
+.psr-kpi-card.kpi-kar-pozitif  { --kpi-color: #10b981; }
+.psr-kpi-card.kpi-kar-negatif  { --kpi-color: #ef4444; }
+.psr-kpi-card.kpi-kar-yok      { --kpi-color: #94a3b8; }
+
+/* --- Maliyet Kaynağı Notu --- */
+.psr-cost-source-note {
+    font-size: 12px;
+    color: var(--hk-text-muted);
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: inline-block;
+}
+
+/* --- Grafik Wrap --- */
+.psr-chart-wrap {
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.psr-chart-full {
+    width: 100%;
+}
+
+.psr-charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 900px) {
+    .psr-charts-row { grid-template-columns: 1fr; }
+}
+
+.psr-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.psr-chart-hint {
+    font-size: 11px;
+    color: var(--hk-text-muted);
+    padding: 6px 10px;
+    background: var(--hk-bg-body);
+    border-radius: 8px;
+    border: 1px dashed var(--hk-border);
+}
+
+.psr-chart-body {
+    position: relative;
+    width: 100%;
+}
+
+/* --- Gün Accordion --- */
+.psr-day-accordion {
+    border: 1px solid var(--hk-border);
+    border-radius: 12px;
+    overflow: hidden;
+    animation: hk-fade-in 0.25s ease;
+}
+
+.psr-accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--hk-bg-body);
+    border-bottom: 1px solid var(--hk-border);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--hk-text-main);
+    flex-wrap: wrap;
+}
+
+.psr-accordion-badge {
+    font-size: 12px;
+    color: var(--hk-text-muted);
+    font-weight: 600;
+    flex: 1;
+}
+
+.psr-accordion-close {
+    background: none;
+    border: 1px solid var(--hk-border);
+    border-radius: 6px;
+    color: var(--hk-text-muted);
+    cursor: pointer;
+    padding: 3px 8px;
+    font-size: 12px;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+}
+
+.psr-accordion-close:hover {
+    background: var(--hk-danger);
+    color: #fff;
+    border-color: var(--hk-danger);
+}
+
+.psr-accordion-body {
+    padding: 0;
+    background: var(--hk-bg-card);
+    overflow-x: auto;
+}
+
+.psr-day-table {
+    font-size: 13px;
+}
+
+/* --- Varyasyon chip --- */
+.psr-var-chip {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(139,92,246,0.12);
+    color: #8b5cf6;
+    border: 1px solid rgba(139,92,246,0.2);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* --- Satış Tablosu --- */
+.psr-satis-table-wrap {
+    overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.psr-satis-table {
+    font-size: 13px;
+}
+
+.psr-satis-listesi-wrap {
+    margin-top: 0;
+}
+
+/* --- Sipariş Link --- */
+.psr-order-link {
+    color: var(--hk-accent);
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity 0.15s;
+}
+
+.psr-order-link:hover {
+    opacity: 0.7;
+    text-decoration: underline;
+}
+
+/* --- Dashboard --- */
+.psr-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation: hk-fade-in 0.3s ease;
+}
+
+/* --- Loading & Empty --- */
+.psr-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px;
+    gap: 16px;
+    color: var(--hk-text-muted);
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    border-radius: 14px;
+}
+
+.psr-loading p { margin: 0; font-size: 15px; }
+
+.psr-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 12px;
+    color: var(--hk-text-muted);
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    border-radius: 14px;
+}
+
+.psr-empty span { font-size: 42px; }
+.psr-empty p { margin: 0; font-size: 15px; }
+
+/* Dark mode elevation */
+#hizli-kasa-app.theme-dark .psr-chart-wrap,
+#hizli-kasa-app.theme-dark .psr-search-bar {
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
