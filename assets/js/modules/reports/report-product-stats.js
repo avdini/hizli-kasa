@@ -226,6 +226,7 @@
             if (!kpi.toplam_satis_adet && !kpi.toplam_iade_adet) {
                 html += '<div class="psr-empty"><span>📦</span><p>Seçili tarih aralığında bu ürün için kayıt bulunamadı.</p></div>';
                 dashboard.innerHTML = html;
+                self._bindRelationEvents();
                 return;
             }
 
@@ -292,56 +293,59 @@
             }
 
             dashboard.innerHTML = html;
+            self._bindDashboardEvents(data);
+        },
 
-            // Bind relation tree and header image preview events
+        _bindDashboardEvents: function (data) {
+            var self = this;
             var dashEl = document.getElementById('psr-dashboard');
-            if (dashEl) {
-                // Bind collapse toggle button
-                var toggleBtn = dashEl.querySelector('#psr-toggle-siblings');
-                var panelEl = dashEl.querySelector('#psr-siblings-panel');
-                if (toggleBtn && panelEl) {
-                    toggleBtn.addEventListener('click', function () {
-                        var isHidden = panelEl.style.display === 'none';
-                        if (isHidden) {
-                            panelEl.style.display = 'block';
-                            toggleBtn.classList.add('active');
-                            toggleBtn.textContent = toggleBtn.textContent.replace('Göster', 'Gizle').replace('▾', '▴');
-                            panelEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        } else {
-                            panelEl.style.display = 'none';
-                            toggleBtn.classList.remove('active');
-                            toggleBtn.textContent = toggleBtn.textContent.replace('Gizle', 'Göster').replace('▴', '▾');
-                        }
-                    });
-                }
+            if (!dashEl) return;
 
-                dashEl.querySelectorAll('.psr-clickable-card').forEach(function (card) {
-                    card.addEventListener('click', function (e) {
-                        if (e.target.closest('.psr-node-img-wrap')) {
-                            return;
-                        }
-                        var clickedSku = this.dataset.sku;
-                        if (clickedSku) {
-                            var inputEl = document.getElementById('psr-sku-input');
-                            if (inputEl) {
-                                inputEl.value = clickedSku;
-                            }
-                            self._loadStats(clickedSku);
-                            self._fetchPreview(clickedSku);
-                        }
-                    });
-                });
-
-                dashEl.querySelectorAll('.psr-node-img-wrap, .psr-header-img-wrap').forEach(function (wrap) {
-                    wrap.addEventListener('click', function (e) {
-                        e.stopPropagation();
-                        var fullSrc = this.dataset.fullSrc;
-                        if (fullSrc && HK.UIRenderer && typeof HK.UIRenderer.openImagePreview === 'function') {
-                            HK.UIRenderer.openImagePreview(fullSrc);
-                        }
-                    });
+            // Bind collapse toggle button
+            var toggleBtn = dashEl.querySelector('#psr-toggle-siblings');
+            var panelEl = dashEl.querySelector('#psr-siblings-panel');
+            if (toggleBtn && panelEl) {
+                toggleBtn.addEventListener('click', function () {
+                    var isHidden = panelEl.style.display === 'none';
+                    if (isHidden) {
+                        panelEl.style.display = 'block';
+                        toggleBtn.classList.add('active');
+                        toggleBtn.textContent = toggleBtn.textContent.replace('Göster', 'Gizle').replace('▾', '▴');
+                        panelEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    } else {
+                        panelEl.style.display = 'none';
+                        toggleBtn.classList.remove('active');
+                        toggleBtn.textContent = toggleBtn.textContent.replace('Gizle', 'Göster').replace('▴', '▾');
+                    }
                 });
             }
+
+            dashEl.querySelectorAll('.psr-clickable-card').forEach(function (card) {
+                card.addEventListener('click', function (e) {
+                    if (e.target.closest('.psr-node-img-wrap')) {
+                        return;
+                    }
+                    var clickedSku = this.dataset.sku;
+                    if (clickedSku) {
+                        var inputEl = document.getElementById('psr-sku-input');
+                        if (inputEl) {
+                            inputEl.value = clickedSku;
+                        }
+                        self._loadStats(clickedSku);
+                        self._fetchPreview(clickedSku);
+                    }
+                });
+            });
+
+            dashEl.querySelectorAll('.psr-node-img-wrap, .psr-header-img-wrap').forEach(function (wrap) {
+                wrap.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var fullSrc = this.dataset.fullSrc;
+                    if (fullSrc && HK.UIRenderer && typeof HK.UIRenderer.openImagePreview === 'function') {
+                        HK.UIRenderer.openImagePreview(fullSrc);
+                    }
+                });
+            });
 
             self._bindCharts(data);
         },
@@ -602,6 +606,58 @@
             });
 
             accordion.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        },
+
+        _bindRelationEvents: function () {
+            var self = this;
+            var dashEl = document.getElementById('psr-dashboard');
+            if (!dashEl) return;
+
+            // Bind collapse toggle button
+            var toggleBtn = dashEl.querySelector('#psr-toggle-siblings');
+            var panelEl = dashEl.querySelector('#psr-siblings-panel');
+            if (toggleBtn && panelEl) {
+                toggleBtn.addEventListener('click', function () {
+                    var isHidden = panelEl.style.display === 'none';
+                    if (isHidden) {
+                        panelEl.style.display = 'block';
+                        toggleBtn.classList.add('active');
+                        toggleBtn.textContent = toggleBtn.textContent.replace('Göster', 'Gizle').replace('▾', '▴');
+                        panelEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    } else {
+                        panelEl.style.display = 'none';
+                        toggleBtn.classList.remove('active');
+                        toggleBtn.textContent = toggleBtn.textContent.replace('Gizle', 'Göster').replace('▴', '▾');
+                    }
+                });
+            }
+
+            dashEl.querySelectorAll('.psr-clickable-card').forEach(function (card) {
+                card.addEventListener('click', function (e) {
+                    if (e.target.closest('.psr-node-img-wrap')) {
+                        return;
+                    }
+                    var clickedSku = this.dataset.sku;
+                    if (clickedSku) {
+                        var inputEl = document.getElementById('psr-sku-input');
+                        if (inputEl) {
+                            inputEl.value = clickedSku;
+                        }
+                        self._loadStats(clickedSku);
+                        self._fetchPreview(clickedSku);
+                    }
+                });
+            });
+
+            dashEl.querySelectorAll('.psr-node-img-wrap, .psr-header-img-wrap').forEach(function (wrap) {
+                wrap.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var fullSrc = this.dataset.fullSrc;
+                    if (fullSrc && HK.UIRenderer && typeof HK.UIRenderer.openImagePreview === 'function') {
+                        HK.UIRenderer.openImagePreview(fullSrc);
+                    }
+                });
+            });
         },
 
         _renderRelationTree: function (p) {
