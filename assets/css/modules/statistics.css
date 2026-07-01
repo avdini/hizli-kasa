@@ -326,8 +326,16 @@
 .psr-search-bar {
     background: var(--hk-bg-card);
     border: 1px solid var(--hk-border);
-    border-radius: 14px;
-    padding: 20px;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+
+.psr-sku-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 650px;
 }
 
 .psr-label {
@@ -337,32 +345,61 @@
     font-weight: 700;
     color: var(--hk-text-muted);
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 2px;
 }
 
 .psr-input-row {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     align-items: center;
+    width: 100%;
 }
 
 .psr-sku-input {
     flex: 1;
-    font-size: 15px;
+    min-width: 0;
+    font-size: 16px;
     font-weight: 600;
     letter-spacing: 0.5px;
+    padding: 12px 16px;
+    height: 48px;
+    border-radius: 10px;
+    border: 2px solid var(--hk-border);
+    background: var(--hk-bg-input, #fff);
+    color: var(--hk-text-main, #333);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+}
+
+.psr-sku-input:focus {
+    outline: none;
+    border-color: var(--hk-accent, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 .psr-sorgula-btn {
     white-space: nowrap;
-    padding: 10px 22px;
+    padding: 0 28px;
+    height: 48px;
     font-size: 14px;
     font-weight: 700;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.psr-sorgula-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
 }
 
 /* --- Ürün Önizleme --- */
 .psr-product-preview {
-    margin-top: 12px;
+    margin-top: 6px;
     font-size: 13px;
 }
 
@@ -372,27 +409,30 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    font-weight: 500;
+    padding: 4px 8px;
 }
 
 .psr-preview-card {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     background: var(--hk-bg-body);
     border: 1px solid var(--hk-border);
     border-radius: 10px;
-    padding: 10px 14px;
+    padding: 12px 16px;
     animation: hk-fade-in 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .psr-preview-icon {
-    font-size: 18px;
+    font-size: 20px;
 }
 
 .psr-preview-info {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
 }
 
 .psr-preview-info strong {
@@ -404,6 +444,7 @@
 .psr-preview-meta {
     font-size: 11px;
     color: var(--hk-text-muted);
+    font-weight: 600;
 }
 
 /* --- Ürün Başlığı --- */
@@ -411,36 +452,42 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 16px;
     flex-wrap: wrap;
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    border-radius: 16px;
+    padding: 20px 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
 }
 
 .psr-product-title {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .psr-product-title h3 {
     margin: 0;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 800;
     color: var(--hk-text-main);
+    letter-spacing: -0.3px;
 }
 
 .psr-type-badge {
     font-size: 11px;
-    padding: 3px 10px;
+    padding: 4px 12px;
     border-radius: 20px;
-    background: rgba(59,130,246,0.12);
+    background: rgba(59, 130, 246, 0.08);
     color: #3b82f6;
     font-weight: 700;
-    border: 1px solid rgba(59,130,246,0.25);
+    border: 1px solid rgba(59, 130, 246, 0.15);
 }
 
 .psr-sku-chip {
     font-size: 12px;
-    padding: 5px 12px;
+    padding: 6px 14px;
     border-radius: 8px;
     background: var(--hk-bg-body);
     border: 1px solid var(--hk-border);
@@ -450,7 +497,7 @@
     letter-spacing: 0.5px;
 }
 
-/* --- KPI Grid (PSR kendi renkleri) --- */
+/* --- KPI Grid --- */
 .psr-kpi-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -459,6 +506,34 @@
 
 @media (max-width: 900px) { .psr-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 500px) { .psr-kpi-grid { grid-template-columns: 1fr; } }
+
+.psr-kpi-card {
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    border-radius: 16px;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.psr-kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+.psr-kpi-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0) 50%, var(--kpi-color) 100%);
+    opacity: 0.04;
+    pointer-events: none;
+}
 
 .psr-kpi-card.kpi-satis        { --kpi-color: #10b981; }
 .psr-kpi-card.kpi-iade         { --kpi-color: #ef4444; }
@@ -473,20 +548,30 @@
     color: var(--hk-text-muted);
     background: var(--hk-bg-body);
     border: 1px solid var(--hk-border);
-    border-radius: 8px;
-    padding: 8px 14px;
-    display: inline-block;
+    border-radius: 10px;
+    padding: 10px 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+    font-weight: 500;
 }
 
 /* --- Grafik Wrap --- */
 .psr-chart-wrap {
     background: var(--hk-bg-card);
     border: 1px solid var(--hk-border);
-    border-radius: 14px;
-    padding: 20px;
+    border-radius: 16px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+    transition: box-shadow 0.25s ease;
+}
+
+.psr-chart-wrap:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
 }
 
 .psr-chart-full {
@@ -510,12 +595,13 @@
 }
 
 .psr-chart-hint {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--hk-text-muted);
-    padding: 6px 10px;
+    padding: 8px 12px;
     background: var(--hk-bg-body);
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px dashed var(--hk-border);
+    font-weight: 500;
 }
 
 .psr-chart-body {
@@ -526,20 +612,29 @@
 /* --- Gün Accordion --- */
 .psr-day-accordion {
     border: 1px solid var(--hk-border);
+    border-left: 4px solid var(--hk-accent, #3b82f6);
     border-radius: 12px;
     overflow: hidden;
-    animation: hk-fade-in 0.25s ease;
+    margin-top: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+    background: var(--hk-bg-card);
+    animation: psr-slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes psr-slide-down {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .psr-accordion-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 12px 16px;
+    gap: 16px;
+    padding: 16px 20px;
     background: var(--hk-bg-body);
     border-bottom: 1px solid var(--hk-border);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--hk-text-main);
     flex-wrap: wrap;
@@ -549,19 +644,23 @@
     font-size: 12px;
     color: var(--hk-text-muted);
     font-weight: 600;
-    flex: 1;
+    background: var(--hk-bg-card);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--hk-border);
 }
 
 .psr-accordion-close {
     background: none;
     border: 1px solid var(--hk-border);
-    border-radius: 6px;
+    border-radius: 8px;
     color: var(--hk-text-muted);
     cursor: pointer;
-    padding: 3px 8px;
+    padding: 6px 12px;
     font-size: 12px;
     line-height: 1;
-    transition: background 0.15s, color 0.15s;
+    font-weight: 700;
+    transition: all 0.15s ease;
 }
 
 .psr-accordion-close:hover {
@@ -576,19 +675,20 @@
     overflow-x: auto;
 }
 
-.psr-day-table {
-    font-size: 13px;
+.psr-day-table th,
+.psr-day-table td {
+    padding: 12px 16px !important;
 }
 
 /* --- Varyasyon chip --- */
 .psr-var-chip {
     font-size: 11px;
-    padding: 2px 8px;
+    padding: 3px 10px;
     border-radius: 20px;
-    background: rgba(139,92,246,0.12);
+    background: rgba(139, 92, 246, 0.08);
     color: #8b5cf6;
-    border: 1px solid rgba(139,92,246,0.2);
-    font-weight: 600;
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    font-weight: 700;
     white-space: nowrap;
 }
 
@@ -599,8 +699,9 @@
     overflow-y: auto;
 }
 
-.psr-satis-table {
-    font-size: 13px;
+.psr-satis-table th,
+.psr-satis-table td {
+    padding: 12px 16px !important;
 }
 
 .psr-satis-listesi-wrap {
@@ -665,4 +766,5 @@
 #hizli-kasa-app.theme-dark .psr-search-bar {
     box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
+
 
