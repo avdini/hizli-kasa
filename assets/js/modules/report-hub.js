@@ -31,7 +31,6 @@
                 console.log("HK.ReportHub: hkTabLoaded triggered", e.detail.tab);
                 if (e.detail.tab === 'raporlar') {
                     self.setupHub();
-                    self.updateAnlikKasaSummary();
                 }
             });
 
@@ -40,7 +39,6 @@
                 console.log("HK.ReportHub: #rapor-hub-root found in DOM on init, running setup immediately");
                 setTimeout(function() {
                     self.setupHub();
-                    self.updateAnlikKasaSummary();
                 }, 50);
             }
 
@@ -49,11 +47,6 @@
                 if (e.key === 'Escape' && HK.State && HK.State.aktifSekme === 'raporlar') {
                     self.geriGit();
                 }
-            });
-
-            // Diğer modüllerden Anlık Kasa güncellendiğinde ciro kartlarını yenile
-            jQuery(document).on('hk:anlik-kasa-guncellendi', function(e, ozet) {
-                self.renderAnlikKasaSummary(ozet);
             });
         },
 
@@ -85,7 +78,8 @@
                 onActivate: rep.onActivate || function() {},
                 hasDateFilter: rep.hasDateFilter !== false,
                 hasSearch: rep.hasSearch || false,
-                searchPlaceholder: rep.searchPlaceholder || 'Ara...'
+                searchPlaceholder: rep.searchPlaceholder || 'Ara...',
+                description: rep.description || ''
             };
 
             // Eğer aktif kategoride bir rapor eklendiyse sidebar'ı yenile
@@ -120,40 +114,8 @@
             // HTML yapısını kur
             container.innerHTML = `
                 <div class="rhub-wrapper">
-                    <!-- Üst Başlık ve Anlık Kasa -->
+                    <!-- Sadece Kategoriler Grid'i (Header ve Anlık Kasa tamamen kaldırıldı) -->
                     <div id="rhub-anasayfa-view">
-                        <div class="rhub-header">
-                            <div>
-                                <h2>📊 Rapor Merkezi</h2>
-                                <p class="rhub-subtitle">Tüm operasyonel ve finansal raporlara tek bir yerden erişin.</p>
-                            </div>
-                            <div class="rhub-anlik-kasa-card" id="rhub-summary-card">
-                                <div class="rhub-anlik-kasa-header">
-                                    <span>⚡ Anlık Kasa Durumu</span>
-                                    <button class="hk-btn-outline compact" id="rhub-anlik-kasa-detay-btn">Detay</button>
-                                </div>
-                                <div class="rhub-anlik-kasa-grid">
-                                    <div class="rhub-anlik-item">
-                                        <span class="rhub-anlik-label">Nakit</span>
-                                        <span class="rhub-anlik-val" id="rhub-val-nakit">0.00 TL</span>
-                                    </div>
-                                    <div class="rhub-anlik-item">
-                                        <span class="rhub-anlik-label">Kart</span>
-                                        <span class="rhub-anlik-val" id="rhub-val-kart">0.00 TL</span>
-                                    </div>
-                                    <div class="rhub-anlik-item">
-                                        <span class="rhub-anlik-label">IBAN</span>
-                                        <span class="rhub-anlik-val" id="rhub-val-iban">0.00 TL</span>
-                                    </div>
-                                    <div class="rhub-anlik-item total">
-                                        <span class="rhub-anlik-label">Genel Net</span>
-                                        <span class="rhub-anlik-val" id="rhub-val-genel">0.00 TL</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Kategoriler Grid -->
                         <div class="rhub-grid" id="rhub-categories-grid"></div>
                     </div>
 
@@ -191,12 +153,6 @@
             // Olayları Bağla
             document.getElementById('rhub-geri-btn').addEventListener('click', function() {
                 self.geriGit();
-            });
-
-            document.getElementById('rhub-anlik-kasa-detay-btn').addEventListener('click', function() {
-                if (HK.AnlikKasa && HK.AnlikKasa.$buton) {
-                    HK.AnlikKasa.$buton.trigger('click');
-                }
             });
 
             document.getElementById('rhub-sorgula').addEventListener('click', function() {
@@ -241,34 +197,75 @@
             var cats = Object.values(this.categories).sort((a, b) => a.order - b.order);
             console.log("HK.ReportHub: Available categories for rendering:", cats);
             
-            grid.innerHTML = cats.map(cat => {
+            grid.innerHTML = cats.map((cat, index) => {
                 var isComingSoon = cat.badge === 'yakinda';
-                var badgeHtml = isComingSoon ? `<span class="rhub-badge-yk">Yakında</span>` : '';
+                var badgeHtml = '';
+                if (cat.badge === 'yakinda') {
+                    badgeHtml = `<span class="rhub-badge-yk">Yakında</span>`;
+                } else if (cat.badge === 'yeni') {
+                    badgeHtml = `<span class="rhub-badge-yeni">Yeni</span>`;
+                } else if (cat.badge === 'beta') {
+                    badgeHtml = `<span class="rhub-badge-beta">Beta</span>`;
+                }
+
                 var catReports = Object.values(this.reports).filter(r => r.categoryId === cat.id);
                 var subtextHtml = isComingSoon ? 'Çok Yakında Hizmetinizde' : `${catReports.length} Rapor Aktif`;
 
-                return `
-                    <div class="rhub-card ${isComingSoon ? 'coming-soon' : ''}" data-id="${cat.id}" style="--cat-color: ${cat.color}">
-                        <div class="rhub-card-icon">${cat.icon}</div>
-                        <div class="rhub-card-body">
-                            <h3>${cat.title} ${badgeHtml}</h3>
-                            <p>${cat.description}</p>
-                            <span class="rhub-card-meta">${subtextHtml}</span>
+                var reportsListHtml = '';
+                if (!isComingSoon && catReports.length > 0) {
+                    reportsListHtml = `
+                        <div class="rhub-card-reports">
+                            ${catReports.map(rep => `
+                                <button class="rhub-card-report-item" data-rep-id="${rep.id}" data-cat-id="${cat.id}">
+                                    <span>${rep.icon}</span>
+                                    <span>${rep.title}</span>
+                                </button>
+                            `).join('')}
                         </div>
+                    `;
+                }
+
+                // Staggered animation delay using inline CSS variables
+                var animationStyle = `style="--cat-color: ${cat.color}; animation-delay: ${index * 60}ms;"`;
+
+                return `
+                    <div class="rhub-card ${isComingSoon ? 'coming-soon' : 'animate-in'}" data-id="${cat.id}" ${animationStyle}>
+                        <div class="rhub-card-main">
+                            <div class="rhub-card-icon">${cat.icon}</div>
+                            <div class="rhub-card-body">
+                                <h3>${cat.title} ${badgeHtml}</h3>
+                                <p>${cat.description}</p>
+                                <span class="rhub-card-meta">${subtextHtml}</span>
+                            </div>
+                        </div>
+                        ${reportsListHtml}
                     </div>
                 `;
             }).join('');
 
-            // Kartlara tıklama olayı
+            // Kartın geneline tıklama (alt raporlar hariç)
             grid.querySelectorAll('.rhub-card:not(.coming-soon)').forEach(card => {
-                card.addEventListener('click', function() {
-                    var catId = this.dataset.id;
-                    self.kategoriAc(catId);
+                card.addEventListener('click', function(e) {
+                    // Eğer alt butona tıklanmadıysa kategoriyi aç
+                    if (!e.target.closest('.rhub-card-report-item')) {
+                        var catId = this.dataset.id;
+                        self.kategoriAc(catId);
+                    }
+                });
+            });
+
+            // Alt rapor öğelerine tıklama olayı
+            grid.querySelectorAll('.rhub-card-report-item').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Kartın genel tıklama event'ini tetikleme
+                    var catId = this.dataset.catId;
+                    var repId = this.dataset.repId;
+                    self.kategoriAc(catId, repId); // Doğrudan o rapora odaklan
                 });
             });
         },
 
-        kategoriAc: function(catId) {
+        kategoriAc: function(catId, repId) {
             var self = this;
             var cat = this.categories[catId];
             if (!cat) return;
@@ -295,10 +292,16 @@
 
                 self.renderSidebarMenu();
                 
-                // Kategorideki ilk raporu aç
-                var catReports = Object.values(self.reports).filter(r => r.categoryId === catId);
-                if (catReports.length > 0) {
-                    self.raporAc(catReports[0].id);
+                // Belirtilen raporu veya kategorideki ilk raporu aç
+                var activeRepId = repId;
+                if (!activeRepId) {
+                    var catReports = Object.values(self.reports).filter(r => r.categoryId === catId);
+                    if (catReports.length > 0) {
+                        activeRepId = catReports[0].id;
+                    }
+                }
+                if (activeRepId) {
+                    self.raporAc(activeRepId);
                 }
             }, 150);
         },
@@ -308,9 +311,12 @@
             var sidebar = document.getElementById('rhub-sidebar-menu');
             if (!sidebar) return;
 
+            var cat = this.categories[this.activeCategory];
             var catReports = Object.values(this.reports).filter(r => r.categoryId === this.activeCategory);
 
-            sidebar.innerHTML = catReports.map(rep => `
+            var headerHtml = cat ? `<div class="rhub-sidebar-header">${cat.title}</div>` : '';
+
+            sidebar.innerHTML = headerHtml + catReports.map(rep => `
                 <button class="rhub-side-btn" id="rhub-btn-${rep.id}" data-id="${rep.id}">
                     <span class="rhub-side-icon">${rep.icon}</span>
                     <span class="rhub-side-title">${rep.title}</span>
@@ -447,46 +453,8 @@
                 setTimeout(function() {
                     hubView.style.transform = 'translateY(0)';
                     hubView.style.opacity = '1';
-                    self.updateAnlikKasaSummary();
                 }, 50);
             }, 150);
-        },
-
-        updateAnlikKasaSummary: function() {
-            if (HK.AnlikKasa && typeof HK.AnlikKasa.guncelle === 'function') {
-                HK.AnlikKasa.guncelle();
-            }
-        },
-
-        renderAnlikKasaSummary: function(ozet) {
-            var nakitVal = document.getElementById('rhub-val-nakit');
-            var kartVal = document.getElementById('rhub-val-kart');
-            var ibanVal = document.getElementById('rhub-val-iban');
-            var genelVal = document.getElementById('rhub-val-genel');
-
-            if (!ozet) return;
-
-            var nakit = ozet.nakit_toplam - ozet.iade_nakit;
-            var kart = ozet.kart_toplam - ozet.iade_kart;
-            var iban = ozet.iban_toplam - ozet.iade_iban;
-            var genel = nakit + kart + iban;
-
-            var format = function(val) {
-                return HK.UIRenderer ? HK.UIRenderer.formatPara(val) + ' TL' : val.toFixed(2) + ' TL';
-            };
-
-            if (nakitVal) {
-                nakitVal.textContent = format(nakit);
-            }
-            if (kartVal) {
-                kartVal.textContent = format(kart);
-            }
-            if (ibanVal) {
-                ibanVal.textContent = format(iban);
-            }
-            if (genelVal) {
-                genelVal.textContent = format(genel);
-            }
         }
     };
 

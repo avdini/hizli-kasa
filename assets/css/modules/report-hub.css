@@ -1,168 +1,155 @@
 /**
  * Hızlı Kasa - Reports Hub Stylesheet
+ * Responsive, Modern and Dynamic Layout Design
  */
+
+/* Entry Animations */
+@keyframes rhubFadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(0.75rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 
 .rhub-wrapper {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    padding: 1.25rem;
     box-sizing: border-box;
     font-family: var(--hk-font-family, inherit);
 }
 
-/* Header & Anlık Kasa Özet */
-.rhub-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 30px;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.rhub-header h2 {
-    font-size: 24px;
-    font-weight: 800;
-    margin: 0 0 5px 0;
-    color: var(--hk-text-main);
-}
-
-.rhub-subtitle {
-    margin: 0;
-    font-size: 13px;
-    color: var(--hk-text-muted);
-}
-
-/* Anlık Kasa Özet Widget */
-.rhub-anlik-kasa-card {
-    background: var(--hk-bg-card);
-    border: 1px solid var(--hk-border);
-    border-radius: 12px;
-    padding: 15px;
-    min-width: 320px;
-    box-shadow: var(--hk-shadow-sm);
-}
-
-.rhub-anlik-kasa-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--hk-border);
-    padding-bottom: 10px;
-    margin-bottom: 10px;
-    font-weight: 700;
-    font-size: 13px;
-    color: var(--hk-text-main);
-}
-
-.rhub-anlik-kasa-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-}
-
-.rhub-anlik-item {
+/* Home view layout wrapper - no header spacing when header is removed */
+#rhub-anasayfa-view {
     display: flex;
     flex-direction: column;
+    width: 100%;
 }
 
-.rhub-anlik-label {
-    font-size: 10px;
-    color: var(--hk-text-muted);
-    text-transform: uppercase;
-    font-weight: 700;
-    margin-bottom: 2px;
-}
-
-.rhub-anlik-val {
-    font-size: 13px;
-    font-weight: 800;
-    color: var(--hk-text-main);
-}
-
-.rhub-anlik-item.total .rhub-anlik-val {
-    color: var(--hk-success);
-}
-
-/* Kategoriler Grid */
+/* Grid & Cards Layout */
 .rhub-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
+    grid-template-columns: repeat(auto-fill, minmax(16.25rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.875rem;
     opacity: 1;
     transform: translateY(0);
     transition: transform 0.15s ease-out, opacity 0.15s ease-out;
 }
 
-/* Kategori Kartı */
+/* Category Card */
 .rhub-card {
     background: var(--hk-bg-card);
     border: 1px solid var(--hk-border);
-    border-left: 4px solid var(--cat-color);
-    border-radius: 12px;
-    padding: 20px;
+    border-left: 3px solid var(--cat-color);
+    border-radius: 0.75rem;
+    padding: 1rem;
     display: flex;
-    align-items: flex-start;
-    gap: 15px;
+    flex-direction: column;
     cursor: pointer;
     box-shadow: var(--hk-shadow-sm);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.2s ease,
+                border-color 0.2s ease;
     box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+    
+    /* Staggered animation values calculated dynamically in JS */
+    opacity: 0;
+    transform: translateY(0.75rem);
+}
+
+/* Class added by JS to trigger staggered entrance */
+.rhub-card.animate-in {
+    animation: rhubFadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.rhub-card-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9375rem;
+    width: 100%;
 }
 
 .rhub-card:hover:not(.coming-soon) {
-    transform: translateY(-3px);
-    box-shadow: var(--hk-shadow-md);
+    transform: translateY(-0.1875rem);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08), 0 0.125rem 0.5rem var(--cat-color);
     background: var(--hk-bg-hover);
 }
 
 .rhub-card-icon {
-    font-size: 28px;
+    font-size: 1.75rem;
     line-height: 1;
+    flex-shrink: 0;
 }
 
 .rhub-card-body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 0.25rem;
+    min-width: 0;
 }
 
 .rhub-card-body h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 700;
     color: var(--hk-text-main);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .rhub-card-body p {
     margin: 0;
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--hk-text-muted);
     line-height: 1.4;
 }
 
 .rhub-card-meta {
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 700;
     color: var(--cat-color);
-    margin-top: 4px;
+    margin-top: 0.25rem;
+}
+
+/* Badges */
+.rhub-badge-yk,
+.rhub-badge-yeni,
+.rhub-badge-beta {
+    font-size: 0.5625rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 6.1875rem;
+    text-transform: uppercase;
+    font-weight: 800;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .rhub-badge-yk {
     background: var(--hk-border-dark);
     color: var(--hk-text-muted);
-    font-size: 9px;
-    padding: 2px 6px;
-    border-radius: 99px;
-    text-transform: uppercase;
-    font-weight: 800;
+}
+
+.rhub-badge-yeni {
+    background: var(--hk-success);
+    color: var(--hk-text-white);
+}
+
+.rhub-badge-beta {
+    background: var(--hk-accent);
+    color: var(--hk-text-white);
 }
 
 .rhub-card.coming-soon {
@@ -175,7 +162,57 @@
     color: var(--hk-text-muted);
 }
 
-/* Kategori & Workspace Görünümü */
+/* Hover Preview List */
+.rhub-card-reports {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    margin-top: 0;
+    border-top: 1px solid transparent;
+    padding-top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.2s ease,
+                margin-top 0.25s ease,
+                border-color 0.25s ease,
+                padding-top 0.25s ease;
+    width: 100%;
+}
+
+.rhub-card:hover:not(.coming-soon) .rhub-card-reports {
+    max-height: 12.5rem; /* ~200px limit */
+    opacity: 1;
+    margin-top: 0.75rem;
+    border-top-color: var(--hk-border);
+    padding-top: 0.75rem;
+}
+
+.rhub-card-report-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    border-radius: 0.375rem;
+    color: var(--hk-text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+    background: transparent;
+    border: none;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+}
+
+.rhub-card-report-item:hover {
+    color: var(--cat-color);
+    background: var(--hk-bg-hover);
+    padding-left: 0.75rem;
+}
+
+/* Category & Workspace View */
 #rhub-kategori-view {
     opacity: 1;
     transform: translateY(0);
@@ -185,22 +222,22 @@
 .rhub-nav-header {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 0.9375rem;
     border-bottom: 1px solid var(--hk-border);
-    padding-bottom: 15px;
-    margin-bottom: 20px;
+    padding-bottom: 0.9375rem;
+    margin-bottom: 1.25rem;
 }
 
 .rhub-back-btn {
     background: var(--hk-bg-card);
     border: 1px solid var(--hk-border);
-    padding: 8px 16px;
-    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 0.8125rem;
     cursor: pointer;
     color: var(--hk-text-main);
-    transition: background 0.1s;
+    transition: background-color 0.1s ease;
 }
 
 .rhub-back-btn:hover {
@@ -211,15 +248,15 @@
 .rhub-breadcrumb {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    gap: 0.5rem;
+    font-size: 0.875rem;
     font-weight: 600;
 }
 
 .rhub-crumb-link {
     color: var(--hk-text-muted);
     cursor: pointer;
-    transition: color 0.1s;
+    transition: color 0.1s ease;
 }
 
 .rhub-crumb-link:hover {
@@ -242,82 +279,98 @@
 /* Workspace Layout */
 .rhub-workspace {
     display: flex;
-    gap: 20px;
+    gap: 1.25rem;
     align-items: flex-start;
 }
 
+/* Compact and Responsive Sidebar */
 .rhub-sidebar {
-    width: 220px;
+    width: clamp(10rem, 15vw, 12rem);
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 0.375rem;
     flex-shrink: 0;
+}
+
+.rhub-sidebar-header {
+    font-size: 0.6875rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--hk-text-muted);
+    padding: 0.25rem 0.5rem;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+    border-bottom: 1px dashed var(--hk-border);
 }
 
 .rhub-side-btn {
     background: var(--hk-bg-card);
     border: 1px solid var(--hk-border);
-    padding: 12px 15px;
-    border-radius: 8px;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.5rem;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 0.8125rem;
     text-align: left;
     cursor: pointer;
     color: var(--hk-text-main);
     display: flex;
     align-items: center;
-    gap: 10px;
-    transition: all 0.15s;
+    gap: 0.625rem;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .rhub-side-btn:hover {
     background: var(--hk-bg-hover);
-    transform: translateX(3px);
+    border-color: var(--hk-border-dark);
 }
 
 .rhub-side-btn.aktif {
-    background: var(--hk-accent);
-    border-color: var(--hk-accent);
-    color: var(--hk-text-white);
+    background: var(--hk-bg-card);
+    border-color: var(--hk-border);
+    border-left: 3px solid var(--hk-accent);
+    color: var(--hk-accent);
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
 }
 
 .rhub-side-btn.aktif:hover {
-    transform: none;
-    background: var(--hk-accent);
+    background: var(--hk-bg-card);
 }
 
 .rhub-content-panel {
     flex: 1;
-    min-width: 0; /* Flexbox taşıma engeli */
+    min-width: 0; /* Flex overflow container fix */
 }
 
-/* Filtre ve Arama Barı */
+/* Filter and Search Bar */
 .rhub-filtre-alani {
     background: var(--hk-bg-card);
     border: 1px solid var(--hk-border);
-    border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 15px;
+    border-radius: 0.75rem;
+    padding: 0.9375rem;
+    margin-bottom: 0.9375rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 15px;
+    gap: 0.9375rem;
     flex-wrap: wrap;
 }
 
 .rhub-tarih-filtre {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 0.625rem;
 }
 
 .rhub-tarih-filtre .hk-input {
-    width: 140px;
+    width: 8.75rem;
 }
 
 .rhub-arama-filtre {
     flex: 1;
-    max-width: 320px;
+    max-width: 20rem;
 }
 
 .rhub-arama-filtre .hk-input {
@@ -326,20 +379,11 @@
 
 .rhub-active-report-container .rapor-baslik-alan,
 .rhub-active-report-container .rapor-alt-sekmeler {
-    display: none !important; /* Eski şablondan kalan gereksiz başlıkları gizle */
+    display: none !important; /* Hide leftover legacy title headers */
 }
 
-/* Responsive Düzenlemeler */
-@media (max-width: 958px) {
-    .rhub-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .rhub-anlik-kasa-card {
-        min-width: 100%;
-    }
-    
+/* Responsive adjustments using em */
+@media (max-width: 59.875em) {
     .rhub-workspace {
         flex-direction: column;
     }
@@ -348,10 +392,27 @@
         width: 100%;
         flex-direction: row;
         overflow-x: auto;
-        padding-bottom: 5px;
+        padding-bottom: 0.3125rem;
+        border-bottom: 1px solid var(--hk-border);
+        margin-bottom: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .rhub-sidebar-header {
+        display: none; /* Hide header when sidebar becomes a top tabs bar */
     }
     
     .rhub-side-btn {
         flex-shrink: 0;
+        width: auto;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .rhub-side-btn.aktif {
+        border-left: 1px solid var(--hk-accent);
+        border-bottom: 3px solid var(--hk-accent);
+        border-radius: 0.5rem;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
     }
 }
