@@ -190,7 +190,10 @@ if (!defined('ABSPATH'))
                 <div class="sevk-summary-row">
                     <span id="sevk-cikis-ozet">0 çeşit ürün, 0 adet toplam</span>
                     <textarea id="sevk-cikis-not" class="hk-input" rows="2" placeholder="Gönderici notu"></textarea>
-                    <button type="button" id="sevk-cikis-onayla" class="sevk-btn primary">Onayla ve Gönder</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="sevk-cikis-onayla" class="sevk-btn primary">Onayla ve Gönder</button>
+                        <button type="button" id="sevk-cikis-direkt-tamamla" class="sevk-btn success" style="display:none;">Direkt Stoklara İşle (Bypass)</button>
+                    </div>
                 </div>
             </div>
 

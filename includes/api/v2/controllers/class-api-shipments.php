@@ -110,6 +110,12 @@ class Hizli_Kasa_API_Shipments extends Hizli_Kasa_API_Controller_Base {
             'callback'            => [$this, 'delete_draft_callback'],
             'permission_callback' => [$this, 'check_permission'],
         ]);
+
+        register_rest_route($this->namespace, '/sevk/direkt-tamamla', [
+            'methods'             => WP_REST_Server::CREATABLE,
+            'callback'            => [$this, 'direct_complete_callback'],
+            'permission_callback' => [$this, 'check_permission'],
+        ]);
     }
 
     public function create_sevk_callback($request) {
@@ -174,6 +180,10 @@ class Hizli_Kasa_API_Shipments extends Hizli_Kasa_API_Controller_Base {
 
     public function delete_draft_callback($request) {
         return $this->handle_request([$this, 'delete_draft'], $request);
+    }
+
+    public function direct_complete_callback($request) {
+        return $this->handle_request([$this, 'direct_complete'], $request);
     }
 
     protected function create_sevk($request) {
@@ -724,6 +734,60 @@ class Hizli_Kasa_API_Shipments extends Hizli_Kasa_API_Controller_Base {
         return Hizli_Kasa_API_Response::success([
             'message' => 'Taslak sevk başarıyla silindi.',
         ]);
+    }
+
+    protected function direct_complete($request) {
+        global $wpdb;
+        $data    = $request->get_json_params();
+        $sevk_id = intval($data['sevk_id'] ?? 0);
+
+        $sevk = $this->get_shipment($sevk_id);
+        if (!$sevk || $sevk->durum !== 'taslak') {
+            return Hizli_Kasa_API_Response::error('Sadece taslak durumundaki sevkler direkt tamamlanabilir.', 400);
+        }
+
+        if (!$this->user_can_source($sevk, true) || !$this->user_can_target($sevk, true)) {
+            return Hizli_Kasa_API_Response::error('Bu işlemi gerçekleştirmek için her iki deponun da yönetim yetkisine sahip olmalısınız.', 403);
+        }
+
+        if ((float) $sevk->toplam_adet <= 0) {
+            return Hizli_Kasa_API_Response::error('En az bir ürün eklenmelidir.', 400);
+        }
+
+        $tables = $this->get_tables();
+        $items  = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$tables['sevk_kalemleri']} WHERE sevk_id = %d",
+            $sevk->id
+        ));
+
+        foreach ($items as $item) {
+            $wpdb->update($tables['sevk_kalemleri'], [
+                'teslim_alinan_adet' => $item->gonderilen_adet,
+                'updated_at'         => current_time('mysql'),
+            ], ['id' => $item->id, 'sevk_id' => $sevk->id]);
+
+            Hizli_Kasa_Stock_Manager::transfer_out(
+                $item->product_id, $item->variation_id,
+                $sevk->kaynak_depo_id, $item->gonderilen_adet, $sevk->id
+            );
+
+            Hizli_Kasa_Stock_Manager::transfer_in(
+                $item->product_id, $item->variation_id,
+                $sevk->hedef_depo_id, $item->gonderilen_adet, $sevk->id
+            );
+        }
+
+        $wpdb->update($tables['sevkler'], [
+            'durum'             => 'tamamlandi',
+            'onaylayan_user_id' => $this->get_current_user(),
+            'not_gonderici'     => sanitize_textarea_field($data['not_gonderici'] ?? $sevk->not_gonderici),
+            'not_alici'         => sanitize_textarea_field($data['not_gonderici'] ?? $sevk->not_gonderici),
+            'updated_at'        => current_time('mysql'),
+        ], ['id' => $sevk->id]);
+
+        return Hizli_Kasa_API_Response::success(
+            $this->format_mutation_response($this->get_shipment($sevk->id))
+        );
     }
 
     protected function get_tables(): array {

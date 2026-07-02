@@ -663,3 +663,8 @@
     font-size: 12px;
     border-radius: 6px;
 }
+.sevk-btn.success {
+    background: var(--hk-success);
+    border-color: var(--hk-success);
+    color: #fff;
+}

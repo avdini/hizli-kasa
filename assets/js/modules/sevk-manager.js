@@ -145,10 +145,12 @@
             var createBtn = document.getElementById('sevk-cikis-olustur');
             var input = document.getElementById('sevk-cikis-barkod');
             var approveBtn = document.getElementById('sevk-cikis-onayla');
+            var direktBtn = document.getElementById('sevk-cikis-direkt-tamamla');
             var newBtn = document.getElementById('sevk-cikis-yeni');
 
             if (createBtn) createBtn.addEventListener('click', function() { self.createSevk(); });
             if (approveBtn) approveBtn.addEventListener('click', function() { self.submitForApproval(); });
+            if (direktBtn) direktBtn.addEventListener('click', function() { self.directComplete(); });
             if (newBtn) newBtn.addEventListener('click', function() { self.resetCikis(); });
             if (input) {
                 input.addEventListener('keydown', function(e) {
@@ -294,10 +296,16 @@
             var route = document.getElementById('sevk-cikis-route');
             var list = document.getElementById('sevk-cikis-kalemler');
             var summary = document.getElementById('sevk-cikis-ozet');
+            var direktBtn = document.getElementById('sevk-cikis-direkt-tamamla');
 
             if (no) no.textContent = sevk.sevk_no;
             if (route) route.textContent = sevk.kaynak_depo_adi + ' → ' + sevk.hedef_depo_adi;
             if (summary) summary.textContent = sevk.toplam_cesit + ' çeşit ürün, ' + sevk.toplam_adet + ' adet toplam';
+            if (direktBtn) {
+                var depo = HK.DepoManager;
+                var canDirect = depo && depo.canManageDepo(sevk.kaynak_depo_id) && depo.canManageDepo(sevk.hedef_depo_id);
+                direktBtn.style.display = canDirect ? 'inline-block' : 'none';
+            }
             if (!list) return;
 
             if (!sevk.kalemler || !sevk.kalemler.length) {
@@ -363,6 +371,25 @@
                 this.activeSevk = data.sevk;
                 var result = document.getElementById('sevk-cikis-sonuc');
                 if (result) result.textContent = data.sevk.sevk_no + ' alıcı depo onayına gönderildi.';
+                this.setStep(3);
+                this.loadAll();
+            } catch (e) {
+                toast(e.message, 'error');
+            }
+        },
+
+        directComplete: async function() {
+            if (!this.activeSevk) return;
+            if (!confirm('Bu işlem hedef depodan onay alınmasını bypass edecek ve stokları anında güncelleyecektir. Devam etmek istiyor musunuz?')) return;
+            var note = document.getElementById('sevk-cikis-not');
+            try {
+                var data = await api('sevk/direkt-tamamla', {
+                    method: 'POST',
+                    body: JSON.stringify({ sevk_id: this.activeSevk.id, not_gonderici: note ? note.value : '' })
+                });
+                this.activeSevk = data.sevk;
+                var result = document.getElementById('sevk-cikis-sonuc');
+                if (result) result.textContent = data.sevk.sevk_no + ' sevk kabulü bypass edilerek tamamlandı ve stoklar güncellendi.';
                 this.setStep(3);
                 this.loadAll();
             } catch (e) {
