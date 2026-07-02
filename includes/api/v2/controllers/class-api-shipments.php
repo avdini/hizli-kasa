@@ -923,14 +923,38 @@ class Hizli_Kasa_API_Shipments extends Hizli_Kasa_API_Controller_Base {
     }
 
     protected function find_product_by_sku(string $sku): array|false {
+        global $wpdb;
+
         $post_id = wc_get_product_id_by_sku($sku);
+
+        if (!$post_id) {
+            $post_id = $wpdb->get_var($wpdb->prepare("
+                SELECT pm.post_id 
+                FROM {$wpdb->postmeta} pm
+                JOIN {$wpdb->posts} p ON pm.post_id = p.ID
+                WHERE pm.meta_key = '_sku' AND pm.meta_value = %s
+                AND p.post_status IN ('publish', 'private')
+                AND p.post_type IN ('product', 'product_variation')
+                LIMIT 1
+            ", $sku));
+        }
+
+        if (!$post_id && is_numeric($sku)) {
+            $product_by_id = wc_get_product(intval($sku));
+            if ($product_by_id) {
+                $post_id = $product_by_id->get_id();
+            }
+        }
+
         if (!$post_id) {
             return false;
         }
+
         $product = wc_get_product($post_id);
         if (!$product) {
             return false;
         }
+
         $variation_id = $product->is_type('variation') ? $product->get_id() : 0;
         return [
             'product_id'   => $variation_id ? $product->get_parent_id() : $product->get_id(),
