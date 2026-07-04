@@ -189,7 +189,7 @@ jQuery(document).ready(function($) {
 
     function loadStatus() {
         $.ajax({
-            url: ajaxurl.replace('admin-ajax.php', 'wp-json/hizli-kasa/v2/auto-sku/status'),
+            url: '<?php echo esc_url_raw(rest_url('hizli-kasa/v2/auto-sku/status')); ?>',
             method: 'GET',
             beforeSend: function(xhr) {
                 xhr.setRequestHeader('X-WP-Nonce', '<?php echo wp_create_nonce('wp_rest'); ?>');
@@ -242,7 +242,7 @@ jQuery(document).ready(function($) {
         if (!isProcessing) return;
 
         $.ajax({
-            url: ajaxurl.replace('admin-ajax.php', 'wp-json/hizli-kasa/v2/auto-sku/generate'),
+            url: '<?php echo esc_url_raw(rest_url('hizli-kasa/v2/auto-sku/generate')); ?>',
             method: 'POST',
             data: JSON.stringify({ limit: batchLimit }),
             contentType: 'application/json',
