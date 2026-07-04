@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
 }
 
 class Hizli_Kasa_Auto_Sku_Manager {
-    private static $is_syncing = false;
+    private static $syncing_ids = [];
 
     public static function init() {
         add_action('woocommerce_update_product', [self::class, 'handle_product_save'], 20, 1);
@@ -96,7 +96,7 @@ class Hizli_Kasa_Auto_Sku_Manager {
     }
 
     public static function handle_meta_change($meta_id, $object_id, $meta_key, $_meta_value) {
-        if (self::$is_syncing) {
+        if (in_array($object_id, self::$syncing_ids)) {
             return;
         }
         if ($meta_key !== '_sku') {
@@ -112,7 +112,7 @@ class Hizli_Kasa_Auto_Sku_Manager {
     }
 
     public static function sync_sku_by_id($product_id) {
-        if (self::$is_syncing) {
+        if (in_array($product_id, self::$syncing_ids)) {
             return false;
         }
 
@@ -137,7 +137,7 @@ class Hizli_Kasa_Auto_Sku_Manager {
             return false;
         }
 
-        self::$is_syncing = true;
+        self::$syncing_ids[] = $product_id;
 
         $prefix = get_option('hizli_kasa_auto_sku_prefix', 'AVD-');
         $new_sku = $prefix . $product_id;
@@ -145,7 +145,7 @@ class Hizli_Kasa_Auto_Sku_Manager {
         $product->set_sku($new_sku);
         $product->save();
 
-        self::$is_syncing = false;
+        self::$syncing_ids = array_diff(self::$syncing_ids, [$product_id]);
         return true;
     }
 
