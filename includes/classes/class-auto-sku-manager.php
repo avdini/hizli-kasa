@@ -12,6 +12,7 @@ class Hizli_Kasa_Auto_Sku_Manager {
         add_action('woocommerce_new_product', [self::class, 'handle_product_save'], 20, 1);
         add_action('woocommerce_new_product_variation', [self::class, 'handle_product_save'], 20, 1);
         add_action('save_post_product', [self::class, 'handle_save_post_product'], 20, 3);
+        add_action('save_post_product_variation', [self::class, 'handle_save_post_product'], 20, 3);
 
         add_action('woocommerce_product_import_inserted_product_object', [self::class, 'handle_import_save'], 20, 2);
 
@@ -112,28 +113,38 @@ class Hizli_Kasa_Auto_Sku_Manager {
     }
 
     public static function sync_sku_by_id($product_id) {
+        error_log("HK SKU Debug: sync_sku_by_id triggered for ID " . $product_id);
+
         if (in_array($product_id, self::$syncing_ids)) {
+            error_log("HK SKU Debug: ID " . $product_id . " is already syncing, skipping.");
             return false;
         }
 
-        if (get_option('hizli_kasa_auto_sku_aktif', '0') !== '1') {
+        $aktif = get_option('hizli_kasa_auto_sku_aktif', '0');
+        error_log("HK SKU Debug: Auto SKU active state: " . $aktif);
+        if ($aktif !== '1') {
             return false;
         }
 
         $product = wc_get_product($product_id);
         if (!$product) {
+            error_log("HK SKU Debug: Failed to load product for ID " . $product_id);
             return false;
         }
 
         $type = $product->get_type();
         $allowed_types = get_option('hizli_kasa_auto_sku_tipler', ['simple', 'product_variation']);
+        error_log("HK SKU Debug: ID " . $product_id . " type is '" . $type . "'. Allowed: " . print_r($allowed_types, true));
         
         $mapped_type = ($type === 'variation') ? 'product_variation' : $type;
         if (!in_array($mapped_type, $allowed_types)) {
+            error_log("HK SKU Debug: Type '" . $mapped_type . "' not in allowed types.");
             return false;
         }
 
-        if ($product->get_sku() !== '') {
+        $sku = $product->get_sku();
+        error_log("HK SKU Debug: ID " . $product_id . " current SKU: '" . $sku . "'");
+        if ($sku !== '') {
             return false;
         }
 
@@ -142,10 +153,12 @@ class Hizli_Kasa_Auto_Sku_Manager {
         $prefix = get_option('hizli_kasa_auto_sku_prefix', 'AVD-');
         $new_sku = $prefix . $product_id;
 
+        error_log("HK SKU Debug: Generating SKU '" . $new_sku . "' for ID " . $product_id);
         $product->set_sku($new_sku);
         $product->save();
 
         self::$syncing_ids = array_diff(self::$syncing_ids, [$product_id]);
+        error_log("HK SKU Debug: Finished successfully for ID " . $product_id);
         return true;
     }
 
