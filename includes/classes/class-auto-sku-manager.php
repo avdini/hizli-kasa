@@ -142,7 +142,7 @@ class Hizli_Kasa_Auto_Sku_Manager {
             return false;
         }
 
-        $sku = $product->get_sku();
+        $sku = $product->get_sku('edit');
         error_log("HK SKU Debug: ID " . $product_id . " current SKU: '" . $sku . "'");
         if ($sku !== '') {
             return false;
