@@ -24,6 +24,7 @@ class Hizli_Kasa_Admin_Settings_Page {
                 <a href="?page=hizli-kasa&tab=bildirimler" class="nav-tab <?php echo $active_tab == 'bildirimler' ? 'nav-tab-active' : ''; ?>">Bildirimler</a>
                 <a href="?page=hizli-kasa&tab=genel" class="nav-tab <?php echo $active_tab == 'genel' ? 'nav-tab-active' : ''; ?>">Genel Ayarlar</a>
                 <a href="?page=hizli-kasa&tab=onbellek" class="nav-tab <?php echo $active_tab == 'onbellek' ? 'nav-tab-active' : ''; ?>">Önbellek (Cache)</a>
+                <a href="?page=hizli-kasa&tab=oto-sku" class="nav-tab <?php echo $active_tab == 'oto-sku' ? 'nav-tab-active' : ''; ?>">Otomatik SKU</a>
                 <a href="?page=hizli-kasa&tab=araclar" class="nav-tab <?php echo $active_tab == 'araclar' ? 'nav-tab-active' : ''; ?>">Sistem Araçları</a>
             </h2>
             <div style="margin-top: 20px;">
@@ -40,6 +41,8 @@ class Hizli_Kasa_Admin_Settings_Page {
                     include HIZLI_KASA_PATH . 'includes/views/tab-bildirimler.php';
                 } elseif ($active_tab === 'onbellek') {
                     include HIZLI_KASA_PATH . 'includes/views/admin-settings-onbellek.php';
+                } elseif ($active_tab === 'oto-sku') {
+                    include HIZLI_KASA_PATH . 'includes/views/admin-settings-auto-sku.php';
                 } elseif ($active_tab === 'araclar') {
                     include HIZLI_KASA_PATH . 'includes/views/admin-settings-araclar.php';
                 }

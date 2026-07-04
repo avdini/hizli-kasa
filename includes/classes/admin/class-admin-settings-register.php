@@ -85,5 +85,31 @@ class Hizli_Kasa_Admin_Settings_Register {
     register_setting('hizli_kasa_araclar_grubu', 'hizli_kasa_debug_log_aktif', [
         'sanitize_callback' => fn($val) => $val ? '1' : '0'
     ]);
+
+    // Otomatik SKU Ayarları
+    register_setting('hizli_kasa_auto_sku_grubu', 'hizli_kasa_auto_sku_aktif', [
+        'sanitize_callback' => fn($val) => $val ? '1' : '0'
+    ]);
+    register_setting('hizli_kasa_auto_sku_grubu', 'hizli_kasa_auto_sku_prefix', [
+        'type' => 'string',
+        'default' => 'AVD-',
+        'sanitize_callback' => 'sanitize_text_field'
+    ]);
+    register_setting('hizli_kasa_auto_sku_grubu', 'hizli_kasa_auto_sku_cron_aktif', [
+        'sanitize_callback' => fn($val) => $val ? '1' : '0'
+    ]);
+    register_setting('hizli_kasa_auto_sku_grubu', 'hizli_kasa_auto_sku_cron_seconds', [
+        'type' => 'integer',
+        'default' => 3600,
+        'sanitize_callback' => 'intval'
+    ]);
+    register_setting('hizli_kasa_auto_sku_grubu', 'hizli_kasa_auto_sku_tipler', [
+        'type' => 'array',
+        'default' => ['simple', 'product_variation']
+    ]);
+    register_setting('hizli_kasa_auto_sku_grubu', 'hizli_kasa_auto_sku_tetikleyiciler', [
+        'type' => 'array',
+        'default' => ['save', 'import']
+    ]);
 }
 }

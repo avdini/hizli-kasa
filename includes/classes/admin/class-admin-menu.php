@@ -79,6 +79,15 @@ class Hizli_Kasa_Admin_Menu {
 
     add_submenu_page(
         'hizli-kasa',
+        'Otomatik SKU',
+        'Otomatik SKU',
+        'manage_options',
+        'hizli-kasa&tab=oto-sku',
+        [Hizli_Kasa_Admin_Settings_Page::class, 'render']
+    );
+
+    add_submenu_page(
+        'hizli-kasa',
         'Sistem Araçları',
         'Sistem Araçları',
         'manage_options',
