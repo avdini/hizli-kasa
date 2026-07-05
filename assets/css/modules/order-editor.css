@@ -134,10 +134,39 @@
 }
 
 .recent-order-item.is-locked {
-    opacity: 0.6;
+    background: rgba(239, 68, 68, 0.04);
+    border-color: var(--hk-danger);
+    opacity: 0.9;
     cursor: not-allowed;
-    pointer-events: none;
-    background: var(--hk-bg-hover);
-    border-color: var(--hk-border);
+    pointer-events: auto;
+}
+
+.recent-order-item.is-locked:hover {
+    background: rgba(239, 68, 68, 0.04);
+    border-color: var(--hk-danger);
+    transform: none;
+}
+
+#hizli-kasa-app.theme-dark .recent-order-item.is-locked {
+    background: rgba(248, 113, 113, 0.08);
+    border-color: var(--hk-danger);
+}
+
+#hizli-kasa-app.theme-dark .recent-order-item.is-locked:hover {
+    background: rgba(248, 113, 113, 0.08);
+    border-color: var(--hk-danger);
+}
+
+.recent-order-item.is-locked .locked-badge {
+    background: var(--hk-danger);
+    color: var(--hk-text-white);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    margin-left: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 

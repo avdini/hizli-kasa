@@ -50,6 +50,7 @@ add_action('rest_api_init', function () {
  */
 function hizli_kasa_get_order_details($request)
 {
+    nocache_headers();
     $order_id = sanitize_text_field($request->get_param('id'));
     $order = wc_get_order($order_id);
 
@@ -69,12 +70,24 @@ function hizli_kasa_get_order_details($request)
     $depo_names_cache = [];
 
     $items = [];
+    $has_item_refund = false;
+    foreach ($order->get_items() as $item_id => $item) {
+        if ($item instanceof WC_Order_Item_Product) {
+            $refunded_qty = (int) wc_get_order_item_meta($item_id, '_hk_refunded_qty', true);
+            if ($refunded_qty > 0) {
+                $has_item_refund = true;
+                break;
+            }
+        }
+    }
+
     $is_fully_refunded = ($order->get_meta('_hk_is_fully_refunded') === 'yes');
     $has_refund = (
         (float) $order->get_total_refunded() > 0 || 
         !empty($order->get_refunds()) || 
         $order->get_meta('_hk_has_refund') === 'yes' || 
-        $is_fully_refunded
+        $is_fully_refunded ||
+        $has_item_refund
     );
 
     foreach ($order->get_items() as $item_id => $item) {
@@ -172,6 +185,7 @@ function hizli_kasa_get_order_details($request)
  */
 function hizli_kasa_search_orders($request)
 {
+    nocache_headers();
     $phone = sanitize_text_field($request->get_param('phone'));
     $barcode = sanitize_text_field($request->get_param('barcode'));
     $date_bas = sanitize_text_field($request->get_param('date_start'));
@@ -279,6 +293,7 @@ function hizli_kasa_search_orders($request)
  */
 function hizli_kasa_get_recent_orders($request)
 {
+    nocache_headers();
     $kasa_no = sanitize_text_field($request->get_param('kasa_no'));
     $depo_id = intval($request->get_param('depo_id'));
     $limit = get_option('hizli_kasa_edit_order_limit', 5);
@@ -335,6 +350,7 @@ function hizli_kasa_get_recent_orders($request)
         if ($order->get_meta('_hizli_kasa_is_refund') === 'yes')
             continue;
 
+        $has_item_refund = false;
         $items = [];
         foreach ($order->get_items() as $item_id => $item) {
             if (!$item instanceof WC_Order_Item_Product) {
@@ -352,11 +368,17 @@ function hizli_kasa_get_recent_orders($request)
             $depo_stock = 0;
             if ($depo_id) {
                 $depo_stock = (float) $wpdb->get_var($wpdb->prepare(
-                    "SELECT quantity FROM $stok_table WHERE product_id = %d AND variation_id = %d AND location_id = %d",
-                    $p_id,
-                    $v_id,
-                    $depo_id
+                     "SELECT quantity FROM $stok_table WHERE product_id = %d AND variation_id = %d AND location_id = %d",
+                     $p_id,
+                     $v_id,
+                     $depo_id
                 ));
+            }
+
+            // Check if refunded
+            $item_refunded_qty = (int) wc_get_order_item_meta($item_id, '_hk_refunded_qty', true);
+            if ($item_refunded_qty > 0) {
+                $has_item_refund = true;
             }
 
             $items[] = [
@@ -378,7 +400,8 @@ function hizli_kasa_get_recent_orders($request)
             (float) $order->get_total_refunded() > 0 || 
             !empty($order->get_refunds()) || 
             $order->get_meta('_hk_has_refund') === 'yes' || 
-            $order->get_meta('_hk_is_fully_refunded') === 'yes'
+            $order->get_meta('_hk_is_fully_refunded') === 'yes' ||
+            $has_item_refund
         );
 
         $results[] = [
@@ -418,11 +441,22 @@ function hizli_kasa_update_order($request)
         return new WP_Error('no_order', 'Sipariş bulunamadı.');
 
     // Guard: İade görmüş sipariş düzenlenemez
+    $has_item_refund = false;
+    foreach ($order->get_items() as $item_id => $item) {
+        if ($item instanceof WC_Order_Item_Product) {
+            $refunded_qty = (int) wc_get_order_item_meta($item_id, '_hk_refunded_qty', true);
+            if ($refunded_qty > 0) {
+                $has_item_refund = true;
+                break;
+            }
+        }
+    }
     $has_refund = (
         (float) $order->get_total_refunded() > 0 || 
         !empty($order->get_refunds()) || 
         $order->get_meta('_hk_has_refund') === 'yes' || 
-        $order->get_meta('_hk_is_fully_refunded') === 'yes'
+        $order->get_meta('_hk_is_fully_refunded') === 'yes' ||
+        $has_item_refund
     );
     if ($has_refund) {
         return new WP_Error('edit_not_allowed', 'Bu sipariş iade işlemi gördüğü için düzenlenemez.');
@@ -720,6 +754,7 @@ function hizli_kasa_update_order($request)
  */
 function hizli_kasa_get_edit_logs($request)
 {
+    nocache_headers();
     global $wpdb;
     $table = Hizli_Kasa_Database::get_tables()['order_edits'];
 

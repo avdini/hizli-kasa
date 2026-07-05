@@ -116,17 +116,19 @@
                     var div = document.createElement("div");
                     var isLocked = order.has_refund;
                     var lockReason = "";
-                    if (order.has_refund) lockReason = "(İade İşlemi Gördü)";
+                    if (order.has_refund) lockReason = "Düzenlenemez (İade/Değişim)";
 
                     div.className = "recent-order-item" + (isLocked ? " is-locked" : "");
+                    div.title = isLocked ? "Bu sipariş iade/değişim işlemi gördüğü için düzenlenemez." : "";
+                    
                     div.innerHTML = `
                         <div class="recent-order-info">
-                            <span class="recent-order-id">#${order.id} ${lockReason ? '<small style="color:#d63031;">' + lockReason + '</small>' : ''}</span>
+                            <span class="recent-order-id">#${order.id}</span>
                             <span class="recent-order-meta">${order.date} | ${order.payment_title}</span>
                         </div>
                         <div style="display:flex; align-items:center;">
                             <div class="recent-order-total">${parseFloat(order.total).toFixed(2)} TL</div>
-                            ${isLocked ? '<span style="color:#e74c3c; font-size:16px; margin-left:10px; font-weight:bold;" title="Düzenlenemez">❌</span>' : ''}
+                            ${isLocked ? '<span class="locked-badge">🚫 ' + lockReason + '</span>' : ''}
                         </div>
                     `;
                     
@@ -134,9 +136,6 @@
                         div.addEventListener("click", function() {
                             self.selectOrder(order);
                         });
-                    } else {
-                        div.style.opacity = "0.6";
-                        div.style.cursor = "not-allowed";
                     }
                     
                     container.appendChild(div);
