@@ -23,6 +23,7 @@ window.HizliKasa = window.HizliKasa || {};
         musteriTelefonUlkeIso: "tr",
         siparisNotu: "",
         splitData: null,
+        editingOrderId: null,
         lastUpdatedId: null,
         CURRENT_VERSION: typeof kasaAyar !== 'undefined' && kasaAyar.version ? kasaAyar.version : "2.8.8",
         MAX_KASA: 4
@@ -154,6 +155,7 @@ window.HizliKasa = window.HizliKasa || {};
                 state.musteriTelefonUlkeIso = "tr";
                 state.siparisNotu = "";
                 state.splitData = null;
+                state.editingOrderId = null;
             }
 
             state.lastUpdatedId = null;
