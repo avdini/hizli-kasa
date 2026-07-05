@@ -98,7 +98,8 @@ window.HizliKasa = window.HizliKasa || {};
                 musteriTelefonUlkeKodu: state.musteriTelefonUlkeKodu,
                 musteriTelefonUlkeIso: state.musteriTelefonUlkeIso,
                 siparisNotu: state.siparisNotu,
-                splitData: state.splitData
+                splitData: state.splitData,
+                editingOrderId: state.editingOrderId
             };
             localStorage.setItem(this._slotKey(state.aktifKasaId), JSON.stringify(veri));
 
@@ -128,6 +129,7 @@ window.HizliKasa = window.HizliKasa || {};
                     state.musteriTelefonUlkeIso = veri.musteriTelefonUlkeIso || "tr";
                     state.siparisNotu = veri.siparisNotu || "";
                     state.splitData = veri.splitData || null;
+                    state.editingOrderId = veri.editingOrderId || null;
 
                     // Geriye dönük uyumluluk: discounted_price'ı line_discount'a çevir
                     state.sepet.forEach(function(item) {
