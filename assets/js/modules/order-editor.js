@@ -118,7 +118,10 @@
                             <span class="recent-order-id">#${order.id} ${lockReason ? '<small style="color:#d63031;">' + lockReason + '</small>' : ''}</span>
                             <span class="recent-order-meta">${order.date} | ${order.payment_title}</span>
                         </div>
-                        <div class="recent-order-total">${parseFloat(order.total).toFixed(2)} TL</div>
+                        <div style="display:flex; align-items:center;">
+                            <div class="recent-order-total">${parseFloat(order.total).toFixed(2)} TL</div>
+                            ${isLocked ? '<span style="color:#e74c3c; font-size:16px; margin-left:10px; font-weight:bold;" title="Düzenlenemez">❌</span>' : ''}
+                        </div>
                     `;
                     
                     if (!isLocked) {
@@ -193,6 +196,7 @@
 
                 // Hafızaya kaydet ve arayüzü güncelle
                 if (HK.CartManager) {
+                    HK._telefonProgramatikGuncelleniyor = true;
                     HK.CartManager.sepetiKaydet();
                 }
 
