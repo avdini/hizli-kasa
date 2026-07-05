@@ -61,9 +61,20 @@ window.HizliKasa = window.HizliKasa || {};
                 var slotVeri = localStorage.getItem(key);
                 if (slotVeri) {
                     var veri = JSON.parse(slotVeri);
-                    btn.classList.toggle("dolu", veri.sepet && veri.sepet.length > 0);
+                    var hasItems = veri.sepet && veri.sepet.length > 0;
+                    btn.classList.toggle("dolu", hasItems);
+                    
+                    if (hasItems) {
+                        var hasExchange = veri.sepet.some(function(item) { return item._is_exchange_return; });
+                        var isEditing = !!veri.editingOrderId;
+                        
+                        btn.classList.toggle("duzenleme", isEditing);
+                        btn.classList.toggle("degisim", !isEditing && hasExchange);
+                    } else {
+                        btn.classList.remove("duzenleme", "degisim");
+                    }
                 } else {
-                    btn.classList.remove("dolu");
+                    btn.classList.remove("dolu", "duzenleme", "degisim");
                 }
             });
         },

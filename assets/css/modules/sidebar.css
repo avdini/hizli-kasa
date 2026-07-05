@@ -74,6 +74,20 @@
     background: #f9fffb;
 }
 
+/* Düzenleme modundaki kasanın kart rengi (Mavi) */
+.sidebar-btn.dolu.duzenleme:not(.aktif) {
+    border-color: #3498db !important;
+    color: #3498db !important;
+    background: #f7fbfe !important;
+}
+
+/* Değişim modundaki kasanın kart rengi (Turuncu) */
+.sidebar-btn.dolu.degisim:not(.aktif) {
+    border-color: #e67e22 !important;
+    color: #e67e22 !important;
+    background: #fefaf6 !important;
+}
+
 /* Sabit Butonlar (Alt Kısım) */
 .kasa-sabit-butonlar {
     display: flex;
