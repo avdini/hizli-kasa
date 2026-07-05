@@ -70,6 +70,12 @@ function hizli_kasa_get_order_details($request)
 
     $items = [];
     $is_fully_refunded = ($order->get_meta('_hk_is_fully_refunded') === 'yes');
+    $has_refund = (
+        (float) $order->get_total_refunded() > 0 || 
+        !empty($order->get_refunds()) || 
+        $order->get_meta('_hk_has_refund') === 'yes' || 
+        $is_fully_refunded
+    );
 
     foreach ($order->get_items() as $item_id => $item) {
         if (!$item instanceof WC_Order_Item_Product) {
@@ -151,6 +157,8 @@ function hizli_kasa_get_order_details($request)
         'telefon' => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '',
         'siparis_notu' => $order->get_meta('_hizli_kasa_siparis_notu') ?: '',
         'is_fully_refunded' => $is_fully_refunded,
+        'has_refund' => $has_refund,
+        'total_refunded' => (float) $order->get_total_refunded(),
         'manual_discount' => hizli_kasa_get_order_manual_discount($order),
         'refunded_manual_discount' => (float) $order->get_meta('_hk_refunded_discount'),
         'total_discount' => hizli_kasa_get_order_total_discount($order),
@@ -366,7 +374,12 @@ function hizli_kasa_get_recent_orders($request)
 
         $payment_method = $order->get_payment_method();
         $is_split = ($payment_method === 'split');
-        $has_refund = (!empty($order->get_refunds()) || $order->get_meta('_hk_has_refund') === 'yes' || $order->get_meta('_hk_is_fully_refunded') === 'yes');
+        $has_refund = (
+            (float) $order->get_total_refunded() > 0 || 
+            !empty($order->get_refunds()) || 
+            $order->get_meta('_hk_has_refund') === 'yes' || 
+            $order->get_meta('_hk_is_fully_refunded') === 'yes'
+        );
 
         $results[] = [
             'id' => $order->get_id(),
@@ -405,7 +418,12 @@ function hizli_kasa_update_order($request)
         return new WP_Error('no_order', 'Sipariş bulunamadı.');
 
     // Guard: İade görmüş sipariş düzenlenemez
-    $has_refund = (!empty($order->get_refunds()) || $order->get_meta('_hk_has_refund') === 'yes' || $order->get_meta('_hk_is_fully_refunded') === 'yes');
+    $has_refund = (
+        (float) $order->get_total_refunded() > 0 || 
+        !empty($order->get_refunds()) || 
+        $order->get_meta('_hk_has_refund') === 'yes' || 
+        $order->get_meta('_hk_is_fully_refunded') === 'yes'
+    );
     if ($has_refund) {
         return new WP_Error('edit_not_allowed', 'Bu sipariş iade işlemi gördüğü için düzenlenemez.');
     }

@@ -12,6 +12,7 @@
     HK.OrderEditor = {
         activeOrder: null,
         editedItems: {}, // item_id -> new_qty
+        loadRecentOrdersCount: 0,
 
         init: function() {
             var self = this;
@@ -89,6 +90,7 @@
             var loading = document.getElementById("recent-orders-loading");
             var self = this;
 
+            var currentLoadId = ++self.loadRecentOrdersCount;
             loading.style.display = "block";
             container.innerHTML = "";
 
@@ -98,6 +100,10 @@
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });
                 var orders = await response.json();
+
+                if (currentLoadId !== self.loadRecentOrdersCount) {
+                    return;
+                }
 
                 loading.style.display = "none";
 
@@ -159,6 +165,15 @@
 
                 if (!orderDetails || orderDetails.code === 'rest_no_route' || orderDetails.message) {
                     throw new Error(orderDetails.message || "Sipariş detayları alınamadı.");
+                }
+
+                // API/Görünüm Düzeyinde Güvenlik Kontrolü
+                if (orderDetails.has_refund || orderDetails.total_refunded > 0) {
+                    if (HK.UIRenderer && typeof HK.UIRenderer.showToast === 'function') {
+                        HK.UIRenderer.showToast("Bu sipariş iade işlemi gördüğü için düzenlenemez!", "error", true);
+                    }
+                    document.getElementById("order-edit-modal").style.display = "none";
+                    return;
                 }
 
                 // Sepet formatına dönüştür
