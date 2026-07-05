@@ -37,8 +37,8 @@
 .recent-order-left-col {
     display: flex;
     align-items: center;
-    gap: 10px;
-    min-width: 220px;
+    gap: 12px;
+    min-width: 380px;
     flex-shrink: 0;
 }
 
@@ -46,11 +46,15 @@
     font-weight: 800;
     color: var(--hk-text-main);
     font-size: 14px;
+    width: 55px;
+    flex-shrink: 0;
 }
 
 .recent-order-time {
     font-size: 13px;
     color: var(--hk-text-muted);
+    width: 45px;
+    flex-shrink: 0;
 }
 
 .recent-order-payment-badge {
@@ -61,6 +65,12 @@
     background: var(--hk-border);
     color: var(--hk-text-muted);
     text-transform: uppercase;
+    width: 100px;
+    text-align: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .recent-order-payment-badge.cod, 
@@ -134,12 +144,14 @@
     gap: 15px;
     flex-shrink: 0;
     justify-content: flex-end;
-    min-width: 260px;
+    min-width: 150px;
 }
 
 .recent-order-customer {
     font-size: 13px;
     color: var(--hk-text-muted);
+    width: 130px;
+    flex-shrink: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -149,10 +161,6 @@
     font-weight: 600;
     color: var(--hk-text-main);
 }
-
-.recent-order-customer .no-customer {
-    font-style: italic;
-    color: var(--hk-text-muted);
 }
 
 .recent-order-total-wrap {
