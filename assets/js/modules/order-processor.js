@@ -674,7 +674,8 @@
                     { key: "_hizli_kasa_kaynak", value: refundTotal > 0 ? "pos_degisim" : "pos_satis" },
                     { key: "_hizli_kasa_musteri_telefon", value: this._getPhoneInfo().fullPhone },
                     { key: "_hizli_kasa_musteri_telefon_ulke_kodu", value: state.musteriTelefonUlkeKodu || "+90" },
-                    { key: "_hizli_kasa_siparis_notu", value: siparisNotu }
+                    { key: "_hizli_kasa_siparis_notu", value: siparisNotu },
+                    { key: "_hizli_kasa_base_odeme_tipi", value: state.odemeTipi }
                 ],
                 coupon_lines: []
             };
@@ -774,7 +775,7 @@
                 };
             });
 
-            var payMethod = state.odemeTipi;
+            var payMethod = state.splitData ? "split" : state.odemeTipi;
             if (payMethod === 'card') payMethod = 'other';
             else if (payMethod === 'cash') payMethod = 'cod';
             else if (payMethod === 'iban') payMethod = 'bacs';
@@ -798,6 +799,7 @@
             var payload = {
                 order_id: state.editingOrderId,
                 payment_method: payMethod,
+                base_odeme_tipi: state.odemeTipi,
                 phone: self._getPhoneInfo().fullPhone,
                 discount: state.iskontoTutar || 0,
                 note: (state.siparisNotu || "").trim(),

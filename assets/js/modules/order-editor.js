@@ -199,6 +199,19 @@
                 if (payMethod === 'cod') payMethod = 'cash';
                 else if (payMethod === 'bacs') payMethod = 'iban';
                 else if (payMethod === 'other') payMethod = 'card';
+                else if (payMethod === 'split') {
+                    if (orderDetails.base_odeme_tipi) {
+                        payMethod = orderDetails.base_odeme_tipi;
+                    } else if (orderDetails.otomatik_indirim > 0) {
+                        if (orderDetails.payment_details && orderDetails.payment_details.iban > 0 && orderDetails.payment_details.nakit === 0) {
+                            payMethod = 'iban';
+                        } else {
+                            payMethod = 'cash';
+                        }
+                    } else {
+                        payMethod = 'card';
+                    }
+                }
 
                 HK.State.odemeTipi = payMethod;
                 HK.State.siparisNotu = orderDetails.siparis_notu || "";

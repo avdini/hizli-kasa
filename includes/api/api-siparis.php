@@ -173,6 +173,8 @@ function hizli_kasa_get_order_details($request)
         'has_refund' => $has_refund,
         'total_refunded' => (float) $order->get_total_refunded(),
         'manual_discount' => hizli_kasa_get_order_manual_discount($order),
+        'otomatik_indirim' => (float) $order->get_meta('_hk_otomatik_indirim'),
+        'base_odeme_tipi' => $order->get_meta('_hizli_kasa_base_odeme_tipi') ?: '',
         'refunded_manual_discount' => (float) $order->get_meta('_hk_refunded_discount'),
         'total_discount' => hizli_kasa_get_order_total_discount($order),
         'refunded_discount' => (float) $order->get_meta('_hk_refunded_discount'),
@@ -422,6 +424,7 @@ function hizli_kasa_update_order($request)
     $data = $request->get_json_params();
     $order_id = intval($data['order_id']);
     $new_payment = sanitize_text_field($data['payment_method'] ?? '');
+    $base_payment = sanitize_text_field($data['base_odeme_tipi'] ?? '');
     $new_discount = isset($data['discount']) ? floatval($data['discount']) : null;
     $new_phone = sanitize_text_field($data['phone'] ?? '');
     $new_note = sanitize_text_field($data['note'] ?? '');
@@ -431,6 +434,20 @@ function hizli_kasa_update_order($request)
     $order = wc_get_order($order_id);
     if (!$order)
         return new WP_Error('no_order', 'Sipariş bulunamadı.');
+
+    $is_auto_discount = false;
+    if ($new_payment === 'cod' || $new_payment === 'bacs') {
+        $is_auto_discount = true;
+    } elseif ($new_payment === 'split') {
+        if ($base_payment === 'cash' || $base_payment === 'iban') {
+            $is_auto_discount = true;
+        }
+    } else {
+        $existing_base = $order->get_meta('_hizli_kasa_base_odeme_tipi');
+        if ($existing_base === 'cash' || $existing_base === 'iban' || $order->get_payment_method() === 'cod' || $order->get_payment_method() === 'bacs') {
+            $is_auto_discount = true;
+        }
+    }
 
     // Guard: İade görmüş sipariş düzenlenemez
     $has_item_refund = false;
@@ -586,6 +603,14 @@ function hizli_kasa_update_order($request)
                     $item->set_quantity($new_qty);
                     $item->set_subtotal(wc_format_decimal(($item->get_subtotal() / $old_qty) * $new_qty));
                     $item->set_total(wc_format_decimal(($item->get_total() / $old_qty) * $new_qty));
+
+                    // Scale manual item discount
+                    $item_discount = (float) wc_get_order_item_meta($item_id, '_hk_item_discount', true);
+                    if ($old_qty > 0) {
+                        $item_discount = ($item_discount / $old_qty) * $new_qty;
+                        wc_update_order_item_meta($item_id, '_hk_item_discount', number_format($item_discount, 2, '.', ''));
+                    }
+
                     $item->save();
                     $log_details[] = $item->get_name() . ": $old_qty -> $new_qty";
                 }
@@ -623,6 +648,20 @@ function hizli_kasa_update_order($request)
             $order->remove_item($item_id);
             $log_details[] = $item->get_name() . " çıkarıldı.";
         }
+    }
+
+    // Her bir kalemin subtotal ve total değerini yeniden hesaplayıp kaydet (nakit/havale indirimini uygulamak için)
+    $auto_discount_total = 0;
+    foreach ($order->get_items() as $item_id => $item) {
+        if (!$item instanceof WC_Order_Item_Product) continue;
+
+        $line_subtotal = (float) $item->get_subtotal();
+        $satir_nakit_indirim = $is_auto_discount ? ($line_subtotal * 0.05) : 0;
+        $auto_discount_total += $satir_nakit_indirim;
+
+        $item_discount = (float) wc_get_order_item_meta($item_id, '_hk_item_discount', true);
+        $item->set_total(wc_format_decimal($line_subtotal - $satir_nakit_indirim - $item_discount));
+        $item->save();
     }
 
     // 4. İskonto Güncelleme
@@ -722,6 +761,10 @@ function hizli_kasa_update_order($request)
     $order->update_meta_data('_ara_toplam', number_format($sepet_ara_toplam, 2, '.', ''));
     $order->update_meta_data('_etiket_toplami', number_format($sepet_regular_toplam, 2, '.', ''));
     $order->update_meta_data('_hk_customer_paid_total', number_format($final_total, 2, '.', ''));
+    $order->update_meta_data('_hk_otomatik_indirim', number_format($auto_discount_total ?? 0, 2, '.', ''));
+    if ($base_payment) {
+        $order->update_meta_data('_hizli_kasa_base_odeme_tipi', $base_payment);
+    }
 
     $order->save();
 
