@@ -47,7 +47,10 @@ if (!defined('ABSPATH'))
         <div id="kasa-konteyner">
             <!-- Başlık Alanı -->
             <div class="kasa-baslik">
-                <h2 id="durum">Kasa Hazır</h2>
+                <div class="kasa-baslik-sol" style="display: flex; align-items: center;">
+                    <h2 id="durum">Kasa Hazır</h2>
+                    <div id="kasa-aktif-mod-alani"></div>
+                </div>
                 <div class="kasa-baslik-sag">
                     <button id="anlik-kasa-buton" class="ust-buton-kucuk">
                         <span>📊</span> <span id="anlik-kasa-etiket"></span> Kasa: <strong id="anlik-kasa-toplam-text">...</strong>

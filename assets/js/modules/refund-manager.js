@@ -908,6 +908,7 @@ const RefundManager = (function () {
         } else {
             refundCart.push({
                 ...item,
+                price: item.discounted_price !== undefined ? item.discounted_price : item.price,
                 qty: 1,
                 variation_id: item.variation_id || 0,
                 depo_id: item.depo_id || 0  // Orijinal çıkış deposu
