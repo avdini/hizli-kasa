@@ -121,36 +121,44 @@
                     div.className = "recent-order-item" + (isLocked ? " is-locked" : "");
                     div.title = isLocked ? "Bu sipariş iade/değişim işlemi gördüğü için düzenlenemez." : "";
                     
-                    var itemsHtml = (order.items || []).map(function(item) {
-                        return `
-                            <div class="recent-order-product-line">
-                                <span class="product-qty">${item.qty}x</span>
-                                <span class="product-name">${item.name}</span>
+                    var firstItem = order.items && order.items[0];
+                    var firstProductHtml = "";
+                    if (firstItem) {
+                        firstProductHtml = `
+                            <div class="recent-order-first-prod">
+                                <span class="product-qty">${firstItem.qty}x</span>
+                                <span class="product-name">${firstItem.name}</span>
                             </div>
                         `;
-                    }).join('');
+                    } else {
+                        firstProductHtml = `<div class="recent-order-first-prod">Ürün bulunamadı.</div>`;
+                    }
+
+                    var moreProductsBadgeHtml = "";
+                    if (order.items && order.items.length > 1) {
+                        moreProductsBadgeHtml = `
+                            <span class="recent-order-more-badge">+${order.items.length - 1}</span>
+                        `;
+                    }
 
                     div.innerHTML = `
-                        <div class="recent-order-header">
-                            <div class="recent-order-title-wrap">
-                                <span class="recent-order-id">#${order.id}</span>
-                                <span class="recent-order-time">${order.date}</span>
-                            </div>
+                        <div class="recent-order-left-col">
+                            <span class="recent-order-id">#${order.id}</span>
+                            <span class="recent-order-time">${order.date}</span>
                             <span class="recent-order-payment-badge ${order.payment_method}">${order.payment_title}</span>
                         </div>
                         
-                        <div class="recent-order-body">
-                            <div class="recent-order-products">
-                                ${itemsHtml || '<div class="report-empty-items">Ürün bulunamadı.</div>'}
-                            </div>
+                        <div class="recent-order-mid-col">
+                            ${firstProductHtml}
+                            ${moreProductsBadgeHtml}
                         </div>
                         
-                        <div class="recent-order-footer">
+                        <div class="recent-order-right-col">
                             <div class="recent-order-customer">
                                 ${order.phone ? `👤 <span>${order.phone}</span>` : '<span class="no-customer">Müşteri Tanımsız</span>'}
                             </div>
-                            <div class="recent-order-action-wrap">
-                                ${isLocked ? '<span class="locked-badge">🚫 ' + lockReason + '</span>' : ''}
+                            <div class="recent-order-total-wrap">
+                                ${isLocked ? '<span class="locked-badge">🚫 Kilitli</span>' : ''}
                                 <div class="recent-order-total">${parseFloat(order.total).toFixed(2)} TL</div>
                             </div>
                         </div>

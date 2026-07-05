@@ -1,4 +1,8 @@
 /* Sipariş Düzenleme Modalı Stilleri */
+.modal-icerik-flex {
+    width: 950px !important;
+}
+
 .recent-orders-list {
     display: flex;
     flex-direction: column;
@@ -9,11 +13,12 @@
     background: var(--hk-bg-body);
     border: 1px solid var(--hk-border);
     border-left: 4px solid var(--hk-accent);
-    border-radius: 10px;
-    padding: 16px;
+    border-radius: 8px;
+    padding: 10px 16px;
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -21,30 +26,26 @@
 .recent-order-item:hover {
     background: var(--hk-bg-hover);
     border-color: var(--hk-accent);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 #hizli-kasa-app.theme-dark .recent-order-item:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.recent-order-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.recent-order-title-wrap {
+.recent-order-left-col {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    min-width: 220px;
+    flex-shrink: 0;
 }
 
 .recent-order-id {
     font-weight: 800;
     color: var(--hk-text-main);
-    font-size: 15px;
+    font-size: 14px;
 }
 
 .recent-order-time {
@@ -53,10 +54,10 @@
 }
 
 .recent-order-payment-badge {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
-    padding: 4px 8px;
-    border-radius: 6px;
+    padding: 3px 6px;
+    border-radius: 4px;
     background: var(--hk-border);
     color: var(--hk-text-muted);
     text-transform: uppercase;
@@ -85,45 +86,63 @@
     color: #e67e22;
 }
 
-.recent-order-body {
-    border-top: 1px dashed var(--hk-border);
-    border-bottom: 1px dashed var(--hk-border);
-    padding: 8px 0;
-}
-
-.recent-order-products {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.recent-order-product-line {
+.recent-order-mid-col {
+    flex-grow: 1;
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
+}
+
+.recent-order-first-prod {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 13px;
     color: var(--hk-text-main);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 320px;
 }
 
 .product-qty {
     font-weight: 700;
     color: var(--hk-accent);
-    min-width: 24px;
 }
 
 .product-name {
     color: var(--hk-text-main);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.recent-order-footer {
+.recent-order-more-badge {
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--hk-border);
+    color: var(--hk-text-muted);
+    padding: 2px 6px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.recent-order-right-col {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
+    justify-content: flex-end;
+    min-width: 260px;
 }
 
 .recent-order-customer {
     font-size: 13px;
     color: var(--hk-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .recent-order-customer span {
@@ -136,15 +155,15 @@
     color: var(--hk-text-muted);
 }
 
-.recent-order-action-wrap {
+.recent-order-total-wrap {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
 }
 
 .recent-order-total {
     font-weight: 800;
-    font-size: 16px;
+    font-size: 15px;
     color: var(--hk-text-main);
 }
 
@@ -236,39 +255,36 @@
 }
 
 .recent-order-item.is-locked {
-    background: rgba(239, 68, 68, 0.04);
-    border-color: var(--hk-danger);
-    opacity: 0.9;
+    background: rgba(239, 68, 68, 0.02);
+    border-left-color: var(--hk-danger);
     cursor: not-allowed;
     pointer-events: auto;
 }
 
 .recent-order-item.is-locked:hover {
-    background: rgba(239, 68, 68, 0.04);
-    border-color: var(--hk-danger);
+    background: rgba(239, 68, 68, 0.02);
+    border-left-color: var(--hk-danger);
     transform: none;
+    box-shadow: none;
 }
 
 #hizli-kasa-app.theme-dark .recent-order-item.is-locked {
-    background: rgba(248, 113, 113, 0.08);
-    border-color: var(--hk-danger);
+    background: rgba(239, 68, 68, 0.04);
+    border-left-color: var(--hk-danger);
 }
 
 #hizli-kasa-app.theme-dark .recent-order-item.is-locked:hover {
-    background: rgba(248, 113, 113, 0.08);
-    border-color: var(--hk-danger);
+    background: rgba(239, 68, 68, 0.04);
+    border-left-color: var(--hk-danger);
 }
 
 .recent-order-item.is-locked .locked-badge {
     background: var(--hk-danger);
-    color: var(--hk-text-white);
-    padding: 5px 10px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 700;
-    margin-left: 10px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+    color: #fff;
+    padding: 3px 6px;
+    font-size: 10px;
+    font-weight: bold;
+    border-radius: 4px;
+    text-transform: uppercase;
 }
 
