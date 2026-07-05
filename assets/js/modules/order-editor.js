@@ -195,7 +195,12 @@
                 HK.State.editingOrderId = orderDetails.id;
                 HK.State.iskontoTutar = parseFloat(orderDetails.manual_discount) || 0;
                 HK.State.musteriTelefon = orderDetails.telefon || "";
-                HK.State.odemeTipi = orderDetails.payment_method || "card";
+                var payMethod = orderDetails.payment_method || "card";
+                if (payMethod === 'cod') payMethod = 'cash';
+                else if (payMethod === 'bacs') payMethod = 'iban';
+                else if (payMethod === 'other') payMethod = 'card';
+
+                HK.State.odemeTipi = payMethod;
                 HK.State.siparisNotu = orderDetails.siparis_notu || "";
 
                 if (orderDetails.payment_method === 'split' && orderDetails.payment_details) {
