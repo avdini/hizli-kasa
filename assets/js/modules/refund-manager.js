@@ -1209,6 +1209,11 @@ const RefundManager = (function () {
             return;
         }
 
+        if (HK.State.editingOrderId) {
+            alert("Kasada şu anda aktif bir sipariş düzenleme işlemi var! Lütfen önce düzenlemeyi tamamlayın veya iptal edin.");
+            return;
+        }
+
         if (!confirm(`${refundCart.length} ürün değişim için kasaya gönderilecek. Devam edilsin mi?`)) return;
 
         // İade sepetindeki ürünleri kasa sepetine negatif satır olarak ekle
