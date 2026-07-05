@@ -156,9 +156,13 @@ function hizli_kasa_process_refund($request)
         if ($original_order) {
             $current_refunded_discount = (float) $original_order->get_meta('_hk_refunded_discount');
             $original_order->update_meta_data('_hk_refunded_discount', $current_refunded_discount + $refund_discount);
-            $original_order->update_meta_data('_hk_has_refund', 'yes');
-            $original_order->save();
         }
+    }
+
+    // Orijinal siparişi iade/değişim görmüş olarak işaretle ve kaydet
+    if ($original_order) {
+        $original_order->update_meta_data('_hk_has_refund', 'yes');
+        $original_order->save();
     }
 
     $refund_order->set_payment_method('cod');

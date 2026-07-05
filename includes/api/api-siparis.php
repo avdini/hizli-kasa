@@ -70,12 +70,24 @@ function hizli_kasa_get_order_details($request)
     $depo_names_cache = [];
 
     $items = [];
+    $has_item_refund = false;
+    foreach ($order->get_items() as $item_id => $item) {
+        if ($item instanceof WC_Order_Item_Product) {
+            $refunded_qty = (int) wc_get_order_item_meta($item_id, '_hk_refunded_qty', true);
+            if ($refunded_qty > 0) {
+                $has_item_refund = true;
+                break;
+            }
+        }
+    }
+
     $is_fully_refunded = ($order->get_meta('_hk_is_fully_refunded') === 'yes');
     $has_refund = (
         (float) $order->get_total_refunded() > 0 || 
         !empty($order->get_refunds()) || 
         $order->get_meta('_hk_has_refund') === 'yes' || 
-        $is_fully_refunded
+        $is_fully_refunded ||
+        $has_item_refund
     );
 
     foreach ($order->get_items() as $item_id => $item) {
@@ -421,11 +433,22 @@ function hizli_kasa_update_order($request)
         return new WP_Error('no_order', 'Sipariş bulunamadı.');
 
     // Guard: İade görmüş sipariş düzenlenemez
+    $has_item_refund = false;
+    foreach ($order->get_items() as $item_id => $item) {
+        if ($item instanceof WC_Order_Item_Product) {
+            $refunded_qty = (int) wc_get_order_item_meta($item_id, '_hk_refunded_qty', true);
+            if ($refunded_qty > 0) {
+                $has_item_refund = true;
+                break;
+            }
+        }
+    }
     $has_refund = (
         (float) $order->get_total_refunded() > 0 || 
         !empty($order->get_refunds()) || 
         $order->get_meta('_hk_has_refund') === 'yes' || 
-        $order->get_meta('_hk_is_fully_refunded') === 'yes'
+        $order->get_meta('_hk_is_fully_refunded') === 'yes' ||
+        $has_item_refund
     );
     if ($has_refund) {
         return new WP_Error('edit_not_allowed', 'Bu sipariş iade işlemi gördüğü için düzenlenemez.');
