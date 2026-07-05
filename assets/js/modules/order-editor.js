@@ -121,14 +121,38 @@
                     div.className = "recent-order-item" + (isLocked ? " is-locked" : "");
                     div.title = isLocked ? "Bu sipariş iade/değişim işlemi gördüğü için düzenlenemez." : "";
                     
+                    var itemsHtml = (order.items || []).map(function(item) {
+                        return `
+                            <div class="recent-order-product-line">
+                                <span class="product-qty">${item.qty}x</span>
+                                <span class="product-name">${item.name}</span>
+                            </div>
+                        `;
+                    }).join('');
+
                     div.innerHTML = `
-                        <div class="recent-order-info">
-                            <span class="recent-order-id">#${order.id}</span>
-                            <span class="recent-order-meta">${order.date} | ${order.payment_title}</span>
+                        <div class="recent-order-header">
+                            <div class="recent-order-title-wrap">
+                                <span class="recent-order-id">#${order.id}</span>
+                                <span class="recent-order-time">${order.date}</span>
+                            </div>
+                            <span class="recent-order-payment-badge ${order.payment_method}">${order.payment_title}</span>
                         </div>
-                        <div style="display:flex; align-items:center;">
-                            <div class="recent-order-total">${parseFloat(order.total).toFixed(2)} TL</div>
-                            ${isLocked ? '<span class="locked-badge">🚫 ' + lockReason + '</span>' : ''}
+                        
+                        <div class="recent-order-body">
+                            <div class="recent-order-products">
+                                ${itemsHtml || '<div class="report-empty-items">Ürün bulunamadı.</div>'}
+                            </div>
+                        </div>
+                        
+                        <div class="recent-order-footer">
+                            <div class="recent-order-customer">
+                                ${order.phone ? `👤 <span>${order.phone}</span>` : '<span class="no-customer">Müşteri Tanımsız</span>'}
+                            </div>
+                            <div class="recent-order-action-wrap">
+                                ${isLocked ? '<span class="locked-badge">🚫 ' + lockReason + '</span>' : ''}
+                                <div class="recent-order-total">${parseFloat(order.total).toFixed(2)} TL</div>
+                            </div>
                         </div>
                     `;
                     
