@@ -148,6 +148,7 @@ function hizli_kasa_get_order_details($request)
         'depo_id' => (int) $order->get_meta('_hk_cikis_depo_id'),
         'depo_adi' => $order->get_meta('_hk_cikis_depo_adi') ?: '',
         'telefon' => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '',
+        'siparis_notu' => $order->get_meta('_hizli_kasa_siparis_notu') ?: '',
         'is_fully_refunded' => $is_fully_refunded,
         'manual_discount' => hizli_kasa_get_order_manual_discount($order),
         'refunded_manual_discount' => (float) $order->get_meta('_hk_refunded_discount'),
@@ -394,28 +395,34 @@ function hizli_kasa_update_order($request)
     $new_payment = sanitize_text_field($data['payment_method'] ?? '');
     $new_discount = isset($data['discount']) ? floatval($data['discount']) : null;
     $new_phone = sanitize_text_field($data['phone'] ?? '');
-    $item_changes = $data['items'] ?? [];
+    $new_note = sanitize_text_field($data['note'] ?? '');
+    $new_split = $data['split_data'] ?? null;
+    $items = $data['items'] ?? [];
 
     $order = wc_get_order($order_id);
     if (!$order)
         return new WP_Error('no_order', 'Sipariş bulunamadı.');
 
-    // Guard: Bölünmüş ödeme veya iade görmüş sipariş düzenlenemez
+    // Guard: İade görmüş sipariş düzenlenemez
     $has_refund = (!empty($order->get_refunds()) || $order->get_meta('_hk_has_refund') === 'yes' || $order->get_meta('_hk_is_fully_refunded') === 'yes');
-    if ($order->get_payment_method() === 'split' || $has_refund) {
-        return new WP_Error('edit_not_allowed', 'Bu sipariş iade işlemi gördüğü veya bölünmüş ödeme olduğu için düzenlenemez.');
+    if ($has_refund) {
+        return new WP_Error('edit_not_allowed', 'Bu sipariş iade işlemi gördüğü için düzenlenemez.');
     }
 
     $old_data = [
         'total' => $order->get_total(),
         'payment' => $order->get_payment_method(),
         'phone' => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '',
+        'note' => $order->get_meta('_hizli_kasa_siparis_notu') ?: '',
         'discount' => hizli_kasa_get_order_manual_discount($order),
         'items' => []
     ];
 
     $depo_id = (int) $order->get_meta('_hk_cikis_depo_id');
+    $depo_adi = $order->get_meta('_hk_cikis_depo_adi') ?: '';
+    $edit_reason = sanitize_text_field($data['edit_reason'] ?? 'Belirtilmedi');
     $log_details = [];
+    $log_details[] = "Sebep: " . $edit_reason;
 
     // 0. Telefon Güncelleme
     $old_phone = $old_data['phone'];
@@ -425,37 +432,12 @@ function hizli_kasa_update_order($request)
         $log_details[] = "Telefon: " . ($old_phone ?: 'Yok') . " -> " . ($new_phone ?: 'Yok');
     }
 
-    // 1. İskonto Güncelleme
-    if ($new_discount !== null && round($new_discount, 2) != round($old_data['discount'], 2)) {
-        // Mevcut fee'leri (iskonto olanları) sil
-        foreach ($order->get_fees() as $fee_id => $fee) {
-            if (hizli_kasa_is_manual_discount_fee($fee)) {
-                $order->remove_item($fee_id);
-            }
-        }
-        
-        // Ürün bazlı indirimlerin toplamını bul
-        $product_discount_total = 0;
-        foreach ($order->get_items() as $item_id => $item) {
-            if (!$item instanceof WC_Order_Item_Product) {
-                continue;
-            }
-            $product_discount_total += (float) wc_get_order_item_meta($item_id, '_hk_item_discount', true);
-        }
-        
-        // Ürün bazlı iskonto ile hedeflenen yeni iskonto arasındaki farkı ayarla
-        $fee_amount = $new_discount - $product_discount_total;
-        if (round($fee_amount, 2) != 0.0) {
-            $item_fee = new WC_Order_Item_Fee();
-            $item_fee->set_name('Düzenlenmiş İskonto');
-            $item_fee->set_amount(-$fee_amount);
-            $item_fee->set_total(wc_format_decimal(-$fee_amount));
-            $item_fee->add_meta_data('_hk_manual_discount', 'yes', true);
-            $order->add_item($item_fee);
-        }
-        
-        $order->update_meta_data('_hk_toplam_iskonto', number_format($new_discount, 2, '.', ''));
-        $log_details[] = "İskonto: " . $old_data['discount'] . " -> " . $new_discount;
+    // 1. Sipariş Notu Güncelleme
+    $old_note = $old_data['note'];
+    if ($new_note !== $old_note) {
+        $order->update_meta_data('_hizli_kasa_siparis_notu', $new_note);
+        $order->set_customer_note($new_note);
+        $log_details[] = "Not: " . ($old_note ?: 'Yok') . " -> " . ($new_note ?: 'Yok');
     }
 
     // 2. Ödeme Yöntemi Değişikliği
@@ -472,43 +454,85 @@ function hizli_kasa_update_order($request)
         $log_details[] = "Ödeme: $old_p -> $new_payment";
     }
 
-    // 3. Ürün ve Adet Değişiklikleri
+    // 3. Ürünler ve Stoklar Senkronizasyonu
     require_once HIZLI_KASA_PATH . 'includes/classes/class-stock-manager.php';
 
-    foreach ($item_changes as $change) {
-        $item_id = intval($change['item_id']);
-        $new_qty = intval($change['qty']);
-        $item = $order->get_item($item_id);
+    // Mevcut sipariş kalemlerini çek
+    $existing_items = [];
+    foreach ($order->get_items() as $item_id => $item) {
+        if (!$item instanceof WC_Order_Item_Product) {
+            continue;
+        }
+        $p_id = $item->get_product_id();
+        $v_id = $item->get_variation_id();
+        $key = $p_id . '_' . $v_id;
+        $existing_items[$key] = [
+            'item_id' => $item_id,
+            'qty' => $item->get_quantity(),
+            'item' => $item
+        ];
+        $old_data['items'][] = [
+            'product_id' => $p_id,
+            'variation_id' => $v_id,
+            'qty' => $item->get_quantity(),
+            'name' => $item->get_name()
+        ];
+    }
 
-        if ($item) {
-            $old_qty = $item->get_quantity();
-            if ($new_qty == $old_qty)
-                continue;
+    // Stok güncelleme yardımcı fonksiyonu
+    $adjust_stock = function($p_id, $v_id, $diff) use ($order_id, $depo_id) {
+        if ($diff == 0) return;
+        $product = wc_get_product($v_id ?: $p_id);
 
-            $old_data['items'][$item_id] = $old_qty;
-            $product_id = $item->get_product_id();
-            $variation_id = $item->get_variation_id();
-            $product = $item->get_product();
+        if ($diff > 0) {
+            // Miktar arttı -> Stok düşür
+            if ($depo_id) {
+                Hizli_Kasa_Stock_Manager::update_warehouse_stock(
+                    $p_id,
+                    $v_id,
+                    $depo_id,
+                    -$diff,
+                    "Sipariş Düzenleme (#$order_id) - Arttırma"
+                );
+            }
+            if ($product && $product->managing_stock()) {
+                wc_update_product_stock($product, $diff, 'decrease');
+            }
+        } else {
+            // Miktar azaldı -> Stok geri ekle
+            $abs_diff = abs($diff);
+            if ($depo_id) {
+                Hizli_Kasa_Stock_Manager::update_warehouse_stock(
+                    $p_id,
+                    $v_id,
+                    $depo_id,
+                    $abs_diff,
+                    "Sipariş Düzenleme (#$order_id) - İade"
+                );
+            }
+            if ($product && $product->managing_stock()) {
+                wc_update_product_stock($product, $abs_diff, 'increase');
+            }
+        }
+    };
 
-            if ($new_qty < $old_qty) {
-                // Azaltma veya Kaldırma
-                $diff = $old_qty - $new_qty;
+    $new_items_keys = [];
+    foreach ($items as $new_item) {
+        $p_id = intval($new_item['product_id']);
+        $v_id = intval($new_item['variation_id'] ?? 0);
+        $new_qty = intval($new_item['qty']);
+        $key = $p_id . '_' . $v_id;
+        $new_items_keys[] = $key;
 
-                // Depo Stoğu İadesi
-                if ($depo_id) {
-                    Hizli_Kasa_Stock_Manager::update_warehouse_stock(
-                        $product_id,
-                        $variation_id,
-                        $depo_id,
-                        $diff,
-                        "Sipariş Düzenleme (#$order_id) - İade"
-                    );
-                }
+        if (isset($existing_items[$key])) {
+            // Var olan ürün
+            $old_qty = $existing_items[$key]['qty'];
+            $item = $existing_items[$key]['item'];
+            $item_id = $existing_items[$key]['item_id'];
 
-                // Site Stoğu İadesi
-                if ($product && $product->managing_stock()) {
-                    wc_update_product_stock($product, $diff, 'increase');
-                }
+            if ($new_qty != $old_qty) {
+                $diff = $new_qty - $old_qty;
+                $adjust_stock($p_id, $v_id, $diff);
 
                 if ($new_qty <= 0) {
                     $order->remove_item($item_id);
@@ -520,38 +544,77 @@ function hizli_kasa_update_order($request)
                     $item->save();
                     $log_details[] = $item->get_name() . ": $old_qty -> $new_qty";
                 }
-            } else {
-                // Arttırma
-                $diff = $new_qty - $old_qty;
+            }
+        } else {
+            // Yeni eklenen ürün
+            if ($new_qty > 0) {
+                $adjust_stock($p_id, $v_id, $new_qty);
 
-                // Depo Stoğu Düşümü
-                if ($depo_id) {
-                    Hizli_Kasa_Stock_Manager::update_warehouse_stock(
-                        $product_id,
-                        $variation_id,
-                        $depo_id,
-                        -$diff,
-                        "Sipariş Düzenleme (#$order_id) - Arttırma"
-                    );
+                $product = wc_get_product($v_id ?: $p_id);
+                if ($product) {
+                    $item_id = $order->add_product($product, $new_qty);
+                    if ($item_id) {
+                        wc_add_order_item_meta($item_id, '_hk_cikis_depo_id', $depo_id, true);
+                        wc_add_order_item_meta($item_id, '_hk_cikis_depo_adi', $depo_adi, true);
+                        $log_details[] = $product->get_name() . " eklendi (Adet: $new_qty).";
+                    }
                 }
-
-                // Site Stoğu Düşümü
-                if ($product && $product->managing_stock()) {
-                    wc_update_product_stock($product, $diff, 'decrease');
-                }
-
-                $item->set_quantity($new_qty);
-                $item->set_subtotal(wc_format_decimal(($item->get_subtotal() / $old_qty) * $new_qty));
-                $item->set_total(wc_format_decimal(($item->get_total() / $old_qty) * $new_qty));
-                $item->save();
-                $log_details[] = $item->get_name() . ": $old_qty -> $new_qty";
             }
         }
     }
 
+    // Siparişte olan ama yeni sepette olmayan ürünleri çıkar
+    foreach ($existing_items as $key => $data) {
+        if (!in_array($key, $new_items_keys)) {
+            $item = $data['item'];
+            $item_id = $data['item_id'];
+            $old_qty = $data['qty'];
+            $p_id = $item->get_product_id();
+            $v_id = $item->get_variation_id();
+
+            // Miktar azaldığı için fark negatif, stokları geri ekle
+            $adjust_stock($p_id, $v_id, -$old_qty);
+
+            $order->remove_item($item_id);
+            $log_details[] = $item->get_name() . " çıkarıldı.";
+        }
+    }
+
+    // 4. İskonto Güncelleme
+    if ($new_discount !== null && round($new_discount, 2) != round($old_data['discount'], 2)) {
+        // Mevcut manual fee'leri sil
+        foreach ($order->get_fees() as $fee_id => $fee) {
+            if (hizli_kasa_is_manual_discount_fee($fee)) {
+                $order->remove_item($fee_id);
+            }
+        }
+
+        // Ürün bazlı indirimleri topla
+        $product_discount_total = 0;
+        foreach ($order->get_items() as $item_id => $item) {
+            if (!$item instanceof WC_Order_Item_Product) {
+                continue;
+            }
+            $product_discount_total += (float) wc_get_order_item_meta($item_id, '_hk_item_discount', true);
+        }
+
+        $fee_amount = $new_discount - $product_discount_total;
+        if (round($fee_amount, 2) != 0.0) {
+            $item_fee = new WC_Order_Item_Fee();
+            $item_fee->set_name('Düzenlenmiş İskonto');
+            $item_fee->set_amount(-$fee_amount);
+            $item_fee->set_total(wc_format_decimal(-$fee_amount));
+            $item_fee->add_meta_data('_hk_manual_discount', 'yes', true);
+            $order->add_item($item_fee);
+        }
+
+        $order->update_meta_data('_hk_toplam_iskonto', number_format($new_discount, 2, '.', ''));
+        $log_details[] = "İskonto: " . $old_data['discount'] . " -> " . $new_discount;
+    }
+
     $order->calculate_totals();
 
-    // 4. Ödeme Metalarını Güncelle
+    // 5. Ödeme Metalarını Güncelle
     $final_total = (float) $order->get_total();
     $payment_method = $order->get_payment_method();
 
@@ -571,16 +634,58 @@ function hizli_kasa_update_order($request)
     } elseif ($payment_method === 'bacs') {
         $order->update_meta_data('_odeme_iban', $final_total);
         $order->update_meta_data('Ödeme (IBAN)', number_format($final_total, 2, '.', '') . ' TL');
+    } elseif ($payment_method === 'split') {
+        $nakit = isset($new_split['nakit']) ? floatval($new_split['nakit']) : 0;
+        $kart = isset($new_split['kart']) ? floatval($new_split['kart']) : 0;
+        $iban = isset($new_split['iban']) ? floatval($new_split['iban']) : 0;
+
+        $sum = $nakit + $kart + $iban;
+        if (abs($sum - $final_total) > 0.05) {
+            if ($sum == 0) {
+                $nakit = $final_total;
+            } else {
+                $factor = $final_total / $sum;
+                $nakit = round($nakit * $factor, 2);
+                $kart = round($kart * $factor, 2);
+                $iban = $final_total - $nakit - $kart;
+            }
+        }
+
+        $order->update_meta_data('_odeme_nakit', $nakit);
+        $order->update_meta_data('_odeme_kart', $kart);
+        $order->update_meta_data('_odeme_iban', $iban);
+        if ($nakit > 0) $order->update_meta_data('Ödeme (Nakit)', number_format($nakit, 2, '.', '') . ' TL');
+        if ($kart > 0) $order->update_meta_data('Ödeme (Kredi Kartı)', number_format($kart, 2, '.', '') . ' TL');
+        if ($iban > 0) $order->update_meta_data('Ödeme (IBAN)', number_format($iban, 2, '.', '') . ' TL');
     }
+
+    // Custom Raporlama Metalarını Güncelle
+    $sepet_ara_toplam = 0;
+    $sepet_regular_toplam = 0;
+    foreach ($order->get_items() as $item) {
+        if (!$item instanceof WC_Order_Item_Product) continue;
+        $product = $item->get_product();
+        $qty = $item->get_quantity();
+        $sepet_ara_toplam += $item->get_total();
+        if ($product) {
+            $sepet_regular_toplam += ($product->get_regular_price() ?: $product->get_price()) * $qty;
+        } else {
+            $sepet_regular_toplam += $item->get_total();
+        }
+    }
+    
+    $order->update_meta_data('_ara_toplam', number_format($sepet_ara_toplam, 2, '.', ''));
+    $order->update_meta_data('_etiket_toplami', number_format($sepet_regular_toplam, 2, '.', ''));
+    $order->update_meta_data('_hk_customer_paid_total', number_format($final_total, 2, '.', ''));
 
     $order->save();
 
-    // 5. Log Kaydı
+    // 6. Log Kaydı
     global $wpdb;
     $table = Hizli_Kasa_Database::get_tables()['order_edits'];
     $wpdb->insert($table, [
         'order_id' => $order_id,
-        'kasa_no' => $order->get_meta('_hizli_kasa_kasa_no'),
+        'kasa_no' => $order->get_meta('_hizli_kasa_kasa_no') ?: '1',
         'user_id' => get_current_user_id(),
         'action_type' => 'manual_edit',
         'old_data' => json_encode($old_data),

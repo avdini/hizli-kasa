@@ -323,6 +323,11 @@
             // Sipariş öncesi sekmeler arası çakışmayı önle
             HK.CartManager.sepetiYukle(state.aktifKasaId);
 
+            if (state.editingOrderId) {
+                await this.siparisGuncelleIsleminiGerceklestir();
+                return;
+            }
+
             var hasRefundItems = state.sepet.some(function(item) {
                 return item._is_exchange_return && item.quantity < 0;
             });
@@ -734,6 +739,108 @@
 
             stokUyariModal.style.display = "flex";
             durumMetni.innerText = "Stok uyarısı verildi!";
+        },
+
+        siparisGuncelleIsleminiGerceklestir: async function() {
+            var self = this;
+            var state = HK.State;
+            var durumMetni = document.getElementById("durum");
+
+            // Düzenleme Sebebi Girişi (Zorunlu)
+            var reason = prompt("Lütfen bu siparişi düzenleme sebebinizi giriniz (Zorunlu):");
+            if (reason === null) {
+                return; // Kasiyer iptal etti
+            }
+
+            reason = reason.trim();
+            if (reason.length < 4) {
+                HK.UIRenderer.showToast("Lütfen geçerli ve açıklayıcı bir düzenleme sebebi giriniz (en az 4 karakter)!", "error", true);
+                return;
+            }
+
+            if (!confirm("Sipariş düzenlenecek ve stoklar güncellenecek. Emin misiniz?")) {
+                return;
+            }
+
+            self.toggleLoading(true);
+            durumMetni.innerText = "Değişiklikler kaydediliyor...";
+
+            var changes = state.sepet.map(function(item) {
+                return {
+                    product_id: item.product_id,
+                    variation_id: item.variation_id || 0,
+                    qty: item.quantity,
+                    price: item.price
+                };
+            });
+
+            var payMethod = state.odemeTipi;
+            if (payMethod === 'card') payMethod = 'other';
+            else if (payMethod === 'cash') payMethod = 'cod';
+            else if (payMethod === 'iban') payMethod = 'bacs';
+
+            // Ödeme Bölünmüşse Tutar Kontrolü Yap
+            if (payMethod === 'split' && state.splitData) {
+                var girenToplam = state.splitData.nakit + state.splitData.kart + state.splitData.iban;
+                var netSatis = changes.reduce(function(acc, item) { return acc + (item.price * item.qty); }, 0) - (state.iskontoTutar || 0);
+                if (netSatis < 0) netSatis = 0;
+                
+                var fark = netSatis - girenToplam;
+                if (Math.abs(fark) >= 0.05 && netSatis > 0) {
+                    self.toggleLoading(false);
+                    HK.UIRenderer.showToast("Ödenecek tutarla ödeme dağılımı uyuşmuyor! Ödemeyi tekrar bölümlendirin.", "error", true);
+                    durumMetni.innerText = "HATA: Ödeme tutarı uyuşmazlığı!";
+                    durumMetni.style.color = "#e74c3c";
+                    return;
+                }
+            }
+
+            var payload = {
+                order_id: state.editingOrderId,
+                payment_method: payMethod,
+                phone: self._getPhoneInfo().fullPhone,
+                discount: state.iskontoTutar || 0,
+                note: (state.siparisNotu || "").trim(),
+                edit_reason: reason,
+                split_data: state.splitData,
+                items: changes
+            };
+
+            try {
+                var response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/update-order', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-WP-Nonce': kasaAyar.nonce 
+                    },
+                    body: JSON.stringify(payload)
+                });
+                var result = await response.json();
+
+                self.toggleLoading(false);
+
+                if (result.success) {
+                    HK.UIRenderer.showToast("Sipariş başarıyla güncellendi.", 'success');
+                    
+                    // Düzenleme modundan çık
+                    state.editingOrderId = null;
+                    HK.CartManager.sepetiTemizle(state.aktifKasaId);
+                    
+                    durumMetni.innerText = "Sipariş güncellendi.";
+                    durumMetni.style.color = "#27ae60";
+                    HK.UIRenderer.arayuzuGuncelle();
+                } else {
+                    HK.UIRenderer.showToast("Hata: " + (result.message || "Bilinmeyen bir hata"), 'error');
+                    durumMetni.innerText = "HATA: " + (result.message || "Bilinmeyen hata");
+                    durumMetni.style.color = "red";
+                }
+            } catch (e) {
+                self.toggleLoading(false);
+                console.error("Save edit error", e);
+                HK.UIRenderer.showToast("İşlem sırasında bir hata oluştu.", 'error');
+                durumMetni.innerText = "Sipariş güncellenemedi!";
+                durumMetni.style.color = "red";
+            }
         }
     };
 

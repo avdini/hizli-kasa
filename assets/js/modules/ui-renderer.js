@@ -411,10 +411,103 @@ window.HizliKasa = window.HizliKasa || {};
                 }
             });
 
+            this._guncelleModBelirtecleri(hasExchangeItems);
+
             HK.CartManager.sepetiKaydet();
             this.notButonunuGuncelle();
             this._odemeOzetiniGuncelle();
             state.lastUpdatedId = null;
+        },
+
+        _guncelleModBelirtecleri: function(hasExchangeItems) {
+            var state = HK.State;
+            var frame = document.getElementById("kasa-dis-cerceve");
+            var sepetListesi = document.getElementById("sepet-listesi");
+            var onaylaBtn = document.getElementById("onayla-buton");
+            
+            // Mevcut banner'ları kontrol et
+            var oldDuzenlemeBanner = document.getElementById("duzenleme-aktif-banner");
+            var oldDegisimBanner = document.getElementById("degisim-aktif-banner");
+
+            if (state.editingOrderId) {
+                // SİPARİŞ DÜZENLEME MODU (Mavi)
+                if (frame) {
+                    frame.classList.add("duzenleme-aktif");
+                    frame.classList.remove("degisim-aktif");
+                }
+
+                if (oldDegisimBanner) oldDegisimBanner.parentNode.removeChild(oldDegisimBanner);
+
+                if (!oldDuzenlemeBanner && sepetListesi) {
+                    var banner = document.createElement("div");
+                    banner.id = "duzenleme-aktif-banner";
+                    banner.className = "duzenleme-banner";
+                    banner.innerHTML = '<span>✏️ SİPARİŞ DÜZENLEME MODU (Sipariş: #' + state.editingOrderId + ')</span>' +
+                                       '<button class="duzenleme-iptal-btn">Düzenlemeyi İptal Et</button>';
+                    sepetListesi.parentNode.insertBefore(banner, sepetListesi);
+                    
+                    banner.querySelector(".duzenleme-iptal-btn").addEventListener("click", function() {
+                        if (confirm("Sipariş düzenleme modundan çıkmak istiyor musunuz? Sepet temizlenecektir.")) {
+                            state.editingOrderId = null;
+                            HK.CartManager.sepetiTemizle(state.aktifKasaId);
+                            HK.UIRenderer.arayuzuGuncelle();
+                        }
+                    });
+                }
+
+                if (onaylaBtn) {
+                    onaylaBtn.innerText = "Değişiklikleri Kaydet";
+                    onaylaBtn.style.setProperty("background", "#3498db", "important");
+                }
+            } else if (hasExchangeItems) {
+                // DEĞİŞİM MODU AKTİF (Turuncu)
+                if (frame) {
+                    frame.classList.add("degisim-aktif");
+                    frame.classList.remove("duzenleme-aktif");
+                }
+
+                if (oldDuzenlemeBanner) oldDuzenlemeBanner.parentNode.removeChild(oldDuzenlemeBanner);
+
+                if (!oldDegisimBanner && sepetListesi) {
+                    var originalOrder = state.sepet.find(function(item) { return item._is_exchange_return && item._exchange_original_order; });
+                    var orderNum = originalOrder ? originalOrder._exchange_original_order : "";
+                    
+                    var banner = document.createElement("div");
+                    banner.id = "degisim-aktif-banner";
+                    banner.className = "degisim-banner";
+                    banner.innerHTML = '<span>🔄 DEĞİŞİM VE İADE MODU AKTİF ' + (orderNum ? '(Sipariş: #' + orderNum + ')' : '') + '</span>' +
+                                       '<button class="degisim-iptal-btn">İadeyi İptal Et</button>';
+                    sepetListesi.parentNode.insertBefore(banner, sepetListesi);
+                    
+                    banner.querySelector(".degisim-iptal-btn").addEventListener("click", function() {
+                        if (confirm("Değişim/İade işlemini iptal etmek istediğinize emin misiniz? Sepetteki tüm iade ürünleri çıkarılacaktır.")) {
+                            state.sepet = state.sepet.filter(function(item) {
+                                return !item._is_exchange_return;
+                            });
+                            HK.CartManager.sepetiKaydet();
+                            HK.UIRenderer.arayuzuGuncelle();
+                        }
+                    });
+                }
+
+                if (onaylaBtn) {
+                    onaylaBtn.innerText = "🔄 Değişimi Tamamla";
+                    onaylaBtn.style.setProperty("background", "#e67e22", "important");
+                }
+            } else {
+                // NORMAL SATIŞ MODU
+                if (frame) {
+                    frame.classList.remove("duzenleme-aktif", "degisim-aktif");
+                }
+
+                if (oldDuzenlemeBanner) oldDuzenlemeBanner.parentNode.removeChild(oldDuzenlemeBanner);
+                if (oldDegisimBanner) oldDegisimBanner.parentNode.removeChild(oldDegisimBanner);
+
+                if (onaylaBtn) {
+                    onaylaBtn.innerText = "Sipariş Oluştur";
+                    onaylaBtn.style.setProperty("background", "", "");
+                }
+            }
         },
 
         notButonunuGuncelle: function() {

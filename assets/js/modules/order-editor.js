@@ -108,10 +108,9 @@
 
                 orders.forEach(function(order) {
                     var div = document.createElement("div");
-                    var isLocked = order.has_refund || order.is_split;
+                    var isLocked = order.has_refund;
                     var lockReason = "";
                     if (order.has_refund) lockReason = "(İade İşlemi Gördü)";
-                    else if (order.is_split) lockReason = "(Bölünmüş Ödeme)";
 
                     div.className = "recent-order-item" + (isLocked ? " is-locked" : "");
                     div.innerHTML = `
@@ -140,145 +139,83 @@
             }
         },
 
-        selectOrder: function(order) {
-            this.activeOrder = order;
-            this.editedItems = {};
-            
-            document.getElementById("order-edit-list-view").style.display = "none";
-            document.getElementById("order-edit-detail-view").style.display = "block";
-            
-            document.getElementById("edit-order-payment").value = order.payment_method;
-            document.getElementById("edit-order-phone").value = order.phone || "";
-            var discountVal = parseFloat(order.manual_discount || order.discount || 0);
-            document.getElementById("edit-order-discount").value = discountVal > 0 ? HK.CurrencyMask.format(discountVal) : "";
-            this.renderItems();
-        },
-
-        renderItems: function() {
+        selectOrder: async function(order) {
             var self = this;
-            var container = document.getElementById("order-edit-items-container");
-            container.innerHTML = "";
+            var modal = document.getElementById("order-edit-modal");
 
-            this.activeOrder.items.forEach(function(item) {
-                var currentQty = self.editedItems[item.item_id] !== undefined ? self.editedItems[item.item_id] : item.qty;
-                var isRemoved = currentQty === 0;
-                var maxQty = item.max_qty || item.qty;
-
-                var div = document.createElement("div");
-                div.className = "edit-item-row" + (isRemoved ? " removed-item" : "");
-                div.innerHTML = `
-                    <div class="edit-item-info">
-                        <span class="edit-item-name">${item.name}</span>
-                        <span class="edit-item-price">${parseFloat(item.total / item.qty).toFixed(2)} TL / Adet</span>
-                        ${maxQty > item.qty ? '<small style="color:var(--hk-success); display:block;">Stokta var: Max ' + maxQty + '</small>' : ''}
-                    </div>
-                    <div class="edit-item-actions">
-                        <div class="edit-qty-control">
-                            <button class="edit-qty-btn minus" data-id="${item.item_id}">-</button>
-                            <span class="edit-qty-val">${currentQty}</span>
-                            <button class="edit-qty-btn plus" data-id="${item.item_id}" ${currentQty >= maxQty ? 'disabled style="opacity:0.3; cursor:not-allowed;"' : ''}>+</button>
-                        </div>
-                        <button class="remove-item-btn" data-id="${item.item_id}">${isRemoved ? 'Geri Al' : 'Kaldır'}</button>
-                    </div>
-                `;
-
-                // Azaltma butonu
-                div.querySelector(".minus").addEventListener("click", function() {
-                    if (currentQty > 0) self.updateItemQty(item.item_id, currentQty - 1);
-                });
-
-                // Arttırma butonu
-                div.querySelector(".plus").addEventListener("click", function() {
-                    if (currentQty < maxQty) self.updateItemQty(item.item_id, currentQty + 1);
-                });
-
-                // Kaldırma/Geri Al butonu
-                div.querySelector(".remove-item-btn").addEventListener("click", function() {
-                    if (isRemoved) {
-                        self.updateItemQty(item.item_id, item.qty);
-                    } else {
-                        self.updateItemQty(item.item_id, 0);
-                    }
-                });
-
-                container.appendChild(div);
-            });
-        },
-
-        updateItemQty: function(itemId, newQty) {
-            this.editedItems[itemId] = newQty;
-            this.renderItems();
-        },
-
-        saveChanges: async function() {
-            var self = this;
-            var paymentMethod = document.getElementById("edit-order-payment").value;
-            var phone = document.getElementById("edit-order-phone").value;
-            var discount = HK.CurrencyMask.parse(document.getElementById("edit-order-discount").value || "0");
-            var changes = [];
-
-            for (var itemId in this.editedItems) {
-                changes.push({
-                    item_id: itemId,
-                    qty: this.editedItems[itemId]
-                });
+            if (HK.UIRenderer && typeof HK.UIRenderer.showToast === 'function') {
+                HK.UIRenderer.showToast("Sipariş verileri yükleniyor...", "info");
             }
-
-            var hasItemChanges = changes.length > 0;
-            var hasPaymentChanges = paymentMethod !== this.activeOrder.payment_method;
-            var hasPhoneChanges = phone !== (this.activeOrder.phone || "");
-            var hasDiscountChanges = discount !== parseFloat(this.activeOrder.manual_discount || this.activeOrder.discount || 0);
-
-            if (!hasItemChanges && !hasPaymentChanges && !hasPhoneChanges && !hasDiscountChanges) {
-                HK.UIRenderer.showToast("Herhangi bir değişiklik yapılmadı.", 'info');
-                return;
-            }
-
-            // Telefon doğrulaması (boş değilse)
-            if (phone.trim() !== "") {
-                var rawPhone = phone.replace(/\D/g, '');
-                if (rawPhone.length !== 11 || rawPhone[0] !== '0') {
-                    HK.UIRenderer.showToast("Lütfen geçerli bir telefon numarası giriniz (05xx...)", "error", true);
-                    document.getElementById("edit-order-phone").focus();
-                    return;
-                }
-            }
-
-            if (!confirm("Sipariş düzenlenecek ve stoklar güncellenecek. Emin misiniz?")) return;
-
-            var saveBtn = document.getElementById("order-edit-save");
-            saveBtn.disabled = true;
-            saveBtn.innerText = "Kaydediliyor...";
 
             try {
-                var response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/update-order', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'X-WP-Nonce': kasaAyar.nonce 
-                    },
-                    body: JSON.stringify({
-                        order_id: this.activeOrder.id,
-                        payment_method: paymentMethod,
-                        phone: phone,
-                        discount: discount,
-                        items: changes
-                    })
+                // Sipariş detaylarını API'den çek
+                var response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/get-order?id=' + order.id, {
+                    headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });
-                var result = await response.json();
+                var orderDetails = await response.json();
 
-                if (result.success) {
-                    HK.UIRenderer.showToast("Sipariş başarıyla güncellendi.", 'success');
-                    document.getElementById("order-edit-modal").style.display = "none";
-                } else {
-                    HK.UIRenderer.showToast("Hata: " + (result.message || "Bilinmeyen bir hata"), 'error');
+                if (!orderDetails || orderDetails.code === 'rest_no_route' || orderDetails.message) {
+                    throw new Error(orderDetails.message || "Sipariş detayları alınamadı.");
                 }
+
+                // Sepet formatına dönüştür
+                var cartItems = orderDetails.items.map(function(item) {
+                    return {
+                        product_id: item.id, // get_order_details returns product ID in 'id' field
+                        variation_id: item.variation_id || 0,
+                        quantity: item.qty,
+                        name: item.name,
+                        sku: item.sku || "",
+                        price: parseFloat(item.price) || 0,
+                        regular_price: parseFloat(item.price) || 0,
+                        line_discount: parseFloat(item.item_discount) || 0,
+                        image: item.image || ""
+                    };
+                });
+
+                // Global State'e yükle
+                HK.State.sepet = cartItems;
+                HK.State.editingOrderId = orderDetails.id;
+                HK.State.iskontoTutar = parseFloat(orderDetails.manual_discount) || 0;
+                HK.State.musteriTelefon = orderDetails.telefon || "";
+                HK.State.odemeTipi = orderDetails.payment_method || "card";
+                HK.State.siparisNotu = orderDetails.siparis_notu || "";
+
+                if (orderDetails.payment_method === 'split' && orderDetails.payment_details) {
+                    HK.State.splitData = {
+                        nakit: parseFloat(orderDetails.payment_details.nakit) || 0,
+                        kart: parseFloat(orderDetails.payment_details.kart) || 0,
+                        iban: parseFloat(orderDetails.payment_details.iban) || 0
+                    };
+                } else {
+                    HK.State.splitData = null;
+                }
+
+                // Hafızaya kaydet ve arayüzü güncelle
+                if (HK.CartManager) {
+                    HK.CartManager.sepetiKaydet();
+                }
+
+                if (HK.UIRenderer) {
+                    HK.UIRenderer.arayuzuGuncelle();
+                }
+
+                // Kasa sekmesine yönlendir
+                var tabBtn = document.querySelector('.ust-sekme[data-tab="kasa"]');
+                if (tabBtn) tabBtn.click();
+
+                // Modalı kapat
+                if (modal) modal.style.display = "none";
+
+                if (HK.UIRenderer && typeof HK.UIRenderer.showToast === 'function') {
+                    HK.UIRenderer.showToast("Sipariş #" + orderDetails.id + " düzenleme modunda yüklendi.", "success");
+                }
+
             } catch (e) {
-                console.error("Save edit error", e);
-                HK.UIRenderer.showToast("İşlem sırasında bir hata oluştu.", 'error');
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.innerText = "Değişiklikleri Kaydet";
+                console.error("Order load error", e);
+                if (HK.UIRenderer && typeof HK.UIRenderer.showToast === 'function') {
+                    HK.UIRenderer.showToast("Sipariş yüklenirken hata oluştu: " + e.message, "error", true);
+                }
             }
         }
     };
