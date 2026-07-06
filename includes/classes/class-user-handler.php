@@ -39,6 +39,7 @@ class Hizli_Kasa_User_Handler {
         // KALICI YETKİLERİ MİNİMAL TUTUYORUZ (GÜVENLİK İÇİN)
         $capabilities = [
             'read'                       => true,
+            'read_private_products'      => true, // Kasiyerlerin özel ürünleri arayıp görebilmesi için eklendi
             'view_admin_dashboard'       => false, // Dinamik olarak halledilecek
             'edit_shop_orders'           => false, // Dinamik olarak halledilecek
             'publish_shop_orders'        => false, // Dinamik olarak halledilecek
