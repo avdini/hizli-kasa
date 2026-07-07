@@ -285,7 +285,11 @@
                         'Content-Type': 'application/json',
                         'X-WP-Nonce': kasaAyar.nonce
                     },
-                    body: JSON.stringify({ items: checkItems, depo_id: depoId })
+                    body: JSON.stringify({
+                        items: checkItems,
+                        depo_id: depoId,
+                        order_id: state.editingOrderId || 0
+                    })
                 });
 
                 var results = await response.json();

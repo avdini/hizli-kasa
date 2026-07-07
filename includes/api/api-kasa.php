@@ -123,9 +123,25 @@ function hizli_kasa_warehouse_stock_check($request)
     $data    = $request->get_json_params();
     $items   = $data['items'] ?? [];
     $depo_id = intval($data['depo_id'] ?? 0);
+    $order_id = intval($data['order_id'] ?? 0);
 
     if (empty($items)) {
         return new WP_Error('no_items', 'Kontrol edilecek ürün yok.', ['status' => 400]);
+    }
+
+    $order_qtys = [];
+    if ($order_id > 0) {
+        $order = wc_get_order($order_id);
+        if ($order) {
+            foreach ($order->get_items() as $item) {
+                if ($item instanceof WC_Order_Item_Product) {
+                    $pid = (int) $item->get_product_id();
+                    $vid = (int) $item->get_variation_id();
+                    $k = $pid . '_' . $vid;
+                    $order_qtys[$k] = (float) $item->get_quantity();
+                }
+            }
+        }
     }
 
     global $wpdb;
@@ -243,32 +259,35 @@ function hizli_kasa_warehouse_stock_check($request)
 
         $available_depo = $depo_stock - $depo_reserved;
 
-        // Kontrol sonuçları
         $site_ok = true;
         $depo_ok = true;
         $warning = null;
 
-        if ($manage_stock && $site_stock !== null) {
-            $site_ok = ($requested_qty <= $site_stock);
-        } elseif ($stock_status === 'outofstock') {
-            $site_ok = false;
+        $original_qty = $order_qtys[$k] ?? 0.0;
+        $net_qty = $requested_qty - $original_qty;
+
+        if ($net_qty > 0) {
+            if ($manage_stock && $site_stock !== null) {
+                $site_ok = ($net_qty <= $site_stock);
+            } elseif ($stock_status === 'outofstock') {
+                $site_ok = false;
+            }
+
+            if ($depo_id !== 0) {
+                $depo_ok = ($net_qty <= $available_depo);
+            }
         }
 
-        if ($depo_id !== 0) {
-            $depo_ok = ($requested_qty <= $available_depo);
-        }
-
-        // Uyarı mesajları
         if ($site_ok && !$depo_ok) {
-            if (($depo_stock + $other_stock - $depo_reserved - $other_res) >= $requested_qty) {
+            if (($depo_stock + $other_stock - $depo_reserved - $other_res) >= $net_qty) {
                 $warning = "Sitede var ama bu depoda rezerve/yok — başka depoda gözüküyor!";
             } elseif ($depo_reserved > 0) {
                 $warning = "⚠️ Kritik Stok Uyarısı! Ürünün {$depo_reserved} adedi internet siparişleri için ayırtılmıştır. (Depoda Toplam: " . (int) $depo_stock . ")";
             } else {
-                $warning = "Depoda yetersiz stok! (Depo: " . (int) $depo_stock . ", İhtiyaç: $requested_qty)";
+                $warning = "Depoda yetersiz stok! (Depo: " . (int) $depo_stock . ", İlave İhtiyaç: $net_qty)";
             }
         } elseif (!$site_ok) {
-            $warning = "Site stoğu yetersiz! (Site: " . ($site_stock !== null ? (int) $site_stock : 'N/A') . ", İhtiyaç: $requested_qty)";
+            $warning = "Site stoğu yetersiz! (Site: " . ($site_stock !== null ? (int) $site_stock : 'N/A') . ", İlave İhtiyaç: $net_qty)";
         }
 
         $results[] = [
