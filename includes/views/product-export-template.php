@@ -162,6 +162,47 @@ foreach ($export_data as $p) {
         }
     }
 }
+
+$csv_lines = [];
+$csv_headers = ["Ürün", "SKU", "Fiyat", "Toplam Stok"];
+foreach ($warehouses as $wh) {
+    $csv_headers[] = $wh->name;
+}
+$csv_lines[] = $csv_headers;
+
+foreach ($export_data as $p) {
+    $row = [
+        $p['name'],
+        $p['sku'] ?: "-",
+        $p['price'],
+        $p['total_stock']
+    ];
+    foreach ($warehouses as $wh) {
+        $row[] = $p['stocks'][$wh->id];
+    }
+    $csv_lines[] = $row;
+    
+    if (!empty($p['variations'])) {
+        foreach ($p['variations'] as $v) {
+            $v_row = [
+                "  ↳ " . $v['name'],
+                $v['sku'] ?: "-",
+                $v['price'],
+                $v['total_stock']
+            ];
+            foreach ($warehouses as $wh) {
+                $v_row[] = $v['stocks'][$wh->id];
+            }
+            $csv_lines[] = $v_row;
+        }
+    }
+}
+
+$csv_output = "";
+foreach ($csv_lines as $line) {
+    $clean_line = array_map(fn($v) => '"' . str_replace('"', '""', $v) . '"', $line);
+    $csv_output .= implode(',', $clean_line) . "\r\n";
+}
 ?>
 
 <!DOCTYPE html>
@@ -170,6 +211,7 @@ foreach ($export_data as $p) {
     <meta charset="UTF-8">
     <title>Müşteri Ürün Bilgi Listesi</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --primary: #4f46e5;
@@ -410,8 +452,14 @@ foreach ($export_data as $p) {
                 <button class="btn" onclick="downloadXML()">
                     📥 XML İndir
                 </button>
+                <button class="btn" onclick="downloadCSV()">
+                    📊 Excel / CSV İndir
+                </button>
+                <button class="btn" onclick="downloadPDF()">
+                    📥 PDF İndir
+                </button>
                 <button class="btn btn-primary" onclick="window.print()">
-                    🖨️ PDF / Yazdır
+                    🖨️ Direkt Yazdır
                 </button>
             </div>
         </div>
@@ -537,6 +585,29 @@ foreach ($export_data as $p) {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        function downloadCSV() {
+            const csvText = '\uFEFF' + '<?php echo esc_js($csv_output); ?>';
+            const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute("download", "urun-bilgi-listesi.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function downloadPDF() {
+            const element = document.querySelector('.table-card');
+            const opt = {
+                margin:       10,
+                filename:     'urun-bilgi-listesi.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+            html2pdf().set(opt).from(element).save();
         }
 
         function showToast(message) {
