@@ -12,8 +12,6 @@ foreach ($product_ids as $product_id) {
         continue;
     }
 
-    $price_clean = html_entity_decode(strip_tags($product->get_price_html()), ENT_QUOTES, 'UTF-8');
-
     $image_id   = $product->get_image_id();
     $large_url  = $image_id ? wp_get_attachment_image_url($image_id, 'full') : '';
     $thumb_url  = $large_url;
@@ -22,24 +20,14 @@ foreach ($product_ids as $product_id) {
         'id'         => $product_id,
         'name'       => $product->get_name(),
         'sku'        => $product->get_sku(),
-        'price'      => $price_clean,
         'type'       => $product->get_type(),
         'thumb'      => $thumb_url,
         'large'      => $large_url,
         'variations' => [],
-        'stocks'     => [],
-        'total_stock'=> 0,
     ];
-
-    foreach ($warehouses as $wh) {
-        $qty = isset($stock_map[$product_id][0][$wh->id]) ? $stock_map[$product_id][0][$wh->id] : 0;
-        $item['stocks'][$wh->id] = $qty;
-        $item['total_stock'] += $qty;
-    }
 
     if ($product->is_type('variable')) {
         $variation_ids  = $product->get_children();
-        $var_total_stock = 0;
         foreach ($variation_ids as $var_id) {
             $variation = wc_get_product($var_id);
             if (!$variation) {
@@ -58,36 +46,13 @@ foreach ($product_ids as $product_id) {
                 }
                 $attrs[] = $label . ': ' . $val;
             }
-            $attrs_str      = implode(' / ', $attrs);
-            $var_price      = html_entity_decode(strip_tags(wc_price($variation->get_price())), ENT_QUOTES, 'UTF-8');
+            $attrs_str = implode(' / ', $attrs);
 
-            $var_item = [
-                'id'          => $var_id,
-                'name'        => $attrs_str,
-                'sku'         => $variation->get_sku(),
-                'price'       => $var_price,
-                'stocks'      => [],
-                'total_stock' => 0,
+            $item['variations'][] = [
+                'id'   => $var_id,
+                'name' => $attrs_str,
+                'sku'  => $variation->get_sku(),
             ];
-
-            foreach ($warehouses as $wh) {
-                $qty = isset($stock_map[$product_id][$var_id][$wh->id]) ? $stock_map[$product_id][$var_id][$wh->id] : 0;
-                $var_item['stocks'][$wh->id] = $qty;
-                $var_item['total_stock']     += $qty;
-            }
-            $var_total_stock += $var_item['total_stock'];
-            $item['variations'][] = $var_item;
-        }
-
-        if (!empty($item['variations'])) {
-            $item['total_stock'] = $var_total_stock;
-            foreach ($warehouses as $wh) {
-                $wh_sum = 0;
-                foreach ($item['variations'] as $v) {
-                    $wh_sum += $v['stocks'][$wh->id];
-                }
-                $item['stocks'][$wh->id] = $wh_sum;
-            }
         }
     }
 
@@ -99,38 +64,7 @@ $catalog_title = isset($options['title']) && !empty($options['title'])
     : 'Ürün Bilgi & Fiyat Kataloğu';
 
 $md = "# Ürün Bilgi Tablosu\n\n";
-$md_headers = ["Ürün", "SKU", "Fiyat", "Toplam Stok"];
-foreach ($warehouses as $wh) {
-    $md_headers[] = $wh->name;
-}
-$md .= "| " . implode(" | ", $md_headers) . " |\n";
-$md .= "| " . implode(" | ", array_fill(0, count($md_headers), "---")) . " |\n";
-foreach ($export_data as $p) {
-    $row = ["**" . $p['name'] . "**", $p['sku'] ?: "-", $p['price'], $p['total_stock']];
-    foreach ($warehouses as $wh) {
-        $row[] = $p['stocks'][$wh->id];
-    }
-    $md .= "| " . implode(" | ", $row) . " |\n";
-    foreach ($p['variations'] as $v) {
-        $vr = ["&nbsp;&nbsp;↳ *" . $v['name'] . "*", $v['sku'] ?: "-", $v['price'], $v['total_stock']];
-        foreach ($warehouses as $wh) {
-            $vr[] = $v['stocks'][$wh->id];
-        }
-        $md .= "| " . implode(" | ", $vr) . " |\n";
-    }
-}
-
-$csv_lines = [array_merge(["Ürün", "SKU", "Fiyat", "Toplam Stok"], array_column((array)$warehouses, 'name'))];
-foreach ($export_data as $p) {
-    $csv_lines[] = array_merge([$p['name'], $p['sku'] ?: "-", $p['price'], $p['total_stock']], array_map(fn($wh) => $p['stocks'][$wh->id], (array)$warehouses));
-    foreach ($p['variations'] as $v) {
-        $csv_lines[] = array_merge(["  ↳ " . $v['name'], $v['sku'] ?: "-", $v['price'], $v['total_stock']], array_map(fn($wh) => $v['stocks'][$wh->id], (array)$warehouses));
-    }
-}
 $csv_output = "";
-foreach ($csv_lines as $line) {
-    $csv_output .= implode(',', array_map(fn($v) => '"' . str_replace('"', '""', $v) . '"', $line)) . "\r\n";
-}
 ?>
 <!DOCTYPE html>
 <html lang="tr">
@@ -401,6 +335,7 @@ foreach ($csv_lines as $line) {
             position: absolute;
             top: 10px;
             right: 10px;
+            z-index: 5;
         }
 
         .card-body {
@@ -727,6 +662,31 @@ foreach ($csv_lines as $line) {
             #catalogSearch { width: 160px; }
             .btn span { display: none; }
         }
+
+        /* ── SKELETON ANIMATION ── */
+        .skeleton {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: loading-skeleton 1.5s infinite;
+            display: inline-block;
+            height: 1em;
+            border-radius: 4px;
+        }
+        @keyframes loading-skeleton {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .price-skeleton {
+            width: 70px;
+            height: 18px;
+            vertical-align: middle;
+        }
+        .stock-skeleton {
+            width: 24px;
+            height: 16px;
+            vertical-align: middle;
+            border-radius: 9999px !important;
+        }
     </style>
 </head>
 <body>
@@ -774,7 +734,6 @@ foreach ($csv_lines as $line) {
     <!-- SUMMARY -->
     <div class="summary-bar no-print">
         <?php
-        $total_all = array_sum(array_column($export_data, 'total_stock'));
         $total_products = count($export_data);
         $total_vars = array_sum(array_map(fn($p) => count($p['variations']), $export_data));
         ?>
@@ -798,17 +757,15 @@ foreach ($csv_lines as $line) {
             <div class="icon">🏪</div>
             <div class="info">
                 <div class="label">Toplam Stok</div>
-                <div class="value"><?php echo number_format($total_all, 0, ',', '.'); ?></div>
+                <div class="value" id="sum-total-stock"><span class="price-skeleton skeleton"></span></div>
             </div>
         </div>
-        <?php foreach ($warehouses as $wh):
-            $wh_total = array_sum(array_map(fn($p) => $p['stocks'][$wh->id], $export_data));
-        ?>
+        <?php foreach ($warehouses as $wh): ?>
         <div class="summary-card">
             <div class="icon">🗄️</div>
             <div class="info">
                 <div class="label"><?php echo esc_html($wh->name); ?></div>
-                <div class="value"><?php echo number_format($wh_total, 0, ',', '.'); ?></div>
+                <div class="value" id="sum-stock-<?php echo $wh->id; ?>"><span class="price-skeleton skeleton"></span></div>
             </div>
         </div>
         <?php endforeach; ?>
@@ -819,7 +776,6 @@ foreach ($csv_lines as $line) {
         <?php foreach ($export_data as $p):
             $has_variations = !empty($p['variations']);
             $has_img        = !empty($p['thumb']);
-            $badge_class    = $p['total_stock'] > 5 ? 'badge-success' : ($p['total_stock'] > 0 ? 'badge-warning' : 'badge-danger');
         ?>
         <div class="product-card" data-name="<?php echo esc_attr(strtolower($p['name'])); ?>" data-sku="<?php echo esc_attr(strtolower($p['sku'])); ?>">
             <div class="card-image" onclick="openLightbox('<?php echo esc_attr($has_img ? $p['large'] : ''); ?>', '<?php echo esc_attr($p['name']); ?>')">
@@ -831,7 +787,7 @@ foreach ($csv_lines as $line) {
                     </div>
                 <?php endif; ?>
                 <div class="card-badge-corner">
-                    <span class="badge <?php echo $badge_class; ?>"><?php echo $p['total_stock']; ?></span>
+                    <span class="badge" data-hk-total-stock="<?php echo $p['id']; ?>"><span class="stock-skeleton skeleton"></span></span>
                 </div>
             </div>
             <div class="card-body">
@@ -839,10 +795,10 @@ foreach ($csv_lines as $line) {
                 <?php if ($p['sku']): ?>
                 <p class="card-sku">SKU: <?php echo esc_html($p['sku']); ?></p>
                 <?php endif; ?>
-                <p class="card-price"><?php echo esc_html($p['price']); ?></p>
+                <p class="card-price" data-hk-price="<?php echo $p['id']; ?>"><span class="price-skeleton skeleton"></span></p>
                 <div class="card-stocks">
                     <?php foreach ($warehouses as $wh): ?>
-                    <span class="card-stock-item"><?php echo esc_html($wh->name); ?>: <?php echo $p['stocks'][$wh->id]; ?></span>
+                    <span class="card-stock-item" data-hk-stock="<?php echo $p['id']; ?>-<?php echo $wh->id; ?>"><?php echo esc_html($wh->name); ?>: ...</span>
                     <?php endforeach; ?>
                 </div>
             </div>
@@ -854,17 +810,15 @@ foreach ($csv_lines as $line) {
                 </button>
             </div>
             <div class="variations-panel">
-                <?php foreach ($p['variations'] as $v):
-                    $vb = $v['total_stock'] > 5 ? 'badge-success' : ($v['total_stock'] > 0 ? 'badge-warning' : 'badge-danger');
-                ?>
+                <?php foreach ($p['variations'] as $v): ?>
                 <div class="var-row">
                     <span class="var-arrow">↳</span>
                     <span class="var-name"><?php echo esc_html($v['name']); ?></span>
                     <?php if ($v['sku']): ?>
                     <span class="var-sku"><?php echo esc_html($v['sku']); ?></span>
                     <?php endif; ?>
-                    <span class="var-price"><?php echo esc_html($v['price']); ?></span>
-                    <span class="badge <?php echo $vb; ?>" style="margin-left:auto;"><?php echo $v['total_stock']; ?></span>
+                    <span class="var-price" data-hk-price="<?php echo $p['id']; ?>-<?php echo $v['id']; ?>"><span class="price-skeleton skeleton"></span></span>
+                    <span class="badge" data-hk-total-stock="<?php echo $p['id']; ?>-<?php echo $v['id']; ?>" style="margin-left:auto;"><span class="stock-skeleton skeleton"></span></span>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -896,7 +850,6 @@ foreach ($csv_lines as $line) {
                     <?php foreach ($export_data as $idx => $p):
                         $has_variations = !empty($p['variations']);
                         $has_img = !empty($p['thumb']);
-                        $tot_b = $p['total_stock'] > 5 ? 'badge-success' : ($p['total_stock'] > 0 ? 'badge-warning' : 'badge-danger');
                     ?>
                     <tr class="product-row" data-name="<?php echo esc_attr(strtolower($p['name'])); ?>" data-sku="<?php echo esc_attr(strtolower($p['sku'])); ?>" data-idx="<?php echo $idx; ?>" <?php if ($has_variations) echo 'onclick="toggleTableVariations(' . $idx . ', this)"'; ?>>
                         <td>
@@ -915,18 +868,13 @@ foreach ($csv_lines as $line) {
                             </div>
                         </td>
                         <td><span class="sku-code"><?php echo esc_html($p['sku'] ?: '-'); ?></span></td>
-                        <td><span class="price-tag"><?php echo esc_html($p['price']); ?></span></td>
-                        <?php foreach ($warehouses as $wh):
-                            $qty = $p['stocks'][$wh->id];
-                            $b   = $qty > 5 ? 'badge-success' : ($qty > 0 ? 'badge-warning' : 'badge-danger');
-                        ?>
-                        <td><span class="badge <?php echo $b; ?>"><?php echo $qty; ?></span></td>
+                        <td><span class="price-tag" data-hk-tbl-price="<?php echo $p['id']; ?>"><span class="price-skeleton skeleton"></span></span></td>
+                        <?php foreach ($warehouses as $wh): ?>
+                        <td><span class="badge" data-hk-tbl-stock="<?php echo $p['id']; ?>-<?php echo $wh->id; ?>"><span class="stock-skeleton skeleton"></span></span></td>
                         <?php endforeach; ?>
-                        <td><span class="badge <?php echo $tot_b; ?>" style="font-weight:700;"><?php echo $p['total_stock']; ?></span></td>
+                        <td><span class="badge" data-hk-tbl-total-stock="<?php echo $p['id']; ?>" style="font-weight:700;"><span class="stock-skeleton skeleton"></span></span></td>
                     </tr>
-                    <?php foreach ($p['variations'] as $v):
-                        $vb   = $v['total_stock'] > 5 ? 'badge-success' : ($v['total_stock'] > 0 ? 'badge-warning' : 'badge-danger');
-                    ?>
+                    <?php foreach ($p['variations'] as $v): ?>
                     <tr class="variation-row hidden" data-parent="<?php echo $idx; ?>">
                         <td>
                             <div class="variation-cell">
@@ -935,14 +883,11 @@ foreach ($csv_lines as $line) {
                             </div>
                         </td>
                         <td><span class="sku-code"><?php echo esc_html($v['sku'] ?: '-'); ?></span></td>
-                        <td><span class="price-tag" style="font-size:13px;"><?php echo esc_html($v['price']); ?></span></td>
-                        <?php foreach ($warehouses as $wh):
-                            $qty = $v['stocks'][$wh->id];
-                            $b   = $qty > 5 ? 'badge-success' : ($qty > 0 ? 'badge-warning' : 'badge-danger');
-                        ?>
-                        <td><span class="badge <?php echo $b; ?>"><?php echo $qty; ?></span></td>
+                        <td><span class="price-tag" style="font-size:13px;" data-hk-tbl-price="<?php echo $p['id']; ?>-<?php echo $v['id']; ?>"><span class="price-skeleton skeleton"></span></span></td>
+                        <?php foreach ($warehouses as $wh): ?>
+                        <td><span class="badge" data-hk-tbl-stock="<?php echo $p['id']; ?>-<?php echo $v['id']; ?>-<?php echo $wh->id; ?>"><span class="stock-skeleton skeleton"></span></span></td>
                         <?php endforeach; ?>
-                        <td><span class="badge <?php echo $vb; ?>" style="font-weight:700;"><?php echo $v['total_stock']; ?></span></td>
+                        <td><span class="badge" data-hk-tbl-total-stock="<?php echo $p['id']; ?>-<?php echo $v['id']; ?>" style="font-weight:700;"><span class="stock-skeleton skeleton"></span></span></td>
                     </tr>
                     <?php endforeach; ?>
                     <?php endforeach; ?>
@@ -962,10 +907,17 @@ foreach ($csv_lines as $line) {
 <div class="toast" id="toast">✓ Kopyalandı!</div>
 
 <script>
-    const MD_DATA  = <?php echo json_encode($md); ?>;
-    const CSV_DATA = <?php echo json_encode($csv_output); ?>;
+    const CONFIG = {
+        ajaxurl: <?php echo json_encode(admin_url('admin-ajax.php')); ?>,
+        token: <?php echo json_encode(isset($_GET['hk_catalog']) ? sanitize_text_field($_GET['hk_catalog']) : ''); ?>,
+        product_ids: <?php echo json_encode(implode(',', $product_ids)); ?>,
+        warehouses: <?php echo json_encode($warehouses); ?>
+    };
 
     let currentView = 'grid';
+    let dynamicDataLoaded = false;
+    let MD_DATA = '';
+    let CSV_DATA = '';
 
     function setView(view) {
         currentView = view;
@@ -1039,12 +991,20 @@ foreach ($csv_lines as $line) {
     }
 
     function copyMarkdown() {
+        if (!dynamicDataLoaded) {
+            showToast('⏳ Veriler yükleniyor, lütfen bekleyin...');
+            return;
+        }
         navigator.clipboard.writeText(MD_DATA)
             .then(() => showToast('✓ Markdown panoya kopyalandı!'))
             .catch(() => showToast('✗ Kopyalama başarısız.'));
     }
 
     function downloadCSV() {
+        if (!dynamicDataLoaded) {
+            showToast('⏳ Veriler yükleniyor, lütfen bekleyin...');
+            return;
+        }
         const blob = new Blob(['\uFEFF' + CSV_DATA], { type: 'text/csv;charset=utf-8;' });
         const a    = document.createElement('a');
         a.href     = URL.createObjectURL(blob);
@@ -1063,6 +1023,189 @@ foreach ($csv_lines as $line) {
         };
         html2pdf().set(opt).from(el).save();
         showToast('⏳ PDF hazırlanıyor...');
+    }
+
+    // ── AJAX REAL-TIME DATA LOADING ──
+    document.addEventListener("DOMContentLoaded", () => {
+        let url = CONFIG.ajaxurl + '?action=hk_get_catalog_dynamic_data';
+        if (CONFIG.token) {
+            url += '&token=' + encodeURIComponent(CONFIG.token);
+        } else {
+            url += '&product_ids=' + encodeURIComponent(CONFIG.product_ids);
+        }
+
+        fetch(url)
+            .then(r => r.json())
+            .then(res => {
+                if (res.success && res.data && res.data.products) {
+                    updateDynamicData(res.data.products);
+                    generateExportStrings(res.data.products);
+                    dynamicDataLoaded = true;
+                } else {
+                    console.error("Dynamic data loading failed:", res.data ? res.data.message : '');
+                }
+            })
+            .catch(err => console.error("Error loading dynamic data:", err));
+    });
+
+    function updateDynamicData(products) {
+        let grandTotalStock = 0;
+        let warehouseTotals = {};
+
+        for (let pid in products) {
+            let p = products[pid];
+            
+            // 1. Grid Card Total Stock Corner Badge
+            let cardBadge = document.querySelector(`[data-hk-total-stock="${pid}"]`);
+            if (cardBadge) {
+                cardBadge.textContent = p.total_stock;
+                cardBadge.className = `badge ${p.total_stock > 5 ? 'badge-success' : (p.total_stock > 0 ? 'badge-warning' : 'badge-danger')}`;
+            }
+
+            // Grid Card Price
+            let cardPrice = document.querySelector(`[data-hk-price="${pid}"]`);
+            if (cardPrice) {
+                cardPrice.innerHTML = p.price;
+            }
+
+            // Grid Card Warehouse Stocks List
+            for (let whId in p.stocks) {
+                let cardStockEl = document.querySelector(`[data-hk-stock="${pid}-${whId}"]`);
+                if (cardStockEl) {
+                    let whName = cardStockEl.textContent.split(':')[0];
+                    cardStockEl.textContent = `${whName}: ${p.stocks[whId]}`;
+                }
+                warehouseTotals[whId] = (warehouseTotals[whId] || 0) + p.stocks[whId];
+            }
+
+            // Grid Card Variations
+            for (let vid in p.variations) {
+                let v = p.variations[vid];
+                let vPrice = document.querySelector(`[data-hk-price="${pid}-${vid}"]`);
+                if (vPrice) vPrice.innerHTML = v.price;
+
+                let vStock = document.querySelector(`[data-hk-total-stock="${pid}-${vid}"]`);
+                if (vStock) {
+                    vStock.textContent = v.total_stock;
+                    vStock.className = `badge ${v.total_stock > 5 ? 'badge-success' : (v.total_stock > 0 ? 'badge-warning' : 'badge-danger')}`;
+                }
+            }
+
+            // 2. Table Row Price Tag
+            let tblPrice = document.querySelector(`[data-hk-tbl-price="${pid}"]`);
+            if (tblPrice) tblPrice.innerHTML = p.price;
+
+            // Table Row Warehouse Stocks
+            for (let whId in p.stocks) {
+                let tblStock = document.querySelector(`[data-hk-tbl-stock="${pid}-${whId}"]`);
+                if (tblStock) {
+                    tblStock.textContent = p.stocks[whId];
+                    tblStock.className = `badge ${p.stocks[whId] > 5 ? 'badge-success' : (p.stocks[whId] > 0 ? 'badge-warning' : 'badge-danger')}`;
+                }
+            }
+
+            // Table Row Total Stock
+            let tblTotal = document.querySelector(`[data-hk-tbl-total-stock="${pid}"]`);
+            if (tblTotal) {
+                tblTotal.textContent = p.total_stock;
+                tblTotal.className = `badge ${p.total_stock > 5 ? 'badge-success' : (p.total_stock > 0 ? 'badge-warning' : 'badge-danger')}`;
+            }
+
+            // Table Row Variations
+            for (let vid in p.variations) {
+                let v = p.variations[vid];
+                let tblVPrice = document.querySelector(`[data-hk-tbl-price="${pid}-${vid}"]`);
+                if (tblVPrice) tblVPrice.innerHTML = v.price;
+
+                for (let whId in v.stocks) {
+                    let tblVStock = document.querySelector(`[data-hk-tbl-stock="${pid}-${vid}-${whId}"]`);
+                    if (tblVStock) {
+                        tblVStock.textContent = v.stocks[whId];
+                        tblVStock.className = `badge ${v.stocks[whId] > 5 ? 'badge-success' : (v.stocks[whId] > 0 ? 'badge-warning' : 'badge-danger')}`;
+                    }
+                }
+
+                let tblVTotal = document.querySelector(`[data-hk-tbl-total-stock="${pid}-${vid}"]`);
+                if (tblVTotal) {
+                    tblVTotal.textContent = v.total_stock;
+                    tblVTotal.className = `badge ${v.total_stock > 5 ? 'badge-success' : (v.total_stock > 0 ? 'badge-warning' : 'badge-danger')}`;
+                }
+            }
+
+            grandTotalStock += p.total_stock;
+        }
+
+        // 3. Update Summary Cards
+        let sumTotalStock = document.getElementById('sum-total-stock');
+        if (sumTotalStock) {
+            sumTotalStock.textContent = grandTotalStock.toLocaleString('tr-TR');
+        }
+
+        for (let whId in warehouseTotals) {
+            let sumWhStock = document.getElementById(`sum-stock-${whId}`);
+            if (sumWhStock) {
+                sumWhStock.textContent = warehouseTotals[whId].toLocaleString('tr-TR');
+            }
+        }
+    }
+
+    function generateExportStrings(products) {
+        let headerRow = ["Ürün", "SKU", "Fiyat", "Toplam Stok"];
+        CONFIG.warehouses.forEach(wh => headerRow.push(wh.name));
+
+        let mdStr = "# Ürün Bilgi Tablosu\n\n";
+        mdStr += "| " + headerRow.join(" | ") + " |\n";
+        mdStr += "| " + headerRow.map(() => "---").join(" | ") + " |\n";
+
+        let csvLines = [];
+        csvLines.push(headerRow);
+
+        document.querySelectorAll('#gridView .product-card').forEach(card => {
+            let pPriceEl = card.querySelector('[data-hk-price]');
+            if (!pPriceEl) return;
+            let pid = pPriceEl.dataset.hkPrice;
+            let p = products[pid];
+            if (!p) return;
+
+            let pTitle = card.querySelector('.card-title').textContent.trim();
+            let pSkuEl = card.querySelector('.card-sku');
+            let pSku = pSkuEl ? pSkuEl.textContent.replace('SKU:', '').trim() : '-';
+
+            let pRow = [pTitle, pSku, p.price, p.total_stock];
+            CONFIG.warehouses.forEach(wh => pRow.push(p.stocks[wh.id] || 0));
+            mdStr += "| " + pRow.join(" | ") + " |\n";
+            csvLines.push(pRow);
+
+            let vPanel = card.querySelector('.variations-panel');
+            if (vPanel) {
+                vPanel.querySelectorAll('.var-row').forEach(vRow => {
+                    let vPriceEl = vRow.querySelector('[data-hk-price]');
+                    if (!vPriceEl) return;
+                    let vKey = vPriceEl.dataset.hkPrice; // format: pid-vid
+                    let vid = vKey.split('-')[1];
+                    let v = p.variations[vid];
+                    if (!v) return;
+
+                    let vTitle = vRow.querySelector('.var-name').textContent.trim();
+                    let vSkuEl = vRow.querySelector('.var-sku');
+                    let vSku = vSkuEl ? vSkuEl.textContent.trim() : '-';
+
+                    let vRowData = ["  ↳ " + vTitle, vSku, v.price, v.total_stock];
+                    CONFIG.warehouses.forEach(wh => vRowData.push(v.stocks[wh.id] || 0));
+                    mdStr += "| &nbsp;&nbsp;↳ *" + vTitle + "* | " + vSku + " | " + v.price + " | " + v.total_stock + " | " + CONFIG.warehouses.map(wh => v.stocks[wh.id] || 0).join(" | ") + " |\n";
+                    csvLines.push(vRowData);
+                });
+            }
+        });
+
+        MD_DATA = mdStr;
+
+        let csvContent = "";
+        csvLines.forEach(line => {
+            let cleanLine = line.map(val => '"' + String(val).replace(/"/g, '""') + '"');
+            csvContent += cleanLine.join(',') + "\r\n";
+        });
+        CSV_DATA = csvContent;
     }
 </script>
 </body>
