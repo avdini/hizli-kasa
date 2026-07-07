@@ -32,6 +32,12 @@ class Hizli_Kasa_Catalog_Public_Handler {
         $product_ids = $share['product_ids'];
         $options     = $share['options'];
 
+        // Disable various lazy load plugins for this standalone page execution
+        add_filter('wp_lazy_loading_enabled', '__return_false', 9999);
+        add_filter('litespeed_can_lazyload', '__return_false', 9999);
+        add_filter('rocket_lazyload_images', '__return_false', 9999);
+        add_filter('lazyload_is_enabled', '__return_false', 9999);
+
         global $wpdb;
         $tables       = Hizli_Kasa_Database::get_tables();
         $warehouses   = $wpdb->get_results("SELECT id, name FROM {$tables['depolar']} ORDER BY priority DESC, id ASC");
