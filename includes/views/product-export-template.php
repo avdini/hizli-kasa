@@ -14,7 +14,20 @@ foreach ($product_ids as $product_id) {
 
     $image_id   = $product->get_image_id();
     $large_url  = $image_id ? wp_get_attachment_image_url($image_id, 'full') : '';
-    $thumb_url  = $large_url;
+    
+    $thumb_url = '';
+    if ($image_id) {
+        $thumb_url = wp_get_attachment_image_url($image_id, 'woocommerce_thumbnail');
+        if (!$thumb_url) {
+            $thumb_url = wp_get_attachment_image_url($image_id, 'thumbnail');
+        }
+        if (!$thumb_url) {
+            $thumb_url = wp_get_attachment_image_url($image_id, 'medium');
+        }
+        if (!$thumb_url) {
+            $thumb_url = $large_url;
+        }
+    }
 
     $item = [
         'id'         => $product_id,
