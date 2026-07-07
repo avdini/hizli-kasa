@@ -568,7 +568,7 @@ foreach ($csv_lines as $line) {
 
     <script>
         function copyMarkdown() {
-            const mdText = '<?php echo esc_js($md); ?>';
+            const mdText = <?php echo json_encode($md); ?>;
             navigator.clipboard.writeText(mdText).then(() => {
                 showToast("Markdown tablosu panoya kopyalandı!");
             }).catch(() => {
@@ -577,7 +577,7 @@ foreach ($csv_lines as $line) {
         }
 
         function downloadXML() {
-            const xmlText = '<?php echo esc_js($xml_string); ?>';
+            const xmlText = <?php echo json_encode($xml_string); ?>;
             const blob = new Blob([xmlText], { type: "application/xml;charset=utf-8;" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
@@ -588,7 +588,7 @@ foreach ($csv_lines as $line) {
         }
 
         function downloadCSV() {
-            const csvText = '\uFEFF' + '<?php echo esc_js($csv_output); ?>';
+            const csvText = '\uFEFF' + <?php echo json_encode($csv_output); ?>;
             const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
