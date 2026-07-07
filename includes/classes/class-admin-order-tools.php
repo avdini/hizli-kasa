@@ -358,6 +358,29 @@ class Hizli_Kasa_Admin_Order_Tools
         ];
     }
 
+    private static function format_meta_value($value)
+    {
+        if (is_array($value) || is_object($value)) {
+            return wp_json_encode($value, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        }
+
+        return (string) $value;
+    }
+
+    private static function format_item_meta($item)
+    {
+        $rows = [];
+        foreach ($item->get_meta_data() as $meta) {
+            $data = $meta->get_data();
+            $rows[] = [
+                'key' => $data['key'],
+                'value' => $data['value'],
+            ];
+        }
+
+        return wp_json_encode($rows, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
     private static function save_item_meta($item, $raw_meta)
     {
         if ($raw_meta === null || trim((string) $raw_meta) === '') {
