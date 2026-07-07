@@ -3,7 +3,7 @@
             <div class="hk-aot-toolbar">
                 <div>
                     <strong>#<?php echo esc_html($order_id); ?></strong>
-                    <span class="hk-aot-pill"><?php echo esc_html($order->get_formatted_order_total()); ?></span>
+                    <span class="hk-aot-pill"><?php echo wp_kses_post($order->get_formatted_order_total()); ?></span>
                     <span class="hk-aot-pill"><?php echo esc_html(wc_get_order_status_name($order->get_status())); ?></span>
                     <?php
                     $used_coupon_code = $order->get_meta('_hizli_kasa_used_coupon_code');
@@ -11,7 +11,7 @@
                     if ($used_coupon_code) {
                         ?>
                         <span class="hk-aot-pill" style="background-color: #27ae60; color: white; font-weight: bold;">
-                            ��� Kullanılan İade Çeki: <?php echo esc_html($used_coupon_code); ?> (-<?php echo esc_html(wc_format_decimal($used_coupon_amount, 2)); ?> TL)
+                            ��� Kullanılan İade Çeki: <?php echo esc_html($used_coupon_code); ?> (-<?php echo esc_html(wc_format_decimal($used_coupon_amount, 2)); ?> TL)
                         </span>
                         <?php
                     }
