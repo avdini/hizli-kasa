@@ -380,6 +380,20 @@ $csv_output = "";
             margin-top: 2px;
         }
 
+        .card-price del, .var-price del, .price-tag del {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 400;
+            text-decoration: line-through;
+            margin-right: 6px;
+        }
+
+        .card-price ins, .var-price ins, .price-tag ins {
+            color: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
         .card-stocks {
             display: flex;
             flex-wrap: wrap;
@@ -1215,7 +1229,7 @@ $csv_output = "";
 
         let csvContent = "";
         csvLines.forEach(line => {
-            let cleanLine = line.map(val => '"' + String(val).replace(/"/g, '""') + '"');
+            let cleanLine = line.map(val => '"' + String(val).replace(/<[^>]+>/g, '').replace(/"/g, '""') + '"');
             csvContent += cleanLine.join(',') + "\r\n";
         });
         CSV_DATA = csvContent;
