@@ -14,8 +14,12 @@ foreach ($product_ids as $product_id) {
 
     $price_clean = html_entity_decode(strip_tags($product->get_price_html()), ENT_QUOTES, 'UTF-8');
 
-    $thumb_url  = get_the_post_thumbnail_url($product_id, 'medium') ?: '';
-    $large_url  = get_the_post_thumbnail_url($product_id, 'full') ?: $thumb_url;
+    $image_id   = $product->get_image_id();
+    $large_url  = $image_id ? wp_get_attachment_image_url($image_id, 'full') : '';
+    $thumb_url  = $image_id ? wp_get_attachment_image_url($image_id, 'woocommerce_thumbnail') : '';
+    if (!$thumb_url) {
+        $thumb_url = $large_url;
+    }
 
     $item = [
         'id'         => $product_id,
