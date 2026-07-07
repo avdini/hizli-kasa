@@ -71,9 +71,10 @@ class Hizli_Kasa_Stock_Order_Handler {
 
             Hizli_Kasa_Stock_Manager::update_warehouse_stock($product_id, $variation_id, $depo_id, -$qty, "POS Satışı (#$order_id)");
 
-            wc_update_order_item_meta($item_id, '_hk_cikis_depo_id', $depo_id);
-            wc_update_order_item_meta($item_id, '_hk_cikis_depo_adet', $qty);
-            wc_update_order_item_meta($item_id, '_hk_cikis_depo_adi', $depo_name ?: 'Bilinmeyen');
+            $item->update_meta_data('_hk_cikis_depo_id', $depo_id);
+            $item->update_meta_data('_hk_cikis_depo_adet', $qty);
+            $item->update_meta_data('_hk_cikis_depo_adi', $depo_name ?: 'Bilinmeyen');
+            $item->save();
         }
 
         $order->update_meta_data('_hk_cikis_depo_id', $depo_id);

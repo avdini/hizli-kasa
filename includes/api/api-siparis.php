@@ -624,8 +624,12 @@ function hizli_kasa_update_order($request)
                 if ($product) {
                     $item_id = $order->add_product($product, $new_qty);
                     if ($item_id) {
-                        wc_add_order_item_meta($item_id, '_hk_cikis_depo_id', $depo_id, true);
-                        wc_add_order_item_meta($item_id, '_hk_cikis_depo_adi', $depo_adi, true);
+                        $item = $order->get_item($item_id);
+                        if ($item) {
+                            $item->update_meta_data('_hk_cikis_depo_id', $depo_id);
+                            $item->update_meta_data('_hk_cikis_depo_adi', $depo_adi);
+                            $item->save();
+                        }
                         $log_details[] = $product->get_name() . " eklendi (Adet: $new_qty).";
                     }
                 }
