@@ -63,6 +63,18 @@ $terminal_url = home_url('/hizli-kasa/terminal/');
                 <h3 class="hk-card-title">Eşleşmeyen Ürünler</h3>
                 <p class="hk-card-desc">Barkod veya SKU uyuşmazlığı nedeniyle eşleşemeyen ürünlerin listesi ve çözüm araçları.</p>
             </a>
+
+            <!-- Paylaşılan Kataloglar -->
+            <a href="?page=hizli-kasa&tab=kataloglar" class="hk-hub-card hk-hub-card-kataloglar">
+                <div class="hk-card-icon-wrapper">
+                    <div class="hk-card-icon hk-icon-kataloglar">
+                        <span class="dashicons dashicons-share"></span>
+                    </div>
+                    <span class="hk-card-arrow dashicons dashicons-arrow-right-alt2"></span>
+                </div>
+                <h3 class="hk-card-title">Paylaşılan Kataloglar</h3>
+                <p class="hk-card-desc">Müşterilerinizle paylaştığınız ürün katalog bağlantılarını listeleyin, kopyalayın veya silin.</p>
+            </a>
         </div>
     </section>
 

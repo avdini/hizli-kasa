@@ -72,6 +72,12 @@ class Hizli_Kasa_Catalog_Share_Manager {
         );
     }
 
+    public static function get_all_shares() {
+        global $wpdb;
+        $tables = Hizli_Kasa_Database::get_tables();
+        return $wpdb->get_results("SELECT * FROM {$tables['catalog_shares']} ORDER BY created_at DESC");
+    }
+
     public static function get_public_url($token) {
         return add_query_arg('hk_catalog', rawurlencode($token), home_url('/'));
     }

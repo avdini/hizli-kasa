@@ -222,6 +222,7 @@
 .hk-hub-card-cache:hover::before { background: #0891b2; }
 .hk-hub-card-sku:hover::before { background: #0d9488; }
 .hk-hub-card-tools:hover::before { background: #6b7280; }
+.hk-hub-card-kataloglar:hover::before { background: #3b82f6; }
 
 /* Icon Container */
 .hk-card-icon-wrapper {
@@ -255,6 +256,7 @@
 .hk-icon-cache { background: #ecfeff; color: #0891b2; }
 .hk-icon-sku { background: #f0fdfa; color: #0d9488; }
 .hk-icon-tools { background: #f8fafc; color: #6b7280; }
+.hk-icon-kataloglar { background: #eff6ff; color: #3b82f6; }
 
 /* Arrow icon */
 .hk-card-arrow {

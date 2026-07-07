@@ -19,6 +19,7 @@ class Hizli_Kasa_Admin_Settings_Page {
                 $tab_titles = [
                     'stok' => 'Stok Yönetimi',
                     'depolar' => 'Depo Yönetimi',
+                    'kataloglar' => 'Paylaşılan Kataloglar',
                     'unmatched' => 'Eşleşmeyen Ürünler',
                     'bildirimler' => 'Bildirimler',
                     'genel' => 'Genel Ayarlar',
@@ -44,6 +45,8 @@ class Hizli_Kasa_Admin_Settings_Page {
                         include HIZLI_KASA_PATH . 'includes/views/admin-stok-uyusmazlik.php';
                     } elseif ($active_tab === 'depolar') {
                         include HIZLI_KASA_PATH . 'includes/views/admin-depo-yonetimi.php';
+                    } elseif ($active_tab === 'kataloglar') {
+                        include HIZLI_KASA_PATH . 'includes/views/admin-settings-kataloglar.php';
                     } elseif ($active_tab === 'bildirimler') {
                         include HIZLI_KASA_PATH . 'includes/views/tab-bildirimler.php';
                     } elseif ($active_tab === 'onbellek') {

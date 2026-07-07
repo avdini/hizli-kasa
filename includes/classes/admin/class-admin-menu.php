@@ -61,6 +61,15 @@ class Hizli_Kasa_Admin_Menu {
 
         add_submenu_page(
             'hizli-kasa',
+            'Paylaşılan Kataloglar',
+            '<span class="dashicons dashicons-share"></span> Paylaşılan Kataloglar',
+            'manage_options',
+            'hizli-kasa&tab=kataloglar',
+            [Hizli_Kasa_Admin_Settings_Page::class, 'render']
+        );
+
+        add_submenu_page(
+            'hizli-kasa',
             'Eşleşmeyen Ürünler',
             '<span class="dashicons dashicons-warning"></span> Eşleşmeyen Ürünler' . $unmatched_badge,
             'manage_options',
