@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
 class Hizli_Kasa_Catalog_Public_Handler {
 
     public static function init() {
-        add_action('init', [self::class, 'maybe_serve_catalog'], 1);
+        add_action('template_redirect', [self::class, 'maybe_serve_catalog']);
         add_action('wp_ajax_hk_create_catalog_share', [self::class, 'ajax_create_share']);
         add_action('wp_ajax_hk_delete_catalog_share', [self::class, 'ajax_delete_share']);
     }
