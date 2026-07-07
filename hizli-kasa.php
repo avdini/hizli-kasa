@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 11.19.0
+ * Version: 11.20.0
  * Author: Seyfullah Kurt
  * Requires Plugins: woocommerce
  * Requires at least: 5.8
@@ -14,7 +14,7 @@ if (!defined('ABSPATH'))
     exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '11.19.0');
+define('HIZLI_KASA_VERSION', '11.20.0');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -76,6 +76,7 @@ function hizli_kasa_init() {
     require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-settings-page.php';
     require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-depo-controller.php';
     require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-mismatch-bubble.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/admin/class-admin-product-export.php';
     require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-stock.php';
     require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-import-export.php';
     require_once HIZLI_KASA_PATH . 'includes/classes/ajax/class-ajax-unmatched.php';
@@ -99,6 +100,7 @@ function hizli_kasa_init() {
     Hizli_Kasa_Admin_Settings_Register::init();
     Hizli_Kasa_Admin_Depo_Controller::init();
     Hizli_Kasa_Admin_Mismatch_Bubble::init();
+    Hizli_Kasa_Admin_Product_Export::init();
     Hizli_Kasa_User_Warehouse_Permissions::init();
     Hizli_Kasa_Ajax_Stock::init();
     Hizli_Kasa_Ajax_Import_Export::init();
