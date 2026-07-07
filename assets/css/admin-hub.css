@@ -1,0 +1,364 @@
+/* ==========================================================================
+   HIZLI KASA ADMIN HUB & MODERN SIDEBAR STYLES
+   ========================================================================== */
+
+/* Global CSS Variables for Hub */
+:root {
+    --hk-primary: #f58220;
+    --hk-primary-hover: #e07116;
+    --hk-bg: #f8fafc;
+    --hk-card-bg: #ffffff;
+    --hk-text-main: #1e293b;
+    --hk-text-muted: #64748b;
+    --hk-border-color: #e2e8f0;
+    --hk-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --hk-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    --hk-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    --hk-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar Menu Modernization
+   -------------------------------------------------------------------------- */
+#toplevel_page_hizli-kasa.wp-has-current-submenu .wp-menu-image img,
+#toplevel_page_hizli-kasa.wp-has-current-submenu .wp-menu-image::before {
+    color: var(--hk-primary) !important;
+}
+
+#toplevel_page_hizli-kasa .wp-submenu li {
+    padding: 0;
+    margin: 0;
+}
+
+#toplevel_page_hizli-kasa .wp-submenu li a {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px 8px 16px !important;
+    transition: var(--hk-transition);
+    border-left: 3px solid transparent;
+}
+
+#toplevel_page_hizli-kasa .wp-submenu li a:hover {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-left-color: rgba(245, 130, 32, 0.5);
+}
+
+#toplevel_page_hizli-kasa .wp-submenu li.current a {
+    background: rgba(245, 130, 32, 0.1) !important;
+    border-left-color: var(--hk-primary) !important;
+    font-weight: 600;
+}
+
+#toplevel_page_hizli-kasa .wp-submenu li a .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+    transition: var(--hk-transition);
+}
+
+#toplevel_page_hizli-kasa .wp-submenu li a:hover .dashicons,
+#toplevel_page_hizli-kasa .wp-submenu li.current a .dashicons {
+    opacity: 1;
+    color: var(--hk-primary);
+}
+
+/* --------------------------------------------------------------------------
+   Hub Dashboard Styles
+   -------------------------------------------------------------------------- */
+.hk-hub-container {
+    max-width: 1200px;
+    margin: 20px auto 40px auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    padding: 0 15px;
+}
+
+/* Header Area */
+.hk-hub-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--hk-card-bg);
+    padding: 24px 32px;
+    border-radius: 16px;
+    box-shadow: var(--hk-shadow-sm);
+    border: 1px solid var(--hk-border-color);
+    margin-bottom: 30px;
+}
+
+.hk-hub-brand h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--hk-text-main);
+    margin: 0 0 4px 0;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hk-hub-brand h1 span.badge {
+    font-size: 12px;
+    font-weight: 500;
+    background: #f1f5f9;
+    color: var(--hk-text-muted);
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--hk-border-color);
+}
+
+.hk-hub-brand p {
+    margin: 0;
+    color: var(--hk-text-muted);
+    font-size: 14px;
+}
+
+/* Call to Action Button */
+.hk-btn-terminal {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--hk-primary);
+    color: #ffffff !important;
+    text-decoration: none !important;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    transition: var(--hk-transition);
+    box-shadow: 0 4px 12px rgba(245, 130, 32, 0.2);
+    border: none;
+    cursor: pointer;
+}
+
+.hk-btn-terminal:hover {
+    background: var(--hk-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(245, 130, 32, 0.3);
+}
+
+.hk-btn-terminal:active {
+    transform: translateY(0);
+}
+
+/* Category Groups */
+.hk-hub-group {
+    margin-bottom: 35px;
+}
+
+.hk-hub-group-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--hk-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hk-hub-group-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--hk-border-color);
+}
+
+/* Grid Layout */
+.hk-hub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+/* Cards */
+.hk-hub-card {
+    background: var(--hk-card-bg);
+    border: 1px solid var(--hk-border-color);
+    border-radius: 14px;
+    padding: 24px;
+    text-decoration: none !important;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: var(--hk-shadow-sm);
+    transition: var(--hk-transition);
+    overflow: hidden;
+}
+
+.hk-hub-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 4px;
+    background: transparent;
+    transition: var(--hk-transition);
+}
+
+/* Card Hover States */
+.hk-hub-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--hk-shadow-lg);
+    border-color: #cbd5e1;
+}
+
+.hk-hub-card:active {
+    transform: translateY(-1px);
+}
+
+/* Accent border colors on hover */
+.hk-hub-card-ops:hover::before { background: #16a34a; }
+.hk-hub-card-depo:hover::before { background: #2563eb; }
+.hk-hub-card-unmatched:hover::before { background: #ea580c; }
+.hk-hub-card-settings:hover::before { background: #6b7280; }
+.hk-hub-card-notify:hover::before { background: #7c3aed; }
+.hk-hub-card-cache:hover::before { background: #0891b2; }
+.hk-hub-card-sku:hover::before { background: #0d9488; }
+.hk-hub-card-tools:hover::before { background: #6b7280; }
+
+/* Icon Container */
+.hk-card-icon-wrapper {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hk-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hk-card-icon .dashicons {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+}
+
+/* Icon specific colors */
+.hk-icon-ops { background: #f0fdf4; color: #16a34a; }
+.hk-icon-depo { background: #eff6ff; color: #2563eb; }
+.hk-icon-unmatched { background: #fff7ed; color: #ea580c; }
+.hk-icon-settings { background: #f8fafc; color: #6b7280; }
+.hk-icon-notify { background: #f5f3ff; color: #7c3aed; }
+.hk-icon-cache { background: #ecfeff; color: #0891b2; }
+.hk-icon-sku { background: #f0fdfa; color: #0d9488; }
+.hk-icon-tools { background: #f8fafc; color: #6b7280; }
+
+/* Arrow icon */
+.hk-card-arrow {
+    color: var(--hk-text-muted);
+    opacity: 0.3;
+    transition: var(--hk-transition);
+}
+
+.hk-hub-card:hover .hk-card-arrow {
+    opacity: 1;
+    transform: translateX(4px);
+    color: var(--hk-primary);
+}
+
+/* Card Content */
+.hk-card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--hk-text-main);
+    margin: 0 0 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hk-card-desc {
+    font-size: 13.5px;
+    color: var(--hk-text-muted);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Mismatch Red Bubble Count */
+.hk-mismatch-badge {
+    background: #d63638;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(214, 54, 56, 0.2);
+}
+
+/* --------------------------------------------------------------------------
+   Breadcrumb Navigation on Tab Pages
+   -------------------------------------------------------------------------- */
+.hk-breadcrumb-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    margin-bottom: 24px;
+    font-size: 14px;
+    color: var(--hk-text-muted);
+}
+
+.hk-breadcrumb-nav a {
+    color: var(--hk-primary);
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: var(--hk-transition);
+}
+
+.hk-breadcrumb-nav a:hover {
+    color: var(--hk-primary-hover);
+    text-decoration: underline;
+}
+
+.hk-breadcrumb-nav .hk-sep {
+    color: #cbd5e1;
+    font-weight: 300;
+}
+
+.hk-breadcrumb-nav span.current {
+    font-weight: 600;
+    color: var(--hk-text-main);
+}
+
+/* Hide standard Hızlı Kasa Settings subpage heading to avoid double titles */
+.toplevel_page_hizli-kasa div.wrap > h1:first-child {
+    display: none;
+}
+
+/* Adjust top elements on Hızlı Kasa page */
+.toplevel_page_hizli-kasa div.wrap {
+    margin: 20px 20px 0 0;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive adjustments
+   -------------------------------------------------------------------------- */
+@media (max-width: 782px) {
+    .hk-hub-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 20px;
+    }
+    
+    .hk-btn-terminal {
+        width: 100%;
+        justify-content: center;
+    }
+}
