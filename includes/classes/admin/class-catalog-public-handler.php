@@ -159,7 +159,9 @@ class Hizli_Kasa_Catalog_Public_Handler {
                 continue;
             }
 
-            $price_clean = html_entity_decode(strip_tags($product->get_price_html(), '<del><ins>'), ENT_QUOTES, 'UTF-8');
+            $price_html  = $product->get_price_html();
+            $price_html  = preg_replace('/<span class="screen-reader-text">.*?<\/span>/i', '', $price_html);
+            $price_clean = html_entity_decode(strip_tags($price_html, '<del><ins>'), ENT_QUOTES, 'UTF-8');
 
             $stocks = [];
             $total_stock = 0;
@@ -185,7 +187,9 @@ class Hizli_Kasa_Catalog_Public_Handler {
                         continue;
                     }
 
-                    $var_price = html_entity_decode(strip_tags($variation->get_price_html(), '<del><ins>'), ENT_QUOTES, 'UTF-8');
+                    $var_price_html = $variation->get_price_html();
+                    $var_price_html = preg_replace('/<span class="screen-reader-text">.*?<\/span>/i', '', $var_price_html);
+                    $var_price      = html_entity_decode(strip_tags($var_price_html, '<del><ins>'), ENT_QUOTES, 'UTF-8');
 
                     $v_stocks = [];
                     $v_total_stock = 0;
