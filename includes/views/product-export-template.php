@@ -793,7 +793,7 @@ $csv_output = "";
         <div class="product-card" data-name="<?php echo esc_attr(strtolower($p['name'])); ?>" data-sku="<?php echo esc_attr(strtolower($p['sku'])); ?>">
             <div class="card-image" onclick="openLightbox('<?php echo esc_attr($has_img ? $p['large'] : ''); ?>', '<?php echo esc_attr($p['name']); ?>')">
                 <?php if ($has_img): ?>
-                    <img src="<?php echo esc_url($p['thumb']); ?>" alt="<?php echo esc_attr($p['name']); ?>" class="no-lazy skip-lazy" data-no-lazy="1" data-skip-lazy="1" loading="lazy">
+                    <img src="<?php echo esc_url($p['thumb']); ?>" alt="<?php echo esc_attr($p['name']); ?>" class="no-lazy skip-lazy rocket-lazyload-bypass" data-no-lazy="1" data-skip-lazy="1">
                 <?php else: ?>
                     <div class="no-image-placeholder">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -868,7 +868,7 @@ $csv_output = "";
                         <td>
                             <div class="product-cell">
                                 <?php if ($has_img): ?>
-                                <img class="product-thumb-sm no-lazy skip-lazy" src="<?php echo esc_url($p['thumb']); ?>" alt="<?php echo esc_attr($p['name']); ?>" data-no-lazy="1" data-skip-lazy="1" onclick="event.stopPropagation(); openLightbox('<?php echo esc_attr($p['large']); ?>', '<?php echo esc_attr($p['name']); ?>')" loading="lazy">
+                                <img class="product-thumb-sm no-lazy skip-lazy rocket-lazyload-bypass" src="<?php echo esc_url($p['thumb']); ?>" alt="<?php echo esc_attr($p['name']); ?>" data-no-lazy="1" data-skip-lazy="1" onclick="event.stopPropagation(); openLightbox('<?php echo esc_attr($p['large']); ?>', '<?php echo esc_attr($p['name']); ?>')">
                                 <?php else: ?>
                                 <div class="thumb-placeholder-sm">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
