@@ -32,6 +32,7 @@ class Hizli_Kasa_Database {
             'suppliers'        => $wpdb->prefix . 'hizli_kasa_suppliers',
             'purchase_orders'  => $wpdb->prefix . 'hizli_kasa_purchase_orders',
             'purchase_order_items' => $wpdb->prefix . 'hizli_kasa_purchase_order_items',
+            'catalog_shares'   => $wpdb->prefix . 'hizli_kasa_catalog_shares',
         ];
     }
 
@@ -292,6 +293,21 @@ class Hizli_Kasa_Database {
         dbDelta($sql13);
         if ($wpdb->last_error) {
             error_log('Hızlı Kasa DB Delta Hatası (Alım Siparişi Kalemleri): ' . $wpdb->last_error);
+        }
+
+        $sql14 = "CREATE TABLE {$tables['catalog_shares']} (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            token varchar(64) NOT NULL,
+            product_ids longtext NOT NULL,
+            options longtext,
+            created_at datetime NOT NULL,
+            expires_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY token (token)
+        ) $charset_collate;";
+        dbDelta($sql14);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Katalog Paylaşımları): ' . $wpdb->last_error);
         }
     }
 
