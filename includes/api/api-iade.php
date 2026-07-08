@@ -122,7 +122,7 @@ function hizli_kasa_process_refund($request)
         $price = abs($item['price']);
         $line_total = $price * $neg_qty;
 
-        $product = wc_get_product($item['id']);
+        $product = wc_get_product(!empty($item['variation_id']) ? $item['variation_id'] : $item['id']);
         if ($product) {
             $item_id = $refund_order->add_product($product, 1, array(
                 'totals' => array('subtotal' => $line_total, 'subtotal_tax' => 0, 'total' => $line_total, 'tax' => 0)
