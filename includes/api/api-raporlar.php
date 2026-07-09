@@ -319,6 +319,8 @@ function hizli_kasa_gun_sonu_raporu($request)
             'iade_iban' => round($iade_iban, 2),
             'iade_kupon' => round($iade_kupon, 2),
             'kupon_toplam' => round($kupon_toplam ?? 0, 2),
+            'toplam_ciro_kupon_haric' => round($toplam_ciro - $kupon_toplam, 2),
+            'toplam_iade_kupon_haric' => round($iade_toplam - $iade_kupon, 2),
         ],
         'iade_siparisler' => $iade_siparisler,
         'masraf_detay' => $masraf_listesi,

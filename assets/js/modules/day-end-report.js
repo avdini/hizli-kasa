@@ -178,14 +178,16 @@
 
             // ▧ Özet Kartlar
             html += '<div class="gs-kart-grid">' +
-                this._kartHTML('💰', 'Satış Cirosu', ozet.toplam_ciro.toFixed(2) + ' TL', '#27ae60') +
+                this._kartHTML('💰', 'Satış Cirosu', (ozet.toplam_ciro_kupon_haric ?? ozet.toplam_ciro).toFixed(2) + ' TL', '#27ae60') +
                 this._kartHTML('🧾', 'Sipariş Sayısı', rapor.siparis_sayisi, '#2c3e50') +
                 this._kartHTML('📦', 'Satılan Ürün', ozet.urun_adet_toplam + ' Adet', '#3498db') +
                 this._kartHTML('🔄', 'İade Tutarı', ozet.toplam_iade.toFixed(2) + ' TL', '#e67e22') +
                 '</div>';
 
             // ▧ Ödeme Dağılımı
-            var netCiro = ozet.toplam_ciro - ozet.toplam_iade;
+            var ciroBaz = ozet.toplam_ciro_kupon_haric ?? ozet.toplam_ciro;
+            var iadeBaz = ozet.toplam_iade_kupon_haric ?? ozet.toplam_iade;
+            var netCiro = ciroBaz - iadeBaz;
 
             html += '<div class="gs-bolum">' +
                 '<h4>Ödeme Dağılımı</h4>' +
@@ -194,7 +196,7 @@
                 '<tr><td>💳 Kart Satış</td><td class="gs-sag">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>' +
                 '<tr><td>🏦 IBAN Satış</td><td class="gs-sag">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>' +
                 (ozet.kupon_toplam > 0 ? '<tr><td>🎟️ Kupon Satış</td><td class="gs-sag">' + ozet.kupon_toplam.toFixed(2) + ' TL</td></tr>' : '') +
-                '<tr class="gs-toplam-satir" style="color:#27ae60;"><td><strong>TOPLAMCİRO</strong></td><td class="gs-sag"><strong>' + ozet.toplam_ciro.toFixed(2) + ' TL</strong></td></tr>';
+                '<tr class="gs-toplam-satir" style="color:#27ae60;"><td><strong>TOPLAMCİRO</strong></td><td class="gs-sag"><strong>' + ciroBaz.toFixed(2) + ' TL</strong></td></tr>';
 
             if (ozet.toplam_iade > 0) {
                 html += '<tr><td colspan="2" style="height:10px;"></td></tr>' +
@@ -370,19 +372,21 @@
             html += '</div>';
 
             // ─── ÖDEME DAĞILIMI ───
-            var netCiro = ozet.toplam_ciro - ozet.toplam_iade;
+            var ciroBaz = ozet.toplam_ciro_kupon_haric ?? ozet.toplam_ciro;
+            var iadeBaz = ozet.toplam_iade_kupon_haric ?? ozet.toplam_iade;
+            var netCiro = ciroBaz - iadeBaz;
             html += '<div style="margin-bottom:8px;">';
             html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">ÖDEME DAĞILIMI</p>';
             html += '<table style="width:100%; font-size:12px; border-collapse:collapse;">';
             html += '<tr><td>Kredi Kartı</td><td style="text-align:right;">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>IBAN / Havale</td><td style="text-align:right;">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>Nakit Satış</td><td style="text-align:right;">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>';
-            html += '<tr style="border-top:1px dashed #000;"><td style="font-weight:bold; font-size:14px; padding-top:2px;">TOPLAM CİRO</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:2px;">' + ozet.toplam_ciro.toFixed(2) + ' TL</td></tr>';
+            html += '<tr style="border-top:1px dashed #000;"><td style="font-weight:bold; font-size:14px; padding-top:2px;">TOPLAM CİRO</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:2px;">' + ciroBaz.toFixed(2) + ' TL</td></tr>';
             html += '</table>';
             html += '</div>';
 
             // GİDERLER
-            var toplamGider = (ozet.toplam_iade || 0);
+            var toplamGider = (ozet.toplam_iade_kupon_haric ?? ozet.toplam_iade ?? 0);
             if (isGenel) {
                 toplamGider += (ozet.toplam_masraf || 0);
             }
@@ -573,7 +577,7 @@
             var netKart = (ozet.kart_toplam || 0) - (ozet.iade_kart || 0);
             var netIban = (ozet.iban_toplam || 0) - (ozet.iade_iban || 0);
             var netNakit = (ozet.nakit_toplam || 0) - (ozet.iade_nakit || 0);
-            var genelToplam = (ozet.toplam_ciro || 0) - (ozet.toplam_iade || 0);
+            var genelToplam = (ozet.toplam_ciro_kupon_haric ?? ozet.toplam_ciro ?? 0) - (ozet.toplam_iade_kupon_haric ?? ozet.toplam_iade ?? 0);
             
             var masrafKart = (ozet.kart_masraf || 0);
             var masrafIban = (ozet.iban_masraf || 0);
