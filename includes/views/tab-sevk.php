@@ -29,6 +29,7 @@ if (!defined('ABSPATH'))
                     <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-siparisler">Alım Siparişleri</button>
                     <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-yeni-siparis">Yeni Sipariş Oluştur</button>
                     <button class="sevk-alt-btn" data-group="tedarik" data-target="malkabul-tedarikciler">Tedarikçiler</button>
+                    <button class="sevk-alt-btn" data-group="tedarik" data-target="tedarikci-iade">Tedarikçi İade</button>
                 </div>
             </div>
         </div>
@@ -322,6 +323,143 @@ if (!defined('ABSPATH'))
                         <textarea id="tedarikci-yeni-adres" class="hk-input" rows="3"></textarea>
                     </label>
                     <button type="button" id="tedarikci-yeni-kaydet" class="sevk-btn primary" style="margin-top:15px;">Kaydet</button>
+                </div>
+            </main>
+        </div>
+    </section>
+
+    <!-- Tedarikçi İade Ekranı -->
+    <section id="tedarikci-iade" class="sevk-icerik-paneli" style="display:none;">
+        <div class="sevk-split">
+            <div class="sevk-list-panel" style="flex: 1.2;">
+                <div class="sevk-panel-title" style="margin-bottom: 15px;">
+                    <h3>İade Geçmişi</h3>
+                    <button type="button" id="tedarikci-iade-yenile" class="sevk-btn secondary small">Yenile</button>
+                </div>
+                <div class="sevk-table-wrap">
+                    <table class="sevk-table">
+                        <thead>
+                            <tr>
+                                <th>İade No</th>
+                                <th>Tedarikçi</th>
+                                <th>Depo</th>
+                                <th>Tarih</th>
+                                <th>Çeşit/Adet</th>
+                                <th>Durum</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tedarikci-iade-listesi">
+                            <tr><td colspan="7" class="sevk-empty">Yükleniyor...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <main class="sevk-detail-panel" style="flex: 1.8;">
+                <!-- Adım 1: Oluşturma -->
+                <div id="t-iade-adim-1" class="sevk-detail-content">
+                    <h3>Yeni İade Oluştur</h3>
+                    <p style="color: var(--hk-text-muted); margin-bottom: 20px;">Tedarikçiye hatalı veya hasarlı ürünlerin iadesini başlatmak için depo ve tedarikçi seçiniz.</p>
+                    <div class="sevk-form-grid">
+                        <label>
+                            Tedarikçi Seçimi <span style="color:red">*</span>
+                            <select id="t-iade-yeni-tedarikci" class="hk-input">
+                                <option value="">Seçiniz...</option>
+                            </select>
+                        </label>
+                        <label>
+                            İade Edilecek Depo
+                            <input type="text" id="t-iade-yeni-depo-label" class="hk-input" readonly value="Aktif Depo Yükleniyor...">
+                        </label>
+                    </div>
+                    <button type="button" id="t-iade-olustur-btn" class="sevk-btn primary" style="margin-top:20px;">İade Taslağı Başlat</button>
+                </div>
+
+                <!-- Adım 2: Kalem Ekleme ve Düzenleme -->
+                <div id="t-iade-adim-2" class="sevk-detail-content" style="display:none;">
+                    <div class="sevk-current-card" style="margin-bottom:15px; padding: 12px; background: rgba(var(--hk-accent-rgb), 0.05); border-radius: 8px; border: 1px solid var(--hk-border);">
+                        <div>
+                            <span id="t-iade-no-label" style="font-weight: bold; font-size: 16px; color: var(--hk-accent);">TIA-XXXX</span>
+                            <div style="font-size: 12px; color: var(--hk-text-muted);" id="t-iade-supplier-label">Tedarikçi: ABC Firması</div>
+                        </div>
+                        <span class="sevk-scan-pill" style="font-size: 11px;">Barkod tarama aktif</span>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <input type="text" id="t-iade-barkod" class="hk-input" style="flex: 1; font-size: 14px;" placeholder="Barkod okutun veya ürün adı yazıp Enter'a basın...">
+                    </div>
+
+                    <div class="sevk-table-wrap compact" style="max-height: 280px; overflow-y: auto; border: 1px solid var(--hk-border); border-radius: 6px; margin-bottom: 15px;">
+                        <table class="sevk-table">
+                            <thead>
+                                <tr>
+                                    <th>Ürün</th>
+                                    <th>SKU</th>
+                                    <th style="width: 80px; text-align: center;">Adet</th>
+                                    <th style="width: 50px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="t-iade-kalemler">
+                                <tr><td colspan="4" class="sevk-empty">Henüz ürün eklenmedi. Barkod okutun.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="sevk-summary-row" style="margin-bottom: 15px; background: transparent; padding: 0;">
+                        <span id="t-iade-ozet-label" style="font-weight: bold; font-size: 13px;">0 çeşit ürün, 0 adet toplam</span>
+                    </div>
+
+                    <div class="sevk-form-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                        <label>
+                            İade Sebebi <span style="color:red">*</span>
+                            <textarea id="t-iade-sebep" class="hk-input" rows="2" placeholder="Hatalı beden, hasarlı ürün vb."></textarea>
+                        </label>
+                        <label>
+                            Notlar
+                            <textarea id="t-iade-not" class="hk-input" rows="2" placeholder="İçerik hakkında ek açıklamalar..."></textarea>
+                        </label>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" id="t-iade-iptal-btn" class="sevk-btn secondary">Taslağı Sil</button>
+                        <button type="button" id="t-iade-onayla-btn" class="sevk-btn primary">Onayla ve Stoktan Düş</button>
+                    </div>
+                </div>
+
+                <!-- Detay Görüntüleme -->
+                <div id="t-iade-detay-panel" class="sevk-detail-content" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom: 1px solid var(--hk-border); padding-bottom: 10px;">
+                        <div>
+                            <h3 id="t-iade-detay-no" style="margin:0;">TIA-XXXX</h3>
+                            <div id="t-iade-detay-supplier" style="font-size: 13px; color: var(--hk-text-muted);"></div>
+                        </div>
+                        <button type="button" id="t-iade-detay-kapat" class="sevk-btn secondary small">Kapat</button>
+                    </div>
+
+                    <div class="sevk-table-wrap compact" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--hk-border); border-radius: 6px; margin-bottom: 15px;">
+                        <table class="sevk-table">
+                            <thead>
+                                <tr>
+                                    <th>Ürün</th>
+                                    <th>SKU</th>
+                                    <th style="width: 80px; text-align: center;">Adet</th>
+                                </tr>
+                            </thead>
+                            <tbody id="t-iade-detay-kalemler"></tbody>
+                        </table>
+                    </div>
+
+                    <div style="background: var(--hk-bg-body); padding: 12px; border-radius: 6px; border: 1px solid var(--hk-border); font-size: 13px; margin-bottom: 15px;">
+                        <div style="margin-bottom: 5px;"><strong>Depo:</strong> <span id="t-iade-detay-depo"></span></div>
+                        <div style="margin-bottom: 5px;"><strong>Tarih:</strong> <span id="t-iade-detay-tarih"></span></div>
+                        <div style="margin-bottom: 5px;"><strong>Sebep:</strong> <span id="t-iade-detay-sebep"></span></div>
+                        <div><strong>Notlar:</strong> <span id="t-iade-detay-not"></span></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap:10px;">
+                        <button type="button" id="t-iade-detay-yazdir" class="sevk-btn success">🖨️ Paket Fişi Yazdır</button>
+                    </div>
                 </div>
             </main>
         </div>

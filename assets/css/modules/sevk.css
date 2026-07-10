@@ -668,3 +668,29 @@
     border-color: var(--hk-success);
     color: #fff;
 }
+
+/* Tedarikçi İade Modülü Stilleri */
+#tedarikci-iade .sevk-status.taslak {
+    background: rgba(22, 160, 133, 0.15);
+    color: #16a085;
+}
+
+#tedarikci-iade .sevk-status.tamamlandi {
+    background: rgba(39, 174, 96, 0.15);
+    color: #27ae60;
+}
+
+.t-iade-qty-input::-webkit-outer-spin-button,
+.t-iade-qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.t-iade-qty-input {
+    -moz-appearance: textfield;
+}
+
+#iade-paket-fis-sablon {
+    display: none;
+}
+

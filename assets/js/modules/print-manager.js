@@ -15,7 +15,8 @@
             'barcode': '#hk-barcode-print-area',
             'report': '#gun-sonu-sablon',
             'report-receipt': '#report-fis-sablon',
-            'coupon': '#fis-coupon-sablon'
+            'coupon': '#fis-coupon-sablon',
+            'iade-paket-fis': '#iade-paket-fis-sablon'
         },
 
         // LocalStorage printer map
@@ -24,7 +25,8 @@
             'barcode': 'hk_barcode_printer',
             'report': 'hk_report_printer',
             'report-receipt': 'hk_receipt_printer',
-            'coupon': 'hk_receipt_printer'
+            'coupon': 'hk_receipt_printer',
+            'iade-paket-fis': 'hk_receipt_printer'
         },
 
         /**

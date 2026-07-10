@@ -33,6 +33,8 @@ class Hizli_Kasa_Database {
             'purchase_orders'  => $wpdb->prefix . 'hizli_kasa_purchase_orders',
             'purchase_order_items' => $wpdb->prefix . 'hizli_kasa_purchase_order_items',
             'catalog_shares'   => $wpdb->prefix . 'hizli_kasa_catalog_shares',
+            'tedarikci_iadeleri'       => $wpdb->prefix . 'hizli_kasa_tedarikci_iadeleri',
+            'tedarikci_iade_kalemleri'  => $wpdb->prefix . 'hizli_kasa_tedarikci_iade_kalemleri',
         ];
     }
 
@@ -308,6 +310,51 @@ class Hizli_Kasa_Database {
         dbDelta($sql14);
         if ($wpdb->last_error) {
             error_log('Hızlı Kasa DB Delta Hatası (Katalog Paylaşımları): ' . $wpdb->last_error);
+        }
+
+        $sql15 = "CREATE TABLE {$tables['tedarikci_iadeleri']} (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            iade_no varchar(50) NOT NULL,
+            supplier_id bigint(20) NOT NULL,
+            location_id bigint(20) NOT NULL,
+            durum varchar(30) NOT NULL DEFAULT 'taslak',
+            toplam_cesit int(11) DEFAULT 0,
+            toplam_adet decimal(15,4) DEFAULT 0.0000,
+            iade_sebep text,
+            `not` text,
+            olusturan_user_id bigint(20) NOT NULL,
+            created_at datetime NOT NULL,
+            updated_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY iade_no (iade_no),
+            KEY supplier_id (supplier_id),
+            KEY location_id (location_id),
+            KEY durum (durum),
+            KEY created_at (created_at)
+        ) $charset_collate;";
+        dbDelta($sql15);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Tedarikçi İadeleri): ' . $wpdb->last_error);
+        }
+
+        $sql16 = "CREATE TABLE {$tables['tedarikci_iade_kalemleri']} (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            iade_id bigint(20) NOT NULL,
+            product_id bigint(20) NOT NULL,
+            variation_id bigint(20) DEFAULT 0,
+            sku varchar(100) NOT NULL,
+            urun_adi varchar(255) NOT NULL,
+            adet decimal(15,4) DEFAULT 0.0000,
+            created_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            KEY iade_id (iade_id),
+            KEY product_id (product_id),
+            KEY variation_id (variation_id),
+            KEY sku (sku)
+        ) $charset_collate;";
+        dbDelta($sql16);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Tedarikçi İade Kalemleri): ' . $wpdb->last_error);
         }
     }
 

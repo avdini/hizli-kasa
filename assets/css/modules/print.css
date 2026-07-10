@@ -2,7 +2,7 @@
    YAZDIRMA STİLLERİ
    ============================================= */
 
-#fis-sablon, #gun-sonu-sablon, #report-fis-sablon, #fis-coupon-sablon {
+#fis-sablon, #gun-sonu-sablon, #report-fis-sablon, #fis-coupon-sablon, #iade-paket-fis-sablon {
     display: none;
     font-family: 'Courier New', Courier, monospace;
     width: 80mm;
@@ -11,22 +11,22 @@
     color: #000 !important;
 }
 
-#fis-sablon *, #gun-sonu-sablon *, #report-fis-sablon *, #fis-coupon-sablon * {
+#fis-sablon *, #gun-sonu-sablon *, #report-fis-sablon *, #fis-coupon-sablon *, #iade-paket-fis-sablon * {
     color: #000 !important;
     border-color: #000 !important;
     box-shadow: none !important;
 }
 
-#fis-sablon table, #gun-sonu-sablon table, #report-fis-sablon table, #fis-coupon-sablon table {
+#fis-sablon table, #gun-sonu-sablon table, #report-fis-sablon table, #fis-coupon-sablon table, #iade-paket-fis-sablon table {
     border-collapse: collapse;
     width: 100%;
     border: none !important;
 }
 
-#fis-sablon td, #fis-sablon th, #gun-sonu-sablon td, #gun-sonu-sablon th, #report-fis-sablon td, #report-fis-sablon th, #fis-coupon-sablon td, #fis-coupon-sablon th,
-#fis-sablon tr, #gun-sonu-sablon tr, #fis-coupon-sablon tr,
-#fis-sablon thead, #gun-sonu-sablon thead, #fis-coupon-sablon thead,
-#fis-sablon tbody, #gun-sonu-sablon tbody, #report-fis-sablon tr, #report-fis-sablon thead, #report-fis-sablon tbody, #fis-coupon-sablon tbody {
+#fis-sablon td, #fis-sablon th, #gun-sonu-sablon td, #gun-sonu-sablon th, #report-fis-sablon td, #report-fis-sablon th, #fis-coupon-sablon td, #fis-coupon-sablon th, #iade-paket-fis-sablon td, #iade-paket-fis-sablon th,
+#fis-sablon tr, #gun-sonu-sablon tr, #fis-coupon-sablon tr, #iade-paket-fis-sablon tr,
+#fis-sablon thead, #gun-sonu-sablon thead, #fis-coupon-sablon thead, #iade-paket-fis-sablon thead,
+#fis-sablon tbody, #gun-sonu-sablon tbody, #report-fis-sablon tr, #report-fis-sablon thead, #report-fis-sablon tbody, #fis-coupon-sablon tbody, #iade-paket-fis-sablon tbody {
     border: none !important;
     padding: 2px 0;
 }
@@ -127,6 +127,27 @@
         box-sizing: border-box !important;
     }
 
+    /* 3.2 Tedarikçi İade Paket Fişi Modu */
+    body.print-mode-iade-paket-fis * {
+        visibility: hidden;
+    }
+    body.print-mode-iade-paket-fis #iade-paket-fis-sablon, 
+    body.print-mode-iade-paket-fis #iade-paket-fis-sablon * {
+        visibility: visible;
+    }
+    body.print-mode-iade-paket-fis #iade-paket-fis-sablon {
+        display: block !important;
+        position: fixed !important; 
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        max-width: 80mm !important;
+        margin: 0 !important;
+        padding: 0 4mm !important;
+        z-index: 99999 !important;
+        box-sizing: border-box !important;
+    }
+
     /* 4. Barkod Modu */
     body.print-mode-barcode > *:not(#hk-barcode-print-area) {
         display: none !important;
@@ -184,7 +205,7 @@
     }
 
     /* 6. Renk ve Font Kalınlığı (Gri Yazıları Engeller) */
-    #fis-sablon *, #gun-sonu-sablon *, #report-fis-sablon *, #hk-barcode-print-area *, #fis-coupon-sablon * {
+    #fis-sablon *, #gun-sonu-sablon *, #report-fis-sablon *, #hk-barcode-print-area *, #fis-coupon-sablon *, #iade-paket-fis-sablon * {
         color: #000 !important;
         opacity: 1 !important;
         font-weight: 600 !important; /* Tüm metinleri siyah yapmak için kalınlaştırır */
@@ -193,7 +214,7 @@
     }
 
     /* Zaten kalın olması gereken yerler */
-    #fis-sablon h2, #fis-sablon b, #fis-sablon strong, #report-fis-sablon h2, #report-fis-sablon b, #report-fis-sablon strong, #fis-coupon-sablon h2, #fis-coupon-sablon b, #fis-coupon-sablon strong, .toplam-deger {
+    #fis-sablon h2, #fis-sablon b, #fis-sablon strong, #report-fis-sablon h2, #report-fis-sablon b, #report-fis-sablon strong, #fis-coupon-sablon h2, #fis-coupon-sablon b, #fis-coupon-sablon strong, #iade-paket-fis-sablon h2, #iade-paket-fis-sablon b, #iade-paket-fis-sablon strong, .toplam-deger {
         font-weight: 900 !important;
     }
 }

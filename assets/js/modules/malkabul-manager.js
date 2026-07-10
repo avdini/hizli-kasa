@@ -478,8 +478,530 @@ const MalkabulManager = (function () {
         }
     }
 
+    // --- TEDARİKÇİ İADE ---
+    let activeIade = null;
+    let iadeList = [];
+
+    function bindIadeEvents() {
+        document.querySelectorAll('.sevk-alt-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.dataset.target === 'tedarikci-iade') {
+                    activeDepoId = window.HizliKasa && window.HizliKasa.DepoManager ? window.HizliKasa.DepoManager.getActiveDepo() : kasaAyar.activeDepoId;
+                    const depoLabel = document.getElementById('t-iade-yeni-depo-label');
+                    if (depoLabel) {
+                        const activeDepoName = window.HizliKasa && window.HizliKasa.DepoManager ? window.HizliKasa.DepoManager.getActiveDepoName() : 'Depo';
+                        depoLabel.value = activeDepoName;
+                    }
+                    loadIadeList();
+                    populateIadeSupplierSelect();
+                }
+            });
+        });
+
+        document.addEventListener('hkActiveDepoChanged', () => {
+            activeDepoId = window.HizliKasa && window.HizliKasa.DepoManager ? window.HizliKasa.DepoManager.getActiveDepo() : kasaAyar.activeDepoId;
+            const depoLabel = document.getElementById('t-iade-yeni-depo-label');
+            if (depoLabel && document.getElementById('tedarikci-iade').style.display !== 'none') {
+                const activeDepoName = window.HizliKasa && window.HizliKasa.DepoManager ? window.HizliKasa.DepoManager.getActiveDepoName() : 'Depo';
+                depoLabel.value = activeDepoName;
+                loadIadeList();
+            }
+        });
+
+        const btnYenile = document.getElementById('tedarikci-iade-yenile');
+        if (btnYenile) btnYenile.addEventListener('click', loadIadeList);
+
+        const btnOlustur = document.getElementById('t-iade-olustur-btn');
+        if (btnOlustur) btnOlustur.addEventListener('click', createSupplierReturn);
+
+        const inputBarkod = document.getElementById('t-iade-barkod');
+        if (inputBarkod) {
+            inputBarkod.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const sku = this.value.trim();
+                    this.value = '';
+                    if (sku) addIadeItem(sku);
+                }
+            });
+        }
+
+        const btnIptal = document.getElementById('t-iade-iptal-btn');
+        if (btnIptal) btnIptal.addEventListener('click', deleteDraftIade);
+
+        const btnOnayla = document.getElementById('t-iade-onayla-btn');
+        if (btnOnayla) btnOnayla.addEventListener('click', confirmIade);
+
+        const btnDetayKapat = document.getElementById('t-iade-detay-kapat');
+        if (btnDetayKapat) btnDetayKapat.addEventListener('click', closeIadeDetay);
+
+        const btnDetayYazdir = document.getElementById('t-iade-detay-yazdir');
+        if (btnDetayYazdir) {
+            btnDetayYazdir.addEventListener('click', () => {
+                if (activeIade) printIadeFis(activeIade);
+            });
+        }
+    }
+
+    function populateIadeSupplierSelect() {
+        const select = document.getElementById('t-iade-yeni-tedarikci');
+        if (!select) return;
+        let html = '<option value="">Seçiniz...</option>';
+        suppliers.forEach(s => {
+            html += `<option value="${s.id}">${s.name}</option>`;
+        });
+        select.innerHTML = html;
+    }
+
+    async function loadIadeList() {
+        const tbody = document.getElementById('tedarikci-iade-listesi');
+        if (!tbody) return;
+
+        tbody.innerHTML = '<tr><td colspan="7" class="sevk-empty">İadeler yükleniyor...</td></tr>';
+
+        try {
+            const res = await fetch(`${API_URL}/tedarikci-iade/liste?_=${Date.now()}`, {
+                headers: { 'X-WP-Nonce': kasaAyar.nonce }
+            });
+            const data = await res.json();
+            if (data.success && data.data.items) {
+                iadeList = data.data.items;
+                renderIadeList();
+            } else {
+                tbody.innerHTML = '<tr><td colspan="7" class="sevk-empty">İade bulunamadı.</td></tr>';
+            }
+        } catch (error) {
+            console.error(error);
+            tbody.innerHTML = '<tr><td colspan="7" class="sevk-empty" style="color:var(--hk-accent);">Yüklenirken hata oluştu.</td></tr>';
+        }
+    }
+
+    function renderIadeList() {
+        const tbody = document.getElementById('tedarikci-iade-listesi');
+        if (!tbody) return;
+
+        if (iadeList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="sevk-empty">Geçmiş iade kaydı bulunmuyor.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = iadeList.map(item => {
+            const dateStr = item.created_at ? new Date(item.created_at.replace(' ', 'T')).toLocaleString('tr-TR') : '-';
+            const durumClass = item.durum === 'tamamlandi' ? 'tamamlandi' : 'taslak';
+            const durumLabel = item.durum === 'tamamlandi' ? 'Tamamlandı' : 'Taslak';
+
+            return `
+                <tr>
+                    <td><strong>${item.iade_no}</strong></td>
+                    <td>${item.supplier_name || 'Bilinmeyen'}</td>
+                    <td>${item.location_name || 'Bilinmeyen'}</td>
+                    <td>${dateStr}</td>
+                    <td>${item.toplam_cesit} / ${parseFloat(item.toplam_adet)}</td>
+                    <td><span class="sevk-status ${durumClass}">${durumLabel}</span></td>
+                    <td style="text-align:right;">
+                        <button type="button" class="sevk-btn secondary small t-iade-git-btn" data-id="${item.id}">Git</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        tbody.querySelectorAll('.t-iade-git-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                showIade(id);
+            });
+        });
+    }
+
+    async function showIade(id) {
+        try {
+            const res = await fetch(`${API_URL}/tedarikci-iade/detay/${id}?_=${Date.now()}`, {
+                headers: { 'X-WP-Nonce': kasaAyar.nonce }
+            });
+            const data = await res.json();
+            if (data.success && data.data.iade) {
+                activeIade = data.data.iade;
+                
+                document.getElementById('t-iade-adim-1').style.display = 'none';
+                document.getElementById('t-iade-adim-2').style.display = 'none';
+                document.getElementById('t-iade-detay-panel').style.display = 'none';
+
+                if (activeIade.durum === 'taslak') {
+                    document.getElementById('t-iade-no-label').innerText = activeIade.iade_no;
+                    document.getElementById('t-iade-supplier-label').innerText = `Tedarikçi: ${activeIade.supplier_name}`;
+                    document.getElementById('t-iade-sebep').value = activeIade.iade_sebep || '';
+                    document.getElementById('t-iade-not').value = activeIade.not || '';
+                    
+                    renderIadeItemsTable();
+                    document.getElementById('t-iade-adim-2').style.display = 'block';
+                    setTimeout(() => {
+                        const input = document.getElementById('t-iade-barkod');
+                        if (input) input.focus();
+                    }, 50);
+                } else {
+                    document.getElementById('t-iade-detay-no').innerText = activeIade.iade_no;
+                    document.getElementById('t-iade-detay-supplier').innerText = `Tedarikçi: ${activeIade.supplier_name}`;
+                    document.getElementById('t-iade-detay-depo').innerText = activeIade.location_name || 'Bilinmeyen';
+                    document.getElementById('t-iade-detay-tarih').innerText = activeIade.created_at ? new Date(activeIade.created_at.replace(' ', 'T')).toLocaleString('tr-TR') : '-';
+                    document.getElementById('t-iade-detay-sebep').innerText = activeIade.iade_sebep || '-';
+                    document.getElementById('t-iade-detay-not').innerText = activeIade.not || '-';
+
+                    const tbody = document.getElementById('t-iade-detay-kalemler');
+                    tbody.innerHTML = activeIade.kalemler.map(item => `
+                        <tr>
+                            <td><strong>${item.urun_adi}</strong></td>
+                            <td>${item.sku}</td>
+                            <td style="text-align:center;">${parseFloat(item.adet)}</td>
+                        </tr>
+                    `).join('');
+
+                    document.getElementById('t-iade-detay-panel').style.display = 'block';
+                }
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function createSupplierReturn() {
+        const supplierSelect = document.getElementById('t-iade-yeni-tedarikci');
+        const supplierId = supplierSelect.value;
+        if (!supplierId) {
+            if (window.Toast) Toast.show('Lütfen bir tedarikçi seçin.', 'error');
+            return;
+        }
+
+        activeDepoId = window.HizliKasa && window.HizliKasa.DepoManager ? window.HizliKasa.DepoManager.getActiveDepo() : kasaAyar.activeDepoId;
+
+        try {
+            const res = await fetch(`${API_URL}/tedarikci-iade/olustur`, {
+                method: 'POST',
+                headers: {
+                    'X-WP-Nonce': kasaAyar.nonce,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    supplier_id: supplierId,
+                    location_id: activeDepoId
+                })
+            });
+            const data = await res.json();
+            if (data.success && data.data.iade) {
+                if (window.Toast) Toast.show('İade taslağı başlatıldı.', 'success');
+                showIade(data.data.iade.id);
+                loadIadeList();
+            } else {
+                if (window.Toast) Toast.show(data.data.message || 'Hata oluştu.', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function addIadeItem(sku) {
+        if (!activeIade) return;
+
+        try {
+            const res = await fetch(`${API_URL}/tedarikci-iade/kalem-ekle`, {
+                method: 'POST',
+                headers: {
+                    'X-WP-Nonce': kasaAyar.nonce,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    iade_id: activeIade.id,
+                    sku: sku,
+                    qty: 1
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (window.Toast) Toast.show('Ürün eklendi.', 'success');
+                
+                const index = activeIade.kalemler.findIndex(k => k.product_id === data.data.kalem.product_id && k.variation_id === data.data.kalem.variation_id);
+                if (index > -1) {
+                    activeIade.kalemler[index] = data.data.kalem;
+                } else {
+                    activeIade.kalemler.push(data.data.kalem);
+                }
+
+                activeIade.toplam_cesit = data.data.toplam_cesit;
+                activeIade.toplam_adet = data.data.toplam_adet;
+
+                renderIadeItemsTable();
+                loadIadeList();
+            } else {
+                if (window.Toast) Toast.show(data.data.message || 'Ürün bulunamadı.', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function removeIadeItem(kalemId) {
+        if (!activeIade) return;
+
+        try {
+            const res = await fetch(`${API_URL}/tedarikci-iade/kalem-sil`, {
+                method: 'POST',
+                headers: {
+                    'X-WP-Nonce': kasaAyar.nonce,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    iade_id: activeIade.id,
+                    kalem_id: kalemId
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                activeIade.kalemler = activeIade.kalemler.filter(k => k.id !== kalemId);
+                activeIade.toplam_cesit = data.data.toplam_cesit;
+                activeIade.toplam_adet = data.data.toplam_adet;
+
+                renderIadeItemsTable();
+                loadIadeList();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function updateIadeItemQty(kalemId, qty) {
+        if (!activeIade) return;
+
+        try {
+            const res = await fetch(`${API_URL}/tedarikci-iade/kalem-miktar-guncelle`, {
+                method: 'POST',
+                headers: {
+                    'X-WP-Nonce': kasaAyar.nonce,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    iade_id: activeIade.id,
+                    kalem_id: kalemId,
+                    qty: qty
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const index = activeIade.kalemler.findIndex(k => k.id === kalemId);
+                if (index > -1) {
+                    activeIade.kalemler[index] = data.data.kalem;
+                }
+                activeIade.toplam_cesit = data.data.toplam_cesit;
+                activeIade.toplam_adet = data.data.toplam_adet;
+
+                renderIadeItemsTable();
+                loadIadeList();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    function renderIadeItemsTable() {
+        const tbody = document.getElementById('t-iade-kalemler');
+        const ozet = document.getElementById('t-iade-ozet-label');
+        if (!tbody || !activeIade) return;
+
+        if (activeIade.kalemler.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="sevk-empty">Henüz ürün eklenmedi. Barkod okutun.</td></tr>';
+            ozet.innerText = '0 çeşit ürün, 0 adet toplam';
+            return;
+        }
+
+        tbody.innerHTML = activeIade.kalemler.map(item => `
+            <tr>
+                <td><strong>${item.urun_adi}</strong></td>
+                <td>${item.sku}</td>
+                <td>
+                    <input type="number" class="hk-input t-iade-qty-input" data-id="${item.id}" value="${parseFloat(item.adet)}" min="0.0001" step="any" style="width:70px; text-align:center; padding: 4px;">
+                </td>
+                <td style="text-align:center;">
+                    <button type="button" class="sevk-btn secondary small t-iade-sil-btn" data-id="${item.id}" style="padding: 2px 6px;">✕</button>
+                </td>
+            </tr>
+        `).join('');
+
+        ozet.innerText = `${activeIade.toplam_cesit} çeşit ürün, ${parseFloat(activeIade.toplam_adet)} adet toplam`;
+
+        tbody.querySelectorAll('.t-iade-qty-input').forEach(input => {
+            input.addEventListener('change', function() {
+                const kalemId = parseInt(this.getAttribute('data-id'));
+                const val = parseFloat(this.value);
+                if (val > 0) {
+                    updateIadeItemQty(kalemId, val);
+                }
+            });
+        });
+
+        tbody.querySelectorAll('.t-iade-sil-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const kalemId = parseInt(this.getAttribute('data-id'));
+                removeIadeItem(kalemId);
+            });
+        });
+    }
+
+    async function deleteDraftIade() {
+        if (!activeIade) return;
+        if (!confirm('Bu iade taslağını silmek istediğinize emin misiniz?')) return;
+
+        try {
+            const res = await fetch(`${API_URL}/tedarikci-iade/sil`, {
+                method: 'POST',
+                headers: {
+                    'X-WP-Nonce': kasaAyar.nonce,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    iade_id: activeIade.id
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (window.Toast) Toast.show('İade taslağı silindi.', 'success');
+                closeIadeDetay();
+                loadIadeList();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function confirmIade() {
+        if (!activeIade) return;
+
+        const sebep = document.getElementById('t-iade-sebep').value.trim();
+        const not = document.getElementById('t-iade-not').value.trim();
+
+        if (!sebep) {
+            if (window.Toast) Toast.show('Lütfen bir iade sebebi belirtin.', 'error');
+            return;
+        }
+
+        if (activeIade.kalemler.length === 0) {
+            if (window.Toast) Toast.show('Boş iade onaylanamaz.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('t-iade-onayla-btn');
+        btn.disabled = true;
+        btn.textContent = 'İşleniyor...';
+
+        try {
+            const res = await fetch(`${API_URL}/tedarikci-iade/onayla`, {
+                method: 'POST',
+                headers: {
+                    'X-WP-Nonce': kasaAyar.nonce,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    iade_id: activeIade.id,
+                    iade_sebep: sebep,
+                    not: not
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (window.Toast) Toast.show('İade başarıyla tamamlandı ve stoktan düşüldü.', 'success');
+                const iadeId = activeIade.id;
+                
+                await loadIadeList();
+                await showIade(iadeId);
+
+                if (activeIade) {
+                    printIadeFis(activeIade);
+                }
+            } else {
+                if (window.Toast) Toast.show(data.data.message || 'Onaylanırken hata oluştu.', 'error');
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Onayla ve Stoktan Düş';
+        }
+    }
+
+    function printIadeFis(iade) {
+        if (!iade) return;
+
+        document.getElementById('iade-paket-no').innerText = iade.iade_no;
+        document.getElementById('iade-paket-tarih').innerText = iade.created_at ? new Date(iade.created_at.replace(' ', 'T')).toLocaleString('tr-TR') : new Date().toLocaleString('tr-TR');
+        document.getElementById('iade-paket-supplier').innerText = iade.supplier_name;
+        document.getElementById('iade-paket-cesit').innerText = iade.toplam_cesit;
+        document.getElementById('iade-paket-adet').innerText = parseFloat(iade.toplam_adet);
+        
+        const sebepEl = document.getElementById('iade-paket-sebep');
+        const sebepRow = document.getElementById('iade-paket-sebep-satiri');
+        if (iade.iade_sebep) {
+            sebepEl.innerText = iade.iade_sebep;
+            sebepRow.style.display = 'block';
+        } else {
+            sebepRow.style.display = 'none';
+        }
+
+        const notEl = document.getElementById('iade-paket-not');
+        const notRow = document.getElementById('iade-paket-not-satiri');
+        if (iade.not) {
+            notEl.innerText = iade.not;
+            notRow.style.display = 'block';
+        } else {
+            notRow.style.display = 'none';
+        }
+
+        const tbody = document.getElementById('iade-paket-urunler-body');
+        tbody.innerHTML = iade.kalemler.map(item => `
+            <tr style="border-bottom:1px dashed #ccc;">
+                <td style="padding:4px 0; line-height: 1.2;">
+                    <strong>${item.urun_adi}</strong><br>
+                    <span style="font-size: 9px; color: #444;">${item.sku}</span>
+                </td>
+                <td style="text-align:right; padding:4px 0; font-weight: bold; vertical-align: middle;">x ${parseFloat(item.adet)}</td>
+            </tr>
+        `).join('');
+
+        if (typeof JsBarcode === "function") {
+            try {
+                JsBarcode("#iade-paket-barkod", iade.iade_no, {
+                    format: "CODE128",
+                    width: 2,
+                    height: 40,
+                    displayValue: false,
+                    margin: 0,
+                    background: "#ffffff",
+                    lineColor: "#000000"
+                });
+                document.getElementById('iade-paket-barkod-text').innerText = iade.iade_no;
+            } catch (e) {
+                console.error("Barkod üretilemedi:", e);
+            }
+        }
+
+        if (window.HizliKasa && window.HizliKasa.PrintManager) {
+            window.HizliKasa.PrintManager.print('iade-paket-fis');
+        } else {
+            console.error("PrintManager bulunamadı!");
+        }
+    }
+
+    function closeIadeDetay() {
+        activeIade = null;
+        document.getElementById('t-iade-adim-1').style.display = 'block';
+        document.getElementById('t-iade-adim-2').style.display = 'none';
+        document.getElementById('t-iade-detay-panel').style.display = 'none';
+        
+        const select = document.getElementById('t-iade-yeni-tedarikci');
+        if (select) select.value = '';
+    }
+
     return {
-        init: init
+        init: function() {
+            init();
+            bindIadeEvents();
+        }
     };
 
 })();

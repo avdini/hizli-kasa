@@ -231,6 +231,57 @@ if (!defined('ABSPATH')) exit;
     ?>
 </div>
 
+<!-- Tedarikçi İade Paket Fiş Şablonu (Sadece Yazdırma İçin) -->
+<div id="iade-paket-fis-sablon" style="color:#000; font-family: 'Courier New', Courier, monospace; width: 100%; max-width: 300px; margin: 0 auto; padding: 10px; box-sizing: border-box;">
+    <div style="text-align:center; margin-bottom:10px; border-bottom:1px dashed #000; padding-bottom:10px;">
+        <h2 style="margin:0; font-size:16px; text-transform: uppercase; font-weight: bold;"><?php echo get_bloginfo('name'); ?></h2>
+        <p style="margin:4px 0 0; font-size:12px; font-weight: bold; letter-spacing: 1px;">TEDARİKÇİ İADE FİŞİ</p>
+    </div>
+    
+    <div style="font-size:11px; margin-bottom:10px; line-height: 1.3;">
+        <div><strong>İADE NO:</strong> <span id="iade-paket-no">TIA-XXXX</span></div>
+        <div><strong>TARİH:</strong> <span id="iade-paket-tarih"></span></div>
+        <div><strong>TEDARİKÇİ:</strong> <span id="iade-paket-supplier"></span></div>
+    </div>
+
+    <table style="width:100%; border-collapse:collapse; font-size:11px; margin-bottom:10px;">
+        <thead>
+            <tr style="border-bottom:1px dashed #000; font-weight: bold;">
+                <th style="text-align:left; padding:4px 0;">Ürün</th>
+                <th style="text-align:right; padding:4px 0; width: 50px;">Adet</th>
+            </tr>
+        </thead>
+        <tbody id="iade-paket-urunler-body">
+            <!-- Dinamik doldurulacak -->
+        </tbody>
+    </table>
+
+    <div style="border-top:1px dashed #000; padding-top:6px; font-size:11px; line-height: 1.3; margin-bottom: 10px;">
+        <div style="display:flex; justify-content:space-between; font-weight:bold;">
+            <span>TOPLAM ÇEŞİT:</span>
+            <span id="iade-paket-cesit">0</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-weight:bold;">
+            <span>TOPLAM ADET:</span>
+            <span id="iade-paket-adet">0</span>
+        </div>
+    </div>
+
+    <div style="font-size:10px; margin-bottom:15px; border-top:1px dashed #000; padding-top:6px; line-height: 1.2;">
+        <div id="iade-paket-sebep-satiri"><strong>SEBEP:</strong> <span id="iade-paket-sebep"></span></div>
+        <div id="iade-paket-not-satiri" style="margin-top: 3px;"><strong>NOT:</strong> <span id="iade-paket-not"></span></div>
+        <div style="margin-top: 3px;"><strong>HAZIRLAYAN:</strong> <span id="iade-paket-hazirlayan"><?php 
+            $current_user = wp_get_current_user(); 
+            echo esc_html(trim($current_user->first_name . ' ' . $current_user->last_name) ?: $current_user->display_name); 
+        ?></span></div>
+    </div>
+
+    <div style="text-align:center;">
+        <img id="iade-paket-barkod" style="width: 100%; max-width: 200px; height: auto; margin: 0 auto; display: block;" />
+        <span id="iade-paket-barkod-text" style="font-size: 9px; display: block; margin-top: 2px;"></span>
+    </div>
+</div>
+
 <!-- ==================== GÜN SONU RAPORU ==================== -->
 
 <!-- Gün Sonu Raporu Modalı -->
