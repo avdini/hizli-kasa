@@ -13,6 +13,7 @@ const MalkabulManager = (function () {
         document.addEventListener('hkTabLoaded', (e) => {
             if (e.detail.tab === 'sevk') {
                 bindEvents();
+                bindIadeEvents();
                 activeDepoId = window.HizliKasa && window.HizliKasa.DepoManager ? window.HizliKasa.DepoManager.getActiveDepo() : kasaAyar.activeDepoId;
                 loadSuppliers();
                 loadPurchaseOrders();
@@ -111,13 +112,15 @@ const MalkabulManager = (function () {
 
     function populateSupplierSelect() {
         const select = document.getElementById('malkabul-yeni-tedarikci');
-        if(!select) return;
+        const selectIade = document.getElementById('t-iade-yeni-tedarikci');
         
         let html = '<option value="">Seçiniz...</option>';
         suppliers.forEach(s => {
             html += `<option value="${s.id}">${s.name}</option>`;
         });
-        select.innerHTML = html;
+        
+        if (select) select.innerHTML = html;
+        if (selectIade) selectIade.innerHTML = html;
     }
 
     async function saveSupplier() {
@@ -998,10 +1001,7 @@ const MalkabulManager = (function () {
     }
 
     return {
-        init: function() {
-            init();
-            bindIadeEvents();
-        }
+        init: init
     };
 
 })();
