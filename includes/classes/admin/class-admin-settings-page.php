@@ -11,6 +11,8 @@ class Hizli_Kasa_Admin_Settings_Page {
         $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priority DESC");
         ?>
         <div class="wrap">
+            <h1 class="wp-heading-inline" style="display:none;">Hızlı Kasa</h1>
+            <hr class="wp-header-end" style="display:none;">
             <?php settings_errors('hizli_kasa_messages'); ?>
 
             <?php if ($active_tab === 'hub'): ?>
