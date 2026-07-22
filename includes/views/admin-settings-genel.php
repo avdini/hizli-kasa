@@ -42,24 +42,89 @@ $tum_roller         = wp_roles()->get_names();
 
         <!-- Grid Layout: Sidebar & Content -->
         <div class="hk-settings-layout">
-            <!-- Sidebar Navigation -->
-            <nav class="hk-settings-nav">
-                <a href="#sec-pos" class="hk-settings-nav-item active">
-                    <span class="dashicons dashicons-store"></span> POS & Sayfa
-                </a>
-                <a href="#sec-roles" class="hk-settings-nav-item">
-                    <span class="dashicons dashicons-admin-users"></span> Yetkiler & Roller
-                </a>
-                <a href="#sec-depo" class="hk-settings-nav-item">
-                    <span class="dashicons dashicons-database"></span> Depo & Stok
-                </a>
-                <a href="#sec-features" class="hk-settings-nav-item">
-                    <span class="dashicons dashicons-tablet"></span> Terminal Özellikleri
-                </a>
-                <a href="#sec-rules" class="hk-settings-nav-item">
-                    <span class="dashicons dashicons-money-alt"></span> Ödeme & Kurallar
-                </a>
-            </nav>
+            <!-- Sticky Sidebar -->
+            <div class="hk-settings-sidebar">
+                <!-- Navigation -->
+                <nav class="hk-settings-nav">
+                    <a href="#sec-pos" class="hk-settings-nav-item active">
+                        <span class="dashicons dashicons-store"></span> POS & Sayfa
+                    </a>
+                    <a href="#sec-roles" class="hk-settings-nav-item">
+                        <span class="dashicons dashicons-admin-users"></span> Yetkiler & Roller
+                    </a>
+                    <a href="#sec-depo" class="hk-settings-nav-item">
+                        <span class="dashicons dashicons-database"></span> Depo & Stok
+                    </a>
+                    <a href="#sec-features" class="hk-settings-nav-item">
+                        <span class="dashicons dashicons-tablet"></span> Terminal Özellikleri
+                    </a>
+                    <a href="#sec-rules" class="hk-settings-nav-item">
+                        <span class="dashicons dashicons-money-alt"></span> Ödeme & Kurallar
+                    </a>
+                </nav>
+
+                <!-- Canlı Sistem Durum Widget'ı -->
+                <div class="hk-sidebar-widget">
+                    <h4 class="hk-widget-title">
+                        <span class="dashicons dashicons-chart-bar" style="color:var(--hk-primary);"></span>
+                        Sistem & POS Durumu
+                    </h4>
+                    <ul class="hk-widget-list">
+                        <li class="hk-widget-item">
+                            <span class="hk-widget-item-label">POS Sayfası:</span>
+                            <span class="hk-widget-item-value">
+                                <?php if ($secili_pos_sayfasi > 0): ?>
+                                    <span style="color:#16a34a; font-weight:700;">🟢 Aktif</span>
+                                <?php else: ?>
+                                    <span style="color:#d63638; font-weight:700;">🔴 Seçilmedi</span>
+                                <?php endif; ?>
+                            </span>
+                        </li>
+                        <li class="hk-widget-item">
+                            <span class="hk-widget-item-label">Online Depo:</span>
+                            <span class="hk-widget-item-value">
+                                <?php 
+                                $online_depo_adi = 'Tüm Depolar';
+                                foreach($depolar as $d) {
+                                    if ($d->id == $online_depo) {
+                                        $online_depo_adi = esc_html($d->name);
+                                        break;
+                                    }
+                                }
+                                echo $online_depo_adi;
+                                ?>
+                            </span>
+                        </li>
+                        <li class="hk-widget-item">
+                            <span class="hk-widget-item-label">Aktif Kasa:</span>
+                            <span class="hk-widget-item-value"><?php echo (int)$kasa_sayisi; ?> Adet</span>
+                        </li>
+                        <li class="hk-widget-item">
+                            <span class="hk-widget-item-label">Kasiyer Yetkisi:</span>
+                            <span class="hk-widget-item-value" style="color:#16a34a;">Etkin</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Hızlı Eylemler Widget'ı -->
+                <div class="hk-sidebar-widget">
+                    <h4 class="hk-widget-title">
+                        <span class="dashicons dashicons-lightning" style="color:#eab308;"></span>
+                        Hızlı Eylemler
+                    </h4>
+                    <div class="hk-widget-actions">
+                        <a href="<?php echo esc_url(function_exists('hizli_kasa_get_pos_url') ? hizli_kasa_get_pos_url() : home_url('/hizli-kasa-pos/')); ?>" target="_blank" class="hk-widget-btn hk-widget-btn-primary">
+                            <span class="dashicons dashicons-external"></span> POS Terminali Aç
+                        </a>
+                        <a href="?page=hizli-kasa&tab=onbellek" class="hk-widget-btn">
+                            <span class="dashicons dashicons-update"></span> Önbelleği Temizle
+                        </a>
+                        <a href="?page=hizli-kasa&tab=stok" class="hk-widget-btn">
+                            <span class="dashicons dashicons-database"></span> Stok Yönetimi
+                        </a>
+                    </div>
+                </div>
+            </div>
 
             <!-- Main Content Area -->
             <div class="hk-settings-content">

@@ -369,7 +369,7 @@
    Modern General Settings Page Styles (.hk-settings-wrap)
    -------------------------------------------------------------------------- */
 .hk-settings-container {
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 20px auto 40px auto;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
     padding: 0 15px;
@@ -427,9 +427,17 @@
 
 .hk-settings-layout {
     display: grid;
-    grid-template-columns: 240px 1fr;
+    grid-template-columns: 270px 1fr;
     gap: 24px;
     align-items: start;
+}
+
+.hk-settings-sidebar {
+    position: sticky;
+    top: 50px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .hk-settings-nav {
@@ -437,8 +445,6 @@
     border: 1px solid var(--hk-border-color);
     border-radius: 14px;
     padding: 12px;
-    position: sticky;
-    top: 50px;
     box-shadow: var(--hk-shadow-sm);
 }
 
@@ -465,6 +471,94 @@
     font-size: 17px;
     width: 17px;
     height: 17px;
+}
+
+/* Sidebar Info & Action Widgets */
+.hk-sidebar-widget {
+    background: var(--hk-card-bg);
+    border: 1px solid var(--hk-border-color);
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: var(--hk-shadow-sm);
+}
+
+.hk-widget-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--hk-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.hk-widget-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.hk-widget-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12.5px;
+    color: var(--hk-text-main);
+}
+
+.hk-widget-item-label {
+    color: var(--hk-text-muted);
+    font-weight: 500;
+}
+
+.hk-widget-item-value {
+    font-weight: 600;
+}
+
+.hk-widget-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hk-widget-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none !important;
+    transition: var(--hk-transition);
+    border: 1px solid var(--hk-border-color);
+    background: #f8fafc;
+    color: var(--hk-text-main) !important;
+}
+
+.hk-widget-btn:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: var(--hk-primary) !important;
+    transform: translateY(-1px);
+}
+
+.hk-widget-btn-primary {
+    background: var(--hk-primary);
+    color: #ffffff !important;
+    border: none;
+    box-shadow: 0 2px 6px rgba(245, 130, 32, 0.25);
+}
+
+.hk-widget-btn-primary:hover {
+    background: var(--hk-primary-hover);
+    color: #ffffff !important;
 }
 
 .hk-settings-card {
@@ -532,7 +626,7 @@
 
 .hk-settings-label {
     flex: 1;
-    max-width: 500px;
+    max-width: 650px;
 }
 
 .hk-settings-label label {
