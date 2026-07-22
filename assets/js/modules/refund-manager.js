@@ -978,19 +978,6 @@ const RefundManager = (function () {
             if (iskontoKonteyner) iskontoKonteyner.style.display = 'none';
             if (iskontoInput) iskontoInput.value = 0;
             
-            // Eğer uyarı mesajı yoksa ekle
-            const ozetGovde = document.querySelector('.siparis-ozet-v2 .ozet-govde');
-            if (ozetGovde && !document.getElementById('iade-iskonto-uyari')) {
-                ozetGovde.innerHTML += `
-                    <div id="iade-iskonto-uyari" class="ozet-kart" style="width:100%; border-color:#3498db; background:rgba(52, 152, 219, 0.05);">
-                        <div class="kart-baslik" style="color:#3498db;">ℹ️ YENİ SİSTEM İSKONTO</div>
-                        <div class="kart-icerik" style="font-size:12px; color:#666;">
-                            Bu siparişte iskonto ürün fiyatlarına yedirilmiştir. Ekstra iskonto düşmenize gerek yoktur. İade edilecek ürünün fiyatı zaten iskontoludur.
-                        </div>
-                    </div>
-                `;
-            }
-            
             const modalToplamInput = document.getElementById('iade-modal-toplam-input');
             if (modalToplamInput) {
                 const finalTotal = getRefundFinalTotal();
