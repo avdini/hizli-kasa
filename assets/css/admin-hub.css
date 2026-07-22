@@ -1089,3 +1089,97 @@ input:checked + .hk-slider:before {
     width: 32px;
     height: 32px;
 }
+
+/* Priority Badge */
+.hk-priority-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #fff7ed;
+    color: #ea580c;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #fed7aa;
+}
+
+/* Glassmorphic Modal */
+.hk-modal-overlay {
+    display: none;
+    position: fixed;
+    z-index: 100000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.hk-modal-box {
+    background: var(--hk-card-bg);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: var(--hk-shadow-lg);
+    border: 1px solid var(--hk-border-color);
+    overflow: hidden;
+    animation: hkModalFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes hkModalFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.hk-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--hk-border-color);
+    background: #f8fafc;
+}
+
+.hk-modal-header h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--hk-text-main);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hk-modal-close {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    color: var(--hk-text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: var(--hk-transition);
+}
+
+.hk-modal-close:hover {
+    color: #dc2626;
+    background: #fef2f2;
+}
+
+.hk-modal-body {
+    padding: 24px;
+}
+
+.hk-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-top: 1px solid var(--hk-border-color);
+}
