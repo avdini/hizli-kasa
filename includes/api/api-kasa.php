@@ -94,11 +94,21 @@ function hizli_kasa_ozel_arama($data)
             $parent_item = $results_map[$target_id];
             $final_flat[] = $parent_item;
             $seen_parents[$target_id] = true;
-            // Bu ana ürünün TÜM varyasyonlarını hemen arkasına ekle (JS gruplama için flat liste gerekiyor)
+            // Bu ana ürünün TÜM varyasyonlarını ekle (aranan/eşleşen varyasyon en üstte çıksın)
+            $exact_vars = [];
+            $other_vars = [];
             foreach ($results_map as $v) {
                 if ($v['parent_id'] === $target_id) {
-                    $final_flat[] = $v;
+                    $v_sku = (string) ($v['sku'] ?? '');
+                    if ((int)$v['id'] === (int)$fid || ($s !== '' && strcasecmp($v_sku, $s) === 0)) {
+                        $exact_vars[] = $v;
+                    } else {
+                        $other_vars[] = $v;
+                    }
                 }
+            }
+            foreach (array_merge($exact_vars, $other_vars) as $v) {
+                $final_flat[] = $v;
             }
         }
     }

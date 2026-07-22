@@ -9,6 +9,7 @@ const RefundManager = (function () {
     let refundSplitData = null;
     let isManualMode = false;
     let manualSearchTimeout = null;
+    let manualSearchController = null;
     let currentSearchPage = 1;
     let activeSearchParams = null;
 
@@ -282,12 +283,18 @@ const RefundManager = (function () {
             return;
         }
 
+        if (manualSearchController) {
+            manualSearchController.abort();
+        }
+        manualSearchController = new AbortController();
+
         const depo_id = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
         const apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
         
         try {
             const response = await fetch(`${apiBase}hizli-kasa/v1/search?s=${encodeURIComponent(query)}&depo_id=${depo_id}${isExact ? '&exact=1' : ''}`, {
-                headers: { 'X-WP-Nonce': kasaAyar.nonce }
+                headers: { 'X-WP-Nonce': kasaAyar.nonce },
+                signal: manualSearchController.signal
             });
 
             const results = await response.json();
@@ -301,6 +308,7 @@ const RefundManager = (function () {
             }
 
         } catch (error) {
+            if (error.name === 'AbortError') return;
             console.error('Manuel arama hatası:', error);
         }
     }
