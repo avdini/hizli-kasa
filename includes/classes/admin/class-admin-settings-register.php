@@ -11,6 +11,10 @@ class Hizli_Kasa_Admin_Settings_Register {
     public static function register()
     {
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_siparis_durumu');
+    register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_pos_page_id', [
+        'type' => 'integer',
+        'sanitize_callback' => 'intval'
+    ]);
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_yetkili_roller');
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_fallback_sku_to_id', [
         'sanitize_callback' => fn($val) => $val ? '1' : '0'

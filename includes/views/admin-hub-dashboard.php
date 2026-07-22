@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) {
 
 global $wpdb;
 $unmatched_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hizli_kasa_unmatched_items");
-$terminal_url = home_url('/hizli-kasa/terminal/');
+$terminal_url = hizli_kasa_get_pos_url();
 ?>
 
 <div class="hk-hub-container">

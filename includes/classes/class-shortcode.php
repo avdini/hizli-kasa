@@ -15,6 +15,87 @@ if (!defined('ABSPATH')) {
 // Shortcode Kaydı
 add_shortcode('hizli_kasa', 'hizli_kasa_uygulamasi');
 
+/**
+ * POS Terminal sayfasının ID'sini döndürür.
+ *
+ * @return int Sayfa ID'si veya bulunamazsa 0
+ */
+function hizli_kasa_get_pos_page_id()
+{
+    $page_id = (int) get_option('hizli_kasa_pos_page_id', 0);
+
+    if ($page_id > 0 && get_post_status($page_id) === 'publish') {
+        return $page_id;
+    }
+
+    // Fallback: Veritabanında [hizli_kasa] shortcode'u barındıran ilk yayınlanmış sayfayı bul
+    global $wpdb;
+    $found_id = $wpdb->get_var(
+        "SELECT ID FROM {$wpdb->posts} 
+         WHERE post_type = 'page' 
+         AND post_status = 'publish' 
+         AND post_content LIKE '%[hizli_kasa]%' 
+         ORDER BY ID ASC 
+         LIMIT 1"
+    );
+
+    if ($found_id) {
+        $found_id = (int) $found_id;
+        update_option('hizli_kasa_pos_page_id', $found_id);
+        return $found_id;
+    }
+
+    return 0;
+}
+
+/**
+ * POS Terminal sayfasının tam URL'sini döndürür.
+ *
+ * @return string POS Terminal permalink URL'si
+ */
+function hizli_kasa_get_pos_url()
+{
+    $page_id = hizli_kasa_get_pos_page_id();
+    if ($page_id > 0) {
+        $permalink = get_permalink($page_id);
+        if ($permalink) {
+            return $permalink;
+        }
+    }
+
+    // Bulunamadıysa varsayılan slug URL'si
+    return home_url('/hizli-kasa-pos/');
+}
+
+/**
+ * Sitede POS sayfasının var olduğunu doğrular, yoksa otomatik oluşturur.
+ *
+ * @return int Oluşturulan veya mevcut olan sayfanın ID'si
+ */
+function hizli_kasa_ensure_pos_page()
+{
+    $page_id = hizli_kasa_get_pos_page_id();
+    if ($page_id > 0) {
+        return $page_id;
+    }
+
+    // Yeni sayfa oluştur
+    $new_page_id = wp_insert_post([
+        'post_title'   => 'Hızlı Kasa POS',
+        'post_content' => '[hizli_kasa]',
+        'post_status'  => 'publish',
+        'post_type'    => 'page',
+        'post_name'    => 'hizli-kasa-pos',
+    ]);
+
+    if (!is_wp_error($new_page_id) && $new_page_id > 0) {
+        update_option('hizli_kasa_pos_page_id', (int) $new_page_id);
+        return (int) $new_page_id;
+    }
+
+    return 0;
+}
+
 function hizli_kasa_can_access_app($user_id = null)
 {
     $user = $user_id ? get_userdata($user_id) : wp_get_current_user();

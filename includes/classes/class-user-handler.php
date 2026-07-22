@@ -77,7 +77,7 @@ class Hizli_Kasa_User_Handler {
         $user = wp_get_current_user();
         if (in_array('hizli_kasa', (array) $user->roles)) {
             // Admin paneline girmeye çalışırsa POS terminaline gönder
-            wp_safe_redirect(home_url('/hizli-kasa/terminal/'));
+            wp_safe_redirect(hizli_kasa_get_pos_url());
             exit;
         }
     }

@@ -14,6 +14,26 @@
                             </td>
                         </tr>
                         <tr valign="top">
+                            <th scope="row">POS Terminal Sayfası</th>
+                            <td>
+                                <?php 
+                                $secili_pos_sayfasi = function_exists('hizli_kasa_get_pos_page_id') ? hizli_kasa_get_pos_page_id() : (int)get_option('hizli_kasa_pos_page_id', 0);
+                                wp_dropdown_pages([
+                                    'name' => 'hizli_kasa_pos_page_id',
+                                    'selected' => $secili_pos_sayfasi,
+                                    'show_option_none' => '-- Otomatik Algıla / Sayfa Seçin --',
+                                    'option_none_value' => '0'
+                                ]); 
+                                ?>
+                                <p class="description">
+                                    <code>[hizli_kasa]</code> kısa kodunu yerleştirdiğiniz sayfayı seçin. Seçim yapılmazsa sistem kısa kodun bulunduğu sayfayı otomatik algılar.
+                                    <?php if ($secili_pos_sayfasi > 0): ?>
+                                        <br><a href="<?php echo esc_url(get_permalink($secili_pos_sayfasi)); ?>" target="_blank">Seçili POS Sayfasını Görüntüle ↗</a>
+                                    <?php endif; ?>
+                                </p>
+                            </td>
+                        </tr>
+                        <tr valign="top">
                             <th scope="row">Erişim Yetkisi Olan Roller</th>
                             <td>
                                 <?php

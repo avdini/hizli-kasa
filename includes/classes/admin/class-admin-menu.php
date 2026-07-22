@@ -129,7 +129,7 @@ class Hizli_Kasa_Admin_Menu {
             'manage_options',
             'hizli-kasa-terminal-link',
             function() {
-                $url = home_url('/hizli-kasa/terminal/');
+                $url = hizli_kasa_get_pos_url();
                 echo "<script>window.open('$url', '_blank'); location.href='admin.php?page=hizli-kasa';</script>";
             }
         );
