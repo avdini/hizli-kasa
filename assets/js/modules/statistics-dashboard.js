@@ -149,40 +149,40 @@
 
             html += '</div>'; // .stat-charts-grid
 
-            // Top 10 Ürün tablosu
+            // Top Ürünler tablosu
             if (urunler.length > 0) {
+                if (!self.topState) {
+                    self.topState = { limit: 10, search: '', sortField: 'qty', sortDir: 'desc' };
+                }
+
                 html += '<div class="stat-chart-card">';
-                html += '<div class="stat-chart-header"><h4 class="stat-chart-title">🏆 En Çok Satan Ürünler</h4><span class="stat-chart-badge">Top ' + urunler.length + '</span></div>';
-                html += self._renderTopTable(urunler);
+                html += '<div class="stat-chart-header stat-top-header">';
+                html += '<div>';
+                html += '<h4 class="stat-chart-title">🏆 En Çok Satan Ürünler</h4>';
+                html += '<span class="stat-chart-badge" id="stat-top-count-badge">' + urunler.length + ' ürün listelendi</span>';
+                html += '</div>';
+                html += '<div class="stat-top-controls">';
+                html += '<div class="stat-top-search-wrap">';
+                html += '<input type="text" id="stat-top-search" class="stat-top-search-input" value="' + self._esc(self.topState.search) + '" placeholder="🔍 Ürün veya SKU ara..." autocomplete="off">';
+                html += '</div>';
+                html += '<select id="stat-top-limit-select" class="stat-top-limit-select">';
+                html += '<option value="10"' + (self.topState.limit === 10 ? ' selected' : '') + '>Top 10</option>';
+                html += '<option value="25"' + (self.topState.limit === 25 ? ' selected' : '') + '>Top 25</option>';
+                html += '<option value="50"' + (self.topState.limit === 50 ? ' selected' : '') + '>Top 50</option>';
+                html += '</select>';
+                html += '</div>';
+                html += '</div>';
+
+                html += self._renderTopTable(urunler, self.topState);
                 html += '</div>';
             }
 
             html += '</div>'; // .stat-dashboard-wrap
             panel.innerHTML = html;
 
-            // Accordion ve Analiz buton dinleyicileri
-            panel.querySelectorAll('.stat-var-toggle-btn').forEach(function (btn) {
-                btn.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    var targetId = this.dataset.target;
-                    var row = document.getElementById(targetId);
-                    if (row) {
-                        var isExpanded = row.style.display !== 'none';
-                        row.style.display = isExpanded ? 'none' : 'table-row';
-                        this.classList.toggle('active', !isExpanded);
-                    }
-                });
-            });
-
-            panel.querySelectorAll('.stat-analyze-btn').forEach(function (btn) {
-                btn.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    var sku = this.dataset.sku;
-                    if (sku && HK.ProductStatsReport) {
-                        HK.ProductStatsReport.analyzeSKU(sku);
-                    }
-                });
-            });
+            if (urunler.length > 0) {
+                self._bindTopTableEvents(panel, urunler);
+            }
 
             // Chart.js mevcut mu?
             if (typeof Chart === 'undefined') {
@@ -415,69 +415,211 @@
         /* -------------------------------------------------
            TOP ÜRÜNLER TABLOSU
         ------------------------------------------------- */
-        _renderTopTable: function (urunler) {
+        _renderTopTable: function (urunler, options) {
             var self = this;
-            var maxQty = urunler[0] ? urunler[0].qty : 1;
-            var html = '<table class="stat-top-table"><thead><tr>'
-                + '<th>#</th><th>Ürün</th><th style="text-align:right">Adet</th><th style="text-align:right">Ciro / Analiz</th>'
-                + '</tr></thead><tbody>';
+            options = options || {};
+            var limit = options.limit || 10;
+            var search = (options.search || '').toLowerCase().trim();
+            var sortField = options.sortField || 'qty';
+            var sortDir = options.sortDir || 'desc';
 
-            urunler.forEach(function (u, i) {
-                var rankClass = i === 0 ? 'top-1' : (i === 1 ? 'top-2' : (i === 2 ? 'top-3' : ''));
-                var pct = maxQty > 0 ? Math.round((u.qty / maxQty) * 100) : 0;
-                var hasVars = u.variations && u.variations.length > 0;
-                var varRowId = 'stat-var-row-' + i;
-                var mainSku = u.sku || u.id || u.name;
-
-                html += '<tr>';
-                html += '<td><span class="stat-rank-badge ' + rankClass + '">' + (i + 1) + '</span></td>';
-                html += '<td>';
-                html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
-                html += '<span style="font-weight:600;">' + self._esc(u.name) + '</span>';
-                if (hasVars) {
-                    html += '<button class="stat-var-toggle-btn" data-target="' + varRowId + '">▼ ' + u.variations.length + ' Varyasyon</button>';
-                }
-                html += '</div>';
-                if (u.sku) {
-                    html += '<div style="font-size:11px;color:var(--hk-text-muted)">SKU: ' + self._esc(u.sku) + '</div>';
-                }
-                html += '<div class="stat-progress-bar-wrap"><div class="stat-progress-bar" style="width:' + pct + '%"></div></div>';
-                html += '</td>';
-                html += '<td style="text-align:right;font-weight:700">' + u.qty + '</td>';
-                html += '<td style="text-align:right">';
-                html += '<div style="color:var(--hk-success);font-weight:700;margin-bottom:3px;">₺ ' + self._num(u.total) + '</div>';
-                html += '<button class="stat-analyze-btn" data-sku="' + self._esc(mainSku) + '" title="Ürün İstatistiğini İncele">🔍 Analiz</button>';
-                html += '</td>';
-                html += '</tr>';
-
-                if (hasVars) {
-                    html += '<tr id="' + varRowId + '" class="stat-var-row" style="display:none;">';
-                    html += '<td colspan="4" style="padding:0;background:rgba(0,0,0,0.02);">';
-                    html += '<div class="stat-var-wrap">';
-                    html += '<table class="stat-var-table"><thead><tr>';
-                    html += '<th>Varyasyon</th><th>SKU</th><th style="text-align:right">Adet</th><th style="text-align:right">Ciro</th><th></th>';
-                    html += '</tr></thead><tbody>';
-
-                    u.variations.forEach(function (v) {
-                        var varSku = v.sku || v.id || v.name;
-                        html += '<tr>';
-                        html += '<td><span class="stat-var-name">↳ ' + self._esc(v.name) + '</span></td>';
-                        html += '<td><span class="stat-var-sku">' + (v.sku ? self._esc(v.sku) : '-') + '</span></td>';
-                        html += '<td style="text-align:right;font-weight:600;">' + v.qty + '</td>';
-                        html += '<td style="text-align:right;color:var(--hk-success);font-weight:600;">₺ ' + self._num(v.total) + '</td>';
-                        html += '<td style="text-align:right;"><button class="stat-analyze-btn stat-analyze-sub" data-sku="' + self._esc(varSku) + '" title="Varyasyon İstatistiğini İncele">🔍</button></td>';
-                        html += '</tr>';
+            var filtered = urunler.filter(function (u) {
+                if (!search) return true;
+                var matchParent = (u.name || '').toLowerCase().includes(search) || (u.sku || '').toLowerCase().includes(search);
+                if (matchParent) return true;
+                if (u.variations && u.variations.length > 0) {
+                    return u.variations.some(function (v) {
+                        return (v.name || '').toLowerCase().includes(search) || (v.sku || '').toLowerCase().includes(search);
                     });
-
-                    html += '</tbody></table>';
-                    html += '</div>';
-                    html += '</td>';
-                    html += '</tr>';
                 }
+                return false;
             });
 
+            filtered.sort(function (a, b) {
+                var valA = parseFloat(a[sortField]) || 0;
+                var valB = parseFloat(b[sortField]) || 0;
+                return sortDir === 'desc' ? valB - valA : valA - valB;
+            });
+
+            var totalMatching = filtered.length;
+            var visibleItems = filtered.slice(0, limit);
+            var maxQty = urunler[0] ? urunler[0].qty : 1;
+
+            var html = '<div id="stat-top-table-container">';
+            html += '<table class="stat-top-table"><thead><tr>';
+            html += '<th style="width:40px">#</th>';
+            html += '<th>Ürün</th>';
+            html += '<th style="text-align:right;cursor:pointer;" class="stat-sort-header" data-sort="qty" title="Adede göre sırala">Adet ' + (sortField === 'qty' ? (sortDir === 'desc' ? '↓' : '↑') : '') + '</th>';
+            html += '<th style="text-align:right;cursor:pointer;" class="stat-sort-header" data-sort="total" title="Ciroya göre sırala">Ciro / Analiz ' + (sortField === 'total' ? (sortDir === 'desc' ? '↓' : '↑') : '') + '</th>';
+            html += '</tr></thead><tbody>';
+
+            if (visibleItems.length === 0) {
+                html += '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--hk-text-muted);">Aramaya uygun ürün bulunamadı.</td></tr>';
+            } else {
+                visibleItems.forEach(function (u, i) {
+                    var rankNum = i + 1;
+                    var rankBadge = '';
+                    if (rankNum === 1) rankBadge = '<span class="stat-rank-badge top-1" title="1. Sıra">🥇</span>';
+                    else if (rankNum === 2) rankBadge = '<span class="stat-rank-badge top-2" title="2. Sıra">🥈</span>';
+                    else if (rankNum === 3) rankBadge = '<span class="stat-rank-badge top-3" title="3. Sıra">🥉</span>';
+                    else rankBadge = '<span class="stat-rank-badge">' + rankNum + '</span>';
+
+                    var pct = maxQty > 0 ? Math.round((u.qty / maxQty) * 100) : 0;
+                    var hasVars = u.variations && u.variations.length > 0;
+                    var varRowId = 'stat-var-row-' + i;
+                    var mainSku = u.sku || u.id || u.name;
+
+                    html += '<tr>';
+                    html += '<td>' + rankBadge + '</td>';
+                    html += '<td>';
+                    html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
+                    html += '<span style="font-weight:600;">' + self._esc(u.name) + '</span>';
+                    if (hasVars) {
+                        html += '<button class="stat-var-toggle-btn" data-target="' + varRowId + '">▼ ' + u.variations.length + ' Varyasyon</button>';
+                    }
+                    html += '</div>';
+                    if (u.sku) {
+                        html += '<div style="font-size:11px;color:var(--hk-text-muted)">SKU: ' + self._esc(u.sku) + '</div>';
+                    }
+                    html += '<div class="stat-progress-bar-wrap"><div class="stat-progress-bar" style="width:' + pct + '%"></div></div>';
+                    html += '</td>';
+                    html += '<td style="text-align:right;font-weight:700">' + u.qty + '</td>';
+                    html += '<td style="text-align:right">';
+                    html += '<div style="color:var(--hk-success);font-weight:700;margin-bottom:3px;">₺ ' + self._num(u.total) + '</div>';
+                    html += '<button class="stat-analyze-btn" data-sku="' + self._esc(mainSku) + '" title="Ürün İstatistiğini İncele">🔍 Analiz</button>';
+                    html += '</td>';
+                    html += '</tr>';
+
+                    if (hasVars) {
+                        html += '<tr id="' + varRowId + '" class="stat-var-row" style="display:none;">';
+                        html += '<td colspan="4" style="padding:0;background:rgba(0,0,0,0.02);">';
+                        html += '<div class="stat-var-wrap">';
+                        html += '<table class="stat-var-table"><thead><tr>';
+                        html += '<th>Varyasyon</th><th>SKU</th><th style="text-align:right">Adet</th><th style="text-align:right">Ciro</th><th></th>';
+                        html += '</tr></thead><tbody>';
+
+                        u.variations.forEach(function (v) {
+                            var varSku = v.sku || v.id || v.name;
+                            html += '<tr>';
+                            html += '<td><span class="stat-var-name">↳ ' + self._esc(v.name) + '</span></td>';
+                            html += '<td><span class="stat-var-sku">' + (v.sku ? self._esc(v.sku) : '-') + '</span></td>';
+                            html += '<td style="text-align:right;font-weight:600;">' + v.qty + '</td>';
+                            html += '<td style="text-align:right;color:var(--hk-success);font-weight:600;">₺ ' + self._num(v.total) + '</td>';
+                            html += '<td style="text-align:right;"><button class="stat-analyze-btn stat-analyze-sub" data-sku="' + self._esc(varSku) + '" title="Varyasyon İstatistiğini İncele">🔍</button></td>';
+                            html += '</tr>';
+                        });
+
+                        html += '</tbody></table>';
+                        html += '</div>';
+                        html += '</td>';
+                        html += '</tr>';
+                    }
+                });
+            }
+
             html += '</tbody></table>';
+
+            if (totalMatching > limit) {
+                var remaining = totalMatching - limit;
+                html += '<div class="stat-top-expand-wrap">';
+                html += '<button id="stat-top-expand-btn" class="stat-top-expand-btn">Daha Fazla Göster (+' + remaining + ' Ürün)</button>';
+                html += '</div>';
+            } else if (limit > 10 && totalMatching > 10) {
+                html += '<div class="stat-top-expand-wrap">';
+                html += '<button id="stat-top-collapse-btn" class="stat-top-expand-btn stat-top-collapse">Daha Az Göster (Top 10)</button>';
+                html += '</div>';
+            }
+
+            html += '</div>'; // #stat-top-table-container
             return html;
+        },
+
+        _bindTopTableEvents: function (panel, urunler) {
+            var self = this;
+            if (!self.topState) {
+                self.topState = { limit: 10, search: '', sortField: 'qty', sortDir: 'desc' };
+            }
+
+            var container = document.getElementById('stat-top-table-container');
+            var searchInput = document.getElementById('stat-top-search');
+            var limitSelect = document.getElementById('stat-top-limit-select');
+
+            var updateTable = function () {
+                if (container) {
+                    container.outerHTML = self._renderTopTable(urunler, self.topState);
+                    self._bindTopTableEvents(panel, urunler);
+                }
+            };
+
+            if (searchInput) {
+                searchInput.addEventListener('input', function () {
+                    self.topState.search = this.value;
+                    updateTable();
+                });
+            }
+
+            if (limitSelect) {
+                limitSelect.addEventListener('change', function () {
+                    self.topState.limit = parseInt(this.value, 10) || 10;
+                    updateTable();
+                });
+            }
+
+            // Accordion toggle dinleyicileri
+            panel.querySelectorAll('.stat-var-toggle-btn').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var targetId = this.dataset.target;
+                    var row = document.getElementById(targetId);
+                    if (row) {
+                        var isExpanded = row.style.display !== 'none';
+                        row.style.display = isExpanded ? 'none' : 'table-row';
+                        this.classList.toggle('active', !isExpanded);
+                    }
+                });
+            });
+
+            // Analiz buton dinleyicileri
+            panel.querySelectorAll('.stat-analyze-btn').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var sku = this.dataset.sku;
+                    if (sku && HK.ProductStatsReport) {
+                        HK.ProductStatsReport.analyzeSKU(sku);
+                    }
+                });
+            });
+
+            // Sıralama başlıkları
+            panel.querySelectorAll('.stat-sort-header').forEach(function (th) {
+                th.addEventListener('click', function () {
+                    var field = this.dataset.sort;
+                    if (self.topState.sortField === field) {
+                        self.topState.sortDir = self.topState.sortDir === 'desc' ? 'asc' : 'desc';
+                    } else {
+                        self.topState.sortField = field;
+                        self.topState.sortDir = 'desc';
+                    }
+                    updateTable();
+                });
+            });
+
+            // Daha fazla göster
+            var expandBtn = document.getElementById('stat-top-expand-btn');
+            if (expandBtn) {
+                expandBtn.addEventListener('click', function () {
+                    self.topState.limit += 15;
+                    updateTable();
+                });
+            }
+
+            var collapseBtn = document.getElementById('stat-top-collapse-btn');
+            if (collapseBtn) {
+                collapseBtn.addEventListener('click', function () {
+                    self.topState.limit = 10;
+                    updateTable();
+                });
+            }
         },
 
         /* -------------------------------------------------

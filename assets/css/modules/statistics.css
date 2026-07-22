@@ -355,6 +355,101 @@
     font-size: 10px;
 }
 
+/* Top Ürünler Header Kontrolleri & Madalyalar */
+.stat-top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.stat-top-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stat-top-search-input {
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    color: var(--hk-text-main);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    outline: none;
+    width: 170px;
+    transition: all 0.2s ease;
+}
+
+.stat-top-search-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.stat-top-limit-select {
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    color: var(--hk-text-main);
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    outline: none;
+}
+
+.stat-rank-badge.top-1 {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border-color: #f59e0b;
+    color: #fff;
+    font-size: 13px;
+    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+}
+
+.stat-rank-badge.top-2 {
+    background: linear-gradient(135deg, #94a3b8, #64748b);
+    border-color: #94a3b8;
+    color: #fff;
+    font-size: 13px;
+    box-shadow: 0 2px 6px rgba(148, 163, 184, 0.4);
+}
+
+.stat-rank-badge.top-3 {
+    background: linear-gradient(135deg, #d97706, #b45309);
+    border-color: #d97706;
+    color: #fff;
+    font-size: 13px;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, 0.4);
+}
+
+.stat-top-expand-wrap {
+    text-align: center;
+    padding: 12px 0 4px 0;
+}
+
+.stat-top-expand-btn {
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    color: #3b82f6;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stat-top-expand-btn:hover {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.stat-top-expand-btn.stat-top-collapse {
+    color: var(--hk-text-muted);
+}
+
 /* =============================================
    DARK TEMA
    ============================================= */

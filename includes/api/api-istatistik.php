@@ -227,9 +227,9 @@ function hizli_kasa_statistics_summary($request) {
         ];
     }
 
-    // Top 10 ürün (adet desc)
+    // Top 50 ürün (adet desc)
     uasort($urun_map, fn($a, $b) => $b['qty'] <=> $a['qty']);
-    $top_urunler = array_values(array_slice($urun_map, 0, 10));
+    $top_urunler = array_values(array_slice($urun_map, 0, 50));
     foreach ($top_urunler as &$u) {
         $u['total'] = round($u['total'], 2);
         if (!empty($u['variations'])) {
