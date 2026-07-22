@@ -80,7 +80,8 @@
                 hasDateFilter: rep.hasDateFilter !== false,
                 hasSearch: rep.hasSearch || false,
                 searchPlaceholder: rep.searchPlaceholder || 'Ara...',
-                description: rep.description || ''
+                description: rep.description || '',
+                order: rep.order || 99
             };
 
             // Eğer aktif kategoride bir rapor eklendiyse sidebar'ı yenile
@@ -92,6 +93,12 @@
             if (grid) {
                 this.renderCategories();
             }
+        },
+
+        getReportsByCategory: function(catId) {
+            return Object.values(this.reports)
+                .filter(function(r) { return r.categoryId === catId; })
+                .sort(function(a, b) { return (a.order || 99) - (b.order || 99); });
         },
 
         setupHub: function() {
@@ -407,7 +414,7 @@
                     badgeHtml = `<span class="rhub-badge-beta">Beta</span>`;
                 }
 
-                var catReports = Object.values(this.reports).filter(r => r.categoryId === cat.id);
+                var catReports = self.getReportsByCategory(cat.id);
                 var subtextHtml = isComingSoon ? 'Çok Yakında Hizmetinizde' : `${catReports.length} Rapor Aktif`;
 
                 var reportsListHtml = '';
@@ -487,7 +494,9 @@
             if (!cat) return;
 
             this.activeCategory = catId;
-            this.history.push({ view: 'hub' });
+            if (this.history.length === 0) {
+                this.history.push({ view: 'hub' });
+            }
 
             var hubView = document.getElementById('rhub-anasayfa-view');
             var catView = document.getElementById('rhub-kategori-view');
@@ -511,7 +520,7 @@
                 // Belirtilen raporu veya kategorideki ilk raporu aç
                 var activeRepId = repId;
                 if (!activeRepId) {
-                    var catReports = Object.values(self.reports).filter(r => r.categoryId === catId);
+                    var catReports = self.getReportsByCategory(catId);
                     if (catReports.length > 0) {
                         activeRepId = catReports[0].id;
                     }
@@ -528,7 +537,7 @@
             if (!sidebar) return;
 
             var cat = this.categories[this.activeCategory];
-            var catReports = Object.values(this.reports).filter(r => r.categoryId === this.activeCategory);
+            var catReports = this.getReportsByCategory(this.activeCategory);
 
             var headerHtml = cat ? `<div class="rhub-sidebar-header">${cat.title}</div>` : '';
 
@@ -645,7 +654,15 @@
                 var prev = this.history.pop();
                 if (prev.view === 'hub') {
                     this.anaSayfayaDon();
+                } else if (prev.view === 'report' && prev.catId && prev.repId) {
+                    if (this.activeCategory === prev.catId) {
+                        this.raporAc(prev.repId);
+                    } else {
+                        this.kategoriAc(prev.catId, prev.repId);
+                    }
                 }
+            } else {
+                this.anaSayfayaDon();
             }
         },
 

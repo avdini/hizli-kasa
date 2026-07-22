@@ -18,7 +18,8 @@
                     panelId: 'rapor-gun-sonu-arsivi',
                     onActivate: function() { self.loadDayEndHistory(); },
                     hasDateFilter: true,
-                    hasSearch: false
+                    hasSearch: false,
+                    order: 1
                 });
 
                 HK.ReportHub.registerReport({
@@ -29,7 +30,8 @@
                     panelId: 'rapor-depo-sayimlari',
                     onActivate: function() { self.loadSayimHistory(); },
                     hasDateFilter: true,
-                    hasSearch: false
+                    hasSearch: false,
+                    order: 2
                 });
             }
 

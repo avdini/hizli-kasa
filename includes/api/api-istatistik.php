@@ -116,16 +116,64 @@ function hizli_kasa_statistics_summary($request) {
                 continue;
             }
             $product = $item->get_product();
-            $sku  = $product ? $product->get_sku() : '';
-            $name = $item->get_name();
             $qty  = $item->get_quantity();
             $tot  = (float) $item->get_total();
-            $key  = $sku ?: sanitize_title($name);
-            if (!isset($urun_map[$key])) {
-                $urun_map[$key] = ['name' => $name, 'sku' => $sku, 'qty' => 0, 'total' => 0];
+
+            $is_variation = $product && $product->is_type('variation');
+            if ($is_variation) {
+                $parent_id   = $product->get_parent_id();
+                $parent_prod = wc_get_product($parent_id);
+                $parent_name = $parent_prod ? $parent_prod->get_name() : $item->get_name();
+                $parent_sku  = $parent_prod ? $parent_prod->get_sku() : '';
+                $key = 'p_' . $parent_id;
+
+                $var_id   = $product->get_id();
+                $var_name = $item->get_name();
+                $var_sku  = $product->get_sku();
+
+                if (!isset($urun_map[$key])) {
+                    $urun_map[$key] = [
+                        'id'         => $parent_id,
+                        'name'       => $parent_name,
+                        'sku'        => $parent_sku,
+                        'qty'        => 0,
+                        'total'      => 0,
+                        'variations' => []
+                    ];
+                }
+                $urun_map[$key]['qty']   += $qty;
+                $urun_map[$key]['total'] += $tot;
+
+                if (!isset($urun_map[$key]['variations'][$var_id])) {
+                    $urun_map[$key]['variations'][$var_id] = [
+                        'id'    => $var_id,
+                        'name'  => $var_name,
+                        'sku'   => $var_sku,
+                        'qty'   => 0,
+                        'total' => 0
+                    ];
+                }
+                $urun_map[$key]['variations'][$var_id]['qty']   += $qty;
+                $urun_map[$key]['variations'][$var_id]['total'] += $tot;
+            } else {
+                $p_id = $product ? $product->get_id() : 0;
+                $name = $item->get_name();
+                $sku  = $product ? $product->get_sku() : '';
+                $key  = $p_id ? ('p_' . $p_id) : ($sku ?: sanitize_title($name));
+
+                if (!isset($urun_map[$key])) {
+                    $urun_map[$key] = [
+                        'id'         => $p_id,
+                        'name'       => $name,
+                        'sku'        => $sku,
+                        'qty'        => 0,
+                        'total'      => 0,
+                        'variations' => []
+                    ];
+                }
+                $urun_map[$key]['qty']   += $qty;
+                $urun_map[$key]['total'] += $tot;
             }
-            $urun_map[$key]['qty']   += $qty;
-            $urun_map[$key]['total'] += $tot;
         }
     }
 
@@ -184,6 +232,17 @@ function hizli_kasa_statistics_summary($request) {
     $top_urunler = array_values(array_slice($urun_map, 0, 10));
     foreach ($top_urunler as &$u) {
         $u['total'] = round($u['total'], 2);
+        if (!empty($u['variations'])) {
+            $vars = array_values($u['variations']);
+            usort($vars, fn($a, $b) => $b['qty'] <=> $a['qty']);
+            foreach ($vars as &$v) {
+                $v['total'] = round($v['total'], 2);
+            }
+            unset($v);
+            $u['variations'] = $vars;
+        } else {
+            $u['variations'] = [];
+        }
     }
     unset($u);
 

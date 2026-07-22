@@ -21,7 +21,8 @@
                     panelId: 'rapor-siparis-duzenleme',
                     onActivate: function() { self.loadLogs(); },
                     hasDateFilter: true,
-                    hasSearch: false
+                    hasSearch: false,
+                    order: 2
                 });
             }
         },

@@ -32,7 +32,8 @@
                     panelId: 'rapor-ozet-istatistik',
                     onActivate: function() { self.load(); },
                     hasDateFilter: true,
-                    hasSearch: false
+                    hasSearch: false,
+                    order: 1
                 });
             }
 
@@ -121,7 +122,7 @@
             // Günlük trend (tek satır — tam genişlik)
             if (gunluk.length > 1) {
                 html += '<div class="stat-chart-card stat-chart-full">';
-                html += '<div class="stat-chart-header"><h4 class="stat-chart-title">📈 Günlük Satış Trendi</h4><span class="stat-chart-badge">' + gunluk.length + ' gün</span></div>';
+                html += '<div class="stat-chart-header"><h4 class="stat-chart-title">📈 Günlük Satış Trendi</h4><span class="stat-chart-badge">' + gunluk.length + ' gün • Detay için noktaya tıklayın</span></div>';
                 html += '<div class="stat-chart-body"><canvas id="stat-chart-gunluk" height="80"></canvas></div>';
                 html += '</div>';
             }
@@ -158,6 +159,30 @@
 
             html += '</div>'; // .stat-dashboard-wrap
             panel.innerHTML = html;
+
+            // Accordion ve Analiz buton dinleyicileri
+            panel.querySelectorAll('.stat-var-toggle-btn').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var targetId = this.dataset.target;
+                    var row = document.getElementById(targetId);
+                    if (row) {
+                        var isExpanded = row.style.display !== 'none';
+                        row.style.display = isExpanded ? 'none' : 'table-row';
+                        this.classList.toggle('active', !isExpanded);
+                    }
+                });
+            });
+
+            panel.querySelectorAll('.stat-analyze-btn').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var sku = this.dataset.sku;
+                    if (sku && HK.ProductStatsReport) {
+                        HK.ProductStatsReport.analyzeSKU(sku);
+                    }
+                });
+            });
 
             // Chart.js mevcut mu?
             if (typeof Chart === 'undefined') {
@@ -208,7 +233,21 @@
                     },
                     options: {
                         responsive: true,
-                        interaction: { mode: 'index', intersect: false },
+                        interaction: { mode: 'nearest', intersect: true },
+                        onHover: function (evt, elements) {
+                            if (evt && evt.chart && evt.chart.canvas) {
+                                evt.chart.canvas.style.cursor = (elements && elements.length) ? 'pointer' : 'default';
+                            }
+                        },
+                        onClick: function (evt, elements) {
+                            if (elements && elements.length > 0) {
+                                var index = elements[0].index;
+                                var item = gunluk[index];
+                                if (item && item.tarih) {
+                                    self._showDayDetails(item.tarih);
+                                }
+                            }
+                        },
                         plugins: {
                             legend: { display: false },
                             tooltip: Object.assign({}, commonTooltip, {
@@ -380,21 +419,61 @@
             var self = this;
             var maxQty = urunler[0] ? urunler[0].qty : 1;
             var html = '<table class="stat-top-table"><thead><tr>'
-                + '<th>#</th><th>Ürün</th><th style="text-align:right">Adet</th><th style="text-align:right">Ciro</th>'
+                + '<th>#</th><th>Ürün</th><th style="text-align:right">Adet</th><th style="text-align:right">Ciro / Analiz</th>'
                 + '</tr></thead><tbody>';
 
             urunler.forEach(function (u, i) {
                 var rankClass = i === 0 ? 'top-1' : (i === 1 ? 'top-2' : (i === 2 ? 'top-3' : ''));
                 var pct = maxQty > 0 ? Math.round((u.qty / maxQty) * 100) : 0;
+                var hasVars = u.variations && u.variations.length > 0;
+                var varRowId = 'stat-var-row-' + i;
+                var mainSku = u.sku || u.name;
+
                 html += '<tr>';
                 html += '<td><span class="stat-rank-badge ' + rankClass + '">' + (i + 1) + '</span></td>';
-                html += '<td><div>' + self._esc(u.name) + '</div>'
-                    + (u.sku ? '<div style="font-size:11px;color:var(--hk-text-muted)">SKU: ' + self._esc(u.sku) + '</div>' : '')
-                    + '<div class="stat-progress-bar-wrap"><div class="stat-progress-bar" style="width:' + pct + '%"></div></div>'
-                    + '</td>';
+                html += '<td>';
+                html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
+                html += '<span style="font-weight:600;">' + self._esc(u.name) + '</span>';
+                if (hasVars) {
+                    html += '<button class="stat-var-toggle-btn" data-target="' + varRowId + '">▼ ' + u.variations.length + ' Varyasyon</button>';
+                }
+                html += '</div>';
+                if (u.sku) {
+                    html += '<div style="font-size:11px;color:var(--hk-text-muted)">SKU: ' + self._esc(u.sku) + '</div>';
+                }
+                html += '<div class="stat-progress-bar-wrap"><div class="stat-progress-bar" style="width:' + pct + '%"></div></div>';
+                html += '</td>';
                 html += '<td style="text-align:right;font-weight:700">' + u.qty + '</td>';
-                html += '<td style="text-align:right;color:var(--hk-success);font-weight:700">₺ ' + self._num(u.total) + '</td>';
+                html += '<td style="text-align:right">';
+                html += '<div style="color:var(--hk-success);font-weight:700;margin-bottom:3px;">₺ ' + self._num(u.total) + '</div>';
+                html += '<button class="stat-analyze-btn" data-sku="' + self._esc(mainSku) + '" title="Ürün İstatistiğini İncele">🔍 Analiz</button>';
+                html += '</td>';
                 html += '</tr>';
+
+                if (hasVars) {
+                    html += '<tr id="' + varRowId + '" class="stat-var-row" style="display:none;">';
+                    html += '<td colspan="4" style="padding:0;background:rgba(0,0,0,0.02);">';
+                    html += '<div class="stat-var-wrap">';
+                    html += '<table class="stat-var-table"><thead><tr>';
+                    html += '<th>Varyasyon</th><th>SKU</th><th style="text-align:right">Adet</th><th style="text-align:right">Ciro</th><th></th>';
+                    html += '</tr></thead><tbody>';
+
+                    u.variations.forEach(function (v) {
+                        var varSku = v.sku || v.name;
+                        html += '<tr>';
+                        html += '<td><span class="stat-var-name">↳ ' + self._esc(v.name) + '</span></td>';
+                        html += '<td><span class="stat-var-sku">' + (v.sku ? self._esc(v.sku) : '-') + '</span></td>';
+                        html += '<td style="text-align:right;font-weight:600;">' + v.qty + '</td>';
+                        html += '<td style="text-align:right;color:var(--hk-success);font-weight:600;">₺ ' + self._num(v.total) + '</td>';
+                        html += '<td style="text-align:right;"><button class="stat-analyze-btn stat-analyze-sub" data-sku="' + self._esc(varSku) + '" title="Varyasyon İstatistiğini İncele">🔍</button></td>';
+                        html += '</tr>';
+                    });
+
+                    html += '</tbody></table>';
+                    html += '</div>';
+                    html += '</td>';
+                    html += '</tr>';
+                }
             });
 
             html += '</tbody></table>';
@@ -449,6 +528,25 @@
 
         _today: function () {
             return new Date().toISOString().split('T')[0];
+        },
+
+        _showDayDetails: function (targetDate) {
+            if (!targetDate || !HK.ReportHub) return;
+
+            var elStart = document.getElementById('rhub-tarih-bas');
+            var elEnd   = document.getElementById('rhub-tarih-bit');
+            if (elStart) elStart.value = targetDate;
+            if (elEnd)   elEnd.value = targetDate;
+
+            if (HK.ReportHub.history) {
+                HK.ReportHub.history.push({
+                    view: 'report',
+                    catId: 'istatistik',
+                    repId: 'ozet-istatistik'
+                });
+            }
+
+            HK.ReportHub.kategoriAc('satis', 'tum-siparisler');
         },
 
         _esc: function (s) {

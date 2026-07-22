@@ -270,6 +270,91 @@
     transition: width 0.6s ease;
 }
 
+/* Varyasyon Accordion & Analiz Buton Stilleri */
+.stat-var-toggle-btn {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stat-var-toggle-btn:hover,
+.stat-var-toggle-btn.active {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+}
+
+.stat-var-wrap {
+    padding: 10px 14px;
+    border-top: 1px dashed var(--hk-border);
+    border-bottom: 1px dashed var(--hk-border);
+}
+
+.stat-var-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+}
+
+.stat-var-table th {
+    padding: 4px 8px;
+    color: var(--hk-text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    border-bottom: 1px solid var(--hk-border);
+}
+
+.stat-var-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.stat-var-name {
+    color: var(--hk-text-main);
+    font-weight: 500;
+}
+
+.stat-var-sku {
+    color: var(--hk-text-muted);
+    font-size: 11px;
+}
+
+.stat-analyze-btn {
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    color: var(--hk-text-main);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stat-analyze-btn:hover {
+    background: #3b82f6;
+    color: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.stat-analyze-sub {
+    padding: 2px 6px;
+    font-size: 10px;
+}
+
 /* =============================================
    DARK TEMA
    ============================================= */

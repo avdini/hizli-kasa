@@ -28,7 +28,8 @@
                     onActivate: function () { self._renderShell(); },
                     hasDateFilter: true,
                     hasSearch: false,
-                    description: 'SKU bazlı satış, iade ve kâr analizi'
+                    description: 'SKU bazlı satış, iade ve kâr analizi',
+                    order: 2
                 });
             }
 
@@ -38,6 +39,27 @@
                     self._renderCharts(self.lastData);
                 }
             });
+        },
+
+        analyzeSKU: function (sku) {
+            var self = this;
+            if (!sku || !HK.ReportHub) return;
+
+            if (HK.ReportHub.history) {
+                HK.ReportHub.history.push({
+                    view: 'report',
+                    catId: 'istatistik',
+                    repId: 'ozet-istatistik'
+                });
+            }
+
+            HK.ReportHub.kategoriAc('istatistik', 'urun-istatistik');
+
+            setTimeout(function () {
+                var input = document.getElementById('psr-sku-input');
+                if (input) input.value = sku;
+                self._loadStats(sku);
+            }, 100);
         },
 
         _renderShell: function () {

@@ -24,7 +24,8 @@
                     onActivate: function() { self.loadOrders(1); },
                     hasDateFilter: true,
                     hasSearch: true,
-                    searchPlaceholder: 'Sipariş ID veya Ürün Ara...'
+                    searchPlaceholder: 'Sipariş ID veya Ürün Ara...',
+                    order: 1
                 });
 
                 HK.ReportHub.registerReport({
@@ -36,7 +37,8 @@
                     onActivate: function() { self.loadInternetOrders(1); },
                     hasDateFilter: true,
                     hasSearch: true,
-                    searchPlaceholder: 'Sipariş ID veya Müşteri Ara...'
+                    searchPlaceholder: 'Sipariş ID veya Müşteri Ara...',
+                    order: 2
                 });
             }
 

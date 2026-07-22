@@ -22,7 +22,8 @@
                     onActivate: function() { self.loadRefunds(1); },
                     hasDateFilter: true,
                     hasSearch: true,
-                    searchPlaceholder: 'İade ID veya Kasiyer Ara...'
+                    searchPlaceholder: 'İade ID veya Kasiyer Ara...',
+                    order: 1
                 });
             }
 
