@@ -313,6 +313,34 @@ const RefundManager = (function () {
         }
     }
 
+    function renderAttributeChipsHtml(product) {
+        if (product.attributes) {
+            let chips = '';
+            if (typeof product.attributes === 'object' && !Array.isArray(product.attributes)) {
+                const keys = Object.keys(product.attributes);
+                keys.forEach(key => {
+                    const val = product.attributes[key];
+                    if (!val) return;
+                    const lowerKey = key.toLowerCase();
+                    const isStandard = ['beden', 'renk', 'numara', 'size', 'color', 'ebat'].includes(lowerKey);
+                    const labelText = isStandard ? val : `${key}: ${val}`;
+                    chips += `<span class="attr-chip" title="${key}: ${val}">${labelText}</span>`;
+                });
+            } else if (typeof product.attributes === 'string' && product.attributes.trim() !== '') {
+                chips = `<span class="attr-chip">${product.attributes}</span>`;
+            }
+            if (chips) {
+                return `<div class="attr-chip-container">${chips}</div>`;
+            }
+        }
+        if (product.name && product.name.includes(' - ')) {
+            const parts = product.name.split(' - ').slice(1).join(' - ').split(',');
+            const chips = parts.map(p => `<span class="attr-chip">${p.trim()}</span>`).join('');
+            return `<div class="attr-chip-container">${chips}</div>`;
+        }
+        return `<span class="urun-ad">${product.name}</span>`;
+    }
+
     function renderManualSearchResults(results) {
         const container = document.getElementById('iade-siparis-detay');
         if (!container) return;
@@ -325,8 +353,8 @@ const RefundManager = (function () {
         let html = `<div class="urun-listesi-baslik">Arama Sonuçları (${results.length})</div><div class="iade-kaydirilabilir-liste">`;
         
         results.forEach(product => {
-            // Eğer varyant ise ve ana ürünse (seçilemez)
             const isVariable = product.type === 'variable' || product.is_variable;
+            const isVariation = product.type === 'variation' || product.parent_id > 0;
             const btnHtml = isVariable 
                 ? `<span class="iade-uyari-text">Varyant Seçin</span>`
                 : `<button class="iade-ekle-btn" onclick="RefundManager.addManualToRefundCart(${JSON.stringify(product).replace(/"/g, '&quot;')})">İadeye Ekle</button>`;
@@ -339,11 +367,16 @@ const RefundManager = (function () {
                 ? `<img src="${imageSrc}" class="iade-item-image" alt="">`
                 : `<div class="iade-item-image-placeholder"></div>`;
 
+            const rowClass = isVariation ? 'iade-urun-satir iade-varyasyon-satir' : 'iade-urun-satir';
+            const nameHtml = isVariation
+                ? `<div class="urun-ad-wrapper"><span class="var-icon">↳</span>${renderAttributeChipsHtml(product)}</div>`
+                : `<span class="urun-ad">${product.name}</span>`;
+
             html += `
-                <div class="iade-urun-satir">
+                <div class="${rowClass}">
                     ${imgHtml}
                     <div class="urun-bilgi">
-                        <span class="urun-ad">${product.name}</span>
+                        ${nameHtml}
                         <span class="urun-sku">SKU: ${product.sku || '-'} | Stok: ${product.stock_quantity || 0}</span>
                     </div>
                     <div class="urun-fiyat-adet">

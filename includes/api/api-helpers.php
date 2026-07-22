@@ -170,6 +170,26 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id)
         $thumb_id = $m['_thumbnail_id'] ?? '';
         $img_url = $thumb_id ? wp_get_attachment_image_url($thumb_id, 'thumbnail') : '';
 
+        $attributes = [];
+        if ($p->post_type === 'product_variation') {
+            foreach ($m as $mk => $mv) {
+                if (strpos($mk, 'attribute_') === 0 && $mv !== '') {
+                    $raw_slug = str_replace(['attribute_pa_', 'attribute_'], '', $mk);
+                    $label = function_exists('wc_attribute_label') ? wc_attribute_label($raw_slug) : ucwords(str_replace(['-', '_'], ' ', $raw_slug));
+                    $val = $mv;
+                    if (strpos($mk, 'attribute_pa_') === 0) {
+                        $term = get_term_by('slug', $mv, 'pa_' . $raw_slug);
+                        if ($term && !is_wp_error($term)) {
+                            $val = $term->name;
+                        } else {
+                            $val = ucwords(str_replace(['-', '_'], ' ', $mv));
+                        }
+                    }
+                    $attributes[$label] = $val;
+                }
+            }
+        }
+
         $final[$pid] = [
             'id' => $pid,
             'parent_id' => (int) $p->post_parent,
@@ -185,6 +205,7 @@ function hizli_kasa_hydrate_products_batch($ids, $depo_id)
             'depo_kodu' => $d_code,
             'images' => $img_url ? [['src' => $img_url]] : [],
             'is_variable' => $p_type === 'variable',
+            'attributes' => $attributes,
             'variations' => []
         ];
     }

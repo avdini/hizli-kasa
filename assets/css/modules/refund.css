@@ -438,6 +438,51 @@
 .iade-urun-satir .urun-ad { font-weight: bold; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .iade-urun-satir .urun-sku { font-size: 11px; color: #999; }
 
+/* Varyasyon Satırı & Attribute Çip Tasarımı */
+.iade-urun-satir.iade-varyasyon-satir {
+    margin-left: 15px;
+    background: rgba(52, 152, 219, 0.03);
+    border-left: 3px solid var(--hk-accent, #3498db);
+    border-bottom: 1px dashed var(--hk-border);
+    padding-left: 10px;
+}
+
+.urun-ad-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.var-icon {
+    color: var(--hk-accent, #3498db);
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.attr-chip-container {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+}
+
+.attr-chip {
+    display: inline-block;
+    background: var(--hk-bg-hover, #f0f3f6);
+    color: var(--hk-text-main, #2c3e50);
+    border: 1px solid var(--hk-border, #dcdfe6);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
+
 .iade-urun-satir .urun-fiyat-adet { text-align: right; min-width: 100px; }
 .birim-fiyat { font-weight: bold; color: var(--hk-text-main); }
 .mevcut-adet { font-weight: bold; color: #3498db; }
