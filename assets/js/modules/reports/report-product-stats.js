@@ -45,6 +45,8 @@
             var self = this;
             if (!sku || !HK.ReportHub) return;
 
+            self.pendingSKU = sku;
+
             if (HK.ReportHub.history) {
                 HK.ReportHub.history.push({
                     view: 'report',
@@ -56,9 +58,13 @@
             HK.ReportHub.kategoriAc('istatistik', 'urun-istatistik');
 
             setTimeout(function () {
-                var input = document.getElementById('psr-sku-input');
-                if (input) input.value = sku;
-                self._loadStats(sku);
+                if (self.pendingSKU) {
+                    var skuToLoad = self.pendingSKU;
+                    self.pendingSKU = null;
+                    var input = document.getElementById('psr-sku-input');
+                    if (input) input.value = skuToLoad;
+                    self._loadStats(skuToLoad);
+                }
             }, 100);
         },
 
@@ -114,7 +120,12 @@
                 self._loadStats(sku);
             });
 
-            if (self.lastData) {
+            if (self.pendingSKU) {
+                var skuToLoad = self.pendingSKU;
+                self.pendingSKU = null;
+                skuInput.value = skuToLoad;
+                self._loadStats(skuToLoad);
+            } else if (self.lastData) {
                 self._renderDashboard(self.lastData);
             }
         },
@@ -173,6 +184,12 @@
             var self = this;
             var dashboard = document.getElementById('psr-dashboard');
             if (!dashboard) return;
+
+            var input = document.getElementById('psr-sku-input');
+            if (input && input.value !== sku) {
+                input.value = sku;
+            }
+            self._fetchPreview(sku);
 
             var dateStart = (document.getElementById('rhub-tarih-bas') || {}).value || self._today();
             var dateEnd   = (document.getElementById('rhub-tarih-bit') || {}).value || self._today();

@@ -427,7 +427,7 @@
                 var pct = maxQty > 0 ? Math.round((u.qty / maxQty) * 100) : 0;
                 var hasVars = u.variations && u.variations.length > 0;
                 var varRowId = 'stat-var-row-' + i;
-                var mainSku = u.sku || u.name;
+                var mainSku = u.sku || u.id || u.name;
 
                 html += '<tr>';
                 html += '<td><span class="stat-rank-badge ' + rankClass + '">' + (i + 1) + '</span></td>';
@@ -459,7 +459,7 @@
                     html += '</tr></thead><tbody>';
 
                     u.variations.forEach(function (v) {
-                        var varSku = v.sku || v.name;
+                        var varSku = v.sku || v.id || v.name;
                         html += '<tr>';
                         html += '<td><span class="stat-var-name">↳ ' + self._esc(v.name) + '</span></td>';
                         html += '<td><span class="stat-var-sku">' + (v.sku ? self._esc(v.sku) : '-') + '</span></td>';
