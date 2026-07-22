@@ -540,6 +540,23 @@ window.HizliKasa = window.HizliKasa || {};
             if (!item) return;
 
             yeniDeger = parseFloat(yeniDeger) || 0;
+            var absQty = Math.abs(item.quantity);
+            if (absQty === 0) return;
+
+            if (item.quantity < 0) {
+                var yeniBirimFiyat = (tip === 'toplam') ? (yeniDeger / absQty) : yeniDeger;
+                if (yeniBirimFiyat < 0) yeniBirimFiyat = 0;
+
+                item.price = parseFloat(yeniBirimFiyat.toFixed(2));
+                item.line_discount = 0;
+
+                this.sepetiKaydet();
+                if (HK.UIRenderer) {
+                    HK.UIRenderer.arayuzuGuncelle();
+                }
+                return;
+            }
+
             var satirToplamFiyat = item.price * item.quantity;
             var hedeflenenSatirNet;
 

@@ -155,13 +155,35 @@ window.HizliKasa = window.HizliKasa || {};
                         '</div>' +
                         '<div class="urun-orta-detay">' +
                             '<span class="urun-detay-metin" style="font-size:15px; font-weight:bold; color:var(--hk-danger, #e74c3c);">' +
-                                absQty + ' Adet x ' + item.price.toFixed(2) + ' TL</span>' +
+                                absQty + ' Adet x <span class="urun-birim-fiyat-alan" data-index="' + index + '" style="cursor:pointer; text-decoration:underline;" title="Tıkla → Değişim birim fiyatını düzenle">' + item.price.toFixed(2) + '</span> TL</span>' +
                         '</div>' +
                         '<div class="urun-sag-aksiyonlar">' +
                             '<span class="urun-fiyat-grup" style="text-align:right; flex-shrink:0;">' +
-                                '<div class="ara-toplam" style="font-size: 19px; color: #e74c3c; font-weight: 800; line-height: 1.1;">-' + lineTotal.toFixed(2) + ' TL</div>' +
+                                '<div class="ara-toplam urun-satir-toplam-alan" data-index="' + index + '" style="font-size: 19px; color: #e74c3c; font-weight: 800; line-height: 1.1; cursor:pointer;" title="Tıkla → Değişim satır toplamını düzenle">-' + lineTotal.toFixed(2) + ' TL</div>' +
                             '</span>' +
                         '</div>';
+
+                    // Click-to-edit: Birim fiyat alanı
+                    var birimFiyatSpan = li.querySelector(".urun-birim-fiyat-alan");
+                    if (birimFiyatSpan) {
+                        birimFiyatSpan.addEventListener("click", (function(idx, el) {
+                            return function(e) {
+                                e.stopPropagation();
+                                self._clickToEdit(el, idx, 'birim');
+                            };
+                        })(index, birimFiyatSpan));
+                    }
+
+                    // Click-to-edit: Satır toplam alanı
+                    var satirToplamSpan = li.querySelector(".urun-satir-toplam-alan");
+                    if (satirToplamSpan) {
+                        satirToplamSpan.addEventListener("click", (function(idx, el) {
+                            return function(e) {
+                                e.stopPropagation();
+                                self._clickToEdit(el, idx, 'toplam');
+                            };
+                        })(index, satirToplamSpan));
+                    }
 
                     // Silme (çıkarma) butonu
                     var silButon = document.createElement("button");
@@ -540,12 +562,17 @@ window.HizliKasa = window.HizliKasa || {};
             // Zaten input modundaysa çık
             if (el.querySelector("input")) return;
 
-            var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
-            var satirNakitIndirim = hasAutoDiscount ? (item.price * item.quantity * 0.05) : 0;
-            var netSatirFiyati = (item.price * item.quantity) - satirNakitIndirim - (item.line_discount || 0);
-            if (netSatirFiyati < 0) netSatirFiyati = 0;
-            
-            var mevcutDeger = tip === 'birim' ? (netSatirFiyati / item.quantity) : netSatirFiyati;
+            var mevcutDeger;
+            if (item.quantity < 0) {
+                var absQty = Math.abs(item.quantity);
+                mevcutDeger = tip === 'birim' ? item.price : (item.price * absQty);
+            } else {
+                var hasAutoDiscount = (state.odemeTipi === "cash" || state.odemeTipi === "iban");
+                var satirNakitIndirim = hasAutoDiscount ? (item.price * item.quantity * 0.05) : 0;
+                var netSatirFiyati = (item.price * item.quantity) - satirNakitIndirim - (item.line_discount || 0);
+                if (netSatirFiyati < 0) netSatirFiyati = 0;
+                mevcutDeger = tip === 'birim' ? (netSatirFiyati / item.quantity) : netSatirFiyati;
+            }
 
             var orijinalText = el.textContent;
             var input = document.createElement("input");

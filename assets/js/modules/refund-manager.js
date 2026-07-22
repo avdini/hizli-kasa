@@ -1000,7 +1000,7 @@ const RefundManager = (function () {
                 <li>
                     <div class="sepet-item-bilgi">
                         <strong>${item.name}</strong> <br>
-                        <span>${item.qty} adet x ${item.price} TL</span>
+                        <span>${item.qty} adet x <span class="iade-birim-fiyat-edit" style="cursor:pointer; text-decoration:underline; font-weight:bold;" onclick="RefundManager.editRefundCartItemPrice('${item.item_id}')" title="Birim fiyatı düzenlemek için tıklayın">${item.price.toFixed(2)} TL ✏️</span></span>
                     </div>
                     <div class="sepet-item-fiyat">-${lineTotal.toFixed(2)} TL</div>
                     <button class="sepet-sil" onclick="RefundManager.removeFromRefundCart('${item.item_id}')">✕</button>
@@ -1327,6 +1327,23 @@ const RefundManager = (function () {
         }
     }
 
+    function editRefundCartItemPrice(itemId) {
+        const item = refundCart.find(i => i.item_id == itemId);
+        if (!item) return;
+
+        const inputStr = prompt(`"${item.name}" için yeni İade Birim Fiyatını (TL) girin:`, item.price.toFixed(2));
+        if (inputStr === null) return;
+
+        const newPrice = HK.CurrencyMask ? HK.CurrencyMask.parse(inputStr) : parseFloat(inputStr.replace(',', '.'));
+        if (isNaN(newPrice) || newPrice < 0) {
+            alert('Geçersiz birim fiyat.');
+            return;
+        }
+
+        item.price = parseFloat(newPrice.toFixed(2));
+        renderRefundCart();
+    }
+
     return {
         init,
         addToRefundCart,
@@ -1334,6 +1351,7 @@ const RefundManager = (function () {
         selectOrder,
         closeSearchResults,
         addManualToRefundCart,
+        editRefundCartItemPrice,
         sendToRegisterForExchange
     };
 })();
