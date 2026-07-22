@@ -243,10 +243,12 @@
 #iade-siparis-detay {
     display: flex;
     flex-direction: column;
+    min-height: 0;
 }
 
 .iade-kaydirilabilir-liste {
     flex: 1;
+    min-height: 250px;
     overflow-y: auto;
     padding-right: 10px;
     margin-right: -10px; /* Offset for padding if needed */

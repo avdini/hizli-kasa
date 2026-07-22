@@ -612,13 +612,18 @@ const RefundManager = (function () {
             <div class="iade-kaydirilabilir-liste">
         `;
 
-        originalOrder.items.forEach(item => {
+        const itemsList = Array.isArray(originalOrder.items)
+            ? originalOrder.items
+            : Object.values(originalOrder.items || {});
+
+        itemsList.forEach(item => {
             var depoBadge = item.depo_adi
                 ? '<span class="depo-badge" title="Çıkış Deposu">📦 ' + item.depo_adi + '</span>'
                 : '<span class="depo-badge depo-bilinmeyen" title="Depo bilgisi yok">📦 Bilinmeyen</span>';
 
-            var iskontoBadge = (originalOrder.has_item_discount && item.item_discount > 0)
-                ? `<span class="urun-iskonto-badge" style="background:#e74c3c;color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:8px;vertical-align:middle;display:inline-block;">İsk: -${item.item_discount.toFixed(2)} ₺</span>`
+            var itemDiscount = parseFloat(item.item_discount) || 0;
+            var iskontoBadge = (originalOrder.has_item_discount && itemDiscount > 0)
+                ? `<span class="urun-iskonto-badge" style="background:#e74c3c;color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:8px;vertical-align:middle;display:inline-block;">İsk: -${itemDiscount.toFixed(2)} ₺</span>`
                 : '';
 
             var imgHtml = item.image
