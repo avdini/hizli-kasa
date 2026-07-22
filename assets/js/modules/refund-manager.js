@@ -659,27 +659,40 @@ const RefundManager = (function () {
 
         itemsList.forEach(item => {
             var depoBadge = item.depo_adi
-                ? '<span class="depo-badge" title="Çıkış Deposu">📦 ' + item.depo_adi + '</span>'
-                : '<span class="depo-badge depo-bilinmeyen" title="Depo bilgisi yok">📦 Bilinmeyen</span>';
+                ? `<span class="depo-badge" title="Çıkış Deposu: ${item.depo_adi}">📦 ${item.depo_adi}</span>`
+                : `<span class="depo-badge depo-bilinmeyen" title="Depo bilgisi bulunamadı">📦 Bilinmeyen</span>`;
 
             var itemDiscount = parseFloat(item.item_discount) || 0;
             var iskontoBadge = (originalOrder.has_item_discount && itemDiscount > 0)
-                ? `<span class="urun-iskonto-badge" style="background:#e74c3c;color:#fff;font-size:10px;padding:2px 6px;border-radius:10px;margin-left:8px;vertical-align:middle;display:inline-block;">İsk: -${itemDiscount.toFixed(2)} ₺</span>`
+                ? `<span class="urun-iskonto-badge" title="Ürüne özel -${itemDiscount.toFixed(2)} ₺ iskonto uygulandı">İsk: -${itemDiscount.toFixed(2)} ₺</span>`
                 : '';
 
             var imgHtml = item.image
-                ? `<img src="${item.image}" class="iade-item-image" alt="">`
+                ? `<img src="${item.image}" class="iade-item-image" alt="" title="${item.name}">`
                 : `<div class="iade-item-image-placeholder"></div>`;
 
+            var nameHtml = `<span class="urun-ad" title="${item.name}">${item.name}</span>`;
+            if (item.name && item.name.includes(' - ')) {
+                var nameParts = item.name.split(' - ');
+                var parentTitle = nameParts[0];
+                var attrText = nameParts.slice(1).join(' - ');
+                var attrChips = attrText.split(',').map(a => `<span class="attr-chip" title="${a.trim()}">${a.trim()}</span>`).join('');
+                nameHtml = `<span class="urun-ad" title="${item.name}">${parentTitle}</span><div class="attr-chip-container">${attrChips}</div>`;
+            }
+
             html += `
-                <div class="iade-urun-satir">
+                <div class="iade-urun-satir" title="${item.name}">
                     ${imgHtml}
                     <div class="urun-bilgi">
-                        <span class="urun-ad">${item.name}</span>
-                        <span class="urun-sku">SKU: ${item.sku} ${depoBadge}</span>
+                        ${nameHtml}
+                        <div class="urun-meta-satir">
+                            <span class="urun-sku">SKU: ${item.sku || '-'}</span>
+                            ${depoBadge}
+                        </div>
                     </div>
                     <div class="urun-fiyat-adet">
-                        <span class="birim-fiyat">${item.price} TL</span> ${iskontoBadge} x <span class="mevcut-adet">${item.qty}</span>
+                        <span class="birim-fiyat">${item.price} TL</span> ${iskontoBadge}
+                        <span class="adet-vurgu">x <span class="mevcut-adet">${item.qty}</span></span>
                     </div>
                     <button class="iade-ekle-btn" onclick="RefundManager.addToRefundCart('${item.item_id}')">İade Et</button>
                 </div>

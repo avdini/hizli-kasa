@@ -409,10 +409,19 @@
 .iade-urun-satir {
     display: flex;
     align-items: center;
-    padding: 12px;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--hk-border);
-    gap: 15px;
+    gap: 12px;
     color: var(--hk-text-main);
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.iade-kaydirilabilir-liste .iade-urun-satir:nth-child(even) {
+    background: rgba(0, 0, 0, 0.015);
+}
+
+.iade-urun-satir:hover {
+    background: var(--hk-bg-hover, rgba(52, 152, 219, 0.05)) !important;
 }
 
 .iade-urun-satir:last-child { border-bottom: none; }
@@ -437,6 +446,47 @@
 .iade-urun-satir .urun-bilgi { flex: 1; min-width: 0; }
 .iade-urun-satir .urun-ad { font-weight: bold; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .iade-urun-satir .urun-sku { font-size: 11px; color: #999; }
+
+.urun-meta-satir {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 2px;
+    flex-wrap: wrap;
+}
+
+.depo-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(46, 204, 113, 0.12);
+    color: #27ae60;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.depo-badge.depo-bilinmeyen {
+    background: rgba(149, 165, 166, 0.12);
+    color: #7f8c8d;
+    border-color: rgba(149, 165, 166, 0.3);
+}
+
+.urun-iskonto-badge {
+    background: rgba(231, 76, 60, 0.12);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.3);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    margin-left: 4px;
+}
+
+.adet-vurgu {
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--hk-text-muted);
+}
 
 /* Varyasyon Satırı & Attribute Çip Tasarımı */
 .iade-urun-satir.iade-varyasyon-satir {
