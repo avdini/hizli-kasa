@@ -187,6 +187,7 @@ function hizli_kasa_get_order_details($request)
  */
 function hizli_kasa_search_orders($request)
 {
+    global $wpdb;
     nocache_headers();
     $phone = sanitize_text_field($request->get_param('phone'));
     $barcode = sanitize_text_field($request->get_param('barcode'));
@@ -207,11 +208,74 @@ function hizli_kasa_search_orders($request)
     $meta_query = array('relation' => 'AND');
 
     if (!empty($phone)) {
-        $meta_query[] = array(
-            'key' => '_hizli_kasa_musteri_telefon',
-            'value' => $phone,
-            'compare' => 'LIKE',
-        );
+        $digits = preg_replace('/\D/', '', $phone);
+        $phone_variants = array();
+        if (!empty($phone)) {
+            $phone_variants[] = $phone;
+        }
+        if (!empty($digits)) {
+            $phone_variants[] = $digits;
+            $digits10 = (strlen($digits) === 11 && $digits[0] === '0') ? substr($digits, 1) : $digits;
+            if (strlen($digits10) === 10) {
+                $phone_variants[] = '0' . $digits10;
+                $phone_variants[] = '+90' . $digits10;
+                $phone_variants[] = '+90 ' . $digits10;
+                $phone_variants[] = '90' . $digits10;
+            }
+        }
+        $phone_variants = array_unique(array_filter($phone_variants));
+
+        $phone_sub_query = array('relation' => 'OR');
+        foreach ($phone_variants as $variant) {
+            $phone_sub_query[] = array(
+                'key' => '_hizli_kasa_musteri_telefon',
+                'value' => $variant,
+                'compare' => 'LIKE',
+            );
+            $phone_sub_query[] = array(
+                'key' => '_billing_phone',
+                'value' => $variant,
+                'compare' => 'LIKE',
+            );
+        }
+        $meta_query[] = $phone_sub_query;
+    }
+
+    if (!empty($barcode)) {
+        $product_ids = array();
+        if (is_numeric($barcode) && intval($barcode) > 0) {
+            $product_ids[] = intval($barcode);
+        }
+        $sku_pid = wc_get_product_id_by_sku($barcode);
+        if ($sku_pid > 0) {
+            $product_ids[] = $sku_pid;
+        }
+
+        $like_barcode = '%' . $wpdb->esc_like($barcode) . '%';
+        $meta_matched_ids = $wpdb->get_col($wpdb->prepare(
+            "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ('_sku', '_barcode', '_custom_barcode', '_hk_barcode') AND meta_value LIKE %s LIMIT 100",
+            $like_barcode
+        ));
+        if (!empty($meta_matched_ids)) {
+            $product_ids = array_merge($product_ids, array_map('intval', $meta_matched_ids));
+        }
+        $product_ids = array_unique(array_filter($product_ids));
+
+        if (!empty($product_ids)) {
+            $placeholders = implode(',', array_fill(0, count($product_ids), '%d'));
+            $sql = "SELECT DISTINCT order_id FROM {$wpdb->prefix}woocommerce_order_items oi
+                    INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim ON oi.order_item_id = oim.order_item_id
+                    WHERE oim.meta_key IN ('_product_id', '_variation_id')
+                    AND oim.meta_value IN ($placeholders)";
+            $matching_order_ids = array_map('intval', $wpdb->get_col($wpdb->prepare($sql, $product_ids)));
+            if (!empty($matching_order_ids)) {
+                $args['post__in'] = $matching_order_ids;
+            } else {
+                $args['post__in'] = array(0);
+            }
+        } else {
+            $args['post__in'] = array(0);
+        }
     }
 
     $depo_id = intval($request->get_param('depo_id'));
@@ -222,7 +286,7 @@ function hizli_kasa_search_orders($request)
         );
     }
 
-    if (!empty($meta_query) && count($meta_query) > 1) {
+    if (!empty($meta_query) && count($meta_query) > 0) {
         $args['meta_query'] = $meta_query;
     }
 
@@ -242,30 +306,33 @@ function hizli_kasa_search_orders($request)
     $results = [];
 
     foreach ($orders as $order) {
-        // İade işlemi olarak oluşturulan negatif siparişleri listeleme
         if ($order->get_meta('_hizli_kasa_is_refund') === 'yes') {
             continue;
         }
 
         $total = (float) $order->get_total();
 
-        // Fiyat filtresi (Manuel kontrol çünkü wc_get_orders ile karmaşık olabilir)
         if ($price_min > 0 && $total < $price_min)
             continue;
         if ($price_max > 0 && $total > $price_max)
             continue;
 
-        // Barkod/Ürün filtresi
         if (!empty($barcode)) {
             $found = false;
+            $barcode_lower = mb_strtolower($barcode);
             foreach ($order->get_items() as $item) {
                 if (!$item instanceof WC_Order_Item_Product) {
                     continue;
                 }
                 $product = $item->get_product();
-                if ($product && ($product->get_sku() === $barcode || (string) $product->get_id() === $barcode)) {
-                    $found = true;
-                    break;
+                if ($product) {
+                    $item_sku = mb_strtolower((string) $product->get_sku());
+                    $item_id = (string) $product->get_id();
+                    $parent_id = (string) $product->get_parent_id();
+                    if ($item_sku === $barcode_lower || strpos($item_sku, $barcode_lower) !== false || $item_id === $barcode || $parent_id === $barcode) {
+                        $found = true;
+                        break;
+                    }
                 }
             }
             if (!$found)
@@ -277,7 +344,7 @@ function hizli_kasa_search_orders($request)
             'date' => $order->get_date_created()->date('d.m.Y H:i'),
             'total' => $total,
             'kasiyer' => $order->get_meta('_hizli_kasa_kasiyer') ?: '-',
-            'telefon' => $order->get_meta('_hizli_kasa_musteri_telefon') ?: '-',
+            'telefon' => $order->get_meta('_hizli_kasa_musteri_telefon') ?: ($order->get_billing_phone() ?: '-'),
             'is_fully_refunded' => ($order->get_meta('_hk_is_fully_refunded') === 'yes')
         ];
     }
