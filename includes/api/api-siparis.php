@@ -205,7 +205,8 @@ function hizli_kasa_search_orders($request)
         'order' => 'DESC',
     );
 
-    $meta_query = array('relation' => 'AND');
+    $phone_order_ids = null;
+    $barcode_order_ids = null;
 
     if (!empty($phone)) {
         $digits = preg_replace('/\D/', '', $phone);
@@ -225,20 +226,33 @@ function hizli_kasa_search_orders($request)
         }
         $phone_variants = array_unique(array_filter($phone_variants));
 
-        $phone_sub_query = array('relation' => 'OR');
+        $like_clauses = array();
+        $prepare_args = array();
         foreach ($phone_variants as $variant) {
-            $phone_sub_query[] = array(
-                'key' => '_hizli_kasa_musteri_telefon',
-                'value' => $variant,
-                'compare' => 'LIKE',
-            );
-            $phone_sub_query[] = array(
-                'key' => '_billing_phone',
-                'value' => $variant,
-                'compare' => 'LIKE',
-            );
+            $like_clauses[] = "meta_value LIKE %s";
+            $prepare_args[] = '%' . $wpdb->esc_like($variant) . '%';
         }
-        $meta_query[] = $phone_sub_query;
+
+        if (!empty($like_clauses)) {
+            $where_likes = implode(' OR ', $like_clauses);
+            $sql = "SELECT DISTINCT post_id FROM {$wpdb->postmeta} 
+                    WHERE meta_key IN ('_hizli_kasa_musteri_telefon', '_billing_phone') 
+                    AND ($where_likes) LIMIT 300";
+            $found_ids = array_map('intval', $wpdb->get_col($wpdb->prepare($sql, $prepare_args)));
+
+            if ($wpdb->get_var("SHOW TABLES LIKE '{$wpdb->prefix}wc_orders_meta'") === "{$wpdb->prefix}wc_orders_meta") {
+                $hpos_sql = "SELECT DISTINCT order_id FROM {$wpdb->prefix}wc_orders_meta 
+                             WHERE meta_key IN ('_hizli_kasa_musteri_telefon', '_billing_phone') 
+                             AND ($where_likes) LIMIT 300";
+                $hpos_ids = array_map('intval', $wpdb->get_col($wpdb->prepare($hpos_sql, $prepare_args)));
+                $found_ids = array_merge($found_ids, $hpos_ids);
+            }
+
+            $phone_order_ids = array_unique(array_filter($found_ids));
+            if (empty($phone_order_ids)) {
+                return array('results' => [], 'has_more' => false);
+            }
+        }
     }
 
     if (!empty($barcode)) {
@@ -266,28 +280,37 @@ function hizli_kasa_search_orders($request)
             $sql = "SELECT DISTINCT order_id FROM {$wpdb->prefix}woocommerce_order_items oi
                     INNER JOIN {$wpdb->prefix}woocommerce_order_itemmeta oim ON oi.order_item_id = oim.order_item_id
                     WHERE oim.meta_key IN ('_product_id', '_variation_id')
-                    AND oim.meta_value IN ($placeholders)";
-            $matching_order_ids = array_map('intval', $wpdb->get_col($wpdb->prepare($sql, $product_ids)));
-            if (!empty($matching_order_ids)) {
-                $args['post__in'] = $matching_order_ids;
-            } else {
-                $args['post__in'] = array(0);
-            }
+                    AND oim.meta_value IN ($placeholders) LIMIT 300";
+            $barcode_order_ids = array_map('intval', $wpdb->get_col($wpdb->prepare($sql, $product_ids)));
         } else {
-            $args['post__in'] = array(0);
+            $barcode_order_ids = array();
         }
+
+        if (empty($barcode_order_ids)) {
+            return array('results' => [], 'has_more' => false);
+        }
+    }
+
+    if ($phone_order_ids !== null && $barcode_order_ids !== null) {
+        $combined_ids = array_intersect($phone_order_ids, $barcode_order_ids);
+        if (empty($combined_ids)) {
+            return array('results' => [], 'has_more' => false);
+        }
+        $args['post__in'] = $combined_ids;
+    } elseif ($phone_order_ids !== null) {
+        $args['post__in'] = $phone_order_ids;
+    } elseif ($barcode_order_ids !== null) {
+        $args['post__in'] = $barcode_order_ids;
     }
 
     $depo_id = intval($request->get_param('depo_id'));
     if ($depo_id > 0) {
-        $meta_query[] = array(
-            'key' => '_hk_cikis_depo_id',
-            'value' => $depo_id,
+        $args['meta_query'] = array(
+            array(
+                'key' => '_hk_cikis_depo_id',
+                'value' => $depo_id,
+            )
         );
-    }
-
-    if (!empty($meta_query) && count($meta_query) > 0) {
-        $args['meta_query'] = $meta_query;
     }
 
     if (!empty($date_bas) || !empty($date_bit)) {
@@ -302,7 +325,12 @@ function hizli_kasa_search_orders($request)
         $args['date_created'] = $date_query;
     }
 
-    $orders = wc_get_orders($args);
+    try {
+        $orders = wc_get_orders($args);
+    } catch (\Throwable $e) {
+        return array('results' => [], 'has_more' => false);
+    }
+
     $results = [];
 
     foreach ($orders as $order) {
