@@ -227,9 +227,10 @@ function hizli_kasa_statistics_summary($request) {
     }
     $toplam_masraf = (float) ($masraf_rows[0]->total ?? 0);
 
-    // Saatlik diziyi tüm saatleri kapsayacak şekilde doldur (0–23)
+    // Saatlik diziyi mağaza çalışma vardiyasına uygun sırala (06:00 – 05:00)
     $saatlik = [];
-    for ($h = 0; $h < 24; $h++) {
+    for ($i = 0; $i < 24; $i++) {
+        $h = ($i + 6) % 24;
         $k = sprintf('%02d:00', $h);
         $saatlik[] = [
             'saat'  => $k,
@@ -250,12 +251,13 @@ function hizli_kasa_statistics_summary($request) {
         ];
     }
 
-    // İskonto Trend (Tek gün ise saatlik, çoklu gün ise günlük)
+    // İskonto Trend (Tek gün ise 06:00–05:00 saatlik, çoklu gün ise günlük)
     $is_single_day = ($date_start === $date_end);
     $iskonto_noktalar = [];
 
     if ($is_single_day) {
-        for ($h = 0; $h < 24; $h++) {
+        for ($i = 0; $i < 24; $i++) {
+            $h = ($i + 6) % 24;
             $k = sprintf('%02d:00', $h);
             $iskonto_noktalar[] = [
                 'label'   => $k,
