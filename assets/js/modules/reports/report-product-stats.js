@@ -955,6 +955,7 @@
                         pointHoverRadius: 6,
                         borderWidth: 2,
                         yAxisID: 'yAdet',
+                        hidden: true,
                     },
                     {
                         label: 'Ciro (₺)',
@@ -976,6 +977,7 @@
                     yAdet: {
                         type: 'linear',
                         position: 'left',
+                        display: 'auto',
                         grid: { color: gridColor },
                         ticks: { color: tickColor, stepSize: 1 },
                         beginAtZero: true,

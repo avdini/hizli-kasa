@@ -711,6 +711,7 @@
                         pointHoverRadius: 6,
                         borderWidth: 2,
                         yAxisID: 'ySiparis',
+                        hidden: true,
                     },
                     {
                         label: 'Net Ciro (₺)',
@@ -732,6 +733,7 @@
                     ySiparis: {
                         type: 'linear',
                         position: 'left',
+                        display: 'auto',
                         grid: { color: gridColor },
                         ticks: { color: tickColor, stepSize: 1 },
                         beginAtZero: true,
