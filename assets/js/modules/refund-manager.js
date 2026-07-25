@@ -398,7 +398,10 @@ const RefundManager = (function () {
         if (cartItem) {
             cartItem.qty++;
         } else {
-            const isVariation = (product.type === 'variation' || product.parent_id > 0);
+            const imageSrc = (product.images && product.images.length > 0)
+                ? product.images[0].src
+                : (product.image ? product.image : (product.image_url ? product.image_url : ''));
+
             refundCart.push({
                 item_id: itemId,
                 id: isVariation ? product.parent_id : product.id,
@@ -407,7 +410,8 @@ const RefundManager = (function () {
                 price: parseFloat(product.price),
                 qty: 1,
                 variation_id: isVariation ? product.id : 0,
-                depo_id: HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0
+                depo_id: HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0,
+                image: imageSrc
             });
         }
 
@@ -1275,7 +1279,7 @@ const RefundManager = (function () {
                 price: parseFloat(item.price),
                 regular_price: parseFloat(item.price),
                 line_discount: 0,
-                image: '',
+                image: item.image || item.image_url || (item.images && item.images[0] ? item.images[0].src : ''),
                 _is_exchange_return: true,
                 _exchange_depo_id: item.depo_id || (HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0),
                 _exchange_original_order: originalOrder ? originalOrder.id : null,

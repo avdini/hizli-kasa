@@ -145,9 +145,21 @@ window.HizliKasa = window.HizliKasa || {};
                     var li = document.createElement("li");
                     li.className = "exchange-return-item";
 
+                    var imgHtml = '';
+                    if (item.image) {
+                        imgHtml = '<div class="exchange-img-container has-image" title="Tıkla → Resmi büyüt">' +
+                                      '<img src="' + item.image + '" class="urun-resim exchange-urun-resim">' +
+                                      '<div class="exchange-img-overlay">🔄</div>' +
+                                  '</div>';
+                    } else {
+                        imgHtml = '<div class="exchange-img-container">' +
+                                      '<div class="exchange-img-placeholder">🔄</div>' +
+                                  '</div>';
+                    }
+
                     li.innerHTML =
                         '<div class="urun-sol-kolon">' +
-                            (item.image ? '<img src="' + item.image + '" class="urun-resim" style="width:40px; height:40px; object-fit:cover; border-radius:4px; margin-right:10px; flex-shrink:0; opacity:0.7;">' : '<div style="width:40px; height:40px; background:var(--hk-danger, #e74c3c); border-radius:4px; margin-right:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px;">🔄</div>') +
+                            imgHtml +
                             '<span class="urun-bilgi">' +
                                 '<strong class="urun-ad">' + item.name + '</strong>' +
                                 '<span class="urun-sku" style="color:#e74c3c; font-size:12px; font-weight:bold;">' + (item.sku || '') + ' <span class="exchange-badge">İADE</span></span>' +
@@ -162,6 +174,20 @@ window.HizliKasa = window.HizliKasa || {};
                                 '<div class="ara-toplam urun-satir-toplam-alan" data-index="' + index + '" style="font-size: 19px; color: #e74c3c; font-weight: 800; line-height: 1.1; cursor:pointer;" title="Tıkla → Değişim satır toplamını düzenle">-' + lineTotal.toFixed(2) + ' TL</div>' +
                             '</span>' +
                         '</div>';
+
+                    // Click-to-preview: Görsel varsa tıklayınca büyüt
+                    var imgContainer = li.querySelector(".exchange-img-container.has-image");
+                    if (imgContainer) {
+                        imgContainer.addEventListener("click", function(e) {
+                            e.stopPropagation();
+                            var src = item.image;
+                            if (window.HizliKasa && window.HizliKasa.StockTerminal && typeof window.HizliKasa.StockTerminal.openImagePreview === 'function') {
+                                window.HizliKasa.StockTerminal.openImagePreview(src);
+                            } else {
+                                self.openImagePreview(src);
+                            }
+                        });
+                    }
 
                     // Click-to-edit: Birim fiyat alanı
                     var birimFiyatSpan = li.querySelector(".urun-birim-fiyat-alan");
