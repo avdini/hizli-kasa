@@ -169,6 +169,55 @@
     justify-content: space-between;
 }
 
+.stat-main-trend-header {
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.stat-trend-toggle-wrap {
+    display: inline-flex;
+    align-items: center;
+    background: var(--hk-bg-subtle, rgba(0, 0, 0, 0.05));
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--hk-border, rgba(0, 0, 0, 0.08));
+}
+
+.stat-trend-toggle-btn {
+    background: transparent;
+    border: none;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--hk-text-muted, #64748b);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.stat-trend-toggle-btn:hover {
+    color: var(--hk-text-main, #1e293b);
+}
+
+.stat-trend-toggle-btn.active {
+    background: var(--hk-card-bg, #ffffff);
+    color: var(--hk-primary, #3b82f6);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    font-weight: 700;
+}
+
+#hizli-kasa-app.theme-dark .stat-trend-toggle-wrap {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+#hizli-kasa-app.theme-dark .stat-trend-toggle-btn.active {
+    background: #334155;
+    color: #38bdf8;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
 .stat-chart-title {
     font-size: 14px;
     font-weight: 700;

@@ -121,21 +121,25 @@
             // Grafik Grid
             html += '<div class="stat-charts-grid">';
 
-            // Günlük trend (tek satır — tam genişlik)
-            if (gunluk.length > 1) {
-                html += '<div class="stat-chart-card stat-chart-full">';
-                html += '<div class="stat-chart-header"><h4 class="stat-chart-title">📈 Günlük Satış Trendi</h4><span class="stat-chart-badge">' + gunluk.length + ' gün • Detay için noktaya tıklayın</span></div>';
-                html += '<div class="stat-chart-body"><canvas id="stat-chart-gunluk" height="80"></canvas></div>';
-                html += '</div>';
+            // Birleşik Trend Kartı (Satış Trendi & İskonto Analizi — Geçişli)
+            var iskNoktalar = iskonto.noktalar || [];
+            if (!self.activeTrendMode) {
+                self.activeTrendMode = 'satis';
             }
 
-            // İskonto Analizi (tek satır — tam genişlik)
-            var iskNoktalar = iskonto.noktalar || [];
-            if (iskNoktalar.length > 0) {
-                var modLabel = iskonto.mod === 'saatlik' ? 'Saatlik Yoğunluk' : iskNoktalar.length + ' Günlük Trend';
+            if (gunluk.length > 0 || iskNoktalar.length > 0) {
                 html += '<div class="stat-chart-card stat-chart-full">';
-                html += '<div class="stat-chart-header"><h4 class="stat-chart-title">✂️ İskonto Analizi</h4><span class="stat-chart-badge">' + modLabel + ' • Etiket vs. Gerçek Satış</span></div>';
-                html += '<div class="stat-chart-body"><canvas id="stat-chart-iskonto" height="80"></canvas></div>';
+                html += '<div class="stat-chart-header stat-main-trend-header">';
+                html += '<div>';
+                html += '<h4 class="stat-chart-title" id="stat-main-trend-title">📈 Satış Trendi</h4>';
+                html += '<span class="stat-chart-badge" id="stat-main-trend-badge">Yükleniyor...</span>';
+                html += '</div>';
+                html += '<div class="stat-trend-toggle-wrap">';
+                html += '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'satis' ? ' active' : '') + '" data-mode="satis">📈 Satış Trendi</button>';
+                html += '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'iskonto' ? ' active' : '') + '" data-mode="iskonto">✂️ İskonto Analizi</button>';
+                html += '</div>';
+                html += '</div>';
+                html += '<div class="stat-chart-body"><canvas id="stat-chart-main" height="80"></canvas></div>';
                 html += '</div>';
             }
 
@@ -224,135 +228,23 @@
                 cornerRadius: 8,
             };
 
-            // --- Günlük trend line chart ---
-            if (gunluk.length > 1 && document.getElementById('stat-chart-gunluk')) {
-                self.charts.gunluk = new Chart(document.getElementById('stat-chart-gunluk'), {
-                    type: 'line',
-                    data: {
-                        labels: gunluk.map(function (g) { return g.tarih_kisa; }),
-                        datasets: [{
-                            label: 'Net Ciro (₺)',
-                            data: gunluk.map(function (g) { return g.toplam; }),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59,130,246,0.10)',
-                            fill: true,
-                            tension: 0.4,
-                            pointBackgroundColor: '#3b82f6',
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            borderWidth: 2.5,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        interaction: { mode: 'nearest', intersect: true },
-                        onHover: function (evt, elements) {
-                            if (evt && evt.chart && evt.chart.canvas) {
-                                evt.chart.canvas.style.cursor = (elements && elements.length) ? 'pointer' : 'default';
-                            }
-                        },
-                        onClick: function (evt, elements) {
-                            if (elements && elements.length > 0) {
-                                var index = elements[0].index;
-                                var item = gunluk[index];
-                                if (item && item.tarih) {
-                                    self._showDayDetails(item.tarih);
-                                }
-                            }
-                        },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: Object.assign({}, commonTooltip, {
-                                callbacks: {
-                                    label: function (ctx) { return ' ₺ ' + self._num(ctx.parsed.y); }
-                                }
-                            })
-                        },
-                        scales: {
-                            x: { grid: { color: gridColor }, ticks: { color: tickColor } },
-                            y: {
-                                grid: { color: gridColor },
-                                ticks: {
-                                    color: tickColor,
-                                    callback: function (v) { return '₺' + self._num(v); }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
+            // --- Ana Trend Chart (Satış veya İskonto) ---
+            if (document.getElementById('stat-chart-main')) {
+                self._initMainTrendChart(data, gridColor, tickColor, commonTooltip);
 
-            // --- İskonto Analizi line chart ---
-            if (iskNoktalar.length > 0 && document.getElementById('stat-chart-iskonto')) {
-                self.charts.iskonto = new Chart(document.getElementById('stat-chart-iskonto'), {
-                    type: 'line',
-                    data: {
-                        labels: iskNoktalar.map(function (n) { return n.label; }),
-                        datasets: [
-                            {
-                                label: 'Etiket Toplamı (₺)',
-                                data: iskNoktalar.map(function (n) { return n.etiket; }),
-                                borderColor: '#94a3b8',
-                                backgroundColor: 'rgba(148,163,184,0.15)',
-                                fill: false,
-                                tension: 0.4,
-                                borderWidth: 2,
-                                borderDash: [5, 3],
-                                pointRadius: 4,
-                            },
-                            {
-                                label: 'Gerçek Satış (₺)',
-                                data: iskNoktalar.map(function (n) { return n.gercek; }),
-                                borderColor: '#10b981',
-                                backgroundColor: 'rgba(16,185,129,0.18)',
-                                fill: '-1',
-                                tension: 0.4,
-                                borderWidth: 2.5,
-                                pointRadius: 4,
-                                pointHoverRadius: 6,
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        interaction: { mode: 'index', intersect: false },
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top',
-                                labels: { color: tickColor, font: { size: 12 } }
-                            },
-                            tooltip: Object.assign({}, commonTooltip, {
-                                callbacks: {
-                                    label: function (ctx) {
-                                        return ' ' + ctx.dataset.label + ': ₺ ' + self._num(ctx.parsed.y);
-                                    },
-                                    afterBody: function (items) {
-                                        if (!items || !items.length) return [];
-                                        var idx = items[0].dataIndex;
-                                        var point = iskNoktalar[idx];
-                                        if (!point) return [];
-                                        var diff = point.iskonto;
-                                        var pct = point.etiket > 0 ? ((diff / point.etiket) * 100).toFixed(1) : '0';
-                                        return [
-                                            '-----------------------',
-                                            '✂️ Uygulanan İskonto: ₺ ' + self._num(diff) + ' (%' + pct + ' indirim)'
-                                        ];
-                                    }
-                                }
-                            })
-                        },
-                        scales: {
-                            x: { grid: { color: gridColor }, ticks: { color: tickColor } },
-                            y: {
-                                grid: { color: gridColor },
-                                ticks: {
-                                    color: tickColor,
-                                    callback: function (v) { return '₺' + self._num(v); }
-                                }
-                            }
-                        }
-                    }
+                // Toggle buton dinleyicileri
+                panel.querySelectorAll('.stat-trend-toggle-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var mode = this.dataset.mode;
+                        if (mode === self.activeTrendMode) return;
+                        self.activeTrendMode = mode;
+
+                        panel.querySelectorAll('.stat-trend-toggle-btn').forEach(function (b) {
+                            b.classList.toggle('active', b.dataset.mode === mode);
+                        });
+
+                        self._updateMainTrendChart(data, gridColor, tickColor, commonTooltip);
+                    });
                 });
             }
 
@@ -739,6 +631,161 @@
                 }
             });
             self.charts = {};
+        },
+
+        /* -------------------------------------------------
+           ANA TREND CHART (SATIŞ & İSKONTO DÖNÜŞÜMLÜ)
+        ------------------------------------------------- */
+        _initMainTrendChart: function (data, gridColor, tickColor, commonTooltip) {
+            var self = this;
+            var canvas = document.getElementById('stat-chart-main');
+            if (!canvas) return;
+
+            self.charts.main = new Chart(canvas, {
+                type: 'line',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+                        y: {
+                            grid: { color: gridColor },
+                            ticks: {
+                                color: tickColor,
+                                callback: function (v) { return '₺' + self._num(v); }
+                            }
+                        }
+                    }
+                }
+            });
+
+            self._updateMainTrendChart(data, gridColor, tickColor, commonTooltip);
+        },
+
+        _updateMainTrendChart: function (data, gridColor, tickColor, commonTooltip) {
+            var self = this;
+            var chart = self.charts.main;
+            if (!chart) return;
+
+            var mode = self.activeTrendMode || 'satis';
+            var titleEl = document.getElementById('stat-main-trend-title');
+            var badgeEl = document.getElementById('stat-main-trend-badge');
+
+            var gunluk  = data.gunluk_trend || [];
+            var saatlik = data.saatlik_dagilim || [];
+            var iskonto = data.iskonto_trend || {};
+            var iskNoktalar = iskonto.noktalar || [];
+
+            if (mode === 'satis') {
+                if (titleEl) titleEl.innerText = '📈 Satış Trendi';
+
+                var isSingleDay = (gunluk.length <= 1);
+                var labels = [];
+                var seriesData = [];
+
+                if (!isSingleDay) {
+                    labels = gunluk.map(function (g) { return g.tarih_kisa; });
+                    seriesData = gunluk.map(function (g) { return g.toplam; });
+                    if (badgeEl) badgeEl.innerText = gunluk.length + ' gün • Detay için noktaya tıklayın';
+                } else {
+                    labels = saatlik.map(function (s) { return s.saat; });
+                    seriesData = saatlik.map(function (s) { return s.total; });
+                    if (badgeEl) badgeEl.innerText = 'Saatlik Yoğunluk • 24 Saat';
+                }
+
+                chart.data.labels = labels;
+                chart.data.datasets = [{
+                    label: 'Net Ciro (₺)',
+                    data: seriesData,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59,130,246,0.10)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#3b82f6',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    borderWidth: 2.5,
+                }];
+
+                chart.options.plugins.legend = { display: false };
+                chart.options.plugins.tooltip = Object.assign({}, commonTooltip, {
+                    callbacks: {
+                        label: function (ctx) { return ' Net Ciro: ₺ ' + self._num(ctx.parsed.y); }
+                    }
+                });
+
+                chart.options.onClick = function (evt, elements) {
+                    if (!isSingleDay && elements && elements.length > 0) {
+                        var index = elements[0].index;
+                        var item = gunluk[index];
+                        if (item && item.tarih) {
+                            self._showDayDetails(item.tarih);
+                        }
+                    }
+                };
+
+            } else {
+                if (titleEl) titleEl.innerText = '✂️ İskonto Analizi';
+                var modLabel = iskonto.mod === 'saatlik' ? 'Saatlik Yoğunluk' : iskNoktalar.length + ' Günlük Trend';
+                if (badgeEl) badgeEl.innerText = modLabel + ' • Etiket vs. Gerçek Satış';
+
+                chart.data.labels = iskNoktalar.map(function (n) { return n.label; });
+                chart.data.datasets = [
+                    {
+                        label: 'Etiket Toplamı (₺)',
+                        data: iskNoktalar.map(function (n) { return n.etiket; }),
+                        borderColor: '#94a3b8',
+                        backgroundColor: 'rgba(148,163,184,0.15)',
+                        fill: false,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        borderDash: [5, 3],
+                        pointRadius: 4,
+                    },
+                    {
+                        label: 'Gerçek Satış (₺)',
+                        data: iskNoktalar.map(function (n) { return n.gercek; }),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,0.18)',
+                        fill: '-1',
+                        tension: 0.4,
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                    }
+                ];
+
+                chart.options.plugins.legend = {
+                    display: true,
+                    position: 'top',
+                    labels: { color: tickColor, font: { size: 12 } }
+                };
+
+                chart.options.plugins.tooltip = Object.assign({}, commonTooltip, {
+                    callbacks: {
+                        label: function (ctx) {
+                            return ' ' + ctx.dataset.label + ': ₺ ' + self._num(ctx.parsed.y);
+                        },
+                        afterBody: function (items) {
+                            if (!items || !items.length) return [];
+                            var idx = items[0].dataIndex;
+                            var point = iskNoktalar[idx];
+                            if (!point) return [];
+                            var diff = point.iskonto;
+                            var pct = point.etiket > 0 ? ((diff / point.etiket) * 100).toFixed(1) : '0';
+                            return [
+                                '-----------------------',
+                                '✂️ Uygulanan İskonto: ₺ ' + self._num(diff) + ' (%' + pct + ' indirim)'
+                            ];
+                        }
+                    }
+                });
+
+                chart.options.onClick = null;
+            }
+
+            chart.update();
         },
 
         /* -------------------------------------------------
