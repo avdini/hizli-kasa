@@ -274,6 +274,9 @@
             html += self._kpiCard('📦', 'TOPLAM SATIŞ', kpi.toplam_satis_adet + ' adet', self._currency(kpi.toplam_satis_ciro), 'kpi-satis');
             html += self._kpiCard('↩️', 'TOPLAM İADE', kpi.toplam_iade_adet + ' adet', self._currency(kpi.toplam_iade_tutar), 'kpi-iade');
             html += self._kpiCard('📉', 'NET CİRO', self._currency(kpi.net_ciro), 'Ciro – İade', 'kpi-net');
+            if (kpi.toplam_iskonto_tutar > 0) {
+                html += self._kpiCard('✂️', 'TOPLAM İSKONTO', self._currency(kpi.toplam_iskonto_tutar), 'Liste Fiyatı Düşüşü', 'kpi-kar-pozitif');
+            }
 
             if (kpi.brut_kar !== null && kpi.brut_kar !== undefined) {
                 var karClass = kpi.brut_kar >= 0 ? 'kpi-kar-pozitif' : 'kpi-kar-negatif';
@@ -288,12 +291,25 @@
                 html += '<div class="psr-cost-source-note">📌 Maliyet kaynağı: <strong>' + kaynakLabel + '</strong></div>';
             }
 
-            // Günlük trend grafiği
+            // Birleşik Trend & İskonto Grafiği
+            if (!self.activeTrendMode) {
+                self.activeTrendMode = 'satis';
+            }
+
             if (trend.length > 0) {
                 html += '<div class="psr-chart-wrap psr-chart-full">';
-                html +=   '<div class="psr-chart-header"><h4 class="stat-chart-title">📈 Günlük Satış Trendi</h4><span class="stat-chart-badge">' + trend.length + ' gün</span></div>';
-                html +=   '<div class="psr-chart-hint">💡 Grafikteki bir noktaya tıklayarak o günün satışlarını inceleyin</div>';
-                html +=   '<div class="psr-chart-body"><canvas id="psr-chart-trend" height="90"></canvas></div>';
+                html +=   '<div class="psr-chart-header stat-main-trend-header">';
+                html +=     '<div>';
+                html +=       '<h4 class="stat-chart-title" id="psr-main-trend-title">📈 Günlük Satış Trendi</h4>';
+                html +=       '<span class="stat-chart-badge" id="psr-main-trend-badge">' + trend.length + ' gün</span>';
+                html +=     '</div>';
+                html +=     '<div class="stat-trend-toggle-wrap">';
+                html +=       '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'satis' ? ' active' : '') + '" data-mode="satis">📈 Satış Trendi</button>';
+                html +=       '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'iskonto' ? ' active' : '') + '" data-mode="iskonto">✂️ İskonto Analizi</button>';
+                html +=     '</div>';
+                html +=   '</div>';
+                html +=   '<div class="psr-chart-hint" id="psr-main-trend-hint">💡 Grafikteki bir noktaya tıklayarak o günün satışlarını inceleyin</div>';
+                html +=   '<div class="psr-chart-body"><canvas id="psr-chart-main" height="90"></canvas></div>';
                 html +=   '<div id="psr-day-accordion" class="psr-day-accordion" style="display:none;"></div>';
                 html += '</div>';
             }
@@ -418,89 +434,26 @@
                 cornerRadius: 8,
             };
 
-            // Trend Chart
-            if (trend.length > 0 && document.getElementById('psr-chart-trend')) {
-                self.charts.trend = new Chart(document.getElementById('psr-chart-trend'), {
-                    type: 'line',
-                    data: {
-                        labels: trend.map(function (g) { return g.tarih_kisa; }),
-                        datasets: [
-                            {
-                                label: 'Satış Adeti',
-                                data: trend.map(function (g) { return g.satis_adet; }),
-                                borderColor: '#10b981',
-                                backgroundColor: 'rgba(16,185,129,0.12)',
-                                fill: true,
-                                tension: 0.4,
-                                pointBackgroundColor: '#10b981',
-                                pointRadius: 5,
-                                pointHoverRadius: 8,
-                                borderWidth: 2.5,
-                                yAxisID: 'yAdet',
-                            },
-                            {
-                                label: 'Ciro (₺)',
-                                data: trend.map(function (g) { return g.satis_ciro; }),
-                                borderColor: '#3b82f6',
-                                backgroundColor: 'transparent',
-                                fill: false,
-                                tension: 0.4,
-                                pointBackgroundColor: '#3b82f6',
-                                pointRadius: 5,
-                                pointHoverRadius: 8,
-                                borderWidth: 2,
-                                yAxisID: 'yCiro',
-                                borderDash: [5, 3],
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        interaction: { mode: 'index', intersect: false },
-                        onClick: function (evt, elements) {
-                            if (elements && elements.length > 0) {
-                                var idx = elements[0].index;
-                                self._showDayAccordion(trend[idx]);
-                            }
-                        },
-                        plugins: {
-                            legend: { labels: { color: tickColor } },
-                            tooltip: Object.assign({}, commonTooltip, {
-                                callbacks: {
-                                    label: function (ctx) {
-                                        if (ctx.dataset.yAxisID === 'yCiro') {
-                                            return ' ₺ ' + self._num(ctx.parsed.y);
-                                        }
-                                        return ' ' + ctx.parsed.y + ' adet';
-                                    }
-                                }
-                            })
-                        },
-                        scales: {
-                            x: { grid: { color: gridColor }, ticks: { color: tickColor } },
-                            yAdet: {
-                                type: 'linear',
-                                position: 'left',
-                                grid: { color: gridColor },
-                                ticks: { color: tickColor, stepSize: 1 },
-                                beginAtZero: true,
-                            },
-                            yCiro: {
-                                type: 'linear',
-                                position: 'right',
-                                grid: { drawOnChartArea: false },
-                                ticks: {
-                                    color: tickColor,
-                                    callback: function (v) { return '₺' + self._num(v); }
-                                },
-                                beginAtZero: true,
-                            }
-                        }
-                    }
-                });
+            // Ana Trend Chart (Satış veya İskonto)
+            if (trend.length > 0 && document.getElementById('psr-chart-main')) {
+                self._initMainTrendChart(data, gridColor, tickColor, commonTooltip);
 
-                // pointer cursor on hover
-                document.getElementById('psr-chart-trend').style.cursor = 'pointer';
+                var dashEl = document.getElementById('psr-dashboard');
+                if (dashEl) {
+                    dashEl.querySelectorAll('.stat-trend-toggle-btn').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            var mode = this.dataset.mode;
+                            if (mode === self.activeTrendMode) return;
+                            self.activeTrendMode = mode;
+
+                            dashEl.querySelectorAll('.stat-trend-toggle-btn').forEach(function (b) {
+                                b.classList.toggle('active', b.dataset.mode === mode);
+                            });
+
+                            self._updateMainTrendChart(data, gridColor, tickColor, commonTooltip);
+                        });
+                    });
+                }
             }
 
             // Compare Chart
@@ -908,6 +861,204 @@
                 }
             });
             self.charts = {};
+        },
+
+        /* -------------------------------------------------
+           ANA TREND CHART (SATIŞ & İSKONTO DÖNÜŞÜMLÜ)
+        ------------------------------------------------- */
+        _initMainTrendChart: function (data, gridColor, tickColor, commonTooltip) {
+            var self = this;
+            var canvas = document.getElementById('psr-chart-main');
+            if (!canvas) return;
+
+            self.charts.main = new Chart(canvas, {
+                type: 'line',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: { grid: { color: gridColor }, ticks: { color: tickColor } }
+                    }
+                }
+            });
+
+            self._updateMainTrendChart(data, gridColor, tickColor, commonTooltip);
+        },
+
+        _updateMainTrendChart: function (data, gridColor, tickColor, commonTooltip) {
+            var self = this;
+            var chart = self.charts.main;
+            if (!chart) return;
+
+            var mode = self.activeTrendMode || 'satis';
+            var titleEl = document.getElementById('psr-main-trend-title');
+            var badgeEl = document.getElementById('psr-main-trend-badge');
+            var hintEl  = document.getElementById('psr-main-trend-hint');
+
+            var trend = data.gunluk_trend || [];
+
+            if (mode === 'satis') {
+                if (titleEl) titleEl.innerText = '📈 Günlük Satış Trendi';
+                if (badgeEl) badgeEl.innerText = trend.length + ' gün';
+                if (hintEl) {
+                    hintEl.style.display = 'block';
+                    hintEl.innerText = '💡 Grafikteki bir noktaya tıklayarak o günün satışlarını inceleyin';
+                }
+
+                chart.data.labels = trend.map(function (g) { return g.tarih_kisa; });
+                chart.data.datasets = [
+                    {
+                        label: 'Satış Adeti',
+                        data: trend.map(function (g) { return g.satis_adet; }),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,0.12)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#10b981',
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        borderWidth: 2.5,
+                        yAxisID: 'yAdet',
+                    },
+                    {
+                        label: 'Ciro (₺)',
+                        data: trend.map(function (g) { return g.satis_ciro; }),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'transparent',
+                        fill: false,
+                        tension: 0.4,
+                        pointBackgroundColor: '#3b82f6',
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        borderWidth: 2,
+                        yAxisID: 'yCiro',
+                        borderDash: [5, 3],
+                    }
+                ];
+
+                chart.options.scales = {
+                    x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+                    yAdet: {
+                        type: 'linear',
+                        position: 'left',
+                        grid: { color: gridColor },
+                        ticks: { color: tickColor, stepSize: 1 },
+                        beginAtZero: true,
+                    },
+                    yCiro: {
+                        type: 'linear',
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            color: tickColor,
+                            callback: function (v) { return '₺' + self._num(v); }
+                        },
+                        beginAtZero: true,
+                    }
+                };
+
+                chart.options.plugins.legend = { labels: { color: tickColor } };
+                chart.options.plugins.tooltip = Object.assign({}, commonTooltip, {
+                    callbacks: {
+                        label: function (ctx) {
+                            if (ctx.dataset.yAxisID === 'yCiro') {
+                                return ' ₺ ' + self._num(ctx.parsed.y);
+                            }
+                            return ' ' + ctx.parsed.y + ' adet';
+                        }
+                    }
+                });
+
+                chart.options.onClick = function (evt, elements) {
+                    if (elements && elements.length > 0) {
+                        var idx = elements[0].index;
+                        self._showDayAccordion(trend[idx]);
+                    }
+                };
+
+                var canvasEl = document.getElementById('psr-chart-main');
+                if (canvasEl) canvasEl.style.cursor = 'pointer';
+
+            } else {
+                if (titleEl) titleEl.innerText = '✂️ İskonto Analizi';
+                if (badgeEl) badgeEl.innerText = trend.length + ' gün • Etiket vs. Gerçek Satış';
+                if (hintEl) {
+                    hintEl.style.display = 'block';
+                    hintEl.innerText = '💡 Bu ürün için uygulanan liste/etiket fiyatı ve fiili satış tutarı karşılaştırması';
+                }
+
+                chart.data.labels = trend.map(function (g) { return g.tarih_kisa; });
+                chart.data.datasets = [
+                    {
+                        label: 'Etiket Toplamı (₺)',
+                        data: trend.map(function (g) { return g.etiket_ciro; }),
+                        borderColor: '#94a3b8',
+                        backgroundColor: 'rgba(148,163,184,0.15)',
+                        fill: false,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        borderDash: [5, 3],
+                        pointRadius: 4,
+                    },
+                    {
+                        label: 'Gerçek Satış (₺)',
+                        data: trend.map(function (g) { return g.satis_ciro; }),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,0.18)',
+                        fill: '-1',
+                        tension: 0.4,
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                    }
+                ];
+
+                chart.options.scales = {
+                    x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+                    y: {
+                        type: 'linear',
+                        grid: { color: gridColor },
+                        ticks: {
+                            color: tickColor,
+                            callback: function (v) { return '₺' + self._num(v); }
+                        },
+                        beginAtZero: true,
+                    }
+                };
+
+                chart.options.plugins.legend = {
+                    display: true,
+                    position: 'top',
+                    labels: { color: tickColor, font: { size: 12 } }
+                };
+
+                chart.options.plugins.tooltip = Object.assign({}, commonTooltip, {
+                    callbacks: {
+                        label: function (ctx) {
+                            return ' ' + ctx.dataset.label + ': ₺ ' + self._num(ctx.parsed.y);
+                        },
+                        afterBody: function (items) {
+                            if (!items || !items.length) return [];
+                            var idx = items[0].dataIndex;
+                            var point = trend[idx];
+                            if (!point) return [];
+                            var diff = point.iskonto_tutar || 0;
+                            var pct = point.etiket_ciro > 0 ? ((diff / point.etiket_ciro) * 100).toFixed(1) : '0';
+                            return [
+                                '-----------------------',
+                                '✂️ Uygulanan İskonto: ₺ ' + self._num(diff) + ' (%' + pct + ' indirim)'
+                            ];
+                        }
+                    }
+                });
+
+                chart.options.onClick = null;
+                var canvasEl = document.getElementById('psr-chart-main');
+                if (canvasEl) canvasEl.style.cursor = 'default';
+            }
+
+            chart.update();
         },
 
         _currency: function (v) {

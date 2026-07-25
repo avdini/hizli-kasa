@@ -98,13 +98,14 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
 
         $all_orders = wc_get_orders($order_args);
 
-        $satis_adet     = 0;
-        $satis_ciro     = 0.0;
-        $iade_adet      = 0;
-        $iade_tutar     = 0.0;
-        $gun_map        = [];
-        $satis_listesi  = [];
-        $variation_map  = [];
+        $satis_adet           = 0;
+        $satis_ciro           = 0.0;
+        $toplam_iskonto_tutar = 0.0;
+        $iade_adet            = 0;
+        $iade_tutar           = 0.0;
+        $gun_map              = [];
+        $satis_listesi        = [];
+        $variation_map        = [];
 
         foreach ($all_orders as $order) {
             $is_refund  = ($order->get_meta('_hizli_kasa_is_refund') === 'yes');
@@ -125,12 +126,25 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
                     continue;
                 }
 
-                $item_qty   = (int) $item->get_quantity();
-                $item_total = (float) $item->get_total();
-                $gun_key    = $created_dt->date('Y-m-d');
+                $item_qty      = (int) $item->get_quantity();
+                $item_total    = (float) $item->get_total();
+                $item_subtotal = (float) $item->get_subtotal();
+                if ($item_subtotal <= 0) {
+                    $item_subtotal = $item_total;
+                }
+                $item_iskonto  = max(0, $item_subtotal - $item_total);
+
+                $gun_key = $created_dt->date('Y-m-d');
 
                 if (!isset($gun_map[$gun_key])) {
-                    $gun_map[$gun_key] = ['satis_adet' => 0, 'satis_ciro' => 0.0, 'iade_adet' => 0, 'order_ids' => []];
+                    $gun_map[$gun_key] = [
+                        'satis_adet'    => 0,
+                        'satis_ciro'    => 0.0,
+                        'etiket_ciro'   => 0.0,
+                        'iskonto_tutar' => 0.0,
+                        'iade_adet'     => 0,
+                        'order_ids'     => []
+                    ];
                 }
 
                 $var_name = $item_product->get_name();
@@ -149,8 +163,13 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
                 } else {
                     $satis_adet += $item_qty;
                     $satis_ciro += $item_total;
-                    $gun_map[$gun_key]['satis_adet'] += $item_qty;
-                    $gun_map[$gun_key]['satis_ciro'] += $item_total;
+                    $toplam_iskonto_tutar += $item_iskonto;
+
+                    $gun_map[$gun_key]['satis_adet']    += $item_qty;
+                    $gun_map[$gun_key]['satis_ciro']    += $item_total;
+                    $gun_map[$gun_key]['etiket_ciro']   += $item_subtotal;
+                    $gun_map[$gun_key]['iskonto_tutar'] += $item_iskonto;
+
                     $variation_map[$var_key]['satis_adet'] += $item_qty;
                     $variation_map[$var_key]['satis_ciro'] += $item_total;
 
@@ -181,12 +200,14 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
         $gunluk_trend = [];
         foreach ($gun_map as $tarih => $v) {
             $gunluk_trend[] = [
-                'tarih'       => $tarih,
-                'tarih_kisa'  => date_i18n('d.m', strtotime($tarih)),
-                'satis_adet'  => $v['satis_adet'],
-                'satis_ciro'  => round($v['satis_ciro'], 2),
-                'iade_adet'   => $v['iade_adet'],
-                'order_ids'   => $v['order_ids'],
+                'tarih'         => $tarih,
+                'tarih_kisa'    => date_i18n('d.m', strtotime($tarih)),
+                'satis_adet'    => $v['satis_adet'],
+                'satis_ciro'    => round($v['satis_ciro'], 2),
+                'etiket_ciro'   => round($v['etiket_ciro'], 2),
+                'iskonto_tutar' => round($v['iskonto_tutar'], 2),
+                'iade_adet'     => $v['iade_adet'],
+                'order_ids'     => $v['order_ids'],
             ];
         }
 
@@ -213,11 +234,12 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
         $response_data = [
             'product' => $product_data,
             'kpi'     => [
-                'toplam_satis_adet'  => $satis_adet,
-                'toplam_satis_ciro'  => round($satis_ciro, 2),
-                'toplam_iade_adet'   => $iade_adet,
-                'toplam_iade_tutar'  => round($iade_tutar, 2),
-                'net_ciro'           => $net_ciro,
+                'toplam_satis_adet'    => $satis_adet,
+                'toplam_satis_ciro'    => round($satis_ciro, 2),
+                'toplam_iskonto_tutar' => round($toplam_iskonto_tutar, 2),
+                'toplam_iade_adet'     => $iade_adet,
+                'toplam_iade_tutar'    => round($iade_tutar, 2),
+                'net_ciro'             => $net_ciro,
                 'maliyet_birim'      => $maliyet_birim,
                 'maliyet_kaynak'     => $this->get_cost_source_label($product_data),
                 'toplam_maliyet'     => $toplam_maliyet,
