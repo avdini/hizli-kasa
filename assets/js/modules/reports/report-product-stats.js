@@ -25,7 +25,7 @@
                     title: 'Ürün İstatistik Analizi',
                     icon: '🔍',
                     panelId: 'rapor-urun-istatistik',
-                    onActivate: function () { self._renderShell(); },
+                    onActivate: function () { self.onActivateReport(); },
                     hasDateFilter: true,
                     hasSearch: false,
                     description: 'SKU bazlı satış, iade ve kâr analizi',
@@ -33,12 +33,46 @@
                 });
             }
 
+            // Depo değiştiğinde ve Ürün İstatistik Raporu aktifse yeni depoya göre verileri yenile
+            document.addEventListener('hkActiveDepoChanged', function () {
+                if (HK.ReportHub && HK.ReportHub.activeCategory === 'istatistik' && HK.ReportHub.activeReport === 'urun-istatistik') {
+                    var sku = self.getCurrentSKU();
+                    if (sku) {
+                        self._loadStats(sku);
+                    }
+                }
+            });
+
             document.addEventListener('hkThemeChanged', function () {
                 if (self.lastData) {
                     self._destroyCharts();
                     self._renderCharts(self.lastData);
                 }
             });
+        },
+
+        getCurrentSKU: function () {
+            var self = this;
+            var input = document.getElementById('psr-sku-input');
+            var inputSku = input ? input.value.trim() : '';
+            if (inputSku) return inputSku;
+            if (self.lastData && self.lastData.product && self.lastData.product.sku) {
+                return self.lastData.product.sku;
+            }
+            return self.lastSKU || '';
+        },
+
+        onActivateReport: function () {
+            var self = this;
+            var input = document.getElementById('psr-sku-input');
+            if (!input) {
+                self._renderShell();
+            } else {
+                var sku = self.getCurrentSKU();
+                if (sku) {
+                    self._loadStats(sku);
+                }
+            }
         },
 
         analyzeSKU: function (sku) {
@@ -182,6 +216,7 @@
 
         _loadStats: function (sku) {
             var self = this;
+            self.lastSKU = sku;
             var dashboard = document.getElementById('psr-dashboard');
             if (!dashboard) return;
 
