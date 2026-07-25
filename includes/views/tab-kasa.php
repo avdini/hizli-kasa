@@ -110,6 +110,7 @@ if (!defined('ABSPATH'))
                 <div class="odeme-btn aktif" data-tip="card">💳 Kredi Kartı</div>
                 <div class="odeme-btn" data-tip="cash">💵 Nakit (-%5)</div>
                 <div class="odeme-btn" data-tip="iban">🏦 IBAN (-%5)</div>
+                <div class="odeme-btn" data-tip="qr_taksit" id="qr-taksit-buton">📱 QR Taksitli</div>
             </div>
 
             <!-- Müşteri Bilgisi (Gizli - Butonla açılır) -->

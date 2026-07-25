@@ -46,6 +46,9 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
             </div>
         </div>
         <div class="ust-menu-sag-aksiyonlar">
+            <div id="qr-bekleyen-badge" class="ust-menu-aksiyon qr-badge" style="display:none;" title="Bekleyen QR Ödemeler">
+                📱 <span id="qr-bekleyen-sayi">0</span>
+            </div>
             <a href="<?php echo esc_url(home_url('/')); ?>" class="ust-menu-aksiyon site-link" target="_blank" title="Site Ana Sayfası">
                 <span class="site-name-text"><?php bloginfo('name'); ?></span>
             </a>

@@ -38,6 +38,7 @@ require_once $api_dir . 'v2/controllers/class-api-product-statistics.php';
 require_once $api_dir . 'v2/controllers/class-api-expenses.php';
 require_once $api_dir . 'v2/controllers/class-api-auto-sku.php';
 require_once $api_dir . 'v2/controllers/class-api-supplier-returns.php';
+require_once $api_dir . 'v2/controllers/class-api-qr-payment.php';
 
 // Register V2 REST Routes
 add_action('rest_api_init', function () {
@@ -73,6 +74,9 @@ add_action('rest_api_init', function () {
 
     $supplier_returns_controller = new Hizli_Kasa_API_Supplier_Returns();
     $supplier_returns_controller->register_routes();
+
+    $qr_payment_controller = new Hizli_Kasa_API_QR_Payment();
+    $qr_payment_controller->register_routes();
 });
 
 

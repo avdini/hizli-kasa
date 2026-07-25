@@ -390,3 +390,54 @@ if (!defined('ABSPATH')) exit;
         </div>
     </div>
 </div>
+
+<!-- QR Taksitli Ödeme Modalı -->
+<div id="qr-odeme-modal" class="modal-cerceve" style="display:none;">
+    <div class="modal-icerik modal-icerik-md" style="max-width: 440px; text-align: center;">
+        <h3 style="margin-bottom: 10px; color: var(--hk-primary, #6C5CE7); display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <span>📱</span> <span>QR Taksitli Ödeme</span>
+        </h3>
+        <p id="qr-modal-siparis-info" style="font-size: 15px; margin-bottom: 15px;">
+            Sipariş yükleniyor...
+        </p>
+
+        <!-- QR Kod Alanı -->
+        <div id="qr-code-container" style="display: inline-block; padding: 15px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin: 10px auto 15px;"></div>
+
+        <p style="font-size: 13px; color: #7f8c8d; margin-bottom: 10px;">
+            Müşteri telefon kamerasıyla QR kodu okutup taksitli ödemeyi tamamlayabilir.
+        </p>
+
+        <!-- Timer -->
+        <div style="font-size: 14px; font-weight: bold; background: rgba(108, 92, 231, 0.1); color: #6C5CE7; padding: 8px 16px; border-radius: 20px; display: inline-block; margin-bottom: 20px;">
+            ⏱️ Kalan Süre: <span id="qr-modal-timer">15:00</span>
+        </div>
+
+        <div style="font-size: 11px; color: #95a5a6; word-break: break-all; margin-bottom: 15px; display: none;">
+            Ödeme Linki: <a id="qr-modal-link-display" href="#" target="_blank">...</a>
+        </div>
+
+        <div class="modal-butonlar" style="display: flex; gap: 10px;">
+            <button id="qr-modal-arka-plan" class="hk-btn-primary" style="flex: 1; padding: 12px;">📁 Arka Plana At</button>
+            <button id="qr-modal-iptal" class="hk-btn-danger" style="flex: 1; padding: 12px;">❌ İptal Et</button>
+        </div>
+    </div>
+</div>
+
+<!-- Bekleyen QR Ödemeler Listesi Modalı -->
+<div id="qr-bekleyen-modal" class="modal-cerceve" style="display:none;">
+    <div class="modal-icerik modal-icerik-md" style="max-width: 500px;">
+        <h3 style="margin-bottom: 15px; color: var(--hk-primary, #6C5CE7);">
+            📱 Bekleyen QR Ödemeler
+        </h3>
+        
+        <div id="qr-bekleyen-liste" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+            <!-- Dinamik Dolacak -->
+        </div>
+
+        <div class="modal-butonlar">
+            <button onclick="document.getElementById('qr-bekleyen-modal').style.display='none'" class="hk-btn-secondary" style="width:100%; padding:12px;">Kapat</button>
+        </div>
+    </div>
+</div>
+

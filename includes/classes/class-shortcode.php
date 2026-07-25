@@ -167,7 +167,7 @@ function hizli_kasa_uygulamasi()
     $css_modules = [
         'theme-vars', 'reset', 'utilities', 'layout', 'sidebar',
         'cart', 'barcode', 'totals', 'modals', 'refund',
-        'stock-terminal', 'reports', 'statistics', 'toast', 'print', 'responsive', 'barcode-print', 'order-editor', 'sevk', 'report-hub'
+        'stock-terminal', 'reports', 'statistics', 'toast', 'print', 'responsive', 'barcode-print', 'order-editor', 'sevk', 'report-hub', 'qr-payment'
     ];
 
     foreach ($css_modules as $module) {
@@ -230,6 +230,8 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-report-receipt-printer', $js_base . 'modules/report-receipt-printer.js', ['kasa-reports-common', 'kasa-print-manager', 'jsbarcode'], $pos_version, true);
     wp_enqueue_script('kasa-sevk-manager', $js_base . 'modules/sevk-manager.js', ['kasa-ui-renderer', 'kasa-depo-manager', 'kasa-sound-manager'], $pos_version, true);
     wp_enqueue_script('kasa-malkabul-manager', $js_base . 'modules/malkabul-manager.js', ['kasa-ui-renderer', 'kasa-depo-manager'], $pos_version, true);
+    wp_enqueue_script('kasa-qrcode-lib', $js_base . 'lib/qrcode.min.js', [], $pos_version, true);
+    wp_enqueue_script('kasa-qr-payment-manager', $js_base . 'modules/qr-payment-manager.js', ['kasa-qrcode-lib', 'kasa-ui-renderer', 'kasa-sound-manager'], $pos_version, true);
     wp_enqueue_script('kasa-js', $js_base . 'kasa.js', [
         'kasa-cart-manager',
         'kasa-ui-renderer',
@@ -255,7 +257,8 @@ function hizli_kasa_uygulamasi()
         'kasa-report-receipt-printer',
         'kasa-sevk-manager',
         'kasa-malkabul-manager',
-        'kasa-currency-mask'
+        'kasa-currency-mask',
+        'kasa-qr-payment-manager'
     ], $pos_version, true);
 
     // JavaScript'e veri aktarımı
@@ -266,6 +269,7 @@ function hizli_kasa_uygulamasi()
     wp_localize_script('kasa-cart-manager', 'kasaAyar', [
         'apiUrl'          => rest_url('wc/v3/'),
         'rootApiUrl'      => rest_url(),
+        'siteUrl'         => get_site_url(),
         'nonce'           => wp_create_nonce('wp_rest'),
         'siparisDurumu'   => $guncel_durum,
         'userName'        => $display_name,
@@ -279,7 +283,8 @@ function hizli_kasa_uygulamasi()
         'tema'            => get_user_meta(get_current_user_id(), '_hizli_kasa_tema', true) ?: 'light',
         'soundSettings'   => get_user_meta(get_current_user_id(), '_hizli_kasa_ses_ayarlari', true) ?: ['volume' => 80, 'preset' => 'classic'],
         'fallbackSkuToId' => get_option('hizli_kasa_fallback_sku_to_id', '0'),
-        'iskontoTelefonEsigi' => (int)get_option('hizli_kasa_iskonto_telefon_esigi', 2000)
+        'iskontoTelefonEsigi' => (int)get_option('hizli_kasa_iskonto_telefon_esigi', 2000),
+        'qrPaymentTimeout' => 15
     ]);
 
     // HTML Template'i Render Et

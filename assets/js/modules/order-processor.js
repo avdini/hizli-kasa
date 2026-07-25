@@ -689,6 +689,17 @@
                 siparisVerisi.meta_data.push({ key: "_exchange_refund_order_id", value: exchangeRefundOrderId.toString() });
             }
 
+            // QR Taksitli Ödeme Yönlendirmesi
+            if (state.odemeTipi === 'qr_taksit') {
+                this.toggleLoading(false);
+                if (HK.QRPaymentManager && typeof HK.QRPaymentManager.startQRPayment === 'function') {
+                    HK.QRPaymentManager.startQRPayment(siparisVerisi);
+                } else {
+                    if (HK.UIRenderer) HK.UIRenderer.showToast("QR Ödeme modülü yüklenemedi!", "error", true);
+                }
+                return;
+            }
+
             try {
                 var response = await fetch(kasaAyar.apiUrl + 'orders', {
                     method: "POST",

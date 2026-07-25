@@ -59,6 +59,11 @@ document.addEventListener("DOMContentLoaded", function() {
         HK.OrderEditor.init();
     }
 
+    // 7.65 QR Ödeme Yöneticisini başlat
+    if (HK.QRPaymentManager) {
+        HK.QRPaymentManager.init();
+    }
+
     // 7.7 Rapor modüllerini başlat
     if (HK.OrderEditReports) {
         HK.OrderEditReports.init();
