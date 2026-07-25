@@ -682,36 +682,81 @@
 
                 var isSingleDay = (gunluk.length <= 1);
                 var labels = [];
-                var seriesData = [];
+                var ciroData = [];
+                var adetData = [];
 
                 if (!isSingleDay) {
-                    labels = gunluk.map(function (g) { return g.tarih_kisa; });
-                    seriesData = gunluk.map(function (g) { return g.toplam; });
+                    labels   = gunluk.map(function (g) { return g.tarih_kisa; });
+                    ciroData = gunluk.map(function (g) { return g.toplam; });
+                    adetData = gunluk.map(function (g) { return g.siparis_sayisi; });
                     if (badgeEl) badgeEl.innerText = gunluk.length + ' gün • Detay için noktaya tıklayın';
                 } else {
-                    labels = saatlik.map(function (s) { return s.saat; });
-                    seriesData = saatlik.map(function (s) { return s.total; });
+                    labels   = saatlik.map(function (s) { return s.saat; });
+                    ciroData = saatlik.map(function (s) { return s.total; });
+                    adetData = saatlik.map(function (s) { return s.count; });
                     if (badgeEl) badgeEl.innerText = 'Saatlik Yoğunluk • 24 Saat';
                 }
 
                 chart.data.labels = labels;
-                chart.data.datasets = [{
-                    label: 'Net Ciro (₺)',
-                    data: seriesData,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59,130,246,0.10)',
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: '#3b82f6',
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    borderWidth: 2.5,
-                }];
+                chart.data.datasets = [
+                    {
+                        label: 'Sipariş Sayısı',
+                        data: adetData,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139,92,246,0.12)',
+                        fill: false,
+                        tension: 0.4,
+                        pointBackgroundColor: '#8b5cf6',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        borderWidth: 2,
+                        yAxisID: 'ySiparis',
+                    },
+                    {
+                        label: 'Net Ciro (₺)',
+                        data: ciroData,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59,130,246,0.10)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#3b82f6',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        borderWidth: 2.5,
+                        yAxisID: 'yCiro',
+                    }
+                ];
 
-                chart.options.plugins.legend = { display: false };
+                chart.options.scales = {
+                    x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+                    ySiparis: {
+                        type: 'linear',
+                        position: 'left',
+                        grid: { color: gridColor },
+                        ticks: { color: tickColor, stepSize: 1 },
+                        beginAtZero: true,
+                    },
+                    yCiro: {
+                        type: 'linear',
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: {
+                            color: tickColor,
+                            callback: function (v) { return '₺' + self._num(v); }
+                        },
+                        beginAtZero: true,
+                    }
+                };
+
+                chart.options.plugins.legend = { display: true, position: 'top', labels: { color: tickColor, font: { size: 12 } } };
                 chart.options.plugins.tooltip = Object.assign({}, commonTooltip, {
                     callbacks: {
-                        label: function (ctx) { return ' Net Ciro: ₺ ' + self._num(ctx.parsed.y); }
+                        label: function (ctx) {
+                            if (ctx.dataset.yAxisID === 'yCiro') {
+                                return ' Net Ciro: ₺ ' + self._num(ctx.parsed.y);
+                            }
+                            return ' Sipariş Sayısı: ' + ctx.parsed.y + ' adet';
+                        }
                     }
                 });
 
