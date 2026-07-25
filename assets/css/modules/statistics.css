@@ -1498,4 +1498,40 @@
     color: #7c3aed;
 }
 
+.re-charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 900px) {
+    .re-charts-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.re-chart-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.re-chart-body {
+    position: relative;
+    width: 100%;
+    min-height: 250px;
+    height: 250px;
+}
+
+.re-doughnut-wrap {
+    position: relative;
+    width: 100%;
+    min-height: 250px;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 

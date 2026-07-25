@@ -92,19 +92,19 @@
             html += self._kpiCard('📊', 'EN YÜKSEK GİDER', enYuksek.category, self._currency(enYuksek.total) + ' harcama', 'kpi-masraf-yuksek');
             html += '</div>';
 
-            // Grafikler Satırı (Trend & Kategori Dağılımı)
-            html += '<div class="stat-charts-row re-charts-row">';
+            // Grafikler Satırı (Trend & Kategori Dağılımı Yan Yana)
+            html += '<div class="re-charts-row">';
             
             // Trend Çubuk Grafiği
             html += '<div class="stat-chart-card re-chart-card">';
             html +=   '<div class="stat-chart-header"><h4 class="stat-chart-title">📈 Masraf Zaman Trendi</h4><span class="stat-chart-badge">' + (data.gunluk_trend || []).length + ' gün</span></div>';
-            html +=   '<div class="stat-chart-body"><canvas id="re-chart-trend" height="200"></canvas></div>';
+            html +=   '<div class="stat-chart-body re-chart-body"><canvas id="re-chart-trend" height="240"></canvas></div>';
             html += '</div>';
 
             // Kategori Pasta Grafiği
             html += '<div class="stat-chart-card re-chart-card">';
             html +=   '<div class="stat-chart-header"><h4 class="stat-chart-title">🍩 Kategori Dağılımı</h4><span class="stat-chart-badge">' + kategoriler.length + ' kategori</span></div>';
-            html +=   '<div class="stat-chart-body stat-doughnut-wrap"><canvas id="re-chart-category" height="200"></canvas></div>';
+            html +=   '<div class="stat-chart-body re-doughnut-wrap"><canvas id="re-chart-category" height="240"></canvas></div>';
             html += '</div>';
 
             html += '</div>';
@@ -319,13 +319,24 @@
                             backgroundColor: colors.slice(0, kategoriler.length),
                             borderWidth: 2,
                             borderColor: isDark ? '#1e293b' : '#ffffff',
+                            hoverOffset: 6,
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        cutout: '60%',
                         plugins: {
-                            legend: { position: 'right', labels: { color: tickColor, font: { size: 11 } } },
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: tickColor,
+                                    font: { size: 12, weight: '600' },
+                                    padding: 14,
+                                    boxWidth: 12,
+                                    usePointStyle: true,
+                                }
+                            },
                             tooltip: Object.assign({}, commonTooltip, {
                                 callbacks: {
                                     label: function (ctx) {
