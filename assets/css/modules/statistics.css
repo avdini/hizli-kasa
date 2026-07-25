@@ -1498,89 +1498,64 @@
     color: #7c3aed;
 }
 
-.re-charts-row {
+.re-master-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 20px;
     margin-bottom: 20px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    align-items: stretch;
 }
 
-.re-charts-row.focus-trend {
-    grid-template-columns: 1fr;
-}
-
-.re-charts-row.focus-trend .re-chart-card-category {
-    display: none;
-}
-
-.re-charts-row.focus-category {
-    grid-template-columns: 1fr;
-}
-
-.re-charts-row.focus-category .re-chart-card-trend {
-    display: none;
-}
-
-@media (max-width: 900px) {
-    .re-charts-row {
+@media (max-width: 992px) {
+    .re-master-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.re-master-left,
+.re-master-right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.re-kpi-subgrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+@media (max-width: 768px) {
+    .re-kpi-subgrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.re-kpi-subgrid-right {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
 }
 
 .re-chart-card {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    transition: all 0.25s ease;
+    flex: 1;
     border: 1px solid var(--hk-border, #e2e8f0);
-}
-
-.re-chart-card.is-active-card {
-    border-color: var(--hk-primary, #3b82f6);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
-}
-
-.re-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.re-expand-btn {
-    background: var(--hk-bg-body, #f8fafc);
-    border: 1px solid var(--hk-border, #e2e8f0);
-    color: var(--hk-text-muted, #64748b);
-    border-radius: 6px;
-    padding: 3px 8px;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.re-expand-btn:hover,
-.re-expand-btn.active {
-    background: var(--hk-primary, #3b82f6);
-    border-color: var(--hk-primary, #3b82f6);
-    color: #ffffff;
 }
 
 .re-chart-body {
     position: relative;
     width: 100%;
-    min-height: 260px;
-    height: 260px;
+    min-height: 280px;
+    height: 280px;
 }
 
 .re-doughnut-wrap {
     position: relative;
     width: 100%;
-    min-height: 260px;
-    height: 260px;
+    min-height: 280px;
+    height: 280px;
     display: flex;
     align-items: center;
     justify-content: center;
