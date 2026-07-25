@@ -95,6 +95,7 @@
             var odeme   = data.odeme_dagilimi || {};
             var saatlik = data.saatlik_dagilim || [];
             var gunluk  = data.gunluk_trend   || [];
+            var iskonto = data.iskonto_trend  || {};
             var kasiy   = data.kasiyerler     || [];
             var urunler = data.top_urunler    || [];
 
@@ -105,6 +106,7 @@
             html += self._kpiCard('💰', 'TOPLAM CİRO',    self._currency(kpi.toplam_ciro),  kpi.siparis_sayisi + ' sipariş', 'kpi-ciro');
             html += self._kpiCard('🏦', 'NET CİRO',       self._currency(kpi.net_ciro),      'İade ve masraf düşüldü', 'kpi-net');
             html += self._kpiCard('↩️', 'TOPLAM İADE',    self._currency(kpi.toplam_iade),   kpi.iade_sayisi + ' iade', 'kpi-iade');
+            html += self._kpiCard('✂️', 'TOPLAM İSKONTO', self._currency(kpi.toplam_iskonto || 0), (kpi.iskonto_siparis_sayisi || 0) + ' siparişte', 'kpi-iskonto');
             html += self._kpiCard('🧾', 'SİPARİŞ SAYISI', kpi.siparis_sayisi + ' adet',      'Brüt satış adedi', 'kpi-siparis');
             html += '</div>';
 
@@ -124,6 +126,16 @@
                 html += '<div class="stat-chart-card stat-chart-full">';
                 html += '<div class="stat-chart-header"><h4 class="stat-chart-title">📈 Günlük Satış Trendi</h4><span class="stat-chart-badge">' + gunluk.length + ' gün • Detay için noktaya tıklayın</span></div>';
                 html += '<div class="stat-chart-body"><canvas id="stat-chart-gunluk" height="80"></canvas></div>';
+                html += '</div>';
+            }
+
+            // İskonto Analizi (tek satır — tam genişlik)
+            var iskNoktalar = iskonto.noktalar || [];
+            if (iskNoktalar.length > 0) {
+                var modLabel = iskonto.mod === 'saatlik' ? 'Saatlik Yoğunluk' : iskNoktalar.length + ' Günlük Trend';
+                html += '<div class="stat-chart-card stat-chart-full">';
+                html += '<div class="stat-chart-header"><h4 class="stat-chart-title">✂️ İskonto Analizi</h4><span class="stat-chart-badge">' + modLabel + ' • Etiket vs. Gerçek Satış</span></div>';
+                html += '<div class="stat-chart-body"><canvas id="stat-chart-iskonto" height="80"></canvas></div>';
                 html += '</div>';
             }
 
@@ -253,6 +265,80 @@
                             tooltip: Object.assign({}, commonTooltip, {
                                 callbacks: {
                                     label: function (ctx) { return ' ₺ ' + self._num(ctx.parsed.y); }
+                                }
+                            })
+                        },
+                        scales: {
+                            x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+                            y: {
+                                grid: { color: gridColor },
+                                ticks: {
+                                    color: tickColor,
+                                    callback: function (v) { return '₺' + self._num(v); }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // --- İskonto Analizi line chart ---
+            if (iskNoktalar.length > 0 && document.getElementById('stat-chart-iskonto')) {
+                self.charts.iskonto = new Chart(document.getElementById('stat-chart-iskonto'), {
+                    type: 'line',
+                    data: {
+                        labels: iskNoktalar.map(function (n) { return n.label; }),
+                        datasets: [
+                            {
+                                label: 'Etiket Toplamı (₺)',
+                                data: iskNoktalar.map(function (n) { return n.etiket; }),
+                                borderColor: '#94a3b8',
+                                backgroundColor: 'rgba(148,163,184,0.15)',
+                                fill: false,
+                                tension: 0.4,
+                                borderWidth: 2,
+                                borderDash: [5, 3],
+                                pointRadius: 4,
+                            },
+                            {
+                                label: 'Gerçek Satış (₺)',
+                                data: iskNoktalar.map(function (n) { return n.gercek; }),
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16,185,129,0.18)',
+                                fill: '-1',
+                                tension: 0.4,
+                                borderWidth: 2.5,
+                                pointRadius: 4,
+                                pointHoverRadius: 6,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: { color: tickColor, font: { size: 12 } }
+                            },
+                            tooltip: Object.assign({}, commonTooltip, {
+                                callbacks: {
+                                    label: function (ctx) {
+                                        return ' ' + ctx.dataset.label + ': ₺ ' + self._num(ctx.parsed.y);
+                                    },
+                                    afterBody: function (items) {
+                                        if (!items || !items.length) return [];
+                                        var idx = items[0].dataIndex;
+                                        var point = iskNoktalar[idx];
+                                        if (!point) return [];
+                                        var diff = point.iskonto;
+                                        var pct = point.etiket > 0 ? ((diff / point.etiket) * 100).toFixed(1) : '0';
+                                        return [
+                                            '-----------------------',
+                                            '✂️ Uygulanan İskonto: ₺ ' + self._num(diff) + ' (%' + pct + ' indirim)'
+                                        ];
+                                    }
                                 }
                             })
                         },

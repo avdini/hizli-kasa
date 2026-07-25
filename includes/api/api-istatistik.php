@@ -58,16 +58,20 @@ function hizli_kasa_statistics_summary($request) {
     // Akümülatörler
     $toplam_ciro   = 0;
     $toplam_iade   = 0;
+    $toplam_iskonto = 0;
+    $iskonto_siparis_sayisi = 0;
     $nakit_toplam  = 0;
     $kart_toplam   = 0;
     $iban_toplam   = 0;
     $siparis_sayisi = 0;
     $iade_sayisi   = 0;
 
-    $saat_map    = [];   // "09:00" => ['count'=>N, 'total'=>X]
-    $gun_map     = [];   // "2024-05-01" => ['count'=>N, 'total'=>X]
-    $kasiyer_map = [];   // "Ad Soyad" => ['count'=>N, 'total'=>X]
-    $urun_map    = [];   // sku => ['name'=>..., 'qty'=>N, 'total'=>X]
+    $saat_map         = [];
+    $gun_map          = [];
+    $kasiyer_map      = [];
+    $urun_map         = [];
+    $iskonto_saat_map = [];
+    $iskonto_gun_map  = [];
 
     foreach ($orders as $order) {
         $order_total = (float) $order->get_total();
@@ -86,6 +90,22 @@ function hizli_kasa_statistics_summary($request) {
         $kart_toplam  += (float) $order->get_meta('_odeme_kart');
         $iban_toplam  += (float) $order->get_meta('_odeme_iban');
 
+        $order_discount = (float) $order->get_meta('_hk_toplam_iskonto');
+        $order_subtotal = 0;
+        foreach ($order->get_items() as $item) {
+            if ($item instanceof WC_Order_Item_Product) {
+                $order_subtotal += (float) $item->get_subtotal();
+            }
+        }
+        if ($order_subtotal <= 0) {
+            $order_subtotal = $order_total + $order_discount;
+        }
+
+        if ($order_discount > 0) {
+            $toplam_iskonto += $order_discount;
+            $iskonto_siparis_sayisi++;
+        }
+
         // Saatlik dağılım
         $saat_key = $created_dt->date('H:00');
         if (!isset($saat_map[$saat_key])) {
@@ -94,6 +114,13 @@ function hizli_kasa_statistics_summary($request) {
         $saat_map[$saat_key]['count']++;
         $saat_map[$saat_key]['total'] += $order_total;
 
+        if (!isset($iskonto_saat_map[$saat_key])) {
+            $iskonto_saat_map[$saat_key] = ['etiket' => 0, 'gercek' => 0, 'iskonto' => 0];
+        }
+        $iskonto_saat_map[$saat_key]['etiket']  += $order_subtotal;
+        $iskonto_saat_map[$saat_key]['gercek']  += $order_total;
+        $iskonto_saat_map[$saat_key]['iskonto'] += $order_discount;
+
         // Günlük trend
         $gun_key = $created_dt->date('Y-m-d');
         if (!isset($gun_map[$gun_key])) {
@@ -101,6 +128,13 @@ function hizli_kasa_statistics_summary($request) {
         }
         $gun_map[$gun_key]['count']++;
         $gun_map[$gun_key]['total'] += $order_total;
+
+        if (!isset($iskonto_gun_map[$gun_key])) {
+            $iskonto_gun_map[$gun_key] = ['etiket' => 0, 'gercek' => 0, 'iskonto' => 0];
+        }
+        $iskonto_gun_map[$gun_key]['etiket']  += $order_subtotal;
+        $iskonto_gun_map[$gun_key]['gercek']  += $order_total;
+        $iskonto_gun_map[$gun_key]['iskonto'] += $order_discount;
 
         // Kasiyer performansı
         $kasiyer = $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmeyen';
@@ -216,6 +250,38 @@ function hizli_kasa_statistics_summary($request) {
         ];
     }
 
+    // İskonto Trend (Tek gün ise saatlik, çoklu gün ise günlük)
+    $is_single_day = ($date_start === $date_end);
+    $iskonto_noktalar = [];
+
+    if ($is_single_day) {
+        for ($h = 0; $h < 24; $h++) {
+            $k = sprintf('%02d:00', $h);
+            $iskonto_noktalar[] = [
+                'label'   => $k,
+                'etiket'  => round($iskonto_saat_map[$k]['etiket'] ?? 0, 2),
+                'gercek'  => round($iskonto_saat_map[$k]['gercek'] ?? 0, 2),
+                'iskonto' => round($iskonto_saat_map[$k]['iskonto'] ?? 0, 2),
+            ];
+        }
+    } else {
+        ksort($iskonto_gun_map);
+        foreach ($iskonto_gun_map as $tarih => $v) {
+            $iskonto_noktalar[] = [
+                'label'   => date_i18n('d.m', strtotime($tarih)),
+                'tarih'   => $tarih,
+                'etiket'  => round($v['etiket'], 2),
+                'gercek'  => round($v['gercek'], 2),
+                'iskonto' => round($v['iskonto'], 2),
+            ];
+        }
+    }
+
+    $iskonto_trend = [
+        'mod'      => $is_single_day ? 'saatlik' : 'gunluk',
+        'noktalar' => $iskonto_noktalar,
+    ];
+
     // Kasiyer sıralaması (ciro desc)
     uasort($kasiyer_map, fn($a, $b) => $b['total'] <=> $a['total']);
     $kasiyerler = [];
@@ -248,12 +314,14 @@ function hizli_kasa_statistics_summary($request) {
 
     $response_data = [
         'kpi' => [
-            'toplam_ciro'    => round($toplam_ciro, 2),
-            'toplam_iade'    => round($toplam_iade, 2),
-            'toplam_masraf'  => round($toplam_masraf, 2),
-            'net_ciro'       => round($toplam_ciro - $toplam_iade - $toplam_masraf, 2),
-            'siparis_sayisi' => $siparis_sayisi,
-            'iade_sayisi'    => $iade_sayisi,
+            'toplam_ciro'            => round($toplam_ciro, 2),
+            'toplam_iade'            => round($toplam_iade, 2),
+            'toplam_masraf'          => round($toplam_masraf, 2),
+            'toplam_iskonto'         => round($toplam_iskonto, 2),
+            'iskonto_siparis_sayisi' => $iskonto_siparis_sayisi,
+            'net_ciro'               => round($toplam_ciro - $toplam_iade - $toplam_masraf, 2),
+            'siparis_sayisi'         => $siparis_sayisi,
+            'iade_sayisi'            => $iade_sayisi,
         ],
         'odeme_dagilimi' => [
             'nakit' => round($nakit_toplam, 2),
@@ -262,6 +330,7 @@ function hizli_kasa_statistics_summary($request) {
         ],
         'saatlik_dagilim' => $saatlik,
         'gunluk_trend'    => $gunluk,
+        'iskonto_trend'   => $iskonto_trend,
         'kasiyerler'      => $kasiyerler,
         'top_urunler'     => $top_urunler,
     ];

@@ -65,7 +65,7 @@
 
 .stat-kpi-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
 }
 
@@ -73,57 +73,53 @@
     .stat-kpi-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 500px) {
-    .stat-kpi-grid { grid-template-columns: 1fr; }
-}
-
 .stat-kpi-card {
-    background: var(--hk-bg-card);
-    border: 1px solid var(--hk-border);
-    border-radius: 14px;
-    padding: 20px;
+    position: relative;
+    background: var(--hk-card-bg, #ffffff);
+    border: 1px solid var(--hk-border, #e2e8f0);
+    border-radius: var(--hk-radius-lg, 12px);
+    padding: 18px 20px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    position: relative;
-    overflow: hidden;
+    gap: 4px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
 }
 
 .stat-kpi-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+    box-shadow: var(--hk-shadow-md);
 }
 
 .stat-kpi-card::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
     background: var(--kpi-color, var(--hk-accent));
 }
 
 .stat-kpi-icon {
-    font-size: 26px;
+    font-size: 22px;
     line-height: 1;
+    margin-bottom: 4px;
 }
 
 .stat-kpi-label {
     font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
     font-weight: 700;
+    letter-spacing: 0.5px;
     color: var(--hk-text-muted);
+    text-transform: uppercase;
 }
 
 .stat-kpi-value {
-    font-size: 26px;
-    font-weight: 900;
+    font-size: 20px;
+    font-weight: 800;
     color: var(--kpi-color, var(--hk-text-main));
-    line-height: 1.1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.2;
 }
 
 .stat-kpi-sub {
@@ -132,9 +128,10 @@
 }
 
 /* Renk varyantları */
-.stat-kpi-card.kpi-ciro   { --kpi-color: #10b981; }
-.stat-kpi-card.kpi-net    { --kpi-color: #3b82f6; }
-.stat-kpi-card.kpi-iade   { --kpi-color: #ef4444; }
+.stat-kpi-card.kpi-ciro    { --kpi-color: #10b981; }
+.stat-kpi-card.kpi-net     { --kpi-color: #3b82f6; }
+.stat-kpi-card.kpi-iade    { --kpi-color: #ef4444; }
+.stat-kpi-card.kpi-iskonto { --kpi-color: #f59e0b; }
 .stat-kpi-card.kpi-siparis { --kpi-color: #8b5cf6; }
 
 /* =============================================
