@@ -92,19 +92,31 @@
             html += self._kpiCard('📊', 'EN YÜKSEK GİDER', enYuksek.category, self._currency(enYuksek.total) + ' harcama', 'kpi-masraf-yuksek');
             html += '</div>';
 
-            // Grafikler Satırı (Trend & Kategori Dağılımı Yan Yana)
-            html += '<div class="re-charts-row">';
+            // Grafikler Satırı (2/3 Trend + 1/3 Pasta + Odaklanma Butonları)
+            html += '<div class="re-charts-row" id="re-charts-row">';
             
-            // Trend Çubuk Grafiği
-            html += '<div class="stat-chart-card re-chart-card">';
-            html +=   '<div class="stat-chart-header"><h4 class="stat-chart-title">📈 Masraf Zaman Trendi</h4><span class="stat-chart-badge">' + (data.gunluk_trend || []).length + ' gün</span></div>';
-            html +=   '<div class="stat-chart-body re-chart-body"><canvas id="re-chart-trend" height="240"></canvas></div>';
+            // Trend Çubuk Grafiği (%66 Genişlik)
+            html += '<div class="stat-chart-card re-chart-card re-chart-card-trend is-active-card" id="re-card-trend">';
+            html +=   '<div class="stat-chart-header">';
+            html +=     '<h4 class="stat-chart-title">📈 Masraf Zaman Trendi</h4>';
+            html +=     '<div class="re-header-actions">';
+            html +=       '<span class="stat-chart-badge">' + (data.gunluk_trend || []).length + ' gün</span>';
+            html +=       '<button class="re-expand-btn" data-target="trend" title="Genişlet / Tam Ekran">⤢ Genişlet</button>';
+            html +=     '</div>';
+            html +=   '</div>';
+            html +=   '<div class="stat-chart-body re-chart-body"><canvas id="re-chart-trend" height="260"></canvas></div>';
             html += '</div>';
 
-            // Kategori Pasta Grafiği
-            html += '<div class="stat-chart-card re-chart-card">';
-            html +=   '<div class="stat-chart-header"><h4 class="stat-chart-title">🍩 Kategori Dağılımı</h4><span class="stat-chart-badge">' + kategoriler.length + ' kategori</span></div>';
-            html +=   '<div class="stat-chart-body re-doughnut-wrap"><canvas id="re-chart-category" height="240"></canvas></div>';
+            // Kategori Pasta Grafiği (%33 Genişlik)
+            html += '<div class="stat-chart-card re-chart-card re-chart-card-category" id="re-card-category">';
+            html +=   '<div class="stat-chart-header">';
+            html +=     '<h4 class="stat-chart-title">🍩 Kategori Dağılımı</h4>';
+            html +=     '<div class="re-header-actions">';
+            html +=       '<span class="stat-chart-badge">' + kategoriler.length + ' kategori</span>';
+            html +=       '<button class="re-expand-btn" data-target="category" title="Genişlet / Tam Ekran">⤢ Genişlet</button>';
+            html +=     '</div>';
+            html +=   '</div>';
+            html +=   '<div class="stat-chart-body re-doughnut-wrap"><canvas id="re-chart-category" height="260"></canvas></div>';
             html += '</div>';
 
             html += '</div>';
@@ -224,6 +236,55 @@
             if (exportBtn) {
                 exportBtn.addEventListener('click', function () {
                     self._exportCSV(data.masraf_listesi || []);
+                });
+            }
+
+            // Genişlet / Odaklan Butonları
+            var rowEl        = document.getElementById('re-charts-row');
+            var cardTrend    = document.getElementById('re-card-trend');
+            var cardCategory = document.getElementById('re-card-category');
+
+            if (rowEl) {
+                rowEl.querySelectorAll('.re-expand-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        var target = this.dataset.target;
+                        var isExpanded = rowEl.classList.contains('focus-' + target);
+
+                        rowEl.classList.remove('focus-trend', 'focus-category');
+
+                        if (!isExpanded) {
+                            rowEl.classList.add('focus-' + target);
+                            this.innerHTML = '🗗 Daralt';
+                            this.classList.add('active');
+                        } else {
+                            this.innerHTML = '⤢ Genişlet';
+                            this.classList.remove('active');
+                        }
+
+                        rowEl.querySelectorAll('.re-expand-btn').forEach(function (b) {
+                            if (b !== btn) {
+                                b.innerHTML = '⤢ Genişlet';
+                                b.classList.remove('active');
+                            }
+                        });
+
+                        setTimeout(function () {
+                            if (self.charts.trend) self.charts.trend.resize();
+                            if (self.charts.category) self.charts.category.resize();
+                        }, 250);
+                    });
+                });
+            }
+
+            if (cardTrend && cardCategory) {
+                cardTrend.addEventListener('click', function () {
+                    cardTrend.classList.add('is-active-card');
+                    cardCategory.classList.remove('is-active-card');
+                });
+                cardCategory.addEventListener('click', function () {
+                    cardCategory.classList.add('is-active-card');
+                    cardTrend.classList.remove('is-active-card');
                 });
             }
         },

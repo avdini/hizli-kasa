@@ -1500,9 +1500,26 @@
 
 .re-charts-row {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 2fr 1fr;
     gap: 20px;
     margin-bottom: 20px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.re-charts-row.focus-trend {
+    grid-template-columns: 1fr;
+}
+
+.re-charts-row.focus-trend .re-chart-card-category {
+    display: none;
+}
+
+.re-charts-row.focus-category {
+    grid-template-columns: 1fr;
+}
+
+.re-charts-row.focus-category .re-chart-card-trend {
+    display: none;
 }
 
 @media (max-width: 900px) {
@@ -1515,20 +1532,55 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    transition: all 0.25s ease;
+    border: 1px solid var(--hk-border, #e2e8f0);
+}
+
+.re-chart-card.is-active-card {
+    border-color: var(--hk-primary, #3b82f6);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.12);
+}
+
+.re-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.re-expand-btn {
+    background: var(--hk-bg-body, #f8fafc);
+    border: 1px solid var(--hk-border, #e2e8f0);
+    color: var(--hk-text-muted, #64748b);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.re-expand-btn:hover,
+.re-expand-btn.active {
+    background: var(--hk-primary, #3b82f6);
+    border-color: var(--hk-primary, #3b82f6);
+    color: #ffffff;
 }
 
 .re-chart-body {
     position: relative;
     width: 100%;
-    min-height: 250px;
-    height: 250px;
+    min-height: 260px;
+    height: 260px;
 }
 
 .re-doughnut-wrap {
     position: relative;
     width: 100%;
-    min-height: 250px;
-    height: 250px;
+    min-height: 260px;
+    height: 260px;
     display: flex;
     align-items: center;
     justify-content: center;
