@@ -84,40 +84,36 @@
 
             var html = '';
 
-            // Master 2-Sütunlu Izgara Yapısı (Sol %66 / Sağ %33)
+            // Master 2-Sütunlu Izgara Yapısı (Sol %66 Tam Yükseklikte Trend Grafiği / Sağ %33 KPI Kartları + Pasta Grafiği)
             html += '<div class="re-master-grid">';
 
-            // Sol Ana Sütun (%66)
+            // Sol Ana Sütun (%66) - TAM YÜKSEKLİKTE MASRAF ZAMAN TRENDİ
             html += '<div class="re-master-left">';
-            // Sol Üst: 3 Finansal KPI Kartı
-            html +=   '<div class="re-kpi-subgrid">';
-            html +=     self._kpiCard('💸', 'TOPLAM MASRAF', self._currency(kpi.toplam_masraf), kpi.toplam_kayit_sayisi + ' harcama kaydı', 'kpi-masraf-toplam');
-            html +=     self._kpiCard('💵', 'NAKİT KASA MASRAFI', self._currency(kpi.nakit_masraf), 'Kasa Bakiyesinden Düşen', 'kpi-masraf-nakit');
-            html +=     self._kpiCard('💳', 'KART & IBAN MASRAFI', self._currency(kpi.kart_iban_masraf), 'Harici Banka / Hesaptan', 'kpi-masraf-kart');
-            html +=   '</div>';
-            // Sol Alt: Geniş Zaman Trend Grafiği
-            html +=   '<div class="stat-chart-card re-chart-card">';
+            html +=   '<div class="stat-chart-card re-chart-card re-chart-full-height">';
             html +=     '<div class="stat-chart-header">';
             html +=       '<h4 class="stat-chart-title">📈 Masraf Zaman Trendi</h4>';
             html +=       '<span class="stat-chart-badge">' + (data.gunluk_trend || []).length + ' gün</span>';
             html +=     '</div>';
-            html +=     '<div class="stat-chart-body re-chart-body"><canvas id="re-chart-trend" height="280"></canvas></div>';
+            html +=     '<div class="stat-chart-body re-chart-body-full"><canvas id="re-chart-trend"></canvas></div>';
             html +=   '</div>';
             html += '</div>';
 
-            // Sağ Ana Sütun (%33)
+            // Sağ Ana Sütun (%33) - 4 KPI KARTI (2x2 GRID) + KATEGORİ DAĞILIMI
             html += '<div class="re-master-right">';
-            // Sağ Üst: En Yüksek Gider KPI Kartı
-            html +=   '<div class="re-kpi-subgrid-right">';
+            // 4 KPI Kartı 2x2 Izgara Yapısı
+            html +=   '<div class="re-kpi-vertical-grid">';
+            html +=     self._kpiCard('💸', 'TOPLAM MASRAF', self._currency(kpi.toplam_masraf), kpi.toplam_kayit_sayisi + ' harcama kaydı', 'kpi-masraf-toplam');
+            html +=     self._kpiCard('💵', 'NAKİT KASA MASRAFI', self._currency(kpi.nakit_masraf), 'Kasa Bakiyesinden Düşen', 'kpi-masraf-nakit');
+            html +=     self._kpiCard('💳', 'KART & IBAN MASRAFI', self._currency(kpi.kart_iban_masraf), 'Harici Banka / Hesaptan', 'kpi-masraf-kart');
             html +=     self._kpiCard('📊', 'EN YÜKSEK GİDER', enYuksek.category, self._currency(enYuksek.total) + ' harcama', 'kpi-masraf-yuksek');
             html +=   '</div>';
-            // Sağ Alt: Kategori Doughnut Grafiği
+            // Kategori Doughnut Grafiği
             html +=   '<div class="stat-chart-card re-chart-card">';
             html +=     '<div class="stat-chart-header">';
             html +=       '<h4 class="stat-chart-title">🍩 Kategori Dağılımı</h4>';
             html +=       '<span class="stat-chart-badge">' + kategoriler.length + ' kategori</span>';
             html +=     '</div>';
-            html +=     '<div class="stat-chart-body re-doughnut-wrap"><canvas id="re-chart-category" height="280"></canvas></div>';
+            html +=     '<div class="stat-chart-body re-doughnut-wrap"><canvas id="re-chart-category" height="240"></canvas></div>';
             html +=   '</div>';
             html += '</div>';
 
