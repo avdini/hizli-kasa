@@ -142,6 +142,10 @@
             <!-- İçerik HK.ProductStatsReport tarafından dinamik olarak doldurulur -->
         </div>
 
+        <div id="rapor-masraf-analiz" class="rapor-icerik-paneli" style="display:none;">
+            <!-- İçerik HK.ExpenseReport tarafından dinamik olarak doldurulur -->
+        </div>
+
         <div id="rapor-depo-sayimlari" class="rapor-icerik-paneli">
             <div class="rapor-kart">
                 <h3 class="rapor-kart-title" style="margin-bottom: 5px;">Depo Sayım Geçmişi</h3>

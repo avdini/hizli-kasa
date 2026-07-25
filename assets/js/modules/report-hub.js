@@ -761,8 +761,7 @@
         icon: '💰',
         color: '#f59e0b',
         description: 'Kâr-zarar tabloları, masraf dağılımları ve vergi raporları.',
-        order: 5,
-        badge: 'yakinda'
+        order: 5
     });
 
     HK.ReportHub.registerCategory({

@@ -1391,4 +1391,111 @@
     50% { transform: rotate(90deg) translateX(4px); }
 }
 
+/* =============================================
+   MASRAF & GİDER ANALİZİ RAPORU STİLLERİ
+   ============================================= */
+
+.re-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.kpi-masraf-toplam { --kpi-color: #f59e0b; }
+.kpi-masraf-nakit  { --kpi-color: #10b981; }
+.kpi-masraf-kart   { --kpi-color: #3b82f6; }
+.kpi-masraf-yuksek { --kpi-color: #8b5cf6; }
+
+.re-loading, .re-error {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--hk-card-bg, #ffffff);
+    border-radius: 12px;
+    border: 1px solid var(--hk-border, #e2e8f0);
+    color: var(--hk-text-muted, #64748b);
+}
+
+.re-error {
+    color: var(--hk-danger, #ef4444);
+    font-weight: 600;
+}
+
+.re-pay-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+}
+
+.re-log-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.re-filter-tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.re-search-input {
+    min-width: 280px;
+    font-size: 13px;
+}
+
+.re-method-select {
+    width: auto;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.re-export-btn {
+    font-size: 12px;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+.re-cat-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--hk-bg-body, #f8fafc);
+    border: 1px solid var(--hk-border, #e2e8f0);
+    color: var(--hk-text-main, #1e293b);
+}
+
+.re-method-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.re-method-nakit {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+}
+
+.re-method-kart {
+    background: rgba(59, 130, 246, 0.12);
+    color: #2563eb;
+}
+
+.re-method-iban {
+    background: rgba(139, 92, 246, 0.12);
+    color: #7c3aed;
+}
+
 
