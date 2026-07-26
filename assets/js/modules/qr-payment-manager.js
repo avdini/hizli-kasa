@@ -390,8 +390,8 @@
 
                     div.innerHTML = "<div><strong>" + item.order_number + "</strong> — " + item.total + " TL <br><small style='color:#888;'>Kalan Süre: " + timerStr + "</small></div>" +
                         "<div>" +
-                        "<button class="hk-btn-small hk-btn-primary qr-view-btn" data-id="' + item.order_id + '" style="margin-right:5px;">QR Göster</button>" +
-                        "<button class="hk-btn-small hk-btn-danger qr-cancel-btn" data-id="' + item.order_id + '">İptal</button>" +
+                        "<button class='hk-btn-small hk-btn-primary qr-view-btn' data-id='" + item.order_id + "' style='margin-right:5px;'>QR Göster</button>" +
+                        "<button class='hk-btn-small hk-btn-danger qr-cancel-btn' data-id='" + item.order_id + "'>İptal</button>" +
                         "</div>";
 
                     listContainer.appendChild(div);
