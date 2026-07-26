@@ -735,16 +735,21 @@
                 this.toggleLoading(false);
 
                 if (response.ok) {
-                    if (HK.ReceiptPrinter) {
-                        HK.ReceiptPrinter.fisHazirla(orderResult);
-                    }
+                    HK.CartManager.sepetiTemizle(siparisKasaId);
+                    jQuery(document).trigger('hk:siparis-tamamlandi');
                     durumMetni.innerText = "Sipariş oluşturuldu.";
                     durumMetni.style.color = "#27ae60";
-                    HK.CartManager.sepetiTemizle(siparisKasaId);
-                    document.getElementById("fis-onay-modal").style.display = "flex";
-                    jQuery(document).trigger('hk:siparis-tamamlandi');
-                    if (HK.PrintManager) {
-                        HK.PrintManager.print('receipt');
+
+                    try {
+                        if (HK.ReceiptPrinter) {
+                            HK.ReceiptPrinter.fisHazirla(orderResult);
+                        }
+                        document.getElementById("fis-onay-modal").style.display = "flex";
+                        if (HK.PrintManager) {
+                            HK.PrintManager.print('receipt');
+                        }
+                    } catch (fisErr) {
+                        console.error("Fiş hazırlama hatası:", fisErr);
                     }
                 } else if (orderResult.code === 'duplicate_order') {
                     durumMetni.innerText = "Bu sipariş zaten oluşturulmuş.";
