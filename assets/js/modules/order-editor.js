@@ -225,7 +225,7 @@
                         name: item.name,
                         sku: item.sku || "",
                         price: parseFloat(item.price) || 0,
-                        regular_price: parseFloat(item.price) || 0,
+                        regular_price: parseFloat(item.regular_price) || parseFloat(item.price) || 0,
                         line_discount: parseFloat(item.item_discount) || 0,
                         image: item.image || ""
                     };

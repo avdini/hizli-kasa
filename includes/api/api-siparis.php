@@ -128,6 +128,11 @@ function hizli_kasa_get_order_details($request)
             $image = $image_id ? wp_get_attachment_image_url($image_id, 'thumbnail') : '';
         }
 
+        $regular_price = $product ? (float) ($product->get_regular_price() ?: $product->get_price()) : 0.0;
+        if ($regular_price <= 0) {
+            $regular_price = (float) ($item->get_subtotal() / max($item->get_quantity(), 1));
+        }
+
         $items[] = [
             'item_id' => $item_id,
             'id' => $item->get_product_id(),
@@ -138,6 +143,7 @@ function hizli_kasa_get_order_details($request)
             'original_qty' => $item->get_quantity(),
             'refunded_qty' => $refunded_qty,
             'price' => $item->get_subtotal() / max($item->get_quantity(), 1),
+            'regular_price' => $regular_price,
             'discounted_price' => $item->get_total() / max($item->get_quantity(), 1),
             'total' => $item->get_total(),
             'depo_id' => $cikis_depo_id,
