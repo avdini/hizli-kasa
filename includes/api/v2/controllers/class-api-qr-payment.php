@@ -111,23 +111,39 @@ class Hizli_Kasa_API_QR_Payment extends Hizli_Kasa_API_Controller_Base {
             $order->add_item($fee_item);
         }
 
-        // 3. Müşteri & Mağaza Varsayılan Bilgileri (Form görmemesi için)
-        $current_user = wp_get_current_user();
-        $store_name   = get_bloginfo('name');
-        
-        $order->set_billing_first_name(sanitize_text_field($billing['first_name'] ?? ($current_user->display_name ?: 'Kasa')));
-        $order->set_billing_last_name(sanitize_text_field($billing['last_name'] ?? 'Müşterisi'));
-        $order->set_billing_company(sanitize_text_field($billing['company'] ?? $store_name));
-        $order->set_billing_address_1(sanitize_text_field($billing['address_1'] ?? 'POS Satış'));
-        $order->set_billing_city(sanitize_text_field($billing['city'] ?? 'Mağaza'));
-        $order->set_billing_country('TR');
-        $order->set_billing_email(sanitize_email($billing['email'] ?? 'pos-guest-' . time() . '@' . parse_url(home_url(), PHP_URL_HOST)));
-        if (!empty($billing['phone'])) {
-            $order->set_billing_phone(sanitize_text_field($billing['phone']));
-        }
+        // 3. Müşteri & Mağaza Varsayılan Bilgileri (Sanal POS / iyzico uyumu için eksiksiz doldurulur)
+        $current_user   = wp_get_current_user();
+        $store_name     = get_bloginfo('name') ?: 'Hızlı Kasa Mağaza';
+        $store_address  = get_option('woocommerce_store_address') ?: 'Mağaza Teslim POS Satış';
+        $store_city     = get_option('woocommerce_store_city') ?: 'İstanbul';
+        $store_postcode = get_option('woocommerce_store_postcode') ?: '34000';
+        $store_country  = 'TR';
 
-        $order->set_shipping_first_name(sanitize_text_field($shipping['first_name'] ?? 'Mağaza Teslim'));
-        $order->set_shipping_last_name(sanitize_text_field($shipping['last_name'] ?? 'POS'));
+        $first_name = sanitize_text_field($billing['first_name'] ?? ($current_user->display_name ?: 'Kasa'));
+        $last_name  = sanitize_text_field($billing['last_name'] ?? 'Müşterisi');
+        $phone      = !empty($billing['phone']) ? sanitize_text_field($billing['phone']) : '05555555555';
+        $email      = sanitize_email($billing['email'] ?? ('pos-guest-' . time() . '@' . (parse_url(home_url(), PHP_URL_HOST) ?: 'magaza.com')));
+
+        // Billing (Fatura Bilgileri)
+        $order->set_billing_first_name($first_name);
+        $order->set_billing_last_name($last_name);
+        $order->set_billing_company($store_name);
+        $order->set_billing_address_1($store_address);
+        $order->set_billing_city($store_city);
+        $order->set_billing_postcode($store_postcode);
+        $order->set_billing_country($store_country);
+        $order->set_billing_email($email);
+        $order->set_billing_phone($phone);
+
+        // Shipping (Teslimat Bilgileri - iyzico / PayTR / Sanal POS için zorunludur)
+        $order->set_shipping_first_name($first_name);
+        $order->set_shipping_last_name($last_name);
+        $order->set_shipping_company($store_name);
+        $order->set_shipping_address_1($store_address);
+        $order->set_shipping_city($store_city);
+        $order->set_shipping_postcode($store_postcode);
+        $order->set_shipping_country($store_country);
+        $order->set_shipping_phone($phone);
 
         if ($customer_note) {
             $order->set_customer_note($customer_note);
