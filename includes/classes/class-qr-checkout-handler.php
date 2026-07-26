@@ -17,6 +17,7 @@ class Hizli_Kasa_QR_Checkout_Handler {
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_qr_checkout_assets']);
         add_action('init', [__CLASS__, 'inject_posted_address_data'], 5);
         add_action('wp', [__CLASS__, 'inject_posted_address_data'], 5);
+        add_action('template_redirect', [__CLASS__, 'inject_posted_address_data'], 5);
         add_action('woocommerce_before_checkout_process', [__CLASS__, 'inject_posted_address_data'], 5);
         add_action('woocommerce_pay_order_before_submit', [__CLASS__, 'render_hidden_address_inputs']);
         add_filter('woocommerce_payment_gateway_title', [__CLASS__, 'customize_gateway_title'], 10, 2);
@@ -39,6 +40,9 @@ class Hizli_Kasa_QR_Checkout_Handler {
         add_filter('iyzico_request_params', [__CLASS__, 'filter_iyzico_request_params'], 10, 2);
         add_filter('woocommerce_iyzico_request', [__CLASS__, 'filter_iyzico_request_params'], 10, 2);
         add_filter('iyzipay_request', [__CLASS__, 'filter_iyzico_request_params'], 10, 2);
+        add_filter('iyzico_checkout_form_initialize_request', [__CLASS__, 'filter_iyzico_request_params'], 10, 2);
+        add_filter('woocommerce_iyzico_checkout_form_initialize_request', [__CLASS__, 'filter_iyzico_request_params'], 10, 2);
+        add_filter('iyzico_create_checkout_form_initialize_request', [__CLASS__, 'filter_iyzico_request_params'], 10, 2);
     }
 
     public static function customize_pay_page_title($title, $order) {
@@ -421,40 +425,64 @@ class Hizli_Kasa_QR_Checkout_Handler {
             $store_postcode = get_option('woocommerce_store_postcode') ?: '34000';
 
             if (empty($request['shippingAddress']) || !is_array($request['shippingAddress'])) {
-                $request['shippingAddress'] = [];
+                if (!empty($request['billingAddress']) && is_array($request['billingAddress'])) {
+                    $request['shippingAddress'] = $request['billingAddress'];
+                } else {
+                    $request['shippingAddress'] = [
+                        'contactName' => 'Kasa Müşterisi',
+                        'address'     => $store_address,
+                        'city'        => $store_city,
+                        'country'     => 'TR',
+                        'zipCode'     => $store_postcode,
+                    ];
+                }
             }
 
             if (empty($request['shippingAddress']['contactName'])) {
-                $request['shippingAddress']['contactName'] = 'Kasa Müşterisi';
+                $request['shippingAddress']['contactName'] = !empty($request['billingAddress']['contactName']) ? $request['billingAddress']['contactName'] : 'Kasa Müşterisi';
             }
             if (empty($request['shippingAddress']['address'])) {
-                $request['shippingAddress']['address'] = $store_address;
+                $request['shippingAddress']['address'] = !empty($request['billingAddress']['address']) ? $request['billingAddress']['address'] : $store_address;
             }
             if (empty($request['shippingAddress']['city'])) {
-                $request['shippingAddress']['city'] = $store_city;
+                $request['shippingAddress']['city'] = !empty($request['billingAddress']['city']) ? $request['billingAddress']['city'] : $store_city;
             }
             if (empty($request['shippingAddress']['country'])) {
-                $request['shippingAddress']['country'] = 'Turkey';
+                $request['shippingAddress']['country'] = !empty($request['billingAddress']['country']) ? $request['billingAddress']['country'] : 'TR';
             }
             if (empty($request['shippingAddress']['zipCode'])) {
-                $request['shippingAddress']['zipCode'] = $store_postcode;
+                $request['shippingAddress']['zipCode'] = !empty($request['billingAddress']['zipCode']) ? $request['billingAddress']['zipCode'] : $store_postcode;
             }
         } elseif (is_object($request) && method_exists($request, 'getShippingAddress')) {
             $shipping_addr = $request->getShippingAddress();
-            if (!$shipping_addr && class_exists('\Iyzipay\Model\Address')) {
-                $store_address  = get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
-                $store_city     = get_option('woocommerce_store_city') ?: 'Istanbul';
-                $store_postcode = get_option('woocommerce_store_postcode') ?: '34000';
+            if (!$shipping_addr) {
+                $billing_addr = method_exists($request, 'getBillingAddress') ? $request->getBillingAddress() : null;
+                if ($billing_addr && class_exists('\Iyzipay\Model\Address')) {
+                    $shipping_addr = new \Iyzipay\Model\Address();
+                    if (method_exists($billing_addr, 'getContactName')) $shipping_addr->setContactName($billing_addr->getContactName());
+                    if (method_exists($billing_addr, 'getAddress')) $shipping_addr->setAddress($billing_addr->getAddress());
+                    if (method_exists($billing_addr, 'getCity')) $shipping_addr->setCity($billing_addr->getCity());
+                    if (method_exists($billing_addr, 'getCountry')) $shipping_addr->setCountry($billing_addr->getCountry());
+                    if (method_exists($billing_addr, 'getZipCode')) $shipping_addr->setZipCode($billing_addr->getZipCode());
 
-                $shipping_addr = new \Iyzipay\Model\Address();
-                $shipping_addr->setContactName('Kasa Müşterisi');
-                $shipping_addr->setAddress($store_address);
-                $shipping_addr->setCity($store_city);
-                $shipping_addr->setCountry('Turkey');
-                $shipping_addr->setZipCode($store_postcode);
+                    if (method_exists($request, 'setShippingAddress')) {
+                        $request->setShippingAddress($shipping_addr);
+                    }
+                } elseif (class_exists('\Iyzipay\Model\Address')) {
+                    $store_address  = get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
+                    $store_city     = get_option('woocommerce_store_city') ?: 'Istanbul';
+                    $store_postcode = get_option('woocommerce_store_postcode') ?: '34000';
 
-                if (method_exists($request, 'setShippingAddress')) {
-                    $request->setShippingAddress($shipping_addr);
+                    $shipping_addr = new \Iyzipay\Model\Address();
+                    $shipping_addr->setContactName('Kasa Müşterisi');
+                    $shipping_addr->setAddress($store_address);
+                    $shipping_addr->setCity($store_city);
+                    $shipping_addr->setCountry('TR');
+                    $shipping_addr->setZipCode($store_postcode);
+
+                    if (method_exists($request, 'setShippingAddress')) {
+                        $request->setShippingAddress($shipping_addr);
+                    }
                 }
             }
         }
