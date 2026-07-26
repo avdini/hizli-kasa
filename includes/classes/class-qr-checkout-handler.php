@@ -2,10 +2,6 @@
 /**
  * Hızlı Kasa - QR Checkout Handler
  *
- * WooCommerce checkout/order-pay sayfasını QR Taksitli Ödeme siparişleri için özelleştirir.
- * Sanal POS (iyzico, PayTR vb.) entegrasyonlarının "Shipping address zorunludur" kontrolü için
- * mağaza adres verilerini hem gizli HTML input olarak hem de PHP $_POST düzeyinde otomatik enjekte eder.
- *
  * @package HizliKasa
  */
 
@@ -16,34 +12,29 @@ if (!defined('ABSPATH')) {
 class Hizli_Kasa_QR_Checkout_Handler {
 
     public static function init() {
-        // 1. Ödeme Sayfası Başlığı & Buton Metni
         add_filter('woocommerce_order_pay_page_title', [__CLASS__, 'customize_pay_page_title'], 10, 2);
         add_filter('woocommerce_pay_order_button_text', [__CLASS__, 'customize_pay_button_text'], 10, 1);
-
-        // 2. Ödeme Sayfasına Özel CSS Inject (Görsel adres formlarını gizler)
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_qr_checkout_assets']);
-
-        // 3. Form Gönderiminde Sanal POS İçin $_POST Enjeksiyonu
         add_action('wp', [__CLASS__, 'inject_posted_address_data'], 5);
-
-        // 4. Form İçi Gizli Input Enjeksiyonu (HTML Form İçi)
         add_action('woocommerce_pay_order_before_submit', [__CLASS__, 'render_hidden_address_inputs']);
-
-        // 5. Fiş / Rapor Ödeme Yöntemi Adı Unvanı
         add_filter('woocommerce_payment_gateway_title', [__CLASS__, 'customize_gateway_title'], 10, 2);
 
-        // 6. WC_Order Getter Filtreleri (Sanal POS eklentilerinin get_shipping_... çağrıları için garanti değerler)
+        add_filter('woocommerce_order_needs_shipping_address', [__CLASS__, 'filter_needs_shipping_address'], 10, 2);
+        add_filter('woocommerce_cart_needs_shipping_address', [__CLASS__, 'filter_cart_needs_shipping_address'], 10, 1);
+
         add_filter('woocommerce_order_get_shipping_address_1', [__CLASS__, 'filter_shipping_address_1'], 10, 2);
+        add_filter('woocommerce_order_get_shipping_address_2', [__CLASS__, 'filter_shipping_address_2'], 10, 2);
         add_filter('woocommerce_order_get_shipping_city', [__CLASS__, 'filter_shipping_city'], 10, 2);
+        add_filter('woocommerce_order_get_shipping_state', [__CLASS__, 'filter_shipping_state'], 10, 2);
         add_filter('woocommerce_order_get_shipping_country', [__CLASS__, 'filter_shipping_country'], 10, 2);
         add_filter('woocommerce_order_get_shipping_postcode', [__CLASS__, 'filter_shipping_postcode'], 10, 2);
         add_filter('woocommerce_order_get_shipping_first_name', [__CLASS__, 'filter_shipping_first_name'], 10, 2);
         add_filter('woocommerce_order_get_shipping_last_name', [__CLASS__, 'filter_shipping_last_name'], 10, 2);
+        add_filter('woocommerce_order_get_shipping_company', [__CLASS__, 'filter_shipping_company'], 10, 2);
+        add_filter('woocommerce_order_get_shipping_phone', [__CLASS__, 'filter_shipping_phone'], 10, 2);
+        add_filter('woocommerce_order_get_address', [__CLASS__, 'filter_order_get_address'], 10, 3);
     }
 
-    /**
-     * QR Ödeme Siparişlerinde Sayfa Başlığı
-     */
     public static function customize_pay_page_title($title, $order) {
         if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes') {
             return 'Mağaza Taksitli Ödeme (# ' . $order->get_order_number() . ')';
@@ -51,9 +42,6 @@ class Hizli_Kasa_QR_Checkout_Handler {
         return $title;
     }
 
-    /**
-     * QR Ödeme Siparişlerinde Ödeme Butonu Metni
-     */
     public static function customize_pay_button_text($text) {
         global $wp;
         if (isset($wp->query_vars['order-pay'])) {
@@ -66,9 +54,6 @@ class Hizli_Kasa_QR_Checkout_Handler {
         return $text;
     }
 
-    /**
-     * Gateway Başlığı Özelleştirmesi
-     */
     public static function customize_gateway_title($title, $gateway_id) {
         if ($gateway_id === 'qr_sanal_pos') {
             return 'QR Taksitli Ödeme (Sanal POS)';
@@ -76,9 +61,51 @@ class Hizli_Kasa_QR_Checkout_Handler {
         return $title;
     }
 
-    /**
-     * HTML Ödeme Formunun İçine Gizli Adres Inputları Ekler (Sanal POS Validasyonu İçin)
-     */
+    private static function get_order_address_fields($order) {
+        $store_address  = get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
+        $store_city     = get_option('woocommerce_store_city') ?: 'Istanbul';
+        $store_postcode = get_option('woocommerce_store_postcode') ?: '34000';
+        $raw_country    = get_option('woocommerce_default_country') ?: 'TR';
+        $country_parts  = explode(':', $raw_country);
+        $store_country  = !empty($country_parts[0]) ? $country_parts[0] : 'TR';
+        $store_state    = !empty($country_parts[1]) ? $country_parts[1] : '34';
+
+        $b_first = $order->get_billing_first_name() ?: 'Kasa';
+        $b_last  = $order->get_billing_last_name() ?: 'Müşterisi';
+        $b_phone = $order->get_billing_phone() ?: '05555555555';
+        $b_email = $order->get_billing_email() ?: 'kasa@magaza.com';
+
+        $s_first = $order->get_shipping_first_name() ?: $b_first;
+        $s_last  = $order->get_shipping_last_name() ?: $b_last;
+
+        return [
+            'billing_first_name'         => $b_first,
+            'billing_last_name'          => $b_last,
+            'billing_company'            => $order->get_billing_company() ?: get_bloginfo('name'),
+            'billing_address_1'          => $order->get_billing_address_1() ?: $store_address,
+            'billing_address_2'          => $order->get_billing_address_2() ?: '',
+            'billing_city'               => $order->get_billing_city() ?: $store_city,
+            'billing_state'              => $order->get_billing_state() ?: $store_state,
+            'billing_postcode'           => $order->get_billing_postcode() ?: $store_postcode,
+            'billing_country'            => $order->get_billing_country() ?: $store_country,
+            'billing_phone'              => $b_phone,
+            'billing_email'              => $b_email,
+
+            'shipping_first_name'        => $s_first,
+            'shipping_last_name'         => $s_last,
+            'shipping_company'           => $order->get_shipping_company() ?: get_bloginfo('name'),
+            'shipping_address_1'         => $order->get_shipping_address_1() ?: $store_address,
+            'shipping_address_2'         => $order->get_shipping_address_2() ?: '',
+            'shipping_city'              => $order->get_shipping_city() ?: $store_city,
+            'shipping_state'             => $order->get_shipping_state() ?: $store_state,
+            'shipping_postcode'          => $order->get_shipping_postcode() ?: $store_postcode,
+            'shipping_country'           => $order->get_shipping_country() ?: $store_country,
+            'shipping_phone'             => $order->get_shipping_phone() ?: $b_phone,
+
+            'ship_to_different_address' => '1',
+        ];
+    }
+
     public static function render_hidden_address_inputs() {
         global $wp;
         if (!isset($wp->query_vars['order-pay'])) {
@@ -92,34 +119,13 @@ class Hizli_Kasa_QR_Checkout_Handler {
             return;
         }
 
-        $fields = [
-            'billing_first_name'  => $order->get_billing_first_name() ?: 'Kasa',
-            'billing_last_name'   => $order->get_billing_last_name() ?: 'Müşterisi',
-            'billing_address_1'   => $order->get_billing_address_1() ?: 'Mağaza Teslim POS Satış',
-            'billing_city'        => $order->get_billing_city() ?: 'İstanbul',
-            'billing_postcode'    => $order->get_billing_postcode() ?: '34000',
-            'billing_country'     => $order->get_billing_country() ?: 'TR',
-            'billing_phone'       => $order->get_billing_phone() ?: '05555555555',
-            'billing_email'       => $order->get_billing_email() ?: 'kasa@magaza.com',
-
-            'shipping_first_name' => $order->get_shipping_first_name() ?: 'Mağaza Teslim',
-            'shipping_last_name'  => $order->get_shipping_last_name() ?: 'POS',
-            'shipping_address_1'  => $order->get_shipping_address_1() ?: 'Mağaza Teslim POS Satış',
-            'shipping_city'       => $order->get_shipping_city() ?: 'İstanbul',
-            'shipping_postcode'   => $order->get_shipping_postcode() ?: '34000',
-            'shipping_country'    => $order->get_shipping_country() ?: 'TR',
-            'shipping_phone'      => $order->get_shipping_phone() ?: '05555555555',
-        ];
+        $fields = self::get_order_address_fields($order);
 
         foreach ($fields as $name => $val) {
             echo '<input type="hidden" name="' . esc_attr($name) . '" value="' . esc_attr($val) . '" />' . "\n";
         }
     }
 
-    /**
-     * Form Gönderim Sırasında (HTTP POST) Sanal POS Eklentilerinin
-     * Adres Validasyonundan Geçmesi İçin $_POST Verilerini Otomatik Enjekte Eder
-     */
     public static function inject_posted_address_data() {
         global $wp;
         if (!isset($wp->query_vars['order-pay'])) {
@@ -133,24 +139,7 @@ class Hizli_Kasa_QR_Checkout_Handler {
             return;
         }
 
-        $fields = [
-            'billing_first_name'  => $order->get_billing_first_name() ?: 'Kasa',
-            'billing_last_name'   => $order->get_billing_last_name() ?: 'Müşterisi',
-            'billing_address_1'   => $order->get_billing_address_1() ?: 'Mağaza Teslim POS Satış',
-            'billing_city'        => $order->get_billing_city() ?: 'İstanbul',
-            'billing_postcode'    => $order->get_billing_postcode() ?: '34000',
-            'billing_country'     => $order->get_billing_country() ?: 'TR',
-            'billing_phone'       => $order->get_billing_phone() ?: '05555555555',
-            'billing_email'       => $order->get_billing_email() ?: 'kasa@magaza.com',
-
-            'shipping_first_name' => $order->get_shipping_first_name() ?: 'Mağaza Teslim',
-            'shipping_last_name'  => $order->get_shipping_last_name() ?: 'POS',
-            'shipping_address_1'  => $order->get_shipping_address_1() ?: 'Mağaza Teslim POS Satış',
-            'shipping_city'       => $order->get_shipping_city() ?: 'İstanbul',
-            'shipping_postcode'   => $order->get_shipping_postcode() ?: '34000',
-            'shipping_country'    => $order->get_shipping_country() ?: 'TR',
-            'shipping_phone'      => $order->get_shipping_phone() ?: '05555555555',
-        ];
+        $fields = self::get_order_address_fields($order);
 
         foreach ($fields as $key => $val) {
             if (empty($_POST[$key])) {
@@ -160,11 +149,28 @@ class Hizli_Kasa_QR_Checkout_Handler {
                 $_REQUEST[$key] = $val;
             }
         }
+
+        if (function_exists('WC') && WC()->customer) {
+            WC()->customer->set_billing_first_name($fields['billing_first_name']);
+            WC()->customer->set_billing_last_name($fields['billing_last_name']);
+            WC()->customer->set_billing_address_1($fields['billing_address_1']);
+            WC()->customer->set_billing_city($fields['billing_city']);
+            WC()->customer->set_billing_state($fields['billing_state']);
+            WC()->customer->set_billing_postcode($fields['billing_postcode']);
+            WC()->customer->set_billing_country($fields['billing_country']);
+            WC()->customer->set_billing_phone($fields['billing_phone']);
+            WC()->customer->set_billing_email($fields['billing_email']);
+
+            WC()->customer->set_shipping_first_name($fields['shipping_first_name']);
+            WC()->customer->set_shipping_last_name($fields['shipping_last_name']);
+            WC()->customer->set_shipping_address_1($fields['shipping_address_1']);
+            WC()->customer->set_shipping_city($fields['shipping_city']);
+            WC()->customer->set_shipping_state($fields['shipping_state']);
+            WC()->customer->set_shipping_postcode($fields['shipping_postcode']);
+            WC()->customer->set_shipping_country($fields['shipping_country']);
+        }
     }
 
-    /**
-     * QR Ödeme Sayfası İçin Temiz Görünüm CSS
-     */
     public static function enqueue_qr_checkout_assets() {
         global $wp;
         if (!isset($wp->query_vars['order-pay'])) {
@@ -178,9 +184,7 @@ class Hizli_Kasa_QR_Checkout_Handler {
             return;
         }
 
-        // QR ödeme sayfasına özel CSS ekle
         $custom_css = "
-            /* Adres ve gereksiz bölümleri gizle */
             .woocommerce-billing-fields,
             .woocommerce-shipping-fields,
             .woocommerce-additional-fields,
@@ -189,7 +193,6 @@ class Hizli_Kasa_QR_Checkout_Handler {
                 display: none !important;
             }
 
-            /* Sayfa Tasarımını Mağaza Ödemesi İçin Şıklaştır */
             body.woocommerce-order-pay {
                 background-color: #f8f9fa;
             }
@@ -229,9 +232,35 @@ class Hizli_Kasa_QR_Checkout_Handler {
         wp_add_inline_style('woocommerce-general', $custom_css);
     }
 
+    public static function filter_needs_shipping_address($needs_shipping, $order) {
+        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes') {
+            return true;
+        }
+        return $needs_shipping;
+    }
+
+    public static function filter_cart_needs_shipping_address($needs_shipping) {
+        global $wp;
+        if (isset($wp->query_vars['order-pay'])) {
+            $order_id = absint($wp->query_vars['order-pay']);
+            $order    = wc_get_order($order_id);
+            if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes') {
+                return true;
+            }
+        }
+        return $needs_shipping;
+    }
+
     public static function filter_shipping_address_1($value, $order) {
         if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
             return get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
+        }
+        return $value;
+    }
+
+    public static function filter_shipping_address_2($value, $order) {
+        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+            return '';
         }
         return $value;
     }
@@ -243,9 +272,20 @@ class Hizli_Kasa_QR_Checkout_Handler {
         return $value;
     }
 
+    public static function filter_shipping_state($value, $order) {
+        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+            $raw_country   = get_option('woocommerce_default_country') ?: 'TR:34';
+            $country_parts = explode(':', $raw_country);
+            return !empty($country_parts[1]) ? $country_parts[1] : '34';
+        }
+        return $value;
+    }
+
     public static function filter_shipping_country($value, $order) {
         if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
-            return 'TR';
+            $raw_country   = get_option('woocommerce_default_country') ?: 'TR';
+            $country_parts = explode(':', $raw_country);
+            return !empty($country_parts[0]) ? $country_parts[0] : 'TR';
         }
         return $value;
     }
@@ -269,5 +309,53 @@ class Hizli_Kasa_QR_Checkout_Handler {
             return $order->get_billing_last_name() ?: 'Müşterisi';
         }
         return $value;
+    }
+
+    public static function filter_shipping_company($value, $order) {
+        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+            return get_bloginfo('name') ?: 'Hızlı Kasa';
+        }
+        return $value;
+    }
+
+    public static function filter_shipping_phone($value, $order) {
+        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+            return $order->get_billing_phone() ?: '05555555555';
+        }
+        return $value;
+    }
+
+    public static function filter_order_get_address($address, $type, $order) {
+        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && $type === 'shipping') {
+            if (empty($address['address_1'])) {
+                $address['address_1'] = get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
+            }
+            if (empty($address['city'])) {
+                $address['city'] = get_option('woocommerce_store_city') ?: 'Istanbul';
+            }
+            if (empty($address['country'])) {
+                $raw_country   = get_option('woocommerce_default_country') ?: 'TR';
+                $country_parts = explode(':', $raw_country);
+                $address['country'] = !empty($country_parts[0]) ? $country_parts[0] : 'TR';
+            }
+            if (empty($address['postcode'])) {
+                $address['postcode'] = get_option('woocommerce_store_postcode') ?: '34000';
+            }
+            if (empty($address['first_name'])) {
+                $address['first_name'] = $order->get_billing_first_name() ?: 'Kasa';
+            }
+            if (empty($address['last_name'])) {
+                $address['last_name'] = $order->get_billing_last_name() ?: 'Müşterisi';
+            }
+            if (empty($address['phone'])) {
+                $address['phone'] = $order->get_billing_phone() ?: '05555555555';
+            }
+            if (empty($address['state'])) {
+                $raw_country   = get_option('woocommerce_default_country') ?: 'TR:34';
+                $country_parts = explode(':', $raw_country);
+                $address['state'] = !empty($country_parts[1]) ? $country_parts[1] : '34';
+            }
+        }
+        return $address;
     }
 }

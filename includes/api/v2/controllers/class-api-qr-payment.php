@@ -111,36 +111,50 @@ class Hizli_Kasa_API_QR_Payment extends Hizli_Kasa_API_Controller_Base {
             $order->add_item($fee_item);
         }
 
-        // 3. Müşteri & Mağaza Varsayılan Bilgileri (WooCommerce Core Checkout standartlarında tam adres seti)
         $current_user   = wp_get_current_user();
         $store_name     = get_bloginfo('name') ?: 'Hızlı Kasa Mağaza';
         $store_address  = get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
         $store_city     = get_option('woocommerce_store_city') ?: 'Istanbul';
         $store_postcode = get_option('woocommerce_store_postcode') ?: '34000';
-        $store_country  = 'TR';
+        $raw_country    = get_option('woocommerce_default_country') ?: 'TR';
+        $country_parts  = explode(':', $raw_country);
+        $store_country  = !empty($country_parts[0]) ? $country_parts[0] : 'TR';
+        $store_state    = !empty($country_parts[1]) ? $country_parts[1] : '34';
 
         $first_name = sanitize_text_field($billing['first_name'] ?? ($current_user->display_name ?: 'Kasa'));
         $last_name  = sanitize_text_field($billing['last_name'] ?? 'Müşterisi');
         $phone      = !empty($billing['phone']) ? sanitize_text_field($billing['phone']) : '05555555555';
         $email      = sanitize_email($billing['email'] ?? ('pos-guest-' . time() . '@' . (parse_url(home_url(), PHP_URL_HOST) ?: 'magaza.com')));
 
-        $address_data = [
+        $billing_address_data = [
             'first_name' => $first_name,
             'last_name'  => $last_name,
-            'company'    => $store_name,
-            'address_1'  => $store_address,
-            'address_2'  => '',
-            'city'       => $store_city,
-            'state'      => '',
-            'postcode'   => $store_postcode,
-            'country'    => $store_country,
+            'company'    => sanitize_text_field($billing['company'] ?? $store_name),
+            'address_1'  => !empty($billing['address_1']) ? sanitize_text_field($billing['address_1']) : $store_address,
+            'address_2'  => sanitize_text_field($billing['address_2'] ?? ''),
+            'city'       => !empty($billing['city']) ? sanitize_text_field($billing['city']) : $store_city,
+            'state'      => !empty($billing['state']) ? sanitize_text_field($billing['state']) : $store_state,
+            'postcode'   => !empty($billing['postcode']) ? sanitize_text_field($billing['postcode']) : $store_postcode,
+            'country'    => !empty($billing['country']) ? sanitize_text_field($billing['country']) : $store_country,
             'email'      => $email,
             'phone'      => $phone,
         ];
 
-        // WooCommerce Core Checkout mantığı ile adresleri tam olarak set et
-        $order->set_address($address_data, 'billing');
-        $order->set_address($address_data, 'shipping');
+        $shipping_address_data = [
+            'first_name' => sanitize_text_field($shipping['first_name'] ?? $first_name),
+            'last_name'  => sanitize_text_field($shipping['last_name'] ?? $last_name),
+            'company'    => sanitize_text_field($shipping['company'] ?? $store_name),
+            'address_1'  => !empty($shipping['address_1']) ? sanitize_text_field($shipping['address_1']) : $billing_address_data['address_1'],
+            'address_2'  => sanitize_text_field($shipping['address_2'] ?? ''),
+            'city'       => !empty($shipping['city']) ? sanitize_text_field($shipping['city']) : $billing_address_data['city'],
+            'state'      => !empty($shipping['state']) ? sanitize_text_field($shipping['state']) : $billing_address_data['state'],
+            'postcode'   => !empty($shipping['postcode']) ? sanitize_text_field($shipping['postcode']) : $billing_address_data['postcode'],
+            'country'    => !empty($shipping['country']) ? sanitize_text_field($shipping['country']) : $billing_address_data['country'],
+            'phone'      => !empty($shipping['phone']) ? sanitize_text_field($shipping['phone']) : $phone,
+        ];
+
+        $order->set_address($billing_address_data, 'billing');
+        $order->set_address($shipping_address_data, 'shipping');
 
         if ($customer_note) {
             $order->set_customer_note($customer_note);

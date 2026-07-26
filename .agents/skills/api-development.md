@@ -313,5 +313,21 @@ Kullanıcının terminal bildirim ses seviyesini ve ses çeşidini (preset) kayd
 }
 ```
 
+---
+
+### 3.4. QR Ödeme Yönetimi & Sanal POS Uyumluğu (QR Payment)
+Kasadan QR Taksitli Ödeme siparişi oluşturur ve Sanal POS eklentilerinin (iyzico, PayTR, Sipay vb.) teslimat adresi gereksinimlerini (`ShippingAddress gönderilmesi zorunludur`) otomatik karşılar.
+
+- **URL:** `/wp-json/hizli-kasa/v2/qr-payment/create`
+- **Metot:** `POST`
+- **İçerik Tipi:** `application/json`
+
+#### Adres Enjeksiyon Mimarisi:
+Sanal POS entegrasyonlarının `ShippingAddress` uyarısı vermemesi için:
+1. Sipariş oluşturulurken `billing` ve `shipping` adresleri mağaza varsayılanları veya gönderilen verilerle eksiksiz doldurulur.
+2. `woocommerce_order_needs_shipping_address` filtresi QR siparişleri için `true` döndürür.
+3. `order-pay` sayfasında hem `$_POST`/`$_REQUEST` hem `WC()->customer` oturumu hem de gizli form girdileri üzerinden teslimat adresi otomatik enjekte edilir.
+
+
 
 
