@@ -218,6 +218,11 @@ class Hizli_Kasa_API_Shipments extends Hizli_Kasa_API_Controller_Base {
             return Hizli_Kasa_API_Response::error('Sevk oluşturulamadı.', 500);
         }
 
+        $sevk_id = $wpdb->insert_id;
+        if (class_exists('Hizli_Kasa_Logger')) {
+            Hizli_Kasa_Logger::stock("Depolar arası yeni Sevk #{$sevk_id} oluşturuldu.", ['sevk_id' => $sevk_id, 'kaynak_depo' => $kaynak, 'hedef_depo' => $hedef], 'info', 'shipment', $sevk_id);
+        }
+
         return Hizli_Kasa_API_Response::success([
             'sevk' => $this->format_shipment($this->get_shipment($wpdb->insert_id), true),
         ]);

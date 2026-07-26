@@ -113,38 +113,36 @@ class Hizli_Kasa_Auto_Sku_Manager {
     }
 
     public static function sync_sku_by_id($product_id) {
-        error_log("HK SKU Debug: sync_sku_by_id triggered for ID " . $product_id);
+        Hizli_Kasa_Logger::sku("sync_sku_by_id tetiklendi. Ürün ID: {$product_id}", ['product_id' => $product_id], 'debug', 'product', $product_id);
 
         if (in_array($product_id, self::$syncing_ids)) {
-            error_log("HK SKU Debug: ID " . $product_id . " is already syncing, skipping.");
+            Hizli_Kasa_Logger::sku("Ürün ID: {$product_id} zaten senkronize ediliyor, atlandı.", ['product_id' => $product_id], 'debug', 'product', $product_id);
             return false;
         }
 
         $aktif = get_option('hizli_kasa_auto_sku_aktif', '0');
-        error_log("HK SKU Debug: Auto SKU active state: " . $aktif);
         if ($aktif !== '1') {
             return false;
         }
 
         $product = wc_get_product($product_id);
         if (!$product) {
-            error_log("HK SKU Debug: Failed to load product for ID " . $product_id);
+            Hizli_Kasa_Logger::sku("Ürün yüklenemedi. ID: {$product_id}", ['product_id' => $product_id], 'warning', 'product', $product_id);
             return false;
         }
 
         $type = $product->get_type();
         $allowed_types = get_option('hizli_kasa_auto_sku_tipler', ['simple', 'product_variation']);
-        error_log("HK SKU Debug: ID " . $product_id . " type is '" . $type . "'. Allowed: " . print_r($allowed_types, true));
         
         $mapped_type = ($type === 'variation') ? 'product_variation' : $type;
         if (!in_array($mapped_type, $allowed_types)) {
-            error_log("HK SKU Debug: Type '" . $mapped_type . "' not in allowed types.");
+            Hizli_Kasa_Logger::sku("Ürün türü ('{$mapped_type}') izin verilen türler arasında değil.", ['type' => $mapped_type, 'allowed' => $allowed_types], 'debug', 'product', $product_id);
             return false;
         }
 
         $sku = $product->get_sku('edit');
-        error_log("HK SKU Debug: ID " . $product_id . " current SKU: '" . $sku . "'");
         if ($sku !== '') {
+            Hizli_Kasa_Logger::sku("Ürün ID {$product_id} zaten bir SKU'ya sahip ('{$sku}'), atlandı.", ['sku' => $sku], 'debug', 'product', $product_id);
             return false;
         }
 
@@ -153,12 +151,11 @@ class Hizli_Kasa_Auto_Sku_Manager {
         $prefix = get_option('hizli_kasa_auto_sku_prefix', 'AVD-');
         $new_sku = $prefix . $product_id;
 
-        error_log("HK SKU Debug: Generating SKU '" . $new_sku . "' for ID " . $product_id);
+        Hizli_Kasa_Logger::sku("Ürün #{$product_id} için otomatik SKU ({$new_sku}) üretildi.", ['new_sku' => $new_sku], 'info', 'product', $product_id);
         $product->set_sku($new_sku);
         $product->save();
 
         self::$syncing_ids = array_diff(self::$syncing_ids, [$product_id]);
-        error_log("HK SKU Debug: Finished successfully for ID " . $product_id);
         return true;
     }
 

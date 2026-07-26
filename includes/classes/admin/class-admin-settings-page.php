@@ -27,7 +27,8 @@ class Hizli_Kasa_Admin_Settings_Page {
                     'genel' => 'Genel Ayarlar',
                     'onbellek' => 'Önbellek (Cache)',
                     'oto-sku' => 'Otomatik SKU',
-                    'araclar' => 'Sistem Araçları'
+                    'araclar' => 'Sistem Araçları',
+                    'loglar'  => 'Sistem & Denetim Günlüğü'
                 ];
                 $current_title = isset($tab_titles[$active_tab]) ? $tab_titles[$active_tab] : 'Ayarlar';
                 ?>
@@ -57,6 +58,8 @@ class Hizli_Kasa_Admin_Settings_Page {
                         include HIZLI_KASA_PATH . 'includes/views/admin-settings-auto-sku.php';
                     } elseif ($active_tab === 'araclar') {
                         include HIZLI_KASA_PATH . 'includes/views/admin-settings-araclar.php';
+                    } elseif ($active_tab === 'loglar') {
+                        include HIZLI_KASA_PATH . 'includes/views/tab-sistem-loglari.php';
                     }
                     ?>
                 </div>

@@ -35,6 +35,7 @@ class Hizli_Kasa_Database {
             'catalog_shares'   => $wpdb->prefix . 'hizli_kasa_catalog_shares',
             'tedarikci_iadeleri'       => $wpdb->prefix . 'hizli_kasa_tedarikci_iadeleri',
             'tedarikci_iade_kalemleri'  => $wpdb->prefix . 'hizli_kasa_tedarikci_iade_kalemleri',
+            'logs'             => $wpdb->prefix . 'hizli_kasa_logs',
         ];
     }
 
@@ -355,6 +356,30 @@ class Hizli_Kasa_Database {
         dbDelta($sql16);
         if ($wpdb->last_error) {
             error_log('Hızlı Kasa DB Delta Hatası (Tedarikçi İade Kalemleri): ' . $wpdb->last_error);
+        }
+
+        $sql17 = "CREATE TABLE {$tables['logs']} (
+            id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+            request_id varchar(64) NOT NULL,
+            channel varchar(32) NOT NULL,
+            level varchar(16) NOT NULL DEFAULT 'info',
+            message text NOT NULL,
+            user_id bigint(20) unsigned DEFAULT 0,
+            object_type varchar(32) DEFAULT NULL,
+            object_id bigint(20) unsigned DEFAULT 0,
+            context longtext DEFAULT NULL,
+            created_at datetime NOT NULL,
+            PRIMARY KEY  (id),
+            KEY request_id (request_id),
+            KEY channel (channel),
+            KEY level (level),
+            KEY user_id (user_id),
+            KEY object_lookup (object_type, object_id),
+            KEY created_at (created_at)
+        ) $charset_collate;";
+        dbDelta($sql17);
+        if ($wpdb->last_error) {
+            error_log('Hızlı Kasa DB Delta Hatası (Logs): ' . $wpdb->last_error);
         }
     }
 

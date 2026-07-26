@@ -145,7 +145,19 @@ $terminal_url = hizli_kasa_get_pos_url();
                     <span class="hk-card-arrow dashicons dashicons-arrow-right-alt2"></span>
                 </div>
                 <h3 class="hk-card-title">Sistem Araçları</h3>
-                <p class="hk-card-desc">Veritabanı onarım, sıfırlama, el terminali senkronizasyonu ve log görüntüleme araçları.</p>
+                <p class="hk-card-desc">Veritabanı onarım, sıfırlama, el terminali senkronizasyonu ve araçlar.</p>
+            </a>
+
+            <!-- Sistem & Denetim Günlüğü -->
+            <a href="?page=hizli-kasa&tab=loglar" class="hk-hub-card hk-hub-card-ops">
+                <div class="hk-card-icon-wrapper">
+                    <div class="hk-card-icon hk-icon-ops">
+                        <span class="dashicons dashicons-list-view"></span>
+                    </div>
+                    <span class="hk-card-arrow dashicons dashicons-arrow-right-alt2"></span>
+                </div>
+                <h3 class="hk-card-title">Sistem Günlüğü</h3>
+                <p class="hk-card-desc">POS, stok, SKU ve ödeme hareketlerinin canlı akışı ve denetim kayıtları.</p>
             </a>
         </div>
     </section>

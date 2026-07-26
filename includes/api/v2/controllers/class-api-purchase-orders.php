@@ -162,6 +162,10 @@ class Hizli_Kasa_API_Purchase_Orders extends Hizli_Kasa_API_Controller_Base {
 
         $po_id = $wpdb->insert_id;
 
+        if (class_exists('Hizli_Kasa_Logger')) {
+            Hizli_Kasa_Logger::stock("Yeni Tedarik / Alım Siparişi (#{$po_id}) oluşturuldu.", ['po_id' => $po_id, 'po_number' => $po_number], 'info', 'purchase_order', $po_id);
+        }
+
         foreach ($items as $item) {
             $product_id = absint($item['product_id']);
             $variation_id = isset($item['variation_id']) ? absint($item['variation_id']) : 0;

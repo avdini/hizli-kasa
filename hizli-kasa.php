@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 12.17.11
+ * Version: 12.18.0
  * Author: Seyfullah Kurt
  * Requires Plugins: woocommerce
  * Requires at least: 5.8
@@ -14,32 +14,35 @@ if (!defined('ABSPATH'))
     exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '12.17.11');
+define('HIZLI_KASA_VERSION', '12.18.0');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
 function hizli_kasa_log($message, $filename = 'hizli-kasa-debug.log')
 {
-    // Production'da log tamamen devre dışı — Ayarlar > Hızlı Kasa > "Debug Logu Aktif" ile açılabilir.
-    // Her sipariş onayında onlarca senkron disk I/O işlemi yapılmasını engeller.
-    $debug_aktif = get_option('hizli_kasa_debug_log_aktif', '0') === '1';
-    if (!$debug_aktif) {
-        return;
-    }
-
+    $context = [];
     if (is_array($message) || is_object($message)) {
-        $message = print_r($message, true);
+        $context = (array) $message;
+        $message = wp_json_encode($message, JSON_UNESCAPED_UNICODE);
     }
-    $file = HIZLI_KASA_PATH . $filename;
-    $timestamp = date('Y-m-d H:i:s');
-    $log_entry = "[$timestamp] $message\n";
 
-    error_log("HK Log: " . $message);
+    if (class_exists('Hizli_Kasa_Logger')) {
+        $channel = 'system';
+        $msg_lower = mb_strtolower((string) $message);
+        if (strpos($msg_lower, 'stok') !== false || strpos($msg_lower, 'depo') !== false || strpos($msg_lower, 'rezervasyon') !== false) {
+            $channel = 'stock';
+        } elseif (strpos($msg_lower, 'sipariş') !== false || strpos($msg_lower, 'iade') !== false || strpos($msg_lower, 'kasiyer') !== false) {
+            $channel = 'pos';
+        } elseif (strpos($msg_lower, 'sku') !== false || strpos($msg_lower, 'barkod') !== false) {
+            $channel = 'sku';
+        }
 
-    $result = @file_put_contents($file, $log_entry, FILE_APPEND);
+        $level = 'info';
+        if (strpos($msg_lower, 'hata') !== false || strpos($msg_lower, 'error') !== false || strpos($msg_lower, 'çatışma') !== false || strpos($msg_lower, 'çakışma') !== false || strpos($msg_lower, 'uyarı') !== false) {
+            $level = 'warning';
+        }
 
-    if ($result === false) {
-        error_log("HK ERROR: Could not write to $file. Check directory permissions.");
+        Hizli_Kasa_Logger::log($message, $channel, $level, $context);
     }
 }
 
@@ -65,6 +68,7 @@ function hizli_kasa_init() {
 
     // Sınıfları Yükle
     require_once HIZLI_KASA_PATH . 'includes/classes/class-database.php';
+    require_once HIZLI_KASA_PATH . 'includes/classes/class-logger.php';
     require_once HIZLI_KASA_PATH . 'includes/classes/class-hooks.php';
     require_once HIZLI_KASA_PATH . 'includes/classes/class-user-warehouse-permissions.php';
     require_once HIZLI_KASA_PATH . 'includes/classes/stock/class-stock-manager.php';

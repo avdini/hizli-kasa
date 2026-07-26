@@ -309,6 +309,10 @@ function hizli_kasa_sayim_start($request) {
 
     $session_id = $wpdb->insert_id;
 
+    if (class_exists('Hizli_Kasa_Logger')) {
+        Hizli_Kasa_Logger::stock("Depo #{$depo_id} için yeni Stok Sayım Oturumu (#{$session_id}) başlatıldı.", ['depo_id' => $depo_id, 'session_id' => $session_id], 'info', 'sayim_session', $session_id);
+    }
+
     return [
         'success' => true,
         'message' => 'Sayım oturumu başarıyla başlatıldı.',

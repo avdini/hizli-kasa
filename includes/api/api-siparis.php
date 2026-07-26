@@ -880,6 +880,10 @@ function hizli_kasa_update_order($request)
         'created_at' => current_time('mysql')
     ]);
 
+    if (class_exists('Hizli_Kasa_Logger')) {
+        Hizli_Kasa_Logger::pos("Sipariş #{$order_id} üzerinde kasiyer tarafından düzenleme yapıldı.", ['order_id' => $order_id, 'action' => 'manual_edit'], 'warning', 'order', $order_id);
+    }
+
     return ['success' => true, 'new_total' => $order->get_total()];
 }
 

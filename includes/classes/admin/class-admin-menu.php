@@ -124,6 +124,15 @@ class Hizli_Kasa_Admin_Menu {
 
         add_submenu_page(
             'hizli-kasa',
+            'Sistem Günlüğü',
+            '<span class="dashicons dashicons-list-view"></span> Sistem Günlüğü',
+            'manage_options',
+            'hizli-kasa&tab=loglar',
+            [Hizli_Kasa_Admin_Settings_Page::class, 'render']
+        );
+
+        add_submenu_page(
+            'hizli-kasa',
             'Terminali Başlat',
             '<span class="dashicons dashicons-external" style="color:#f58220; margin-right:4px;"></span><span style="color:#f58220; font-weight:bold;">POS Terminali ↗</span>',
             'manage_options',
