@@ -122,8 +122,20 @@ class Hizli_Kasa_API_QR_Payment extends Hizli_Kasa_API_Controller_Base {
         $store_state    = !empty($country_parts[1]) ? $country_parts[1] : '34';
 
         $first_name = sanitize_text_field($billing['first_name'] ?? ($current_user->display_name ?: 'Kasa'));
+        $first_name = trim(preg_replace('/[0-9]/', '', $first_name)) ?: 'Kasa';
+
         $last_name  = sanitize_text_field($billing['last_name'] ?? 'Müşterisi');
-        $phone      = !empty($billing['phone']) ? sanitize_text_field($billing['phone']) : '05555555555';
+        $last_name  = trim(preg_replace('/[0-9]/', '', $last_name)) ?: 'Müşterisi';
+
+        $phone      = !empty($billing['phone']) ? sanitize_text_field($billing['phone']) : '5555555555';
+        $phone      = preg_replace('/[^0-9]/', '', $phone);
+        if (substr($phone, 0, 1) === '0') {
+            $phone = substr($phone, 1);
+        }
+        if (empty($phone) || strlen($phone) < 10) {
+            $phone = '5555555555';
+        }
+
         $email      = sanitize_email($billing['email'] ?? ('pos-guest-' . time() . '@' . (parse_url(home_url(), PHP_URL_HOST) ?: 'magaza.com')));
         $raw_billing_address = !empty($billing['address_1']) ? sanitize_text_field($billing['address_1']) : '';
         if (empty($raw_billing_address) || mb_strlen(trim($raw_billing_address)) < 10 || $raw_billing_address === 'POS Satış') {
@@ -138,7 +150,7 @@ class Hizli_Kasa_API_QR_Payment extends Hizli_Kasa_API_Controller_Base {
         $billing_address_data = [
             'first_name' => $first_name,
             'last_name'  => $last_name,
-            'company'    => sanitize_text_field($billing['company'] ?? $store_name),
+            'company'    => trim(preg_replace('/[0-9]/', '', sanitize_text_field($billing['company'] ?? $store_name))),
             'address_1'  => $raw_billing_address,
             'address_2'  => sanitize_text_field($billing['address_2'] ?? ''),
             'city'       => $raw_billing_city,
@@ -148,6 +160,9 @@ class Hizli_Kasa_API_QR_Payment extends Hizli_Kasa_API_Controller_Base {
             'email'      => $email,
             'phone'      => $phone,
         ];
+
+        $s_first_name = trim(preg_replace('/[0-9]/', '', sanitize_text_field($shipping['first_name'] ?? $first_name))) ?: $first_name;
+        $s_last_name  = trim(preg_replace('/[0-9]/', '', sanitize_text_field($shipping['last_name'] ?? $last_name))) ?: $last_name;
 
         $raw_shipping_address = !empty($shipping['address_1']) ? sanitize_text_field($shipping['address_1']) : '';
         if (empty($raw_shipping_address) || mb_strlen(trim($raw_shipping_address)) < 10 || $raw_shipping_address === 'POS Satış') {
@@ -159,17 +174,26 @@ class Hizli_Kasa_API_QR_Payment extends Hizli_Kasa_API_Controller_Base {
             $raw_shipping_city = $billing_address_data['city'];
         }
 
+        $s_phone = !empty($shipping['phone']) ? sanitize_text_field($shipping['phone']) : $phone;
+        $s_phone = preg_replace('/[^0-9]/', '', $s_phone);
+        if (substr($s_phone, 0, 1) === '0') {
+            $s_phone = substr($s_phone, 1);
+        }
+        if (empty($s_phone) || strlen($s_phone) < 10) {
+            $s_phone = $phone;
+        }
+
         $shipping_address_data = [
-            'first_name' => sanitize_text_field($shipping['first_name'] ?? $first_name),
-            'last_name'  => sanitize_text_field($shipping['last_name'] ?? $last_name),
-            'company'    => sanitize_text_field($shipping['company'] ?? $store_name),
+            'first_name' => $s_first_name,
+            'last_name'  => $s_last_name,
+            'company'    => trim(preg_replace('/[0-9]/', '', sanitize_text_field($shipping['company'] ?? $store_name))),
             'address_1'  => $raw_shipping_address,
             'address_2'  => sanitize_text_field($shipping['address_2'] ?? ''),
             'city'       => $raw_shipping_city,
             'state'      => !empty($shipping['state']) ? sanitize_text_field($shipping['state']) : $billing_address_data['state'],
             'postcode'   => !empty($shipping['postcode']) ? sanitize_text_field($shipping['postcode']) : $billing_address_data['postcode'],
             'country'    => !empty($shipping['country']) ? sanitize_text_field($shipping['country']) : $billing_address_data['country'],
-            'phone'      => !empty($shipping['phone']) ? sanitize_text_field($shipping['phone']) : $phone,
+            'phone'      => $s_phone,
         ];
 
         $order->set_address($billing_address_data, 'billing');

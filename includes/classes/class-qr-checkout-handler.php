@@ -74,9 +74,14 @@ class Hizli_Kasa_QR_Checkout_Handler {
         $store_country  = !empty($country_parts[0]) ? $country_parts[0] : 'TR';
         $store_state    = !empty($country_parts[1]) ? $country_parts[1] : '34';
 
-        $b_first = $order->get_billing_first_name() ?: 'Kasa';
-        $b_last  = $order->get_billing_last_name() ?: 'Müşterisi';
-        $b_phone = $order->get_billing_phone() ?: '05555555555';
+        $b_first = trim(preg_replace('/[0-9]/', '', $order->get_billing_first_name() ?: 'Kasa')) ?: 'Kasa';
+        $b_last  = trim(preg_replace('/[0-9]/', '', $order->get_billing_last_name() ?: 'Müşterisi')) ?: 'Müşterisi';
+
+        $raw_phone = preg_replace('/[^0-9]/', '', $order->get_billing_phone() ?: '5555555555');
+        if (substr($raw_phone, 0, 1) === '0') {
+            $raw_phone = substr($raw_phone, 1);
+        }
+        $b_phone = (!empty($raw_phone) && strlen($raw_phone) >= 10) ? $raw_phone : '5555555555';
         $b_email = $order->get_billing_email() ?: 'kasa@magaza.com';
 
         $b_addr = $order->get_billing_address_1();
@@ -89,8 +94,8 @@ class Hizli_Kasa_QR_Checkout_Handler {
             $b_city = $store_city;
         }
 
-        $s_first = $order->get_shipping_first_name() ?: $b_first;
-        $s_last  = $order->get_shipping_last_name() ?: $b_last;
+        $s_first = trim(preg_replace('/[0-9]/', '', $order->get_shipping_first_name() ?: $b_first)) ?: $b_first;
+        $s_last  = trim(preg_replace('/[0-9]/', '', $order->get_shipping_last_name() ?: $b_last)) ?: $b_last;
 
         $s_addr = $order->get_shipping_address_1();
         if (empty($s_addr) || mb_strlen(trim($s_addr)) < 10 || $s_addr === 'POS Satış') {
@@ -102,10 +107,16 @@ class Hizli_Kasa_QR_Checkout_Handler {
             $s_city = $b_city;
         }
 
+        $s_phone_raw = preg_replace('/[^0-9]/', '', $order->get_shipping_phone() ?: $b_phone);
+        if (substr($s_phone_raw, 0, 1) === '0') {
+            $s_phone_raw = substr($s_phone_raw, 1);
+        }
+        $s_phone = (!empty($s_phone_raw) && strlen($s_phone_raw) >= 10) ? $s_phone_raw : $b_phone;
+
         return [
             'billing_first_name'         => $b_first,
             'billing_last_name'          => $b_last,
-            'billing_company'            => $order->get_billing_company() ?: get_bloginfo('name'),
+            'billing_company'            => trim(preg_replace('/[0-9]/', '', $order->get_billing_company() ?: get_bloginfo('name'))),
             'billing_address_1'          => $b_addr,
             'billing_address_2'          => $order->get_billing_address_2() ?: '',
             'billing_city'               => $b_city,
@@ -117,14 +128,14 @@ class Hizli_Kasa_QR_Checkout_Handler {
 
             'shipping_first_name'        => $s_first,
             'shipping_last_name'         => $s_last,
-            'shipping_company'           => $order->get_shipping_company() ?: get_bloginfo('name'),
+            'shipping_company'           => trim(preg_replace('/[0-9]/', '', $order->get_shipping_company() ?: get_bloginfo('name'))),
             'shipping_address_1'         => $s_addr,
             'shipping_address_2'         => $order->get_shipping_address_2() ?: '',
             'shipping_city'              => $s_city,
             'shipping_state'             => $order->get_shipping_state() ?: $store_state,
             'shipping_postcode'          => $order->get_shipping_postcode() ?: $store_postcode,
             'shipping_country'           => $order->get_shipping_country() ?: $store_country,
-            'shipping_phone'             => $order->get_shipping_phone() ?: $b_phone,
+            'shipping_phone'             => $s_phone,
 
             'ship_to_different_address' => '1',
         ];
@@ -366,7 +377,12 @@ class Hizli_Kasa_QR_Checkout_Handler {
 
     public static function filter_shipping_phone($value, $order = null) {
         if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
-            return (method_exists($order, 'get_billing_phone') ? $order->get_billing_phone() : '') ?: '05555555555';
+            $phone = (method_exists($order, 'get_billing_phone') ? $order->get_billing_phone() : '') ?: '5555555555';
+            $phone = preg_replace('/[^0-9]/', '', $phone);
+            if (substr($phone, 0, 1) === '0') {
+                $phone = substr($phone, 1);
+            }
+            return (!empty($phone) && strlen($phone) >= 10) ? $phone : '5555555555';
         }
         return $value;
     }
@@ -395,13 +411,19 @@ class Hizli_Kasa_QR_Checkout_Handler {
                 $address['postcode'] = get_option('woocommerce_store_postcode') ?: '34000';
             }
             if (empty($address['first_name'])) {
-                $address['first_name'] = $order->get_billing_first_name() ?: 'Kasa';
+                $fname = $order->get_billing_first_name() ?: 'Kasa';
+                $address['first_name'] = trim(preg_replace('/[0-9]/', '', $fname)) ?: 'Kasa';
             }
             if (empty($address['last_name'])) {
-                $address['last_name'] = $order->get_billing_last_name() ?: 'Müşterisi';
+                $lname = $order->get_billing_last_name() ?: 'Müşterisi';
+                $address['last_name'] = trim(preg_replace('/[0-9]/', '', $lname)) ?: 'Müşterisi';
             }
             if (empty($address['phone'])) {
-                $address['phone'] = $order->get_billing_phone() ?: '05555555555';
+                $raw_phone = preg_replace('/[^0-9]/', '', $order->get_billing_phone() ?: '5555555555');
+                if (substr($raw_phone, 0, 1) === '0') {
+                    $raw_phone = substr($raw_phone, 1);
+                }
+                $address['phone'] = (!empty($raw_phone) && strlen($raw_phone) >= 10) ? $raw_phone : '5555555555';
             }
             if (empty($address['state'])) {
                 $raw_country   = get_option('woocommerce_default_country') ?: 'TR:34';
