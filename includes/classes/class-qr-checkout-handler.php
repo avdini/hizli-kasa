@@ -19,7 +19,7 @@ class Hizli_Kasa_QR_Checkout_Handler {
         add_action('woocommerce_pay_order_before_submit', [__CLASS__, 'render_hidden_address_inputs']);
         add_filter('woocommerce_payment_gateway_title', [__CLASS__, 'customize_gateway_title'], 10, 2);
 
-        add_filter('woocommerce_order_needs_shipping_address', [__CLASS__, 'filter_needs_shipping_address'], 10, 2);
+        add_filter('woocommerce_order_needs_shipping_address', [__CLASS__, 'filter_needs_shipping_address'], 10, 3);
         add_filter('woocommerce_cart_needs_shipping_address', [__CLASS__, 'filter_cart_needs_shipping_address'], 10, 1);
 
         add_filter('woocommerce_order_get_shipping_address_1', [__CLASS__, 'filter_shipping_address_1'], 10, 2);
@@ -232,8 +232,15 @@ class Hizli_Kasa_QR_Checkout_Handler {
         wp_add_inline_style('woocommerce-general', $custom_css);
     }
 
-    public static function filter_needs_shipping_address($needs_shipping, $order) {
-        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes') {
+    public static function filter_needs_shipping_address($needs_shipping, $arg2 = null, $arg3 = null) {
+        $order = null;
+        if ($arg2 instanceof WC_Order) {
+            $order = $arg2;
+        } elseif ($arg3 instanceof WC_Order) {
+            $order = $arg3;
+        }
+
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes') {
             return true;
         }
         return $needs_shipping;
@@ -299,14 +306,14 @@ class Hizli_Kasa_QR_Checkout_Handler {
 
     public static function filter_shipping_first_name($value, $order = null) {
         if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
-            return $order->get_billing_first_name() ?: 'Kasa';
+            return (method_exists($order, 'get_billing_first_name') ? $order->get_billing_first_name() : '') ?: 'Kasa';
         }
         return $value;
     }
 
     public static function filter_shipping_last_name($value, $order = null) {
         if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
-            return $order->get_billing_last_name() ?: 'Müşterisi';
+            return (method_exists($order, 'get_billing_last_name') ? $order->get_billing_last_name() : '') ?: 'Müşterisi';
         }
         return $value;
     }
@@ -320,7 +327,7 @@ class Hizli_Kasa_QR_Checkout_Handler {
 
     public static function filter_shipping_phone($value, $order = null) {
         if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
-            return $order->get_billing_phone() ?: '05555555555';
+            return (method_exists($order, 'get_billing_phone') ? $order->get_billing_phone() : '') ?: '05555555555';
         }
         return $value;
     }
