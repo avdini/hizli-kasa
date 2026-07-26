@@ -309,14 +309,14 @@ class Hizli_Kasa_QR_Checkout_Handler {
 
     public static function filter_order_item_is_virtual($is_virtual, $item = null, $order = null) {
         if ($order instanceof WC_Order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes') {
-            return true;
+            return false;
         }
         global $wp;
         if (isset($wp->query_vars['order-pay'])) {
             $order_id = absint($wp->query_vars['order-pay']);
             $current_order = wc_get_order($order_id);
             if ($current_order && $current_order->get_meta('_hizli_kasa_qr_payment') === 'yes') {
-                return true;
+                return false;
             }
         }
         return $is_virtual;
@@ -328,7 +328,7 @@ class Hizli_Kasa_QR_Checkout_Handler {
             $order_id = absint($wp->query_vars['order-pay']);
             $order    = wc_get_order($order_id);
             if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes') {
-                return true;
+                return false;
             }
         }
         return $is_virtual;
