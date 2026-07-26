@@ -746,6 +746,11 @@
                     if (HK.PrintManager) {
                         HK.PrintManager.print('receipt');
                     }
+                } else if (orderResult.code === 'duplicate_order') {
+                    durumMetni.innerText = "Bu sipariş zaten oluşturulmuş.";
+                    durumMetni.style.color = "#e67e22";
+                    HK.CartManager.sepetiTemizle(siparisKasaId);
+                    if (HK.UIRenderer) HK.UIRenderer.showToast("Bu sipariş zaten oluşturulmuş, sepet temizlendi.", "warning", true);
                 } else {
                     durumMetni.innerText = "HATA: " + (orderResult.message || "API sorunu!");
                     durumMetni.style.color = "red";
@@ -753,6 +758,10 @@
             } catch (error) {
                 this.toggleLoading(false);
                 console.error("Sipariş hatası", error);
+                durumMetni.innerText = "Bağlantı hatası! Sipariş oluşmuş olabilir.";
+                durumMetni.style.color = "red";
+                HK.CartManager.sepetiTemizle(siparisKasaId);
+                if (HK.UIRenderer) HK.UIRenderer.showToast("Bağlantı kesildi. Sipariş oluşmuş olabilir — lütfen WooCommerce panelinden kontrol edin. Sepet güvenlik için temizlendi.", "error", true);
             }
         },
 
