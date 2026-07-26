@@ -668,8 +668,8 @@
                 billing: {
                     first_name: kasaAyar.userName || "Kasa",
                     last_name: "Kasa " + state.aktifKasaId,
-                    address_1: "POS Satış",
-                    city: "Mağaza",
+                    address_1: "Mağaza Teslim POS Satış Adresi No 1",
+                    city: (kasaAyar && kasaAyar.storeCity) ? kasaAyar.storeCity : "İstanbul",
                     country: "TR",
                     phone: this._getPhoneInfo().fullPhone
                 },

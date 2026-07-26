@@ -125,14 +125,23 @@ class Hizli_Kasa_API_QR_Payment extends Hizli_Kasa_API_Controller_Base {
         $last_name  = sanitize_text_field($billing['last_name'] ?? 'Müşterisi');
         $phone      = !empty($billing['phone']) ? sanitize_text_field($billing['phone']) : '05555555555';
         $email      = sanitize_email($billing['email'] ?? ('pos-guest-' . time() . '@' . (parse_url(home_url(), PHP_URL_HOST) ?: 'magaza.com')));
+        $raw_billing_address = !empty($billing['address_1']) ? sanitize_text_field($billing['address_1']) : '';
+        if (empty($raw_billing_address) || mb_strlen(trim($raw_billing_address)) < 10 || $raw_billing_address === 'POS Satış') {
+            $raw_billing_address = $store_address;
+        }
+
+        $raw_billing_city = !empty($billing['city']) ? sanitize_text_field($billing['city']) : '';
+        if (empty($raw_billing_city) || $raw_billing_city === 'Mağaza') {
+            $raw_billing_city = $store_city;
+        }
 
         $billing_address_data = [
             'first_name' => $first_name,
             'last_name'  => $last_name,
             'company'    => sanitize_text_field($billing['company'] ?? $store_name),
-            'address_1'  => !empty($billing['address_1']) ? sanitize_text_field($billing['address_1']) : $store_address,
+            'address_1'  => $raw_billing_address,
             'address_2'  => sanitize_text_field($billing['address_2'] ?? ''),
-            'city'       => !empty($billing['city']) ? sanitize_text_field($billing['city']) : $store_city,
+            'city'       => $raw_billing_city,
             'state'      => !empty($billing['state']) ? sanitize_text_field($billing['state']) : $store_state,
             'postcode'   => !empty($billing['postcode']) ? sanitize_text_field($billing['postcode']) : $store_postcode,
             'country'    => !empty($billing['country']) ? sanitize_text_field($billing['country']) : $store_country,
@@ -140,13 +149,23 @@ class Hizli_Kasa_API_QR_Payment extends Hizli_Kasa_API_Controller_Base {
             'phone'      => $phone,
         ];
 
+        $raw_shipping_address = !empty($shipping['address_1']) ? sanitize_text_field($shipping['address_1']) : '';
+        if (empty($raw_shipping_address) || mb_strlen(trim($raw_shipping_address)) < 10 || $raw_shipping_address === 'POS Satış') {
+            $raw_shipping_address = $billing_address_data['address_1'];
+        }
+
+        $raw_shipping_city = !empty($shipping['city']) ? sanitize_text_field($shipping['city']) : '';
+        if (empty($raw_shipping_city) || $raw_shipping_city === 'Mağaza') {
+            $raw_shipping_city = $billing_address_data['city'];
+        }
+
         $shipping_address_data = [
             'first_name' => sanitize_text_field($shipping['first_name'] ?? $first_name),
             'last_name'  => sanitize_text_field($shipping['last_name'] ?? $last_name),
             'company'    => sanitize_text_field($shipping['company'] ?? $store_name),
-            'address_1'  => !empty($shipping['address_1']) ? sanitize_text_field($shipping['address_1']) : $billing_address_data['address_1'],
+            'address_1'  => $raw_shipping_address,
             'address_2'  => sanitize_text_field($shipping['address_2'] ?? ''),
-            'city'       => !empty($shipping['city']) ? sanitize_text_field($shipping['city']) : $billing_address_data['city'],
+            'city'       => $raw_shipping_city,
             'state'      => !empty($shipping['state']) ? sanitize_text_field($shipping['state']) : $billing_address_data['state'],
             'postcode'   => !empty($shipping['postcode']) ? sanitize_text_field($shipping['postcode']) : $billing_address_data['postcode'],
             'country'    => !empty($shipping['country']) ? sanitize_text_field($shipping['country']) : $billing_address_data['country'],

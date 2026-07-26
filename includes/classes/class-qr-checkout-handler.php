@@ -75,16 +75,36 @@ class Hizli_Kasa_QR_Checkout_Handler {
         $b_phone = $order->get_billing_phone() ?: '05555555555';
         $b_email = $order->get_billing_email() ?: 'kasa@magaza.com';
 
+        $b_addr = $order->get_billing_address_1();
+        if (empty($b_addr) || mb_strlen(trim($b_addr)) < 10 || $b_addr === 'POS Satış') {
+            $b_addr = $store_address;
+        }
+
+        $b_city = $order->get_billing_city();
+        if (empty($b_city) || $b_city === 'Mağaza') {
+            $b_city = $store_city;
+        }
+
         $s_first = $order->get_shipping_first_name() ?: $b_first;
         $s_last  = $order->get_shipping_last_name() ?: $b_last;
+
+        $s_addr = $order->get_shipping_address_1();
+        if (empty($s_addr) || mb_strlen(trim($s_addr)) < 10 || $s_addr === 'POS Satış') {
+            $s_addr = $b_addr;
+        }
+
+        $s_city = $order->get_shipping_city();
+        if (empty($s_city) || $s_city === 'Mağaza') {
+            $s_city = $b_city;
+        }
 
         return [
             'billing_first_name'         => $b_first,
             'billing_last_name'          => $b_last,
             'billing_company'            => $order->get_billing_company() ?: get_bloginfo('name'),
-            'billing_address_1'          => $order->get_billing_address_1() ?: $store_address,
+            'billing_address_1'          => $b_addr,
             'billing_address_2'          => $order->get_billing_address_2() ?: '',
-            'billing_city'               => $order->get_billing_city() ?: $store_city,
+            'billing_city'               => $b_city,
             'billing_state'              => $order->get_billing_state() ?: $store_state,
             'billing_postcode'           => $order->get_billing_postcode() ?: $store_postcode,
             'billing_country'            => $order->get_billing_country() ?: $store_country,
@@ -94,9 +114,9 @@ class Hizli_Kasa_QR_Checkout_Handler {
             'shipping_first_name'        => $s_first,
             'shipping_last_name'         => $s_last,
             'shipping_company'           => $order->get_shipping_company() ?: get_bloginfo('name'),
-            'shipping_address_1'         => $order->get_shipping_address_1() ?: $store_address,
+            'shipping_address_1'         => $s_addr,
             'shipping_address_2'         => $order->get_shipping_address_2() ?: '',
-            'shipping_city'              => $order->get_shipping_city() ?: $store_city,
+            'shipping_city'              => $s_city,
             'shipping_state'             => $order->get_shipping_state() ?: $store_state,
             'shipping_postcode'          => $order->get_shipping_postcode() ?: $store_postcode,
             'shipping_country'           => $order->get_shipping_country() ?: $store_country,
@@ -259,8 +279,10 @@ class Hizli_Kasa_QR_Checkout_Handler {
     }
 
     public static function filter_shipping_address_1($value, $order = null) {
-        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
-            return get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes') {
+            if (empty($value) || mb_strlen(trim($value)) < 10 || $value === 'POS Satış') {
+                return get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
+            }
         }
         return $value;
     }
@@ -273,8 +295,10 @@ class Hizli_Kasa_QR_Checkout_Handler {
     }
 
     public static function filter_shipping_city($value, $order = null) {
-        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
-            return get_option('woocommerce_store_city') ?: 'Istanbul';
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes') {
+            if (empty($value) || $value === 'Mağaza') {
+                return get_option('woocommerce_store_city') ?: 'Istanbul';
+            }
         }
         return $value;
     }
@@ -341,10 +365,10 @@ class Hizli_Kasa_QR_Checkout_Handler {
             $address = [];
         }
         if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && ($type === 'shipping' || empty($type))) {
-            if (empty($address['address_1'])) {
+            if (empty($address['address_1']) || mb_strlen(trim($address['address_1'])) < 10 || $address['address_1'] === 'POS Satış') {
                 $address['address_1'] = get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
             }
-            if (empty($address['city'])) {
+            if (empty($address['city']) || $address['city'] === 'Mağaza') {
                 $address['city'] = get_option('woocommerce_store_city') ?: 'Istanbul';
             }
             if (empty($address['country'])) {
