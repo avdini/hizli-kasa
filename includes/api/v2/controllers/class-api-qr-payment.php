@@ -111,11 +111,11 @@ class Hizli_Kasa_API_QR_Payment extends Hizli_Kasa_API_Controller_Base {
             $order->add_item($fee_item);
         }
 
-        // 3. Müşteri & Mağaza Varsayılan Bilgileri (Sanal POS / iyzico uyumu için eksiksiz doldurulur)
+        // 3. Müşteri & Mağaza Varsayılan Bilgileri (WooCommerce Core Checkout standartlarında tam adres seti)
         $current_user   = wp_get_current_user();
         $store_name     = get_bloginfo('name') ?: 'Hızlı Kasa Mağaza';
-        $store_address  = get_option('woocommerce_store_address') ?: 'Mağaza Teslim POS Satış';
-        $store_city     = get_option('woocommerce_store_city') ?: 'İstanbul';
+        $store_address  = get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
+        $store_city     = get_option('woocommerce_store_city') ?: 'Istanbul';
         $store_postcode = get_option('woocommerce_store_postcode') ?: '34000';
         $store_country  = 'TR';
 
@@ -124,26 +124,23 @@ class Hizli_Kasa_API_QR_Payment extends Hizli_Kasa_API_Controller_Base {
         $phone      = !empty($billing['phone']) ? sanitize_text_field($billing['phone']) : '05555555555';
         $email      = sanitize_email($billing['email'] ?? ('pos-guest-' . time() . '@' . (parse_url(home_url(), PHP_URL_HOST) ?: 'magaza.com')));
 
-        // Billing (Fatura Bilgileri)
-        $order->set_billing_first_name($first_name);
-        $order->set_billing_last_name($last_name);
-        $order->set_billing_company($store_name);
-        $order->set_billing_address_1($store_address);
-        $order->set_billing_city($store_city);
-        $order->set_billing_postcode($store_postcode);
-        $order->set_billing_country($store_country);
-        $order->set_billing_email($email);
-        $order->set_billing_phone($phone);
+        $address_data = [
+            'first_name' => $first_name,
+            'last_name'  => $last_name,
+            'company'    => $store_name,
+            'address_1'  => $store_address,
+            'address_2'  => '',
+            'city'       => $store_city,
+            'state'      => '',
+            'postcode'   => $store_postcode,
+            'country'    => $store_country,
+            'email'      => $email,
+            'phone'      => $phone,
+        ];
 
-        // Shipping (Teslimat Bilgileri - iyzico / PayTR / Sanal POS için zorunludur)
-        $order->set_shipping_first_name($first_name);
-        $order->set_shipping_last_name($last_name);
-        $order->set_shipping_company($store_name);
-        $order->set_shipping_address_1($store_address);
-        $order->set_shipping_city($store_city);
-        $order->set_shipping_postcode($store_postcode);
-        $order->set_shipping_country($store_country);
-        $order->set_shipping_phone($phone);
+        // WooCommerce Core Checkout mantığı ile adresleri tam olarak set et
+        $order->set_address($address_data, 'billing');
+        $order->set_address($address_data, 'shipping');
 
         if ($customer_note) {
             $order->set_customer_note($customer_note);
