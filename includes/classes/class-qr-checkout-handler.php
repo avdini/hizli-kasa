@@ -15,7 +15,9 @@ class Hizli_Kasa_QR_Checkout_Handler {
         add_filter('woocommerce_order_pay_page_title', [__CLASS__, 'customize_pay_page_title'], 10, 2);
         add_filter('woocommerce_pay_order_button_text', [__CLASS__, 'customize_pay_button_text'], 10, 1);
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_qr_checkout_assets']);
+        add_action('init', [__CLASS__, 'inject_posted_address_data'], 5);
         add_action('wp', [__CLASS__, 'inject_posted_address_data'], 5);
+        add_action('woocommerce_before_checkout_process', [__CLASS__, 'inject_posted_address_data'], 5);
         add_action('woocommerce_pay_order_before_submit', [__CLASS__, 'render_hidden_address_inputs']);
         add_filter('woocommerce_payment_gateway_title', [__CLASS__, 'customize_gateway_title'], 10, 2);
 
@@ -148,12 +150,23 @@ class Hizli_Kasa_QR_Checkout_Handler {
 
     public static function inject_posted_address_data() {
         global $wp;
-        if (!isset($wp->query_vars['order-pay'])) {
+        $order_id = 0;
+
+        if (isset($wp->query_vars['order-pay'])) {
+            $order_id = absint($wp->query_vars['order-pay']);
+        } elseif (isset($_GET['order-pay'])) {
+            $order_id = absint($_GET['order-pay']);
+        } elseif (isset($_POST['order_id'])) {
+            $order_id = absint($_POST['order_id']);
+        } elseif (preg_match('#/pay/(\d+)#', $_SERVER['REQUEST_URI'] ?? '', $matches)) {
+            $order_id = absint($matches[1]);
+        }
+
+        if (!$order_id) {
             return;
         }
 
-        $order_id = absint($wp->query_vars['order-pay']);
-        $order    = wc_get_order($order_id);
+        $order = wc_get_order($order_id);
 
         if (!$order || $order->get_meta('_hizli_kasa_qr_payment') !== 'yes') {
             return;
