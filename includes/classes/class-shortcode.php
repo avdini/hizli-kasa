@@ -205,7 +205,9 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-ui-renderer', $js_base . 'modules/ui-renderer.js', ['kasa-cart-manager', 'kasa-currency-mask'], $pos_version, true);
     wp_enqueue_script('kasa-barcode-scanner', $js_base . 'modules/barcode-scanner.js', ['kasa-cart-manager', 'kasa-ui-renderer'], $pos_version, true);
     wp_enqueue_script('kasa-modal-manager', $js_base . 'modules/modal-manager.js', ['kasa-cart-manager', 'kasa-ui-renderer'], $pos_version, true);
-    wp_enqueue_script('kasa-order-processor', $js_base . 'modules/order-processor.js', ['intl-tel-input', 'kasa-cart-manager', 'kasa-ui-renderer'], $pos_version, true);
+    wp_enqueue_script('kasa-qrcode-lib', $js_base . 'lib/qrcode.min.js', [], $pos_version, true);
+    wp_enqueue_script('kasa-qr-payment-manager', $js_base . 'modules/qr-payment-manager.js', ['kasa-qrcode-lib', 'kasa-ui-renderer', 'kasa-sound-manager'], $pos_version, true);
+    wp_enqueue_script('kasa-order-processor', $js_base . 'modules/order-processor.js', ['intl-tel-input', 'kasa-cart-manager', 'kasa-ui-renderer', 'kasa-qr-payment-manager'], $pos_version, true);
     wp_enqueue_script('kasa-receipt-printer', $js_base . 'modules/receipt-printer.js', ['kasa-order-processor'], $pos_version, true);
     wp_enqueue_script('kasa-day-end-report', $js_base . 'modules/day-end-report.js', ['kasa-cart-manager'], $pos_version, true);
     wp_enqueue_script('kasa-anlik-kasa', $js_base . 'modules/anlik-kasa.js', ['kasa-ui-renderer'], $pos_version, true);
@@ -230,8 +232,6 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-report-receipt-printer', $js_base . 'modules/report-receipt-printer.js', ['kasa-reports-common', 'kasa-print-manager', 'jsbarcode'], $pos_version, true);
     wp_enqueue_script('kasa-sevk-manager', $js_base . 'modules/sevk-manager.js', ['kasa-ui-renderer', 'kasa-depo-manager', 'kasa-sound-manager'], $pos_version, true);
     wp_enqueue_script('kasa-malkabul-manager', $js_base . 'modules/malkabul-manager.js', ['kasa-ui-renderer', 'kasa-depo-manager'], $pos_version, true);
-    wp_enqueue_script('kasa-qrcode-lib', $js_base . 'lib/qrcode.min.js', [], $pos_version, true);
-    wp_enqueue_script('kasa-qr-payment-manager', $js_base . 'modules/qr-payment-manager.js', ['kasa-qrcode-lib', 'kasa-ui-renderer', 'kasa-sound-manager'], $pos_version, true);
     wp_enqueue_script('kasa-js', $js_base . 'kasa.js', [
         'kasa-cart-manager',
         'kasa-ui-renderer',
