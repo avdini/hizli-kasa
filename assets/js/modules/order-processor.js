@@ -53,8 +53,10 @@
             if (stokDevam) {
                 stokDevam.addEventListener("click", function () {
                     if (self.isProcessing) return;
+                    self.isProcessing = true;
                     stokModal.style.display = "none";
-                    self.siparisIsleminiGerceklestir(HK.State.splitData);
+                    var key = "hk_idemp_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+                    self.siparisIsleminiGerceklestir(HK.State.splitData, key);
                 });
             }
 
@@ -117,13 +119,14 @@
 
                 self.toggleLoading(true);
 
+                var key = "hk_idemp_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
                 var sorunlar = await self.sonStokKontrolu();
 
                 if (sorunlar.length > 0) {
                     self.toggleLoading(false);
                     self._stokUyarisiGoster(sorunlar);
                 } else {
-                    self.siparisIsleminiGerceklestir(state.splitData);
+                    self.siparisIsleminiGerceklestir(state.splitData, key);
                 }
             });
 
@@ -335,7 +338,7 @@
          * Sipariş oluşturma ana fonksiyonu
          * @param {Object|null} splitData Bölünmüş ödeme verisi (opsiyonel)
          */
-        siparisIsleminiGerceklestir: async function (splitData) {
+        siparisIsleminiGerceklestir: async function (splitData, idempotencyKey) {
             splitData = splitData || null;
             var state = HK.State;
             var siparisKasaId = state.aktifKasaId;
@@ -393,7 +396,7 @@
             var apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
             var exchangeRefundOrderId = null;
 
-            var idempotencyKey = "hk_idemp_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+            idempotencyKey = idempotencyKey || ("hk_idemp_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9));
 
             // 1. ADIM: İADE İŞLEMİ (Refund)
             if (refundItems.length > 0) {
