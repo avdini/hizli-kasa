@@ -26,9 +26,19 @@ function hizli_kasa_process_refund($request)
     }
 
     $data = $request->get_json_params();
+    $idempotency_key = !empty($data['idempotency_key']) ? sanitize_text_field($data['idempotency_key']) : '';
+
+    if (!empty($idempotency_key)) {
+        $lock_key = 'hk_refund_lock_' . md5($idempotency_key);
+        if (get_transient($lock_key)) {
+            return new WP_Error('duplicate_refund', 'Bu iade işlemi zaten işleniyor veya daha önce tamamlandı.', array('status' => 400));
+        }
+        set_transient($lock_key, '1', 15);
+    }
+
     $original_order_id = !empty($data['original_order_id']) ? sanitize_text_field($data['original_order_id']) : null;
     $is_manual = !empty($data['is_manual']) && $data['is_manual'] === true;
-    $refund_items = $data['items'];
+    $refund_items = isset($data['items']) ? $data['items'] : [];
 
     if (empty($refund_items)) {
         return new WP_Error('no_items', 'İade edilecek ürün seçilmedi.', array('status' => 400));

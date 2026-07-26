@@ -12,6 +12,7 @@ class Hizli_Kasa_Hooks {
         add_action('woocommerce_new_order', [self::class, 'handle_coupon_use'], 10, 2);
         add_action('woocommerce_coupon_options', [self::class, 'render_coupon_print_button']);
         add_action('wp_ajax_hk_print_coupon', [self::class, 'ajax_print_coupon']);
+        add_filter('woocommerce_rest_pre_insert_shop_order_object', [self::class, 'prevent_duplicate_pos_order'], 10, 2);
     }
 
     public static function invalidate_reports_cache() {
@@ -167,6 +168,39 @@ class Hizli_Kasa_Hooks {
         </html>
         <?php
         exit;
+    }
+
+    public static function prevent_duplicate_pos_order($order, $request) {
+        if (!($order instanceof WC_Order)) {
+            return $order;
+        }
+
+        $meta_data = $request->get_param('meta_data');
+        if (!is_array($meta_data)) {
+            return $order;
+        }
+
+        $idempotency_key = '';
+        foreach ($meta_data as $meta) {
+            if (isset($meta['key']) && $meta['key'] === '_hizli_kasa_idempotency_key') {
+                $idempotency_key = sanitize_text_field($meta['value']);
+                break;
+            }
+        }
+
+        if (!empty($idempotency_key)) {
+            $lock_key = 'hk_idemp_lock_' . md5($idempotency_key);
+            if (get_transient($lock_key)) {
+                return new WP_Error(
+                    'duplicate_order',
+                    'Bu sipariş oluşturma işlemi zaten devam ediyor veya daha önce tamamlandı.',
+                    array('status' => 400)
+                );
+            }
+            set_transient($lock_key, '1', 15);
+        }
+
+        return $order;
     }
 }
 

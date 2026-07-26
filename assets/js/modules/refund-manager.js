@@ -1076,9 +1076,13 @@ const RefundManager = (function () {
         }
     }
 
+    let isRefundProcessing = false;
+
     async function processRefund() {
+        if (isRefundProcessing) return;
         if (!confirm('İade faturası oluşturulacak. Onaylıyor musunuz?')) return;
 
+        isRefundProcessing = true;
         showLoading();
         try {
             const apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
@@ -1107,6 +1111,8 @@ const RefundManager = (function () {
                 }
             }
 
+            const idempotencyKey = "hk_refund_idemp_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+
             const response = await fetch(`${apiBase}hizli-kasa/v1/process-refund`, {
                 method: 'POST',
                 headers: {
@@ -1114,6 +1120,7 @@ const RefundManager = (function () {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    idempotency_key: idempotencyKey,
                     original_order_id: originalOrder ? originalOrder.id : '',
                     is_manual: isManualMode,
                     active_depo_id: HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0,
@@ -1165,6 +1172,7 @@ const RefundManager = (function () {
         } catch (error) {
             alert('Hata: ' + error.message);
         } finally {
+            isRefundProcessing = false;
             hideLoading();
         }
     }

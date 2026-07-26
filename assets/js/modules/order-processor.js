@@ -10,13 +10,27 @@
     'use strict';
 
     HK.OrderProcessor = {
+        isProcessing: false,
 
         /**
-         * Yükleme ekranını göster/gizle
+         * Yükleme ekranını göster/gizle ve buton kilit durumunu yönet
          */
         toggleLoading: function (show) {
+            this.isProcessing = !!show;
             var overlay = document.getElementById("order-loading-overlay");
             if (overlay) overlay.style.display = show ? "flex" : "none";
+
+            var onaylaBtn = document.getElementById("onayla-buton");
+            if (onaylaBtn) {
+                onaylaBtn.disabled = !!show;
+                if (show) {
+                    onaylaBtn.classList.add("disabled");
+                    onaylaBtn.style.pointerEvents = "none";
+                } else {
+                    onaylaBtn.classList.remove("disabled");
+                    onaylaBtn.style.pointerEvents = "";
+                }
+            }
         },
 
         /**
@@ -38,6 +52,7 @@
 
             if (stokDevam) {
                 stokDevam.addEventListener("click", function () {
+                    if (self.isProcessing) return;
                     stokModal.style.display = "none";
                     self.siparisIsleminiGerceklestir(HK.State.splitData);
                 });
@@ -45,6 +60,8 @@
 
             document.getElementById("onayla-buton").addEventListener("click", async function () {
                 this.blur();
+                if (self.isProcessing) return;
+
                 var state = HK.State;
                 if (state.sepet.length === 0) return;
 
@@ -376,6 +393,8 @@
             var apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
             var exchangeRefundOrderId = null;
 
+            var idempotencyKey = "hk_idemp_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+
             // 1. ADIM: İADE İŞLEMİ (Refund)
             if (refundItems.length > 0) {
                 durumMetni.innerText = "İade işlemi arka planda oluşturuluyor...";
@@ -387,6 +406,7 @@
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
+                            idempotency_key: idempotencyKey + "_refund",
                             original_order_id: refundOriginalOrder || '',
                             is_manual: !refundOriginalOrder,
                             active_depo_id: HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0,
@@ -679,7 +699,8 @@
                     { key: "_hizli_kasa_musteri_telefon", value: this._getPhoneInfo().fullPhone },
                     { key: "_hizli_kasa_musteri_telefon_ulke_kodu", value: state.musteriTelefonUlkeKodu || "+90" },
                     { key: "_hizli_kasa_siparis_notu", value: siparisNotu },
-                    { key: "_hizli_kasa_base_odeme_tipi", value: state.odemeTipi }
+                    { key: "_hizli_kasa_base_odeme_tipi", value: state.odemeTipi },
+                    { key: "_hizli_kasa_idempotency_key", value: idempotencyKey }
                 ],
                 coupon_lines: []
             };
