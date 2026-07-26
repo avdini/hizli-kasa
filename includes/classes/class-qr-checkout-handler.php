@@ -3,7 +3,8 @@
  * Hızlı Kasa - QR Checkout Handler
  *
  * WooCommerce checkout/order-pay sayfasını QR Taksitli Ödeme siparişleri için özelleştirir.
- * Adres ve ek bilgi formlarını gizler, doğrudan sanal POS kart / taksit ekranını sunar.
+ * Sanal POS (iyzico, PayTR vb.) entegrasyonlarının "Shipping address zorunludur" kontrolü için
+ * mağaza adres verilerini hem gizli HTML input olarak hem de PHP $_POST düzeyinde otomatik enjekte eder.
  *
  * @package HizliKasa
  */
@@ -19,10 +20,16 @@ class Hizli_Kasa_QR_Checkout_Handler {
         add_filter('woocommerce_order_pay_page_title', [__CLASS__, 'customize_pay_page_title'], 10, 2);
         add_filter('woocommerce_pay_order_button_text', [__CLASS__, 'customize_pay_button_text'], 10, 1);
 
-        // 2. Ödeme Sayfasına Özel CSS/JS Inject (Adres formlarını gizler)
+        // 2. Ödeme Sayfasına Özel CSS Inject (Görsel adres formlarını gizler)
         add_action('wp_enqueue_scripts', [__CLASS__, 'enqueue_qr_checkout_assets']);
 
-        // 3. Fiş / Rapor Ödeme Yöntemi Adı Unvanı
+        // 3. Form Gönderiminde Sanal POS İçin $_POST Enjeksiyonu
+        add_action('wp', [__CLASS__, 'inject_posted_address_data'], 5);
+
+        // 4. Form İçi Gizli Input Enjeksiyonu (HTML Form İçi)
+        add_action('woocommerce_pay_order_before_submit', [__CLASS__, 'render_hidden_address_inputs']);
+
+        // 5. Fiş / Rapor Ödeme Yöntemi Adı Unvanı
         add_filter('woocommerce_payment_gateway_title', [__CLASS__, 'customize_gateway_title'], 10, 2);
     }
 
@@ -59,6 +66,92 @@ class Hizli_Kasa_QR_Checkout_Handler {
             return 'QR Taksitli Ödeme (Sanal POS)';
         }
         return $title;
+    }
+
+    /**
+     * HTML Ödeme Formunun İçine Gizli Adres Inputları Ekler (Sanal POS Validasyonu İçin)
+     */
+    public static function render_hidden_address_inputs() {
+        global $wp;
+        if (!isset($wp->query_vars['order-pay'])) {
+            return;
+        }
+
+        $order_id = absint($wp->query_vars['order-pay']);
+        $order    = wc_get_order($order_id);
+
+        if (!$order || $order->get_meta('_hizli_kasa_qr_payment') !== 'yes') {
+            return;
+        }
+
+        $fields = [
+            'billing_first_name'  => $order->get_billing_first_name() ?: 'Kasa',
+            'billing_last_name'   => $order->get_billing_last_name() ?: 'Müşterisi',
+            'billing_address_1'   => $order->get_billing_address_1() ?: 'Mağaza Teslim POS Satış',
+            'billing_city'        => $order->get_billing_city() ?: 'İstanbul',
+            'billing_postcode'    => $order->get_billing_postcode() ?: '34000',
+            'billing_country'     => $order->get_billing_country() ?: 'TR',
+            'billing_phone'       => $order->get_billing_phone() ?: '05555555555',
+            'billing_email'       => $order->get_billing_email() ?: 'kasa@magaza.com',
+
+            'shipping_first_name' => $order->get_shipping_first_name() ?: 'Mağaza Teslim',
+            'shipping_last_name'  => $order->get_shipping_last_name() ?: 'POS',
+            'shipping_address_1'  => $order->get_shipping_address_1() ?: 'Mağaza Teslim POS Satış',
+            'shipping_city'       => $order->get_shipping_city() ?: 'İstanbul',
+            'shipping_postcode'   => $order->get_shipping_postcode() ?: '34000',
+            'shipping_country'    => $order->get_shipping_country() ?: 'TR',
+            'shipping_phone'      => $order->get_shipping_phone() ?: '05555555555',
+        ];
+
+        foreach ($fields as $name => $val) {
+            echo '<input type="hidden" name="' . esc_attr($name) . '" value="' . esc_attr($val) . '" />' . "\n";
+        }
+    }
+
+    /**
+     * Form Gönderim Sırasında (HTTP POST) Sanal POS Eklentilerinin
+     * Adres Validasyonundan Geçmesi İçin $_POST Verilerini Otomatik Enjekte Eder
+     */
+    public static function inject_posted_address_data() {
+        global $wp;
+        if (!isset($wp->query_vars['order-pay'])) {
+            return;
+        }
+
+        $order_id = absint($wp->query_vars['order-pay']);
+        $order    = wc_get_order($order_id);
+
+        if (!$order || $order->get_meta('_hizli_kasa_qr_payment') !== 'yes') {
+            return;
+        }
+
+        $fields = [
+            'billing_first_name'  => $order->get_billing_first_name() ?: 'Kasa',
+            'billing_last_name'   => $order->get_billing_last_name() ?: 'Müşterisi',
+            'billing_address_1'   => $order->get_billing_address_1() ?: 'Mağaza Teslim POS Satış',
+            'billing_city'        => $order->get_billing_city() ?: 'İstanbul',
+            'billing_postcode'    => $order->get_billing_postcode() ?: '34000',
+            'billing_country'     => $order->get_billing_country() ?: 'TR',
+            'billing_phone'       => $order->get_billing_phone() ?: '05555555555',
+            'billing_email'       => $order->get_billing_email() ?: 'kasa@magaza.com',
+
+            'shipping_first_name' => $order->get_shipping_first_name() ?: 'Mağaza Teslim',
+            'shipping_last_name'  => $order->get_shipping_last_name() ?: 'POS',
+            'shipping_address_1'  => $order->get_shipping_address_1() ?: 'Mağaza Teslim POS Satış',
+            'shipping_city'       => $order->get_shipping_city() ?: 'İstanbul',
+            'shipping_postcode'   => $order->get_shipping_postcode() ?: '34000',
+            'shipping_country'    => $order->get_shipping_country() ?: 'TR',
+            'shipping_phone'      => $order->get_shipping_phone() ?: '05555555555',
+        ];
+
+        foreach ($fields as $key => $val) {
+            if (empty($_POST[$key])) {
+                $_POST[$key] = $val;
+            }
+            if (empty($_REQUEST[$key])) {
+                $_REQUEST[$key] = $val;
+            }
+        }
     }
 
     /**
