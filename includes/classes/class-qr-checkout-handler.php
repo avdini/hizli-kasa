@@ -40,6 +40,7 @@ class Hizli_Kasa_QR_Checkout_Handler {
         add_filter('woocommerce_order_get_shipping_phone', [__CLASS__, 'filter_shipping_phone'], 10, 2);
         add_filter('woocommerce_order_get_address', [__CLASS__, 'filter_order_get_address'], 10, 3);
         add_filter('woocommerce_checkout_posted_data', [__CLASS__, 'filter_checkout_posted_data'], 10, 1);
+        add_filter('woocommerce_get_cart_contents', [__CLASS__, 'filter_get_cart_contents'], 10, 1);
     }
 
     public static function customize_pay_page_title($title, $order) {
@@ -514,5 +515,64 @@ class Hizli_Kasa_QR_Checkout_Handler {
             }
         }
         return $data;
+    }
+
+    public static function filter_get_cart_contents($cart_contents) {
+        if (!empty($cart_contents)) {
+            return $cart_contents;
+        }
+
+        global $wp;
+        $order_id = 0;
+        if (isset($wp->query_vars['order-pay'])) {
+            $order_id = absint($wp->query_vars['order-pay']);
+        } elseif (isset($_GET['order-pay'])) {
+            $order_id = absint($_GET['order-pay']);
+        } elseif (isset($_POST['order_id'])) {
+            $order_id = absint($_POST['order_id']);
+        } elseif (preg_match('#/pay/(\d+)#', $_SERVER['REQUEST_URI'] ?? '', $matches)) {
+            $order_id = absint($matches[1]);
+        }
+
+        if (!$order_id) {
+            return $cart_contents;
+        }
+
+        $order = wc_get_order($order_id);
+        if (!$order || $order->get_meta('_hizli_kasa_qr_payment') !== 'yes') {
+            return $cart_contents;
+        }
+
+        $items = $order->get_items();
+        $mock_contents = [];
+
+        if (!empty($items)) {
+            foreach ($items as $item_id => $item) {
+                $product = $item->get_product();
+                if ($product) {
+                    $mock_contents[$item_id] = [
+                        'product_id'   => $product->get_id(),
+                        'variation_id' => $item->get_variation_id(),
+                        'quantity'     => $item->get_quantity(),
+                        'data'         => $product,
+                    ];
+                }
+            }
+        }
+
+        if (empty($mock_contents)) {
+            $dummy_product = new WC_Product_Simple();
+            $dummy_product->set_name('POS Siparişi');
+            $dummy_product->set_price($order->get_total());
+            $dummy_product->set_virtual(false);
+            $mock_contents['qr_pos_dummy'] = [
+                'product_id'   => 999999,
+                'variation_id' => 0,
+                'quantity'     => 1,
+                'data'         => $dummy_product,
+            ];
+        }
+
+        return $mock_contents;
     }
 }
