@@ -35,6 +35,10 @@ class Hizli_Kasa_QR_Checkout_Handler {
         add_filter('woocommerce_order_get_shipping_company', [__CLASS__, 'filter_shipping_company'], 10, 2);
         add_filter('woocommerce_order_get_shipping_phone', [__CLASS__, 'filter_shipping_phone'], 10, 2);
         add_filter('woocommerce_order_get_address', [__CLASS__, 'filter_order_get_address'], 10, 3);
+
+        add_filter('iyzico_request_params', [__CLASS__, 'filter_iyzico_request_params'], 10, 2);
+        add_filter('woocommerce_iyzico_request', [__CLASS__, 'filter_iyzico_request_params'], 10, 2);
+        add_filter('iyzipay_request', [__CLASS__, 'filter_iyzico_request_params'], 10, 2);
     }
 
     public static function customize_pay_page_title($title, $order) {
@@ -408,5 +412,52 @@ class Hizli_Kasa_QR_Checkout_Handler {
             }
         }
         return $address;
+    }
+
+    public static function filter_iyzico_request_params($request, $order = null) {
+        if (is_array($request)) {
+            $store_address  = get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
+            $store_city     = get_option('woocommerce_store_city') ?: 'Istanbul';
+            $store_postcode = get_option('woocommerce_store_postcode') ?: '34000';
+
+            if (empty($request['shippingAddress']) || !is_array($request['shippingAddress'])) {
+                $request['shippingAddress'] = [];
+            }
+
+            if (empty($request['shippingAddress']['contactName'])) {
+                $request['shippingAddress']['contactName'] = 'Kasa Müşterisi';
+            }
+            if (empty($request['shippingAddress']['address'])) {
+                $request['shippingAddress']['address'] = $store_address;
+            }
+            if (empty($request['shippingAddress']['city'])) {
+                $request['shippingAddress']['city'] = $store_city;
+            }
+            if (empty($request['shippingAddress']['country'])) {
+                $request['shippingAddress']['country'] = 'Turkey';
+            }
+            if (empty($request['shippingAddress']['zipCode'])) {
+                $request['shippingAddress']['zipCode'] = $store_postcode;
+            }
+        } elseif (is_object($request) && method_exists($request, 'getShippingAddress')) {
+            $shipping_addr = $request->getShippingAddress();
+            if (!$shipping_addr && class_exists('\Iyzipay\Model\Address')) {
+                $store_address  = get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
+                $store_city     = get_option('woocommerce_store_city') ?: 'Istanbul';
+                $store_postcode = get_option('woocommerce_store_postcode') ?: '34000';
+
+                $shipping_addr = new \Iyzipay\Model\Address();
+                $shipping_addr->setContactName('Kasa Müşterisi');
+                $shipping_addr->setAddress($store_address);
+                $shipping_addr->setCity($store_city);
+                $shipping_addr->setCountry('Turkey');
+                $shipping_addr->setZipCode($store_postcode);
+
+                if (method_exists($request, 'setShippingAddress')) {
+                    $request->setShippingAddress($shipping_addr);
+                }
+            }
+        }
+        return $request;
     }
 }
