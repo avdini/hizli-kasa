@@ -824,7 +824,8 @@
                     product_id: item.product_id,
                     variation_id: item.variation_id || 0,
                     qty: item.quantity,
-                    price: item.price
+                    price: item.price,
+                    line_discount: item.line_discount || 0
                 };
             });
 

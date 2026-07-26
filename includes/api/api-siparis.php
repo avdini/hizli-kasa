@@ -681,11 +681,17 @@ function hizli_kasa_update_order($request)
         $key = $p_id . '_' . $v_id;
         $new_items_keys[] = $key;
 
+        $sent_discount = isset($new_item['line_discount']) ? floatval($new_item['line_discount']) : (isset($new_item['item_discount']) ? floatval($new_item['item_discount']) : null);
+
         if (isset($existing_items[$key])) {
             // Var olan ürün
             $old_qty = $existing_items[$key]['qty'];
             $item = $existing_items[$key]['item'];
             $item_id = $existing_items[$key]['item_id'];
+
+            if ($sent_discount !== null) {
+                wc_update_order_item_meta($item_id, '_hk_item_discount', number_format($sent_discount, 2, '.', ''));
+            }
 
             if ($new_qty != $old_qty) {
                 $diff = $new_qty - $old_qty;
@@ -699,9 +705,9 @@ function hizli_kasa_update_order($request)
                     $item->set_subtotal(wc_format_decimal(($item->get_subtotal() / $old_qty) * $new_qty));
                     $item->set_total(wc_format_decimal(($item->get_total() / $old_qty) * $new_qty));
 
-                    // Scale manual item discount
-                    $item_discount = (float) wc_get_order_item_meta($item_id, '_hk_item_discount', true);
-                    if ($old_qty > 0) {
+                    // Scale manual item discount if not explicitly passed
+                    if ($sent_discount === null && $old_qty > 0) {
+                        $item_discount = (float) wc_get_order_item_meta($item_id, '_hk_item_discount', true);
                         $item_discount = ($item_discount / $old_qty) * $new_qty;
                         wc_update_order_item_meta($item_id, '_hk_item_discount', number_format($item_discount, 2, '.', ''));
                     }
@@ -723,6 +729,9 @@ function hizli_kasa_update_order($request)
                         if ($item) {
                             $item->update_meta_data('_hk_cikis_depo_id', $depo_id);
                             $item->update_meta_data('_hk_cikis_depo_adi', $depo_adi);
+                            if ($sent_discount !== null) {
+                                $item->update_meta_data('_hk_item_discount', number_format($sent_discount, 2, '.', ''));
+                            }
                             $item->save();
                         }
                         $log_details[] = $product->get_name() . " eklendi (Adet: $new_qty).";
@@ -763,36 +772,24 @@ function hizli_kasa_update_order($request)
         $item->save();
     }
 
-    // 4. İskonto Güncelleme
+    // 4. İskonto Güncelleme (Mevcut fee kalemlerini temizle, ürün iskontoları toplamını kaydet)
+    foreach ($order->get_fees() as $fee_id => $fee) {
+        if (hizli_kasa_is_manual_discount_fee($fee)) {
+            $order->remove_item($fee_id);
+        }
+    }
+
+    $product_discount_total = 0;
+    foreach ($order->get_items() as $item_id => $item) {
+        if (!$item instanceof WC_Order_Item_Product) {
+            continue;
+        }
+        $product_discount_total += (float) wc_get_order_item_meta($item_id, '_hk_item_discount', true);
+    }
+
+    $order->update_meta_data('_hk_toplam_iskonto', number_format($product_discount_total, 2, '.', ''));
     if ($new_discount !== null && round($new_discount, 2) != round($old_data['discount'], 2)) {
-        // Mevcut manual fee'leri sil
-        foreach ($order->get_fees() as $fee_id => $fee) {
-            if (hizli_kasa_is_manual_discount_fee($fee)) {
-                $order->remove_item($fee_id);
-            }
-        }
-
-        // Ürün bazlı indirimleri topla
-        $product_discount_total = 0;
-        foreach ($order->get_items() as $item_id => $item) {
-            if (!$item instanceof WC_Order_Item_Product) {
-                continue;
-            }
-            $product_discount_total += (float) wc_get_order_item_meta($item_id, '_hk_item_discount', true);
-        }
-
-        $fee_amount = $new_discount - $product_discount_total;
-        if (round($fee_amount, 2) != 0.0) {
-            $item_fee = new WC_Order_Item_Fee();
-            $item_fee->set_name('Düzenlenmiş İskonto');
-            $item_fee->set_amount(-$fee_amount);
-            $item_fee->set_total(wc_format_decimal(-$fee_amount));
-            $item_fee->add_meta_data('_hk_manual_discount', 'yes', true);
-            $order->add_item($item_fee);
-        }
-
-        $order->update_meta_data('_hk_toplam_iskonto', number_format($new_discount, 2, '.', ''));
-        $log_details[] = "İskonto: " . $old_data['discount'] . " -> " . $new_discount;
+        $log_details[] = "İskonto: " . $old_data['discount'] . " -> " . $product_discount_total;
     }
 
     $order->calculate_totals();
