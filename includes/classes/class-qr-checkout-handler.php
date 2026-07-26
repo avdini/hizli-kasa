@@ -251,29 +251,29 @@ class Hizli_Kasa_QR_Checkout_Handler {
         return $needs_shipping;
     }
 
-    public static function filter_shipping_address_1($value, $order) {
-        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+    public static function filter_shipping_address_1($value, $order = null) {
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
             return get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
         }
         return $value;
     }
 
-    public static function filter_shipping_address_2($value, $order) {
-        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+    public static function filter_shipping_address_2($value, $order = null) {
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
             return '';
         }
         return $value;
     }
 
-    public static function filter_shipping_city($value, $order) {
-        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+    public static function filter_shipping_city($value, $order = null) {
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
             return get_option('woocommerce_store_city') ?: 'Istanbul';
         }
         return $value;
     }
 
-    public static function filter_shipping_state($value, $order) {
-        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+    public static function filter_shipping_state($value, $order = null) {
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
             $raw_country   = get_option('woocommerce_default_country') ?: 'TR:34';
             $country_parts = explode(':', $raw_country);
             return !empty($country_parts[1]) ? $country_parts[1] : '34';
@@ -281,8 +281,8 @@ class Hizli_Kasa_QR_Checkout_Handler {
         return $value;
     }
 
-    public static function filter_shipping_country($value, $order) {
-        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+    public static function filter_shipping_country($value, $order = null) {
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
             $raw_country   = get_option('woocommerce_default_country') ?: 'TR';
             $country_parts = explode(':', $raw_country);
             return !empty($country_parts[0]) ? $country_parts[0] : 'TR';
@@ -290,43 +290,50 @@ class Hizli_Kasa_QR_Checkout_Handler {
         return $value;
     }
 
-    public static function filter_shipping_postcode($value, $order) {
-        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+    public static function filter_shipping_postcode($value, $order = null) {
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
             return get_option('woocommerce_store_postcode') ?: '34000';
         }
         return $value;
     }
 
-    public static function filter_shipping_first_name($value, $order) {
-        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+    public static function filter_shipping_first_name($value, $order = null) {
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
             return $order->get_billing_first_name() ?: 'Kasa';
         }
         return $value;
     }
 
-    public static function filter_shipping_last_name($value, $order) {
-        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+    public static function filter_shipping_last_name($value, $order = null) {
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
             return $order->get_billing_last_name() ?: 'Müşterisi';
         }
         return $value;
     }
 
-    public static function filter_shipping_company($value, $order) {
-        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+    public static function filter_shipping_company($value, $order = null) {
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
             return get_bloginfo('name') ?: 'Hızlı Kasa';
         }
         return $value;
     }
 
-    public static function filter_shipping_phone($value, $order) {
-        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
+    public static function filter_shipping_phone($value, $order = null) {
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && empty($value)) {
             return $order->get_billing_phone() ?: '05555555555';
         }
         return $value;
     }
 
-    public static function filter_order_get_address($address, $type, $order) {
-        if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && $type === 'shipping') {
+    public static function filter_order_get_address($address = [], $type = 'shipping', $order = null) {
+        if (is_object($type)) {
+            $order = $type;
+            $type  = 'shipping';
+        }
+        if (!is_array($address)) {
+            $address = [];
+        }
+        if ($order && method_exists($order, 'get_meta') && $order->get_meta('_hizli_kasa_qr_payment') === 'yes' && ($type === 'shipping' || empty($type))) {
             if (empty($address['address_1'])) {
                 $address['address_1'] = get_option('woocommerce_store_address') ?: 'Merkez Mahallesi Atatürk Caddesi No 1';
             }
