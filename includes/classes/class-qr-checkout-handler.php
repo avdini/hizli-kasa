@@ -25,6 +25,8 @@ class Hizli_Kasa_QR_Checkout_Handler {
         add_filter('woocommerce_order_needs_shipping_address', [__CLASS__, 'filter_needs_shipping_address'], 10, 3);
         add_filter('woocommerce_cart_needs_shipping_address', [__CLASS__, 'filter_cart_needs_shipping_address'], 10, 1);
         add_filter('woocommerce_order_item_is_virtual', [__CLASS__, 'filter_order_item_is_virtual'], 10, 3);
+        add_filter('woocommerce_product_is_virtual', [__CLASS__, 'filter_product_is_virtual'], 10, 2);
+        add_filter('woocommerce_shipping_enabled', [__CLASS__, 'filter_shipping_enabled'], 10, 1);
         add_filter('option_woocommerce_ship_to_destination', [__CLASS__, 'filter_ship_to_destination'], 10, 1);
         add_filter('woocommerce_order_get_shipping_address_1', [__CLASS__, 'filter_shipping_address_1'], 10, 2);
         add_filter('woocommerce_order_get_shipping_address_2', [__CLASS__, 'filter_shipping_address_2'], 10, 2);
@@ -318,6 +320,30 @@ class Hizli_Kasa_QR_Checkout_Handler {
             }
         }
         return $is_virtual;
+    }
+
+    public static function filter_product_is_virtual($is_virtual, $product = null) {
+        global $wp;
+        if (isset($wp->query_vars['order-pay'])) {
+            $order_id = absint($wp->query_vars['order-pay']);
+            $order    = wc_get_order($order_id);
+            if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes') {
+                return true;
+            }
+        }
+        return $is_virtual;
+    }
+
+    public static function filter_shipping_enabled($enabled) {
+        global $wp;
+        if (isset($wp->query_vars['order-pay'])) {
+            $order_id = absint($wp->query_vars['order-pay']);
+            $order    = wc_get_order($order_id);
+            if ($order && $order->get_meta('_hizli_kasa_qr_payment') === 'yes') {
+                return true;
+            }
+        }
+        return $enabled;
     }
 
     public static function filter_ship_to_destination($value) {
