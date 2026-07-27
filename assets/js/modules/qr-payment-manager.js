@@ -194,22 +194,26 @@
         startPollingForOrder: function (paymentObj) {
             var self = this;
             var apiBase = (typeof kasaAyar !== 'undefined' && kasaAyar.rootApiUrl) ? kasaAyar.rootApiUrl : (window.location.origin + '/wp-json/');
+            paymentObj.isStopped = false;
 
             var checkStatus = async function () {
+                if (paymentObj.isStopped) return;
                 try {
                     var res = await fetch(apiBase + 'hizli-kasa/v2/qr-payment/status/' + paymentObj.order_id, {
                         headers: { 'X-WP-Nonce': kasaAyar.nonce }
                     });
                     var data = await res.json();
 
+                    if (paymentObj.isStopped) return;
+
                     if (data.success && data.data) {
                         var statusData = data.data;
 
                         if (statusData.status === 'paid') {
-                            self.stopPollingForOrder(paymentObj.order_id);
+                            self.stopPollingForOrder(paymentObj);
                             self.onPaymentComplete(paymentObj, statusData);
                         } else if (statusData.status === 'failed') {
-                            self.stopPollingForOrder(paymentObj.order_id);
+                            self.stopPollingForOrder(paymentObj);
                             self.onPaymentFailed(paymentObj, statusData);
                         } else if (statusData.status === 'waiting') {
                             // Geri sayım sayacını modalda güncelle
@@ -230,7 +234,7 @@
             };
 
             // İlk kontrol 2 saniye sonra, ardından 5 sn aralıkla
-            setTimeout(checkStatus, 2000);
+            paymentObj.timeout_id = setTimeout(checkStatus, 2000);
             paymentObj.interval_id = setInterval(checkStatus, self.pollIntervalMs);
         },
 
@@ -238,10 +242,17 @@
          * Polling Döngüsünü Durdurur
          */
         stopPollingForOrder: function (orderId) {
-            var payment = this.pendingPayments.find(function (p) { return p.order_id === orderId; });
-            if (payment && payment.interval_id) {
-                clearInterval(payment.interval_id);
-                payment.interval_id = null;
+            var payment = (typeof orderId === 'object' && orderId !== null) ? orderId : this.pendingPayments.find(function (p) { return p.order_id === orderId; });
+            if (payment) {
+                payment.isStopped = true;
+                if (payment.interval_id) {
+                    clearInterval(payment.interval_id);
+                    payment.interval_id = null;
+                }
+                if (payment.timeout_id) {
+                    clearTimeout(payment.timeout_id);
+                    payment.timeout_id = null;
+                }
             }
         },
 
@@ -250,6 +261,8 @@
          */
         onPaymentComplete: function (paymentObj, statusData) {
             var self = this;
+            self.stopPollingForOrder(paymentObj);
+
             var lockedKasaId = paymentObj.kasaId;
             
             // Bekleyen listeden çıkar
@@ -304,6 +317,8 @@
          */
         onPaymentFailed: function (paymentObj, statusData) {
             var self = this;
+            self.stopPollingForOrder(paymentObj);
+
             var lockedKasaId = paymentObj.kasaId;
 
             self.pendingPayments = self.pendingPayments.filter(function (p) { return p.order_id !== paymentObj.order_id; });
