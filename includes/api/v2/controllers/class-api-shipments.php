@@ -223,8 +223,13 @@ class Hizli_Kasa_API_Shipments extends Hizli_Kasa_API_Controller_Base {
             Hizli_Kasa_Logger::stock("Depolar arası yeni Sevk #{$sevk_id} oluşturuldu.", ['sevk_id' => $sevk_id, 'kaynak_depo' => $kaynak, 'hedef_depo' => $hedef], 'info', 'shipment', $sevk_id);
         }
 
+        $sevk = $this->get_shipment($sevk_id);
+        if (!$sevk) {
+            return Hizli_Kasa_API_Response::error('Sevk oluşturuldu fakat detayları çekilemedi.', 500);
+        }
+
         return Hizli_Kasa_API_Response::success([
-            'sevk' => $this->format_shipment($this->get_shipment($wpdb->insert_id), true),
+            'sevk' => $this->format_shipment($sevk, true),
         ]);
     }
 
@@ -859,21 +864,30 @@ class Hizli_Kasa_API_Shipments extends Hizli_Kasa_API_Controller_Base {
         ));
     }
 
-    protected function user_can_source(object $sevk, bool $manage = true): bool {
+    protected function user_can_source(?object $sevk, bool $manage = true): bool {
+        if (!$sevk) {
+            return false;
+        }
         $uid = $this->get_current_user();
         return $manage
             ? hizli_kasa_can_user_manage_depo($uid, (int) $sevk->kaynak_depo_id)
             : hizli_kasa_can_user_view_depo($uid, (int) $sevk->kaynak_depo_id);
     }
 
-    protected function user_can_target(object $sevk, bool $manage = true): bool {
+    protected function user_can_target(?object $sevk, bool $manage = true): bool {
+        if (!$sevk) {
+            return false;
+        }
         $uid = $this->get_current_user();
         return $manage
             ? hizli_kasa_can_user_manage_depo($uid, (int) $sevk->hedef_depo_id)
             : hizli_kasa_can_user_view_depo($uid, (int) $sevk->hedef_depo_id);
     }
 
-    protected function format_shipment(object $sevk, bool $with_items = false): array {
+    protected function format_shipment(?object $sevk, bool $with_items = false): array {
+        if (!$sevk) {
+            return [];
+        }
         global $wpdb;
         $tables = $this->get_tables();
 
@@ -921,7 +935,7 @@ class Hizli_Kasa_API_Shipments extends Hizli_Kasa_API_Controller_Base {
         return $row;
     }
 
-    protected function format_mutation_response(object $sevk, ?object $kalem = null): array {
+    protected function format_mutation_response(?object $sevk, ?object $kalem = null): array {
         return [
             'sevk' => $this->format_shipment($sevk, true),
         ];
