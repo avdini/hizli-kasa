@@ -142,7 +142,9 @@
                     }
 
                     var paymentTitle = order.payment_title || "Belirsiz";
-                    if (order.payment_method === 'cod' || order.payment_method === 'cash') {
+                    if (order.payment_method === 'qr_sanal_pos' || order.payment_method === 'qr_taksit') {
+                        paymentTitle = "📱 QR Taksit";
+                    } else if (order.payment_method === 'cod' || order.payment_method === 'cash') {
                         paymentTitle = "💵 Nakit";
                     } else if (order.payment_method === 'bacs' || order.payment_method === 'iban') {
                         paymentTitle = "📱 IBAN";

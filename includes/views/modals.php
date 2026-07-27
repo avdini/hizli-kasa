@@ -372,6 +372,10 @@ if (!defined('ABSPATH')) exit;
             <strong id="anlik-net-iban">0.00 TL</strong>
         </div>
         <div class="anlik-kasa-row">
+            <span>📱 QR Taksit:</span>
+            <strong id="anlik-net-qr-taksit">0.00 TL</strong>
+        </div>
+        <div class="anlik-kasa-row">
             <span>💵 Nakit:</span>
             <strong id="anlik-net-nakit">0.00 TL</strong>
         </div>

@@ -500,6 +500,7 @@ class Hizli_Kasa_Admin_Order_Tools
             'cod' => 'Nakit',
             'other' => 'Kredi Karti',
             'bacs' => 'IBAN / Havale',
+            'qr_sanal_pos' => 'QR Taksitli Odeme',
             'split' => 'Bolunmus Odeme',
         ];
         $kaynaklar = [
@@ -567,6 +568,7 @@ class Hizli_Kasa_Admin_Order_Tools
                 'cod' => 'Nakit',
                 'other' => 'Kredi Kartı',
                 'bacs' => 'IBAN / Havale',
+                'qr_sanal_pos' => 'QR Taksitli Ödeme',
                 'split' => 'Bölünmüş Ödeme',
             ];
 
@@ -591,6 +593,7 @@ class Hizli_Kasa_Admin_Order_Tools
                 $order->delete_meta_data('Ödeme (Kredi Kartı)');
                 $order->delete_meta_data('Ödeme (Kart)');
                 $order->delete_meta_data('Ödeme (IBAN)');
+                $order->delete_meta_data('Ödeme (QR Taksit)');
 
                 if ($nakit > 0) {
                     $order->update_meta_data('Ödeme (Nakit)', number_format($nakit, 2, '.', '') . ' TL');
@@ -606,10 +609,12 @@ class Hizli_Kasa_Admin_Order_Tools
                 $order->update_meta_data('_odeme_nakit', 0);
                 $order->update_meta_data('_odeme_kart', 0);
                 $order->update_meta_data('_odeme_iban', 0);
+                $order->update_meta_data('_odeme_qr_taksit', 0);
                 $order->delete_meta_data('Ödeme (Nakit)');
                 $order->delete_meta_data('Ödeme (Kredi Kartı)');
                 $order->delete_meta_data('Ödeme (Kart)');
                 $order->delete_meta_data('Ödeme (IBAN)');
+                $order->delete_meta_data('Ödeme (QR Taksit)');
 
                 if ($new_payment === 'cod') {
                     $order->update_meta_data('_odeme_nakit', $final_total);
@@ -620,6 +625,9 @@ class Hizli_Kasa_Admin_Order_Tools
                 } elseif ($new_payment === 'bacs') {
                     $order->update_meta_data('_odeme_iban', $final_total);
                     $order->update_meta_data('Ödeme (IBAN)', number_format($final_total, 2, '.', '') . ' TL');
+                } elseif ($new_payment === 'qr_sanal_pos') {
+                    $order->update_meta_data('_odeme_qr_taksit', $final_total);
+                    $order->update_meta_data('Ödeme (QR Taksit)', number_format($final_total, 2, '.', '') . ' TL');
                 }
             }
         }

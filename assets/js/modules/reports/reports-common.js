@@ -48,21 +48,29 @@
             var nakit = parseFloat(meta._odeme_nakit || 0);
             var kart = parseFloat(meta._odeme_kart || 0);
             var iban = parseFloat(meta._odeme_iban || 0);
+            var qrTaksit = parseFloat(meta._odeme_qr_taksit || 0);
             var kupon = parseFloat(meta._odeme_coupon || 0);
+
+            if (qrTaksit === 0 && (order.payment === 'qr_sanal_pos' || (order.payment_method && order.payment_method === 'qr_sanal_pos'))) {
+                qrTaksit = parseFloat(order.total || 0);
+                kart = 0;
+            }
             
             var activeMethods = [];
             if (Math.abs(nakit) > 0.01) activeMethods.push({ type: 'nakit', name: 'Nakit', amount: nakit });
             if (Math.abs(kart) > 0.01) activeMethods.push({ type: 'kart', name: 'Kart', amount: kart });
             if (Math.abs(iban) > 0.01) activeMethods.push({ type: 'iban', name: 'IBAN', amount: iban });
+            if (Math.abs(qrTaksit) > 0.01) activeMethods.push({ type: 'qr_taksit', name: 'QR Taksit', amount: qrTaksit });
             if (Math.abs(kupon) > 0.01) activeMethods.push({ type: 'kupon', name: 'Kupon', amount: kupon });
             
             var nonCouponMethods = [];
             if (Math.abs(nakit) > 0.01) nonCouponMethods.push({ type: 'nakit', name: 'Nakit', amount: nakit });
             if (Math.abs(kart) > 0.01) nonCouponMethods.push({ type: 'kart', name: 'Kart', amount: kart });
             if (Math.abs(iban) > 0.01) nonCouponMethods.push({ type: 'iban', name: 'IBAN', amount: iban });
+            if (Math.abs(qrTaksit) > 0.01) nonCouponMethods.push({ type: 'qr_taksit', name: 'QR Taksit', amount: qrTaksit });
             
             var badges = [];
-            var icons = { nakit: '💵', kart: '💳', iban: '📱', kupon: '🎟️' };
+            var icons = { nakit: '💵', kart: '💳', iban: '🏦', qr_taksit: '📱', kupon: '🎟️' };
 
             if (Math.abs(kupon) > 0.01) {
                 badges.push('<div class="payment-badge payment-kupon" title="Kupon Ödeme: ' + this.escapeHtml(this.formatCurrency(kupon)) + '">🎟️ Kupon</div>');
@@ -81,7 +89,10 @@
                 var paymentType = 'belirsiz';
                 var icon = '❓';
                 var normalized = paymentTitle.toLowerCase();
-                if (normalized.indexOf('nakit') !== -1 || normalized.indexOf('cash') !== -1) {
+                if (normalized.indexOf('qr') !== -1 || normalized.indexOf('sanal') !== -1) {
+                    paymentType = 'qr_taksit';
+                    icon = '📱';
+                } else if (normalized.indexOf('nakit') !== -1 || normalized.indexOf('cash') !== -1) {
                     paymentType = 'nakit';
                     icon = '💵';
                 } else if (normalized.indexOf('kart') !== -1 || normalized.indexOf('card') !== -1 || normalized.indexOf('kredi') !== -1) {

@@ -123,6 +123,7 @@ function hizli_kasa_gun_sonu_raporu($request)
                 'nakit_toplam' => 0,
                 'kart_toplam' => 0,
                 'iban_toplam' => 0,
+                'qr_taksit_toplam' => 0,
                 'urun_adet_toplam' => 0,
             ],
             'urun_dagilimi' => [],
@@ -134,6 +135,7 @@ function hizli_kasa_gun_sonu_raporu($request)
     $nakit_toplam = 0;
     $kart_toplam = 0;
     $iban_toplam = 0;
+    $qr_taksit_toplam = 0;
     $kupon_toplam = 0;
     $toplam_ciro = 0;
     $toplam_iskonto = 0;
@@ -148,6 +150,7 @@ function hizli_kasa_gun_sonu_raporu($request)
     $iade_nakit = 0;
     $iade_kart = 0;
     $iade_iban = 0;
+    $iade_qr_taksit = 0;
     $iade_kupon = 0;
 
     foreach ($orders as $order) {
@@ -157,7 +160,13 @@ function hizli_kasa_gun_sonu_raporu($request)
         $o_nakit = (float) $order->get_meta('_odeme_nakit');
         $o_kart = (float) $order->get_meta('_odeme_kart');
         $o_iban = (float) $order->get_meta('_odeme_iban');
+        $o_qr_taksit = (float) $order->get_meta('_odeme_qr_taksit');
         $o_kupon = (float) $order->get_meta('_odeme_coupon');
+
+        if ($o_qr_taksit == 0 && $order->get_payment_method() === 'qr_sanal_pos') {
+            $o_qr_taksit = $order_total;
+            $o_kart = 0;
+        }
 
         $kasiyer = $order->get_meta('_hizli_kasa_kasiyer') ?: 'Bilinmeyen';
         $odeme_tipi = $order->get_payment_method_title();
@@ -170,6 +179,7 @@ function hizli_kasa_gun_sonu_raporu($request)
             $iade_nakit += abs($o_nakit);
             $iade_kart += abs($o_kart);
             $iade_iban += abs($o_iban);
+            $iade_qr_taksit += abs($o_qr_taksit);
             $iade_kupon += abs($o_kupon);
 
             $iade_siparisler[] = [
@@ -186,6 +196,7 @@ function hizli_kasa_gun_sonu_raporu($request)
         $nakit_toplam += $o_nakit;
         $kart_toplam += $o_kart;
         $iban_toplam += $o_iban;
+        $qr_taksit_toplam += $o_qr_taksit;
         $kupon_toplam += $o_kupon;
 
         if (!isset($kasiyer_map[$kasiyer])) {
@@ -304,6 +315,7 @@ function hizli_kasa_gun_sonu_raporu($request)
             'nakit_toplam' => round($nakit_toplam, 2),
             'kart_toplam' => round($kart_toplam, 2),
             'iban_toplam' => round($iban_toplam, 2),
+            'qr_taksit_toplam' => round($qr_taksit_toplam, 2),
             'toplam_masraf' => round($toplam_masraf, 2),
             'nakit_masraf' => round($nakit_masraf, 2),
             'kart_masraf' => round($kart_masraf, 2),
@@ -311,12 +323,14 @@ function hizli_kasa_gun_sonu_raporu($request)
             'net_nakit' => round($nakit_toplam - $nakit_masraf - $iade_nakit, 2),
             'net_kart' => round($kart_toplam - $kart_masraf - $iade_kart, 2),
             'net_iban' => round($iban_toplam - $iban_masraf - $iade_iban, 2),
+            'net_qr_taksit' => round($qr_taksit_toplam - $iade_qr_taksit, 2),
             'urun_adet_toplam' => $urun_adet,
             'toplam_iade' => round($iade_toplam, 2),
             'iade_adet' => $iade_adet,
             'iade_nakit' => round($iade_nakit, 2),
             'iade_kart' => round($iade_kart, 2),
             'iade_iban' => round($iade_iban, 2),
+            'iade_qr_taksit' => round($iade_qr_taksit, 2),
             'iade_kupon' => round($iade_kupon, 2),
             'kupon_toplam' => round($kupon_toplam ?? 0, 2),
             'toplam_ciro_kupon_haric' => round($toplam_ciro - $kupon_toplam, 2),

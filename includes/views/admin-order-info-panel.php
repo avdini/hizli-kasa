@@ -109,6 +109,10 @@
                             <label for="hk-oi-iban">IBAN (TL)</label>
                             <input type="number" step="0.01" min="0" id="hk-oi-iban" value="<?php echo esc_attr(wc_format_decimal((float) $order->get_meta('_odeme_iban'), 2)); ?>" <?php echo $is_split ? '' : 'readonly'; ?>>
                         </div>
+                        <div class="hk-aot-form-group">
+                            <label for="hk-oi-qr-taksit">QR Taksit (TL)</label>
+                            <input type="number" step="0.01" min="0" id="hk-oi-qr-taksit" value="<?php echo esc_attr(wc_format_decimal((float) $order->get_meta('_odeme_qr_taksit'), 2)); ?>" <?php echo $is_split ? '' : 'readonly'; ?>>
+                        </div>
                     </div>
                 </div>
             </div>

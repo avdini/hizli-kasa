@@ -96,6 +96,12 @@
     color: #e67e22;
 }
 
+.recent-order-payment-badge.qr_sanal_pos,
+.recent-order-payment-badge.qr_taksit {
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+}
+
 .recent-order-mid-col {
     flex-grow: 1;
     display: flex;

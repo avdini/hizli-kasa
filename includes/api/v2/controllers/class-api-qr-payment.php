@@ -210,6 +210,9 @@ class Hizli_Kasa_API_QR_Payment extends Hizli_Kasa_API_Controller_Base {
         // 5. Özel Hızlı Kasa Meta Verileri
         $order->update_meta_data('_hizli_kasa_qr_payment', 'yes');
         $order->update_meta_data('_hizli_kasa_qr_created_at', time());
+        $order->update_meta_data('_odeme_qr_taksit', number_format((float)$calculated_total, 2, '.', ''));
+        $order->update_meta_data('Ödeme (QR Taksit)', number_format((float)$calculated_total, 2, '.', '') . ' TL');
+        $order->update_meta_data('_odeme_kart', '0.00');
 
         if (is_array($meta_data)) {
             foreach ($meta_data as $m) {

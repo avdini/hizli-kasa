@@ -658,6 +658,12 @@
     border-color: rgba(139, 92, 246, 0.2);
 }
 
+.payment-badge.payment-qr_taksit {
+    background-color: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
 .payment-badge.payment-kupon {
     background-color: rgba(236, 72, 153, 0.1);
     color: #ec4899;

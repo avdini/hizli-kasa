@@ -629,7 +629,7 @@
             }
 
             // Ödeme Yöntemleri (Raporlama İçin)
-            var oNakit = 0, oKart = 0, oIban = 0;
+            var oNakit = 0, oKart = 0, oIban = 0, oQrTaksit = 0;
             
             // Değişim iadesi varsa, bu iade tutarı satış faturasına "Nakit" olarak girer.
             // Çünkü iade faturası kesilirken nakit çıkışı (-Nakit) yazıldı, burada satışa (+Nakit) yazılarak nötrlenir.
@@ -645,6 +645,7 @@
                 } else {
                     if (state.odemeTipi === "cash") oNakit += gercekOdenen;
                     else if (state.odemeTipi === "iban") oIban += gercekOdenen;
+                    else if (state.odemeTipi === "qr_taksit") oQrTaksit += gercekOdenen;
                     else oKart += gercekOdenen;
                 }
             }
@@ -653,8 +654,8 @@
             var paymentTitle = "Nakit";
 
             if (gercekOdenen > 0) {
-                paymentMethod = splitData ? "split" : (state.odemeTipi === "card" ? "other" : (state.odemeTipi === "cash" ? "cod" : "bacs"));
-                paymentTitle = splitData ? (refundTotal > 0 ? "Değişim" : "Bölünmüş Ödeme") : (state.odemeTipi === "card" ? "Kredi Kartı" : (state.odemeTipi === "cash" ? "Nakit" : "IBAN / Havale"));
+                paymentMethod = splitData ? "split" : (state.odemeTipi === "card" ? "other" : (state.odemeTipi === "cash" ? "cod" : (state.odemeTipi === "qr_taksit" ? "qr_sanal_pos" : "bacs")));
+                paymentTitle = splitData ? (refundTotal > 0 ? "Değişim" : "Bölünmüş Ödeme") : (state.odemeTipi === "card" ? "Kredi Kartı" : (state.odemeTipi === "cash" ? "Nakit" : (state.odemeTipi === "qr_taksit" ? "QR Taksitli Ödeme" : "IBAN / Havale")));
             } else if (refundTotal > 0) {
                 paymentMethod = "cod";
                 paymentTitle = "Nakit (Değişim ile Nötrlendi)";
@@ -702,6 +703,7 @@
                     { key: "_odeme_nakit", value: oNakit.toFixed(2) },
                     { key: "_odeme_kart", value: oKart.toFixed(2) },
                     { key: "_odeme_iban", value: oIban.toFixed(2) },
+                    { key: "_odeme_qr_taksit", value: oQrTaksit.toFixed(2) },
                     { key: "_odeme_coupon", value: appliedCouponAmount.toFixed(2) },
                     { key: "_hizli_kasa_used_coupon_code", value: couponCode },
                     { key: "_hizli_kasa_used_coupon_amount", value: appliedCouponAmount.toFixed(2) },
@@ -714,6 +716,7 @@
                     { key: "Ödeme (Nakit)", value: oNakit.toFixed(2) + " TL" },
                     { key: "Ödeme (Kart)", value: oKart.toFixed(2) + " TL" },
                     { key: "Ödeme (IBAN)", value: oIban.toFixed(2) + " TL" },
+                    { key: "Ödeme (QR Taksit)", value: oQrTaksit.toFixed(2) + " TL" },
                     { key: "_hk_cikis_depo_id", value: (HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0).toString() },
                     { key: "_hk_cikis_depo_adi", value: HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '' },
                     { key: "_hizli_kasa_kaynak", value: refundTotal > 0 ? "pos_degisim" : "pos_satis" },

@@ -902,6 +902,7 @@ window.HizliKasa = window.HizliKasa || {};
                 var kanalAd = "💳 Kredi Kartı";
                 if (state.odemeTipi === "cash") kanalAd = "💵 Nakit";
                 if (state.odemeTipi === "iban") kanalAd = "🏦 IBAN";
+                if (state.odemeTipi === "qr_taksit") kanalAd = "📱 QR Taksit";
 
                 html += '<div class="odeme-ozet-kart"> <span class="ozet-kanal">' + kanalAd + '</span> <span class="ozet-tutar">' + sonToplam.toFixed(2) + ' TL</span> </div>';
                 els.odemeOzetiAlani.innerHTML = html;

@@ -23,6 +23,7 @@
             // Modal içindeki değerler
             this.$netKart = $('#anlik-net-kart');
             this.$netIban = $('#anlik-net-iban');
+            this.$netQrTaksit = $('#anlik-net-qr-taksit');
             this.$netNakit = $('#anlik-net-nakit');
             this.$genelNet = $('#anlik-genel-net');
             this.$etiket = $('#anlik-kasa-etiket');
@@ -99,7 +100,8 @@
                         var nakitGosterilecek = ozet.nakit_toplam - ozet.iade_nakit;
                         var kartGosterilecek = ozet.kart_toplam - ozet.iade_kart;
                         var ibanGosterilecek = ozet.iban_toplam - ozet.iade_iban;
-                        var genelGosterilecek = nakitGosterilecek + kartGosterilecek + ibanGosterilecek;
+                        var qrTaksitGosterilecek = (ozet.qr_taksit_toplam || 0) - (ozet.iade_qr_taksit || 0);
+                        var genelGosterilecek = nakitGosterilecek + kartGosterilecek + ibanGosterilecek + qrTaksitGosterilecek;
 
                         // Etiketleri Güncelle
                         var depoAdi = HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '';
@@ -119,6 +121,7 @@
                         // Modal Güncelle
                         self.$netKart.text(HK.UIRenderer ? HK.UIRenderer.formatPara(kartGosterilecek) + ' TL' : kartGosterilecek.toFixed(2) + ' TL');
                         self.$netIban.text(HK.UIRenderer ? HK.UIRenderer.formatPara(ibanGosterilecek) + ' TL' : ibanGosterilecek.toFixed(2) + ' TL');
+                        self.$netQrTaksit.text(HK.UIRenderer ? HK.UIRenderer.formatPara(qrTaksitGosterilecek) + ' TL' : qrTaksitGosterilecek.toFixed(2) + ' TL');
                         self.$netNakit.text(HK.UIRenderer ? HK.UIRenderer.formatPara(nakitGosterilecek) + ' TL' : nakitGosterilecek.toFixed(2) + ' TL');
                         self.$genelNet.text(HK.UIRenderer ? HK.UIRenderer.formatPara(genelGosterilecek) + ' TL' : genelGosterilecek.toFixed(2) + ' TL');
                     }

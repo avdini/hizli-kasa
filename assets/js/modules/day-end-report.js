@@ -195,14 +195,16 @@
                 '<tr><td>💵 Nakit Satış</td><td class="gs-sag">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>' +
                 '<tr><td>💳 Kart Satış</td><td class="gs-sag">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>' +
                 '<tr><td>🏦 IBAN Satış</td><td class="gs-sag">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>' +
+                (ozet.qr_taksit_toplam > 0 ? '<tr><td>📱 QR Taksit Satış</td><td class="gs-sag">' + ozet.qr_taksit_toplam.toFixed(2) + ' TL</td></tr>' : '') +
                 (ozet.kupon_toplam > 0 ? '<tr><td>🎟️ Kupon Satış</td><td class="gs-sag">' + ozet.kupon_toplam.toFixed(2) + ' TL</td></tr>' : '') +
-                '<tr class="gs-toplam-satir" style="color:#27ae60;"><td><strong>TOPLAMCİRO</strong></td><td class="gs-sag"><strong>' + ciroBaz.toFixed(2) + ' TL</strong></td></tr>';
+                '<tr class="gs-toplam-satir" style="color:#27ae60;"><td><strong>TOPLAM CİRO</strong></td><td class="gs-sag"><strong>' + ciroBaz.toFixed(2) + ' TL</strong></td></tr>';
 
             if (ozet.toplam_iade > 0) {
                 html += '<tr><td colspan="2" style="height:10px;"></td></tr>' +
                     '<tr><td style="color:#e67e22;">🔄 Nakit İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_nakit.toFixed(2) + ' TL</td></tr>' +
                     '<tr><td style="color:#e67e22;">🔄 Kart İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_kart.toFixed(2) + ' TL</td></tr>' +
                     '<tr><td style="color:#e67e22;">🔄 IBAN İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_iban.toFixed(2) + ' TL</td></tr>' +
+                    (ozet.iade_qr_taksit > 0 ? '<tr><td style="color:#e67e22;">🔄 QR Taksit İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_qr_taksit.toFixed(2) + ' TL</td></tr>' : '') +
                     (ozet.iade_kupon > 0 ? '<tr><td style="color:#e67e22;">🔄 Kupon İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_kupon.toFixed(2) + ' TL</td></tr>' : '');
             }
 
@@ -380,6 +382,7 @@
             html += '<table style="width:100%; font-size:12px; border-collapse:collapse;">';
             html += '<tr><td>Kredi Kartı</td><td style="text-align:right;">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>IBAN / Havale</td><td style="text-align:right;">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>';
+            if (ozet.qr_taksit_toplam > 0) html += '<tr><td>QR Taksit</td><td style="text-align:right;">' + ozet.qr_taksit_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>Nakit Satış</td><td style="text-align:right;">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr style="border-top:1px dashed #000;"><td style="font-weight:bold; font-size:14px; padding-top:2px;">TOPLAM CİRO</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:2px;">' + ciroBaz.toFixed(2) + ' TL</td></tr>';
             html += '</table>';
@@ -576,6 +579,7 @@
 
             var netKart = (ozet.kart_toplam || 0) - (ozet.iade_kart || 0);
             var netIban = (ozet.iban_toplam || 0) - (ozet.iade_iban || 0);
+            var netQrTaksit = (ozet.qr_taksit_toplam || 0) - (ozet.iade_qr_taksit || 0);
             var netNakit = (ozet.nakit_toplam || 0) - (ozet.iade_nakit || 0);
             var genelToplam = (ozet.toplam_ciro_kupon_haric ?? ozet.toplam_ciro ?? 0) - (ozet.toplam_iade_kupon_haric ?? ozet.toplam_iade ?? 0);
             
@@ -604,6 +608,7 @@
             html += '<tr style="border-bottom:1px dashed #000;"><td style="padding:4px 0;">GENEL TOPLAM</td><td style="text-align:right; font-weight:bold;">' + genelToplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td style="padding:4px 0;">KART TOPLAM</td><td style="text-align:right;">' + netKart.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td style="padding:4px 0;">IBAN TOPLAM</td><td style="text-align:right;">' + netIban.toFixed(2) + ' TL</td></tr>';
+            if (netQrTaksit > 0) html += '<tr><td style="padding:4px 0;">QR TAKSİT TOPLAM</td><td style="text-align:right;">' + netQrTaksit.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td style="padding:4px 0;">NAKİT TOPLAM</td><td style="text-align:right;">' + netNakit.toFixed(2) + ' TL</td></tr>';
             
             if (toplamMasraf > 0) {
