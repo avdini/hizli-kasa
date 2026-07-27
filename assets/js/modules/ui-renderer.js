@@ -987,19 +987,6 @@ window.HizliKasa = window.HizliKasa || {};
                             HK.CartManager.sepetiKaydet();
                             HK.CartManager.sepetiYukle(yeniId);
                         }
-                        var lockData = state.qrLockData;
-                        var completePayment = this._qrCompletePayment || (lockData ? { order_id: lockData.orderId } : null);
-                        if (completePayment && HK.QRPaymentManager) {
-                            HK.QRPaymentManager.fetchAndShowReceipt(completePayment.order_id || completePayment.orderId);
-                        }
-                        if (HK.CartManager) {
-                            HK.CartManager.kasaKilidiniAc(yeniId);
-                            HK.CartManager.sepetiTemizle(yeniId);
-                        }
-                        this.classList.remove('qr-tamamlandi');
-                        var existingBadge = this.querySelector('.qr-kasa-badge');
-                        if (existingBadge) existingBadge.remove();
-                        this._qrCompletePayment = null;
                         self.sidebarGuncelle();
                         self.arayuzuGuncelle();
                         return;

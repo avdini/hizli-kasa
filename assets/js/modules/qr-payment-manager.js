@@ -293,6 +293,10 @@
 
             if (HK.UIRenderer) {
                 HK.UIRenderer.kasaQRDurumGuncelle(lockedKasaId, 'tamamlandi', paymentObj);
+                HK.UIRenderer.sidebarGuncelle();
+                if (lockedKasaId === HK.State.aktifKasaId) {
+                    HK.UIRenderer.arayuzuGuncelle();
+                }
             }
 
             // Komisyon / Taksit Detay Metni Oluştur
