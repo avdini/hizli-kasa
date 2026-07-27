@@ -50,6 +50,28 @@
                     }
                 });
             }
+
+            var btnCopy = document.getElementById("qr-modal-copy-btn");
+            if (btnCopy) {
+                btnCopy.addEventListener("click", function () {
+                    var linkInput = document.getElementById("qr-modal-link-input");
+                    if (!linkInput || !linkInput.value) return;
+
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(linkInput.value).then(function () {
+                            if (HK.UIRenderer && HK.UIRenderer.showToast) {
+                                HK.UIRenderer.showToast("✅ Ödeme bağlantısı panoya kopyalandı!", "success");
+                            }
+                        });
+                    } else {
+                        linkInput.select();
+                        document.execCommand("copy");
+                        if (HK.UIRenderer && HK.UIRenderer.showToast) {
+                            HK.UIRenderer.showToast("✅ Ödeme bağlantısı panoya kopyalandı!", "success");
+                        }
+                    }
+                });
+            }
         },
 
         /**
@@ -147,15 +169,14 @@
             var modal = document.getElementById("qr-odeme-modal");
             var orderInfo = document.getElementById("qr-modal-siparis-info");
             var qrBox = document.getElementById("qr-code-container");
-            var linkText = document.getElementById("qr-modal-link-display");
+            var linkInput = document.getElementById("qr-modal-link-input");
 
             if (orderInfo) {
                 orderInfo.innerHTML = "Sipariş <strong>" + paymentObj.order_number + "</strong> — Tutar: <strong style='color:#00B894;'>" + paymentObj.total + " TL</strong>";
             }
 
-            if (linkText) {
-                linkText.href = paymentObj.pay_url;
-                linkText.innerText = paymentObj.pay_url;
+            if (linkInput) {
+                linkInput.value = paymentObj.pay_url;
             }
 
             if (qrBox) {
