@@ -406,53 +406,39 @@ if (!defined('ABSPATH')) exit;
 
 <!-- QR Taksitli Ödeme Modalı -->
 <div id="qr-odeme-modal" class="modal-cerceve" style="display:none;">
-    <div class="modal-icerik modal-icerik-md" style="max-width: 460px; text-align: center; position: relative;">
-        <!-- Kapat (X) Butonu -->
-        <button id="qr-modal-kapat" class="modal-kapat-btn" style="position: absolute; top: 12px; right: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #94a3b8; line-height: 1;" title="Ekranı Kapat (Ödeme Devam Eder)">&times;</button>
+    <div class="modal-icerik modal-icerik-md">
+        <button id="qr-modal-kapat" class="qr-modal-close" title="Ekranı Kapat (Ödeme Devam Eder)">&times;</button>
 
-        <h3 style="margin-bottom: 8px; color: var(--hk-primary, #6C5CE7); display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <h3 class="qr-modal-title">
             <span>📱</span> <span>QR Taksitli Ödeme</span>
         </h3>
-        <p id="qr-modal-siparis-info" style="font-size: 15px; margin-bottom: 12px; font-weight: 500;">
-            Sipariş yükleniyor...
-        </p>
 
-        <!-- QR Kod Alanı -->
-        <div id="qr-code-container" style="display: inline-block; padding: 15px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); margin: 5px auto 12px;"></div>
+        <p id="qr-modal-siparis-info" class="qr-modal-order-info">Sipariş yükleniyor...</p>
 
-        <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">
-            Müşteri telefon kamerasıyla QR kodu okutup ödemeyi tamamlayabilir.
-        </p>
+        <div id="qr-code-container" class="qr-modal-qr-wrap"></div>
 
-        <!-- Timer -->
-        <div style="font-size: 14px; font-weight: bold; background: rgba(108, 92, 231, 0.1); color: #6C5CE7; padding: 8px 16px; border-radius: 20px; display: inline-block; margin-bottom: 15px;">
+        <p class="qr-modal-hint">Müşteri telefon kamerasıyla QR kodu okutup ödemeyi tamamlayabilir.</p>
+
+        <div class="qr-modal-timer">
             ⏱️ Kalan Süre: <span id="qr-modal-timer">15:00</span>
         </div>
 
-        <!-- Kopyalanabilir Bağlantı Kutusu -->
-        <div style="background: var(--hk-bg-subtle, #f8fafc); border: 1px solid var(--hk-border, #e2e8f0); border-radius: 10px; padding: 10px; margin-bottom: 15px; text-align: left;">
-            <label style="font-size: 11px; font-weight: 600; color: #64748b; display: block; margin-bottom: 4px;">🔗 Kopyalanabilir Ödeme Bağlantısı (WhatsApp/SMS):</label>
-            <div style="display: flex; gap: 6px;">
-                <input type="text" id="qr-modal-link-input" readonly value="..." style="flex: 1; font-size: 12px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #334155;" />
-                <button type="button" id="qr-modal-copy-btn" class="hk-btn-secondary" style="padding: 6px 12px; font-size: 12px; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                    <span>📋</span> <span>Kopyala</span>
-                </button>
+        <div class="qr-modal-link-box">
+            <label class="qr-modal-link-label">🔗 Ödeme Bağlantısı (WhatsApp / SMS ile gönderilebilir)</label>
+            <div class="qr-modal-link-row">
+                <input type="text" id="qr-modal-link-input" readonly value="..." />
+                <button type="button" id="qr-modal-copy-btn" class="qr-modal-copy-btn">📋 Kopyala</button>
             </div>
         </div>
 
-        <!-- Ana İşlem Butonları (Görsel Olarak Ayrılmış) -->
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-            <!-- Arka Plana Al / Modalı Kapat (Güvenli Buton) -->
-            <button id="qr-modal-arka-plan" class="hk-btn-primary" style="width: 100%; padding: 12px 16px; font-weight: 600; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;">
-                <span style="font-size: 14px;">📁 Ekranı Kapat / Arka Plana Al</span>
-                <span style="font-size: 11px; opacity: 0.85; font-weight: normal;">(Kasa Kilitli Kalır, Ödeme Beklenmeye Devam Eder)</span>
+        <div class="qr-modal-actions">
+            <button id="qr-modal-arka-plan" class="qr-modal-bg-btn">
+                <span>📁 Ekranı Kapat / Arka Plana Al</span>
+                <span class="qr-btn-sub">Kasa kilitli kalır, ödeme arka planda takip edilir</span>
             </button>
 
-            <!-- Tehlikeli İşlem Ayrımı -->
-            <div style="border-top: 1px solid #e2e8f0; margin-top: 5px; padding-top: 12px;">
-                <button id="qr-modal-iptal" class="hk-btn-danger" style="width: 100%; padding: 8px 12px; font-size: 12px; background: transparent; color: #ef4444; border: 1px solid #fca5a5; border-radius: 6px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='transparent'">
-                    ⚠️ Siparişi İptal Et ve Kiliti Kaldır
-                </button>
+            <div class="qr-modal-danger-zone">
+                <button id="qr-modal-iptal" class="qr-modal-cancel-btn">⚠️ Siparişi İptal Et ve Kilidi Kaldır</button>
             </div>
         </div>
     </div>

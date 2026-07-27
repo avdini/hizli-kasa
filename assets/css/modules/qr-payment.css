@@ -137,3 +137,198 @@
     transform: scale(1.05);
     background: #4f46e5 !important;
 }
+
+/* =============================================
+   QR ÖDEME MODAL STİLLERİ
+   ============================================= */
+
+#qr-odeme-modal .modal-icerik {
+    max-width: 440px;
+    text-align: center;
+    position: relative;
+    padding: 28px 24px 20px;
+}
+
+.qr-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--hk-text-muted);
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+}
+
+.qr-modal-close:hover {
+    background: var(--hk-bg-hover);
+    color: var(--hk-text-main);
+}
+
+.qr-modal-title {
+    margin: 0 0 6px;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--hk-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.qr-modal-order-info {
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 14px;
+    color: var(--hk-text-main);
+}
+
+.qr-modal-qr-wrap {
+    display: inline-block;
+    padding: 14px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+    margin: 4px auto 14px;
+}
+
+.qr-modal-hint {
+    font-size: 12px;
+    color: var(--hk-text-muted);
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+.qr-modal-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    background: color-mix(in srgb, var(--hk-accent) 12%, transparent);
+    color: var(--hk-accent);
+    padding: 6px 18px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+}
+
+.qr-modal-link-box {
+    background: var(--hk-bg-body);
+    border: 1px solid var(--hk-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+.qr-modal-link-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--hk-text-muted);
+    display: block;
+    margin-bottom: 6px;
+}
+
+.qr-modal-link-row {
+    display: flex;
+    gap: 6px;
+}
+
+.qr-modal-link-row input {
+    flex: 1;
+    font-size: 12px;
+    padding: 7px 10px;
+    border: 1px solid var(--hk-border-dark);
+    border-radius: 6px;
+    background: var(--hk-bg-card);
+    color: var(--hk-text-main);
+    margin-bottom: 0;
+}
+
+.qr-modal-copy-btn {
+    padding: 7px 14px;
+    font-size: 12px;
+    white-space: nowrap;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 6px;
+    border: 1px solid var(--hk-border-dark);
+    background: var(--hk-bg-hover);
+    color: var(--hk-text-main);
+    font-weight: 600;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.qr-modal-copy-btn:hover {
+    background: var(--hk-border);
+}
+
+.qr-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.qr-modal-bg-btn {
+    width: 100%;
+    padding: 14px 16px;
+    font-weight: 700;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: var(--hk-accent);
+    color: var(--hk-text-white);
+    font-size: 14px;
+    transition: background 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--hk-accent) 30%, transparent);
+}
+
+.qr-modal-bg-btn:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 4px 14px color-mix(in srgb, var(--hk-accent) 40%, transparent);
+}
+
+.qr-modal-bg-btn .qr-btn-sub {
+    font-size: 11px;
+    opacity: 0.85;
+    font-weight: 400;
+}
+
+.qr-modal-danger-zone {
+    border-top: 1px solid var(--hk-border);
+    margin-top: 4px;
+    padding-top: 12px;
+}
+
+.qr-modal-cancel-btn {
+    width: 100%;
+    padding: 9px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    background: transparent;
+    color: var(--hk-danger);
+    border: 1px solid color-mix(in srgb, var(--hk-danger) 35%, transparent);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.qr-modal-cancel-btn:hover {
+    background: color-mix(in srgb, var(--hk-danger) 6%, transparent);
+    border-color: var(--hk-danger);
+}
