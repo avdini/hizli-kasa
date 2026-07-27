@@ -2,22 +2,6 @@
  * Hızlı Kasa - QR Taksitli Ödeme Modül Stilleri
  */
 
-/* QR Taksitli Ödeme Butonu */
-.odeme-btn[data-tip="qr_taksit"] {
-    background: linear-gradient(135deg, #6C5CE7 0%, #a29bfe 100%) !important;
-    color: #ffffff !important;
-    font-weight: 700;
-    box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
-}
-
-.odeme-btn[data-tip="qr_taksit"]:hover {
-    background: linear-gradient(135deg, #5a4bcf 0%, #8c7ae6 100%) !important;
-    transform: translateY(-1px);
-}
-
-.odeme-btn[data-tip="qr_taksit"].aktif {
-    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.5), inset 0 2px 4px rgba(0,0,0,0.2) !important;
-}
 
 /* Topbar QR Bekleyen Ödemeler Rozeti (Badge) */
 .qr-badge {
