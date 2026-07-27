@@ -281,8 +281,14 @@
             }
 
             if (HK.CartManager) {
-                HK.CartManager.kasaKilidiniAc(lockedKasaId);
-                HK.CartManager.sepetiTemizle(lockedKasaId);
+                HK.CartManager.kasayiKilitle(lockedKasaId, {
+                    orderId: paymentObj.order_id,
+                    orderNumber: paymentObj.order_number,
+                    total: paymentObj.total,
+                    payUrl: paymentObj.pay_url,
+                    createdAt: paymentObj.created_at || Date.now(),
+                    status: 'paid'
+                });
             }
 
             if (HK.UIRenderer) {
@@ -296,20 +302,17 @@
                 detailText += " | Net Ele Geçen: " + gw.merchant_payout;
             }
 
-            var toastMsg = "🟢 " + paymentObj.order_number + " Ödemesi Başarıyla Alındı! " + detailText;
+            var toastMsg = "🟢 Kasa " + lockedKasaId + "'te " + paymentObj.order_number + " Ödemesi Alındı! Fişi yazdırıp tamamlamak için kasanıza geçin. (" + detailText + ")";
 
             if (HK.UIRenderer && typeof HK.UIRenderer.showToast === 'function') {
                 HK.UIRenderer.showToast(toastMsg, "success", true);
             }
 
             var durumMetni = document.getElementById("durum");
-            if (durumMetni) {
-                durumMetni.innerText = "QR Ödeme Alındı: " + paymentObj.order_number;
+            if (durumMetni && HK.State.aktifKasaId === lockedKasaId) {
+                durumMetni.innerText = "QR Ödeme Alındı: " + paymentObj.order_number + " (Fiş Bekliyor)";
                 durumMetni.style.color = "#00B894";
             }
-
-            // Sipariş Fişini Yazdır Modalını Aç
-            self.fetchAndShowReceipt(paymentObj.order_id);
         },
 
         /**

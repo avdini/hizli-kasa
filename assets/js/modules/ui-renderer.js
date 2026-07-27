@@ -619,9 +619,44 @@ window.HizliKasa = window.HizliKasa || {};
             if (oldDegisimBanner) oldDegisimBanner.parentNode.removeChild(oldDegisimBanner);
 
             if (state.qrLockData) {
+                if (state.qrLockData.status === 'paid') {
+                    if (frame) {
+                        frame.classList.add("qr-tamamlandi-aktif");
+                        frame.classList.remove("duzenleme-aktif", "degisim-aktif", "qr-kilitli-aktif");
+                    }
+
+                    if (modAlani) {
+                        modAlani.innerHTML = '<div class="kasa-mod-badge qr-tamamlandi" style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 8px 14px; border-radius: 8px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">' +
+                                             '<span>✅ QR Ödeme Alındı: #' + state.qrLockData.orderNumber + ' — ' + state.qrLockData.total + ' TL</span>' +
+                                             '<button class="mod-qr-fis-yazdir-btn" style="background: white; color: #059669; border: none; border-radius: 6px; padding: 6px 14px; font-weight: bold; cursor: pointer;">🖨️ Fişi Yazdır ve Tamamla</button>' +
+                                             '</div>';
+
+                        modAlani.querySelector(".mod-qr-fis-yazdir-btn").addEventListener("click", function() {
+                            var orderId = state.qrLockData.orderId;
+                            var kasaId = state.aktifKasaId;
+                            if (HK.QRPaymentManager) {
+                                HK.QRPaymentManager.fetchAndShowReceipt(orderId);
+                            }
+                            if (HK.CartManager) {
+                                HK.CartManager.kasaKilidiniAc(kasaId);
+                                HK.CartManager.sepetiTemizle(kasaId);
+                            }
+                            self.sidebarGuncelle();
+                            self.arayuzuGuncelle();
+                        });
+                    }
+
+                    if (onaylaBtn) {
+                        onaylaBtn.innerText = "✅ Ödeme Alındı (Fiş Bekliyor)";
+                        onaylaBtn.disabled = true;
+                        onaylaBtn.style.setProperty("background", "#10b981", "important");
+                    }
+                    return;
+                }
+
                 if (frame) {
                     frame.classList.add("qr-kilitli-aktif");
-                    frame.classList.remove("duzenleme-aktif", "degisim-aktif");
+                    frame.classList.remove("duzenleme-aktif", "degisim-aktif", "qr-tamamlandi-aktif");
                 }
 
                 if (modAlani) {
@@ -948,15 +983,25 @@ window.HizliKasa = window.HizliKasa || {};
                     var yeniId = parseInt(id);
 
                     if (this.classList.contains('qr-tamamlandi')) {
+                        if (yeniId !== state.aktifKasaId) {
+                            HK.CartManager.sepetiKaydet();
+                            HK.CartManager.sepetiYukle(yeniId);
+                        }
+                        var lockData = state.qrLockData;
+                        var completePayment = this._qrCompletePayment || (lockData ? { order_id: lockData.orderId } : null);
+                        if (completePayment && HK.QRPaymentManager) {
+                            HK.QRPaymentManager.fetchAndShowReceipt(completePayment.order_id || completePayment.orderId);
+                        }
+                        if (HK.CartManager) {
+                            HK.CartManager.kasaKilidiniAc(yeniId);
+                            HK.CartManager.sepetiTemizle(yeniId);
+                        }
                         this.classList.remove('qr-tamamlandi');
                         var existingBadge = this.querySelector('.qr-kasa-badge');
                         if (existingBadge) existingBadge.remove();
-                        var completePayment = this._qrCompletePayment;
-                        if (completePayment && HK.QRPaymentManager) {
-                            HK.QRPaymentManager.fetchAndShowReceipt(completePayment.order_id);
-                        }
                         this._qrCompletePayment = null;
-                        if (HK.UIRenderer) HK.UIRenderer.sidebarGuncelle();
+                        self.sidebarGuncelle();
+                        self.arayuzuGuncelle();
                         return;
                     }
 
