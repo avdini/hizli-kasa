@@ -24,6 +24,7 @@ window.HizliKasa = window.HizliKasa || {};
         siparisNotu: "",
         splitData: null,
         editingOrderId: null,
+        qrLockData: null,
         lastUpdatedId: null,
         CURRENT_VERSION: typeof kasaAyar !== 'undefined' && kasaAyar.version ? kasaAyar.version : "2.8.8",
         MAX_KASA: 4
@@ -100,7 +101,8 @@ window.HizliKasa = window.HizliKasa || {};
                 musteriTelefonUlkeIso: state.musteriTelefonUlkeIso,
                 siparisNotu: state.siparisNotu,
                 splitData: state.splitData,
-                editingOrderId: state.editingOrderId
+                editingOrderId: state.editingOrderId,
+                qrLockData: state.qrLockData
             };
             localStorage.setItem(this._slotKey(state.aktifKasaId), JSON.stringify(veri));
 
@@ -131,6 +133,7 @@ window.HizliKasa = window.HizliKasa || {};
                     state.siparisNotu = veri.siparisNotu || "";
                     state.splitData = veri.splitData || null;
                     state.editingOrderId = veri.editingOrderId || null;
+                    state.qrLockData = veri.qrLockData || null;
 
                     // Geriye dönük uyumluluk: discounted_price'ı line_discount'a çevir
                     state.sepet.forEach(function(item) {
@@ -156,6 +159,7 @@ window.HizliKasa = window.HizliKasa || {};
                 state.siparisNotu = "";
                 state.splitData = null;
                 state.editingOrderId = null;
+                state.qrLockData = null;
             }
 
             state.lastUpdatedId = null;
@@ -185,6 +189,9 @@ window.HizliKasa = window.HizliKasa || {};
         sepetiTemizle: function(kasaId) {
             var state = HK.State;
             var temizlenecekKasaId = kasaId ? parseInt(kasaId) : state.aktifKasaId;
+            if (this.kasaKilitliMi(temizlenecekKasaId)) {
+                return;
+            }
             localStorage.removeItem(this._slotKey(temizlenecekKasaId));
 
             if (temizlenecekKasaId !== state.aktifKasaId) {
@@ -228,6 +235,80 @@ window.HizliKasa = window.HizliKasa || {};
             }
         },
 
+        kasayiKilitle: function(kasaId, qrData) {
+            var state = HK.State;
+            var hedefKasaId = parseInt(kasaId);
+            qrData.kasaId = hedefKasaId;
+
+            if (hedefKasaId === state.aktifKasaId) {
+                state.qrLockData = qrData;
+            }
+
+            var key = this._slotKey(hedefKasaId);
+            var slotStr = localStorage.getItem(key);
+            if (slotStr) {
+                var veri = JSON.parse(slotStr);
+                veri.qrLockData = qrData;
+                localStorage.setItem(key, JSON.stringify(veri));
+            } else {
+                localStorage.setItem(key, JSON.stringify({
+                    sepet: state.sepet,
+                    iskontoTutar: state.iskontoTutar,
+                    odemeTipi: state.odemeTipi,
+                    musteriTelefon: state.musteriTelefon,
+                    musteriTelefonUlkeKodu: state.musteriTelefonUlkeKodu,
+                    musteriTelefonUlkeIso: state.musteriTelefonUlkeIso,
+                    siparisNotu: state.siparisNotu,
+                    splitData: state.splitData,
+                    editingOrderId: state.editingOrderId,
+                    qrLockData: qrData
+                }));
+            }
+
+            if (HK.UIRenderer) {
+                HK.UIRenderer.sidebarGuncelle();
+                if (hedefKasaId === state.aktifKasaId) {
+                    HK.UIRenderer.kasaQRKilidiniUygula();
+                }
+            }
+        },
+
+        kasaKilidiniAc: function(kasaId) {
+            var state = HK.State;
+            var hedefKasaId = parseInt(kasaId);
+
+            if (hedefKasaId === state.aktifKasaId) {
+                state.qrLockData = null;
+            }
+
+            var key = this._slotKey(hedefKasaId);
+            var slotStr = localStorage.getItem(key);
+            if (slotStr) {
+                var veri = JSON.parse(slotStr);
+                veri.qrLockData = null;
+                localStorage.setItem(key, JSON.stringify(veri));
+            }
+
+            if (HK.UIRenderer) {
+                HK.UIRenderer.sidebarGuncelle();
+                if (hedefKasaId === state.aktifKasaId) {
+                    HK.UIRenderer.kasaQRKilidiniKaldir();
+                }
+            }
+        },
+
+        kasaKilitliMi: function(kasaId) {
+            var hedefKasaId = parseInt(kasaId || HK.State.aktifKasaId);
+            if (hedefKasaId === HK.State.aktifKasaId) {
+                return !!HK.State.qrLockData;
+            }
+            var key = this._slotKey(hedefKasaId);
+            var slotStr = localStorage.getItem(key);
+            if (!slotStr) return false;
+            var veri = JSON.parse(slotStr);
+            return !!(veri.qrLockData);
+        },
+
         /**
          * Diğer kasalardaki aynı ürünün bilgisini getir
          * @param {number} productId Ürün ID
@@ -268,6 +349,10 @@ window.HizliKasa = window.HizliKasa || {};
          * @param {Object} urun API'den gelen ürün objesi
          */
         ekleUrunObjesiyle: function(urun) {
+            if (this.kasaKilitliMi()) {
+                if (HK.UIRenderer) HK.UIRenderer.showToast("Bu kasada QR ödeme bekliyor. Ürün eklenemez.", "warning", false);
+                return;
+            }
             var state = HK.State;
             var durumMetni = document.getElementById("durum");
 

@@ -100,6 +100,11 @@ document.addEventListener("DOMContentLoaded", function() {
         // Eğer değişiklik bizim aktif kasa slotumuzdaysa sepeti yenile
         if (e.key === currentSlotKey) {
             HK.CartManager.sepetiYukle(state.aktifKasaId);
+            if (state.qrLockData) {
+                HK.UIRenderer.kasaQRKilidiniUygula();
+            } else {
+                HK.UIRenderer.kasaQRKilidiniKaldir();
+            }
         }
         // Slotlar arası doluluk bilgisini güncellemek için sidebar'ı yenile
         HK.UIRenderer.sidebarGuncelle();

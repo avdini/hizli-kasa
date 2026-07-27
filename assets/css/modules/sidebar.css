@@ -142,3 +142,100 @@
     color: white !important;
     transform: scale(1.05);
 }
+
+/* QR Ödeme Bekleniyor — Amber Pulse */
+.sidebar-btn.qr-bekliyor:not(.aktif) {
+    border-color: #f59e0b !important;
+    color: #d97706 !important;
+    background: linear-gradient(135deg, #fffbeb, #fef3c7) !important;
+    animation: qr-kasa-pulse 2s infinite ease-in-out;
+    position: relative;
+}
+
+.sidebar-btn.qr-bekliyor.aktif {
+    background: linear-gradient(135deg, #d97706, #b45309) !important;
+    border-color: #b45309 !important;
+    animation: qr-kasa-pulse-aktif 2s infinite ease-in-out;
+    position: relative;
+}
+
+@keyframes qr-kasa-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 12px 4px rgba(245, 158, 11, 0.25);
+        transform: scale(1.03);
+    }
+}
+
+@keyframes qr-kasa-pulse-aktif {
+    0%, 100% {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    50% {
+        box-shadow: 0 0 16px 4px rgba(245, 158, 11, 0.4);
+    }
+}
+
+.sidebar-btn .qr-kasa-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    font-size: 11px;
+    background: #f59e0b;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    line-height: 1;
+    z-index: 2;
+}
+
+.sidebar-btn .kasa-qr-timer {
+    font-size: 10px;
+    font-weight: 800;
+    color: #d97706;
+    margin-top: 2px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.5px;
+}
+
+.sidebar-btn.aktif .kasa-qr-timer {
+    color: #fcd34d;
+}
+
+/* QR Tamamlandı — Yeşil Flash */
+.sidebar-btn.qr-tamamlandi:not(.aktif) {
+    border-color: #10b981 !important;
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+    animation: qr-kasa-success-flash 1s infinite ease-in-out;
+    position: relative;
+}
+
+@keyframes qr-kasa-success-flash {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    50% { opacity: 0.6; box-shadow: 0 0 12px 4px rgba(16, 185, 129, 0.3); }
+}
+
+/* QR Süresi Doldu — Kırmızı */
+.sidebar-btn.qr-suresi-doldu:not(.aktif) {
+    border-color: #ef4444 !important;
+    background: #fef2f2 !important;
+    color: #dc2626 !important;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+    position: relative;
+}
+
+.sidebar-btn.qr-tamamlandi .qr-kasa-badge {
+    background: #10b981;
+}
+
+.sidebar-btn.qr-suresi-doldu .qr-kasa-badge {
+    background: #ef4444;
+}

@@ -424,19 +424,24 @@ if (!defined('ABSPATH')) exit;
     </div>
 </div>
 
-<!-- Bekleyen QR Ödemeler Listesi Modalı -->
-<div id="qr-bekleyen-modal" class="modal-cerceve" style="display:none;">
+<!-- Bildirim Merkezi Modalı (Yapım Aşamasında) -->
+<div id="bildirim-merkezi-modal" class="modal-cerceve" style="display:none;">
     <div class="modal-icerik modal-icerik-md" style="max-width: 500px;">
-        <h3 style="margin-bottom: 15px; color: var(--hk-primary, #6C5CE7);">
-            📱 Bekleyen QR Ödemeler
+        <h3 style="margin-bottom: 15px; color: #6366f1; display: flex; align-items: center; gap: 8px;">
+            <span>🔔</span> <span>Bildirim Merkezi</span>
         </h3>
-        
-        <div id="qr-bekleyen-liste" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
-            <!-- Dinamik Dolacak -->
+
+        <div style="text-align:center; padding: 40px 20px;">
+            <div style="font-size: 52px; margin-bottom: 16px; filter: grayscale(0.3);">🚧</div>
+            <h4 style="color: #475569; margin-bottom: 8px; font-size: 16px;">Yapım Aşamasında</h4>
+            <p style="color: #94a3b8; font-size: 13px; line-height: 1.6; max-width: 300px; margin: 0 auto;">
+                Bildirim merkezi yakında burada olacak.<br>
+                Stok uyarıları, sipariş bildirimleri ve daha fazlası...
+            </p>
         </div>
 
         <div class="modal-butonlar">
-            <button onclick="document.getElementById('qr-bekleyen-modal').style.display='none'" class="hk-btn-secondary" style="width:100%; padding:12px;">Kapat</button>
+            <button onclick="document.getElementById('bildirim-merkezi-modal').style.display='none'" class="hk-btn-secondary" style="width:100%; padding:12px;">Kapat</button>
         </div>
     </div>
 </div>

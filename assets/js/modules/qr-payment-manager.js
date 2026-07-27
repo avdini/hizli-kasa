@@ -27,14 +27,6 @@
                 self.timeoutMinutes = parseInt(kasaAyar.qrPaymentTimeout, 10) || 15;
             }
 
-            // Top Bar Badge Tıklama Event
-            var badge = document.getElementById("qr-bekleyen-badge");
-            if (badge) {
-                badge.addEventListener("click", function () {
-                    self.showPendingListModal();
-                });
-            }
-
             // QR Modal İçi Butonlar
             var btnArkaPlan = document.getElementById("qr-modal-arka-plan");
             if (btnArkaPlan) {
@@ -63,7 +55,7 @@
         /**
          * QR Taksitli Ödeme Başlatma
          */
-        startQRPayment: async function (siparisVerisi) {
+        startQRPayment: async function (siparisVerisi, kasaId) {
             var self = this;
             var durumMetni = document.getElementById("durum");
             var apiBase = (typeof kasaAyar !== 'undefined' && kasaAyar.rootApiUrl) ? kasaAyar.rootApiUrl : (window.location.origin + '/wp-json/');
@@ -91,14 +83,17 @@
 
                 if (result.success && result.data) {
                     var data = result.data;
-                    
-                    // Sepeti Temizle (Kasa anında boşa çıksın)
                     var state = HK.State;
+                    var lockedKasaId = kasaId || state.aktifKasaId;
+
                     if (HK.CartManager) {
-                        HK.CartManager.sepetiTemizle(state.aktifKasaId);
-                    }
-                    if (HK.UIRenderer) {
-                        HK.UIRenderer.arayuzuGuncelle();
+                        HK.CartManager.kasayiKilitle(lockedKasaId, {
+                            orderId: data.order_id,
+                            orderNumber: data.order_number,
+                            total: data.total,
+                            payUrl: data.pay_url,
+                            createdAt: Date.now()
+                        });
                     }
 
                     // Bekleyen listeye ekle
@@ -108,7 +103,8 @@
                         total: data.total,
                         pay_url: data.pay_url,
                         created_at: Date.now(),
-                        interval_id: null
+                        interval_id: null,
+                        kasaId: lockedKasaId
                     };
 
                     self.pendingPayments.push(paymentObj);
@@ -119,9 +115,6 @@
 
                     // Polling Başlat
                     self.startPollingForOrder(paymentObj);
-
-                    // Badge Güncelle
-                    self.updateBadge();
 
                     if (durumMetni) {
                         durumMetni.innerText = "QR Ödeme Bekleniyor: " + data.order_number;
@@ -257,10 +250,10 @@
          */
         onPaymentComplete: function (paymentObj, statusData) {
             var self = this;
+            var lockedKasaId = paymentObj.kasaId;
             
             // Bekleyen listeden çıkar
             self.pendingPayments = self.pendingPayments.filter(function (p) { return p.order_id !== paymentObj.order_id; });
-            self.updateBadge();
 
             // Eğer modal açık ve bu sipariş izleniyorsa kapat
             if (self.currentViewingOrderId === paymentObj.order_id) {
@@ -272,6 +265,15 @@
             // Ses Çal
             if (HK.Sound && typeof HK.Sound.play === 'function') {
                 HK.Sound.play('success');
+            }
+
+            if (HK.CartManager) {
+                HK.CartManager.kasaKilidiniAc(lockedKasaId);
+                HK.CartManager.sepetiTemizle(lockedKasaId);
+            }
+
+            if (HK.UIRenderer) {
+                HK.UIRenderer.kasaQRDurumGuncelle(lockedKasaId, 'tamamlandi', paymentObj);
             }
 
             // Komisyon / Taksit Detay Metni Oluştur
@@ -293,7 +295,7 @@
                 durumMetni.style.color = "#00B894";
             }
 
-            // Sipariş Fişini Yazdır Modalını Aç (İsteğe Bağlı)
+            // Sipariş Fişini Yazdır Modalını Aç
             self.fetchAndShowReceipt(paymentObj.order_id);
         },
 
@@ -302,13 +304,22 @@
          */
         onPaymentFailed: function (paymentObj, statusData) {
             var self = this;
+            var lockedKasaId = paymentObj.kasaId;
+
             self.pendingPayments = self.pendingPayments.filter(function (p) { return p.order_id !== paymentObj.order_id; });
-            self.updateBadge();
 
             if (self.currentViewingOrderId === paymentObj.order_id) {
                 var modal = document.getElementById("qr-odeme-modal");
                 if (modal) modal.style.display = "none";
                 self.currentViewingOrderId = null;
+            }
+
+            if (HK.CartManager) {
+                HK.CartManager.kasaKilidiniAc(lockedKasaId);
+            }
+
+            if (HK.UIRenderer) {
+                HK.UIRenderer.kasaQRDurumGuncelle(lockedKasaId, 'suresi-doldu');
             }
 
             var msg = (statusData && statusData.message) ? statusData.message : "Ödeme alınamadı / zaman aşımına uğradı.";
@@ -336,91 +347,36 @@
                 var data = await res.json();
 
                 self.stopPollingForOrder(orderId);
-                var paymentObj = self.pendingPayments.find(function (p) { return p.order_id === orderId; }) || { order_id: orderId, order_number: '#' + orderId };
+                var paymentObj = self.pendingPayments.find(function (p) { return p.order_id === orderId; }) || { order_id: orderId, order_number: '#' + orderId, kasaId: HK.State.aktifKasaId };
                 self.onPaymentFailed(paymentObj, { message: "Kasiyer tarafından iptal edildi." });
             } catch (e) {
                 console.error("Cancel payment error", e);
             }
         },
 
+        changePaymentMethod: function (kasaId) {
+            var self = this;
+            var payment = self.pendingPayments.find(function (p) { return p.kasaId === parseInt(kasaId); });
+            if (!payment) {
+                // If not found in memory array, attempt unlock directly
+                if (HK.CartManager) HK.CartManager.kasaKilidiniAc(kasaId);
+                return;
+            }
+            self.cancelPayment(payment.order_id);
+        },
+
         /**
          * Top Bar QR Badge Güncelleme
          */
         updateBadge: function () {
-            var badge = document.getElementById("qr-bekleyen-badge");
-            var countEl = document.getElementById("qr-bekleyen-sayi");
-
-            if (!badge || !countEl) return;
-
-            var count = this.pendingPayments.length;
-            countEl.innerText = count.toString();
-
-            if (count > 0) {
-                badge.style.display = "flex";
-            } else {
-                badge.style.display = "none";
-            }
+            // Badge artık bildirim merkezi, QR bağlantısı kaldırıldı
         },
 
         /**
          * Bekleyen QR Ödemeler Listesi Modalı
          */
         showPendingListModal: function () {
-            var self = this;
-            var modal = document.getElementById("qr-bekleyen-modal");
-            var listContainer = document.getElementById("qr-bekleyen-liste");
-
-            if (!listContainer || !modal) return;
-
-            listContainer.innerHTML = "";
-
-            if (self.pendingPayments.length === 0) {
-                listContainer.innerHTML = "<p style='text-align:center; color:#888;'>Bekleyen QR ödeme bulunmamaktadır.</p>";
-            } else {
-                self.pendingPayments.forEach(function (item) {
-                    var div = document.createElement("div");
-                    div.className = "qr-pending-item";
-                    div.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid #eee;";
-
-                    var elapsedSec = Math.floor((Date.now() - item.created_at) / 1000);
-                    var remSec = Math.max(0, (15 * 60) - elapsedSec);
-                    var mins = Math.floor(remSec / 60);
-                    var secs = remSec % 60;
-                    var timerStr = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
-
-                    div.innerHTML = "<div><strong>" + item.order_number + "</strong> — " + item.total + " TL <br><small style='color:#888;'>Kalan Süre: " + timerStr + "</small></div>" +
-                        "<div>" +
-                        "<button class='hk-btn-small hk-btn-primary qr-view-btn' data-id='" + item.order_id + "' style='margin-right:5px;'>QR Göster</button>" +
-                        "<button class='hk-btn-small hk-btn-danger qr-cancel-btn' data-id='" + item.order_id + "'>İptal</button>" +
-                        "</div>";
-
-                    listContainer.appendChild(div);
-                });
-
-                // Buton Eventleri
-                var viewBtns = listContainer.querySelectorAll(".qr-view-btn");
-                viewBtns.forEach(function (btn) {
-                    btn.addEventListener("click", function () {
-                        var id = parseInt(this.getAttribute("data-id"), 10);
-                        var p = self.pendingPayments.find(function (item) { return item.order_id === id; });
-                        if (p) {
-                            modal.style.display = "none";
-                            self.showQRModal(p);
-                        }
-                    });
-                });
-
-                var cancelBtns = listContainer.querySelectorAll(".qr-cancel-btn");
-                cancelBtns.forEach(function (btn) {
-                    btn.addEventListener("click", function () {
-                        var id = parseInt(this.getAttribute("data-id"), 10);
-                        self.cancelPayment(id);
-                        self.showPendingListModal();
-                    });
-                });
-            }
-
-            modal.style.display = "flex";
+            // Modal artık bildirim merkezi placeholder'ı
         },
 
         /**

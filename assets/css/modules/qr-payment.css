@@ -30,10 +30,12 @@
         transform: scale(1);
         box-shadow: 0 0 0 0 rgba(241, 196, 15, 0.7);
     }
+
     70% {
         transform: scale(1.03);
         box-shadow: 0 0 0 8px rgba(241, 196, 15, 0);
     }
+
     100% {
         transform: scale(1);
         box-shadow: 0 0 0 0 rgba(241, 196, 15, 0);
@@ -50,4 +52,88 @@
 
 .qr-pending-item:hover {
     background: rgba(255, 255, 255, 0.1);
+}
+
+/* Kilitli Kasa — İçerik alanı dim */
+.kasa-qr-kilitli #sepet-listesi {
+    opacity: 0.6;
+    pointer-events: none;
+    user-select: none;
+}
+
+.kasa-qr-kilitli #barkod-input,
+.kasa-qr-kilitli #urun-arama-input {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.kasa-qr-kilitli #onayla-buton {
+    background: #d97706 !important;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.kasa-qr-kilitli .odeme-secici .odeme-btn:not([data-tip="qr_taksit"]) {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* QR Kilit Mod Badge */
+.kasa-mod-badge.qr-bekliyor {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    animation: qr-mod-badge-pulse 2s infinite ease-in-out;
+}
+
+.kasa-mod-badge.qr-bekliyor span {
+    flex: 1;
+    min-width: 200px;
+}
+
+.kasa-mod-badge.qr-bekliyor button {
+    background: rgba(255,255,255,0.25);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 6px;
+    padding: 5px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.kasa-mod-badge.qr-bekliyor button:hover {
+    background: rgba(255,255,255,0.4);
+}
+
+@keyframes qr-mod-badge-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+    50% { box-shadow: 0 0 8px 2px rgba(245, 158, 11, 0.3); }
+}
+
+/* Bildirim Merkezi Badge */
+.bildirim-badge {
+    background: #6366f1 !important;
+    color: white !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    border-radius: 20px !important;
+    padding: 4px 12px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+    transition: all 0.3s ease;
+}
+
+.bildirim-badge:hover {
+    transform: scale(1.05);
+    background: #4f46e5 !important;
 }

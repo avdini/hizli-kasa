@@ -45,6 +45,7 @@ window.HizliKasa = window.HizliKasa || {};
             this._bindOdemeTipiSecici();
             this._bindSidebarButonlari();
             this._bindIskontoTemizle();
+            this._startSidebarTimerInterval();
         },
 
         /**
@@ -52,31 +53,158 @@ window.HizliKasa = window.HizliKasa || {};
          */
         sidebarGuncelle: function() {
             var state = HK.State;
+            var self = this;
             this.els.sidebarButtons.forEach(function(btn) {
                 var id = btn.dataset.id;
+                if (!id) return;
                 btn.classList.toggle("aktif", parseInt(id) === state.aktifKasaId);
 
-                // Dolu kasa kontrolü (içinde ürün var mı?)
                 var key = HK.CartManager ? HK.CartManager._slotKey(id) : ('hizli_kasa_hafiza_slot_' + id);
                 var slotVeri = localStorage.getItem(key);
                 if (slotVeri) {
                     var veri = JSON.parse(slotVeri);
                     var hasItems = veri.sepet && veri.sepet.length > 0;
                     btn.classList.toggle("dolu", hasItems);
-                    
-                    if (hasItems) {
+
+                    var qrLock = veri.qrLockData;
+                    var isQRLocked = !!qrLock;
+                    btn.classList.toggle("qr-bekliyor", isQRLocked);
+
+                    if (!isQRLocked) {
+                        btn.classList.remove("qr-tamamlandi", "qr-suresi-doldu");
+                    }
+
+                    self._kasaKartOverlayGuncelle(btn, qrLock);
+
+                    if (hasItems && !isQRLocked) {
                         var hasExchange = veri.sepet.some(function(item) { return item._is_exchange_return; });
                         var isEditing = !!veri.editingOrderId;
-                        
+
                         btn.classList.toggle("duzenleme", isEditing);
                         btn.classList.toggle("degisim", !isEditing && hasExchange);
-                    } else {
+                    } else if (!isQRLocked) {
                         btn.classList.remove("duzenleme", "degisim");
                     }
                 } else {
-                    btn.classList.remove("dolu", "duzenleme", "degisim");
+                    btn.classList.remove("dolu", "duzenleme", "degisim", "qr-bekliyor", "qr-tamamlandi", "qr-suresi-doldu");
+                    self._kasaKartOverlayGuncelle(btn, null);
                 }
             });
+        },
+
+        _kasaKartOverlayGuncelle: function(btn, qrLockData) {
+            var existingBadge = btn.querySelector('.qr-kasa-badge');
+            var existingTimer = btn.querySelector('.kasa-qr-timer');
+            if (existingBadge) existingBadge.remove();
+            if (existingTimer) existingTimer.remove();
+
+            if (!qrLockData) return;
+
+            btn.style.position = 'relative';
+
+            var badge = document.createElement('span');
+            badge.className = 'qr-kasa-badge';
+            badge.textContent = '📱';
+            btn.appendChild(badge);
+
+            var timer = document.createElement('div');
+            timer.className = 'kasa-qr-timer';
+            var timeoutMs = (HK.QRPaymentManager ? HK.QRPaymentManager.timeoutMinutes : 15) * 60 * 1000;
+            var elapsed = Date.now() - qrLockData.createdAt;
+            var remaining = Math.max(0, Math.floor((timeoutMs - elapsed) / 1000));
+            var mins = Math.floor(remaining / 60);
+            var secs = remaining % 60;
+            timer.textContent = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+            btn.appendChild(timer);
+        },
+
+        kasaQRDurumGuncelle: function(kasaId, durum, paymentObj) {
+            var btn = document.querySelector('.sidebar-btn[data-id="' + kasaId + '"]');
+            if (!btn) return;
+
+            btn.classList.remove('qr-bekliyor', 'qr-tamamlandi', 'qr-suresi-doldu');
+
+            if (durum === 'tamamlandi') {
+                btn.classList.add('qr-tamamlandi');
+                var existingBadge = btn.querySelector('.qr-kasa-badge');
+                if (existingBadge) existingBadge.textContent = '✅';
+                var existingTimer = btn.querySelector('.kasa-qr-timer');
+                if (existingTimer) existingTimer.remove();
+
+                if (!btn._qrCompletePayment) btn._qrCompletePayment = paymentObj;
+            } else if (durum === 'suresi-doldu') {
+                btn.classList.add('qr-suresi-doldu');
+                var existingBadge = btn.querySelector('.qr-kasa-badge');
+                if (existingBadge) existingBadge.textContent = '⚠️';
+                var existingTimer = btn.querySelector('.kasa-qr-timer');
+                if (existingTimer) existingTimer.remove();
+            }
+        },
+
+        kasaQRKilidiniUygula: function() {
+            var frame = document.getElementById("kasa-dis-cerceve");
+            if (frame) frame.classList.add("kasa-qr-kilitli");
+
+            var barkodInput = document.getElementById("barkod-input");
+            if (barkodInput) barkodInput.disabled = true;
+
+            var urunArama = document.getElementById("urun-arama-input");
+            if (urunArama) urunArama.disabled = true;
+
+            var onaylaBtn = document.getElementById("onayla-buton");
+            if (onaylaBtn) {
+                onaylaBtn.disabled = true;
+                onaylaBtn.innerText = "📱 QR Ödeme Bekleniyor...";
+            }
+        },
+
+        kasaQRKilidiniKaldir: function() {
+            var frame = document.getElementById("kasa-dis-cerceve");
+            if (frame) frame.classList.remove("kasa-qr-kilitli");
+
+            var barkodInput = document.getElementById("barkod-input");
+            if (barkodInput) barkodInput.disabled = false;
+
+            var urunArama = document.getElementById("urun-arama-input");
+            if (urunArama) urunArama.disabled = false;
+
+            var onaylaBtn = document.getElementById("onayla-buton");
+            if (onaylaBtn) {
+                onaylaBtn.disabled = false;
+                onaylaBtn.innerText = "Sipariş Oluştur";
+            }
+        },
+
+        _startSidebarTimerInterval: function() {
+            var self = this;
+            setInterval(function() {
+                if (!self.els || !self.els.sidebarButtons) return;
+                self.els.sidebarButtons.forEach(function(btn) {
+                    var id = btn.dataset.id;
+                    if (!id) return;
+                    var timerEl = btn.querySelector('.kasa-qr-timer');
+                    if (!timerEl) return;
+
+                    var key = HK.CartManager ? HK.CartManager._slotKey(id) : ('hizli_kasa_hafiza_slot_' + id);
+                    var slotStr = localStorage.getItem(key);
+                    if (!slotStr) return;
+
+                    var veri = JSON.parse(slotStr);
+                    if (!veri.qrLockData) return;
+
+                    var timeoutMs = (HK.QRPaymentManager ? HK.QRPaymentManager.timeoutMinutes : 15) * 60 * 1000;
+                    var elapsed = Date.now() - veri.qrLockData.createdAt;
+                    var remaining = Math.max(0, Math.floor((timeoutMs - elapsed) / 1000));
+                    var mins = Math.floor(remaining / 60);
+                    var secs = remaining % 60;
+                    timerEl.textContent = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+
+                    if (remaining <= 0) {
+                        timerEl.textContent = '00:00';
+                        timerEl.style.color = '#ef4444';
+                    }
+                });
+            }, 1000);
         },
 
         /**
@@ -490,6 +618,52 @@ window.HizliKasa = window.HizliKasa || {};
             if (oldDuzenlemeBanner) oldDuzenlemeBanner.parentNode.removeChild(oldDuzenlemeBanner);
             if (oldDegisimBanner) oldDegisimBanner.parentNode.removeChild(oldDegisimBanner);
 
+            if (state.qrLockData) {
+                if (frame) {
+                    frame.classList.add("qr-kilitli-aktif");
+                    frame.classList.remove("duzenleme-aktif", "degisim-aktif");
+                }
+
+                if (modAlani) {
+                    modAlani.innerHTML = '<div class="kasa-mod-badge qr-bekliyor">' +
+                                         '<span>📱 QR Ödeme: #' + state.qrLockData.orderNumber + ' — ' + state.qrLockData.total + ' TL</span>' +
+                                         '<button class="mod-qr-degistir-btn">Ödeme Yöntemini Değiştir</button>' +
+                                         '<button class="mod-qr-goster-btn" style="margin-left:5px;">QR Göster</button>' +
+                                         '</div>';
+
+                    modAlani.querySelector(".mod-qr-degistir-btn").addEventListener("click", function() {
+                        if (confirm("QR ödemeyi iptal edip başka bir ödeme yöntemiyle devam etmek istiyor musunuz?")) {
+                            if (HK.QRPaymentManager) {
+                                HK.QRPaymentManager.changePaymentMethod(state.aktifKasaId);
+                            }
+                        }
+                    });
+
+                    modAlani.querySelector(".mod-qr-goster-btn").addEventListener("click", function() {
+                        if (HK.QRPaymentManager) {
+                            var payment = HK.QRPaymentManager.pendingPayments.find(function(p) {
+                                return p.kasaId === state.aktifKasaId;
+                            }) || {
+                                order_id: state.qrLockData.orderId,
+                                order_number: state.qrLockData.orderNumber,
+                                total: state.qrLockData.total,
+                                pay_url: state.qrLockData.payUrl,
+                                created_at: state.qrLockData.createdAt,
+                                kasaId: state.aktifKasaId
+                            };
+                            HK.QRPaymentManager.showQRModal(payment);
+                        }
+                    });
+                }
+
+                if (onaylaBtn) {
+                    onaylaBtn.innerText = "📱 QR Ödeme Bekleniyor...";
+                    onaylaBtn.disabled = true;
+                    onaylaBtn.style.setProperty("background", "#d97706", "important");
+                }
+                return;
+            }
+
             if (state.editingOrderId) {
                 // SİPARİŞ DÜZENLEME MODU (Mavi)
                 if (frame) {
@@ -765,21 +939,47 @@ window.HizliKasa = window.HizliKasa || {};
          */
         _bindSidebarButonlari: function() {
             var state = HK.State;
+            var self = this;
             this.els.sidebarButtons.forEach(function(btn) {
                 btn.addEventListener("click", function() {
                     var id = this.dataset.id;
                     if (!id) return; // Kasa ID yoksa işlem yapma (Rapor butonları vb.)
 
                     var yeniId = parseInt(id);
+
+                    if (this.classList.contains('qr-tamamlandi')) {
+                        this.classList.remove('qr-tamamlandi');
+                        var existingBadge = this.querySelector('.qr-kasa-badge');
+                        if (existingBadge) existingBadge.remove();
+                        var completePayment = this._qrCompletePayment;
+                        if (completePayment && HK.QRPaymentManager) {
+                            HK.QRPaymentManager.fetchAndShowReceipt(completePayment.order_id);
+                        }
+                        this._qrCompletePayment = null;
+                        if (HK.UIRenderer) HK.UIRenderer.sidebarGuncelle();
+                        return;
+                    }
+
+                    if (this.classList.contains('qr-suresi-doldu')) {
+                        this.classList.remove('qr-suresi-doldu');
+                        var existingBadge = this.querySelector('.qr-kasa-badge');
+                        if (existingBadge) existingBadge.remove();
+                    }
+
                     if (yeniId === state.aktifKasaId) return;
 
-                    // Mevcut kasayı kaydet, yenisini yükle
                     HK.CartManager.sepetiKaydet();
                     HK.CartManager.sepetiYukle(yeniId);
 
                     var durumMetni = document.getElementById("durum");
                     durumMetni.innerText = "Kasa " + yeniId + " Aktif (v" + state.CURRENT_VERSION + ")";
                     durumMetni.style.color = "#2c3e50";
+
+                    if (state.qrLockData) {
+                        self.kasaQRKilidiniUygula();
+                    } else {
+                        self.kasaQRKilidiniKaldir();
+                    }
 
                     jQuery(document).trigger('hk:kasa-degisti');
                 });

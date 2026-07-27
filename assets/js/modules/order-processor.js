@@ -717,7 +717,7 @@
             if (state.odemeTipi === 'qr_taksit') {
                 this.toggleLoading(false);
                 if (HK.QRPaymentManager && typeof HK.QRPaymentManager.startQRPayment === 'function') {
-                    HK.QRPaymentManager.startQRPayment(siparisVerisi);
+                    HK.QRPaymentManager.startQRPayment(siparisVerisi, state.aktifKasaId);
                 } else {
                     if (HK.UIRenderer) HK.UIRenderer.showToast("QR Ödeme modülü yüklenemedi!", "error", true);
                 }
