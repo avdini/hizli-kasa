@@ -293,6 +293,15 @@ if (!defined('ABSPATH')) exit;
             <p style="margin:0; color:var(--hk-text-muted);">Günün raporu hazırlanıyor...</p>
         </div>
 
+        <!-- Rapor Seçenekleri Barı -->
+        <div id="gun-sonu-secenekler" style="display:none; align-items:center; justify-content:space-between; background:var(--hk-bg-subtle, #f8f9fa); padding:10px 16px; border-radius:10px; border:1px solid var(--hk-border, #e2e8f0); margin-bottom:15px;">
+            <label for="gun-sonu-include-qr" style="display:flex; align-items:center; gap:10px; font-weight:600; font-size:13px; cursor:pointer; margin:0; color:var(--hk-text-main);">
+                <input type="checkbox" id="gun-sonu-include-qr" style="width:18px; height:18px; cursor:pointer; accent-color:var(--hk-primary, #3b82f6);">
+                <span>📱 QR Ödemelerini Rapor & Fiş Toplamlarına Dahil Et (Sanal POS)</span>
+            </label>
+            <span style="font-size:12px; color:var(--hk-text-muted); font-style:italic;">* Varsayılan: Harici tutulur</span>
+        </div>
+
         <!-- Rapor İçeriği -->
         <div id="gun-sonu-icerik" style="display:none;"></div>
 

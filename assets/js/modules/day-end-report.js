@@ -29,10 +29,22 @@
                 gunSonuYazdirBasit: document.getElementById("gun-sonu-yazdir-basit"),
                 gunSonuIcerik: document.getElementById("gun-sonu-icerik"),
                 gunSonuYukleniyor: document.getElementById("gun-sonu-yukleniyor"),
+                gunSonuSecenekler: document.getElementById("gun-sonu-secenekler"),
+                gunSonuIncludeQR: document.getElementById("gun-sonu-include-qr"),
                 gunSonuSablon: document.getElementById("gun-sonu-sablon"),
                 gunSonuButon: document.getElementById("gun-sonu-buton"),
                 genelRaporButon: document.getElementById("genel-rapor-buton")
             };
+
+            if (this.els.gunSonuIncludeQR && !this.els.gunSonuIncludeQR.dataset.bound) {
+                this.els.gunSonuIncludeQR.addEventListener("change", function () {
+                    if (self.data) {
+                        self._raporuGoster(self.data);
+                        self._fisSablonuDoldur(self.data, true);
+                    }
+                });
+                this.els.gunSonuIncludeQR.dataset.bound = "true";
+            }
 
             if (this.els.gunSonuButon && !this.els.gunSonuButon.dataset.bound) {
                 this.els.gunSonuButon.addEventListener("click", function () {
@@ -110,6 +122,7 @@
             this.els.gunSonuModal.style.setProperty("display", "flex", "important");
             this.els.gunSonuYukleniyor.style.display = "block";
             this.els.gunSonuIcerik.style.display = "none";
+            if (this.els.gunSonuSecenekler) this.els.gunSonuSecenekler.style.display = "none";
 
             try {
                 var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
@@ -125,6 +138,7 @@
 
                 self.els.gunSonuYukleniyor.style.display = "none";
                 self.els.gunSonuIcerik.style.display = "block";
+                if (self.els.gunSonuSecenekler) self.els.gunSonuSecenekler.style.display = "flex";
 
                 self.data = rapor;
                 self._raporuGoster(rapor);
@@ -168,6 +182,14 @@
             }
 
             var html = '';
+            var includeQR = !!(this.els.gunSonuIncludeQR && this.els.gunSonuIncludeQR.checked);
+
+            var nakitKartIbanCiro = (ozet.nakit_toplam || 0) + (ozet.kart_toplam || 0) + (ozet.iban_toplam || 0);
+            var nakitKartIbanIade = (ozet.iade_nakit || 0) + (ozet.iade_kart || 0) + (ozet.iade_iban || 0);
+
+            var ciroBaz = includeQR ? (ozet.toplam_ciro_kupon_haric ?? ozet.toplam_ciro) : nakitKartIbanCiro;
+            var iadeBaz = includeQR ? (ozet.toplam_iade_kupon_haric ?? ozet.toplam_iade) : nakitKartIbanIade;
+            var netCiro = ciroBaz - iadeBaz;
 
             // ▧ Genel Bilgiler
             var depoAdi = HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '';
@@ -178,33 +200,33 @@
 
             // ▧ Özet Kartlar
             html += '<div class="gs-kart-grid">' +
-                this._kartHTML('💰', 'Satış Cirosu', (ozet.toplam_ciro_kupon_haric ?? ozet.toplam_ciro).toFixed(2) + ' TL', '#27ae60') +
+                this._kartHTML('💰', 'Satış Cirosu', ciroBaz.toFixed(2) + ' TL', '#27ae60') +
                 this._kartHTML('🧾', 'Sipariş Sayısı', rapor.siparis_sayisi, '#2c3e50') +
                 this._kartHTML('📦', 'Satılan Ürün', ozet.urun_adet_toplam + ' Adet', '#3498db') +
-                this._kartHTML('🔄', 'İade Tutarı', ozet.toplam_iade.toFixed(2) + ' TL', '#e67e22') +
+                this._kartHTML('🔄', 'İade Tutarı', iadeBaz.toFixed(2) + ' TL', '#e67e22') +
                 '</div>';
 
             // ▧ Ödeme Dağılımı
-            var ciroBaz = ozet.toplam_ciro_kupon_haric ?? ozet.toplam_ciro;
-            var iadeBaz = ozet.toplam_iade_kupon_haric ?? ozet.toplam_iade;
-            var netCiro = ciroBaz - iadeBaz;
-
             html += '<div class="gs-bolum">' +
                 '<h4>Ödeme Dağılımı</h4>' +
                 '<table class="gs-tablo">' +
                 '<tr><td>💵 Nakit Satış</td><td class="gs-sag">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>' +
                 '<tr><td>💳 Kart Satış</td><td class="gs-sag">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>' +
                 '<tr><td>🏦 IBAN Satış</td><td class="gs-sag">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>' +
-                (ozet.qr_taksit_toplam > 0 ? '<tr><td>📱 QR Taksit Satış</td><td class="gs-sag">' + ozet.qr_taksit_toplam.toFixed(2) + ' TL</td></tr>' : '') +
+                (includeQR && ozet.qr_taksit_toplam > 0 ? '<tr><td>📱 QR Taksit Satış</td><td class="gs-sag">' + ozet.qr_taksit_toplam.toFixed(2) + ' TL</td></tr>' : '') +
                 (ozet.kupon_toplam > 0 ? '<tr><td>🎟️ Kupon Satış</td><td class="gs-sag">' + ozet.kupon_toplam.toFixed(2) + ' TL</td></tr>' : '') +
                 '<tr class="gs-toplam-satir" style="color:#27ae60;"><td><strong>TOPLAM CİRO</strong></td><td class="gs-sag"><strong>' + ciroBaz.toFixed(2) + ' TL</strong></td></tr>';
 
-            if (ozet.toplam_iade > 0) {
+            if (!includeQR && ozet.qr_taksit_toplam > 0) {
+                html += '<tr><td style="color:#7f8c8d; font-style:italic;">📱 QR Taksit (Sanal POS - Dahil Değil)</td><td class="gs-sag" style="color:#7f8c8d;">' + ozet.qr_taksit_toplam.toFixed(2) + ' TL</td></tr>';
+            }
+
+            if (iadeBaz > 0 || (includeQR && ozet.iade_qr_taksit > 0)) {
                 html += '<tr><td colspan="2" style="height:10px;"></td></tr>' +
                     '<tr><td style="color:#e67e22;">🔄 Nakit İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_nakit.toFixed(2) + ' TL</td></tr>' +
                     '<tr><td style="color:#e67e22;">🔄 Kart İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_kart.toFixed(2) + ' TL</td></tr>' +
                     '<tr><td style="color:#e67e22;">🔄 IBAN İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_iban.toFixed(2) + ' TL</td></tr>' +
-                    (ozet.iade_qr_taksit > 0 ? '<tr><td style="color:#e67e22;">🔄 QR Taksit İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_qr_taksit.toFixed(2) + ' TL</td></tr>' : '') +
+                    (includeQR && ozet.iade_qr_taksit > 0 ? '<tr><td style="color:#e67e22;">🔄 QR Taksit İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_qr_taksit.toFixed(2) + ' TL</td></tr>' : '') +
                     (ozet.iade_kupon > 0 ? '<tr><td style="color:#e67e22;">🔄 Kupon İade</td><td class="gs-sag" style="color:#e67e22;">-' + ozet.iade_kupon.toFixed(2) + ' TL</td></tr>' : '');
             }
 
@@ -228,9 +250,13 @@
                 '<tr><td><strong>NET NAKİT (Kasadaki)</strong></td><td class="gs-sag"><strong>' + ozet.net_nakit.toFixed(2) + ' TL</strong></td></tr>' +
                 '<tr><td><strong>NET KART</strong></td><td class="gs-sag"><strong>' + ozet.net_kart.toFixed(2) + ' TL</strong></td></tr>' +
                 '<tr><td><strong>NET IBAN</strong></td><td class="gs-sag"><strong>' + ozet.net_iban.toFixed(2) + ' TL</strong></td></tr>' +
-                '<tr class="gs-toplam-satir" style="background:#f8f9fa;"><td><strong>NET KASA TOPLAMI</strong></td><td class="gs-sag"><strong>' + netCiro.toFixed(2) + ' TL</strong></td></tr>' +
-                '</table>' +
-                '</div>';
+                (includeQR && ozet.net_qr_taksit > 0 ? '<tr><td><strong>NET QR TAKSİT</strong></td><td class="gs-sag"><strong>' + ozet.net_qr_taksit.toFixed(2) + ' TL</strong></td></tr>' : '') +
+                '<tr class="gs-toplam-satir" style="background:#f8f9fa;"><td><strong>NET KASA TOPLAMI</strong></td><td class="gs-sag"><strong>' + netCiro.toFixed(2) + ' TL</strong></td></tr>';
+
+            if (!includeQR && ozet.net_qr_taksit > 0) {
+                html += '<tr><td style="color:#7f8c8d; font-size:12px; font-style:italic;">ℹ️ (Harici) Net QR Taksit (Sanal POS)</td><td class="gs-sag" style="color:#7f8c8d; font-size:12px;">' + ozet.net_qr_taksit.toFixed(2) + ' TL</td></tr>';
+            }
+            html += '</table></div>';
 
             // ▧ Ürün Dağılımı (İlk 15)
             if (rapor.urun_dagilimi && rapor.urun_dagilimi.length > 0) {
@@ -374,27 +400,35 @@
             html += '</div>';
 
             // ─── ÖDEME DAĞILIMI ───
-            var ciroBaz = ozet.toplam_ciro_kupon_haric ?? ozet.toplam_ciro;
-            var iadeBaz = ozet.toplam_iade_kupon_haric ?? ozet.toplam_iade;
+            var includeQR = !!(this.els.gunSonuIncludeQR && this.els.gunSonuIncludeQR.checked);
+            var nakitKartIbanCiro = (ozet.nakit_toplam || 0) + (ozet.kart_toplam || 0) + (ozet.iban_toplam || 0);
+            var nakitKartIbanIade = (ozet.iade_nakit || 0) + (ozet.iade_kart || 0) + (ozet.iade_iban || 0);
+
+            var ciroBaz = includeQR ? (ozet.toplam_ciro_kupon_haric ?? ozet.toplam_ciro) : nakitKartIbanCiro;
+            var iadeBaz = includeQR ? (ozet.toplam_iade_kupon_haric ?? ozet.toplam_iade) : nakitKartIbanIade;
             var netCiro = ciroBaz - iadeBaz;
+
             html += '<div style="margin-bottom:8px;">';
             html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">ÖDEME DAĞILIMI</p>';
             html += '<table style="width:100%; font-size:12px; border-collapse:collapse;">';
             html += '<tr><td>Kredi Kartı</td><td style="text-align:right;">' + ozet.kart_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>IBAN / Havale</td><td style="text-align:right;">' + ozet.iban_toplam.toFixed(2) + ' TL</td></tr>';
-            if (ozet.qr_taksit_toplam > 0) html += '<tr><td>QR Taksit</td><td style="text-align:right;">' + ozet.qr_taksit_toplam.toFixed(2) + ' TL</td></tr>';
+            if (includeQR && ozet.qr_taksit_toplam > 0) html += '<tr><td>QR Taksit</td><td style="text-align:right;">' + ozet.qr_taksit_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td>Nakit Satış</td><td style="text-align:right;">' + ozet.nakit_toplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr style="border-top:1px dashed #000;"><td style="font-weight:bold; font-size:14px; padding-top:2px;">TOPLAM CİRO</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:2px;">' + ciroBaz.toFixed(2) + ' TL</td></tr>';
+            if (!includeQR && ozet.qr_taksit_toplam > 0) {
+                html += '<tr><td style="font-size:11px; color:#555; font-style:italic;">(HARİCİ QR TAKSİT: ' + ozet.qr_taksit_toplam.toFixed(2) + ' TL)</td><td style="text-align:right; font-size:11px; color:#555;">Dahil Değil</td></tr>';
+            }
             html += '</table>';
             html += '</div>';
 
             // GİDERLER
-            var toplamGider = (ozet.toplam_iade_kupon_haric ?? ozet.toplam_iade ?? 0);
+            var toplamGider = includeQR ? (ozet.toplam_iade_kupon_haric ?? ozet.toplam_iade ?? 0) : nakitKartIbanIade;
             if (isGenel) {
                 toplamGider += (ozet.toplam_masraf || 0);
             }
 
-            if (toplamGider > 0) {
+            if (toplamGider > 0 || (!includeQR && ozet.iade_qr_taksit > 0)) {
                 html += '<div style="margin-bottom:8px;">';
                 html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000;">GİDERLER</p>';
                 html += '<table style="width:100%; font-size:12px; border-collapse:collapse;">';
@@ -403,6 +437,7 @@
                 if (ozet.iade_kart > 0) html += '<tr><td>Kart İade</td><td style="text-align:right;">-' + ozet.iade_kart.toFixed(2) + ' TL</td></tr>';
                 if (ozet.iade_iban > 0) html += '<tr><td>IBAN İade</td><td style="text-align:right;">-' + ozet.iade_iban.toFixed(2) + ' TL</td></tr>';
                 if (ozet.iade_nakit > 0) html += '<tr><td>Nakit İade</td><td style="text-align:right;">-' + ozet.iade_nakit.toFixed(2) + ' TL</td></tr>';
+                if (includeQR && ozet.iade_qr_taksit > 0) html += '<tr><td>QR Taksit İade</td><td style="text-align:right;">-' + ozet.iade_qr_taksit.toFixed(2) + ' TL</td></tr>';
                 if (ozet.iade_kupon > 0) html += '<tr><td>Kupon İade</td><td style="text-align:right;">-' + ozet.iade_kupon.toFixed(2) + ' TL</td></tr>';
                 
                 // Masraflar (Sadece Genel raporda)
@@ -414,6 +449,9 @@
                 }
 
                 html += '<tr style="border-top:1px dashed #000;"><td style="font-weight:bold; font-size:13px; padding-top:2px;">TOPLAM GİDER</td><td style="text-align:right; font-weight:bold; font-size:13px; padding-top:2px;">-' + toplamGider.toFixed(2) + ' TL</td></tr>';
+                if (!includeQR && ozet.iade_qr_taksit > 0) {
+                    html += '<tr><td style="font-size:11px; color:#555; font-style:italic;">(HARİCİ QR İADE: -' + ozet.iade_qr_taksit.toFixed(2) + ' TL)</td><td style="text-align:right; font-size:11px; color:#555;">Dahil Değil</td></tr>';
+                }
                 html += '</table>';
                 html += '</div>';
             }
@@ -426,7 +464,13 @@
             html += '<tr style="border-bottom:1px dashed #eee;"><td>Net Kart Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_kart.toFixed(2) + ' TL</td></tr>';
             html += '<tr style="border-bottom:1px dashed #eee;"><td>Net IBAN Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_iban.toFixed(2) + ' TL</td></tr>';
             html += '<tr style="border-bottom:1px dashed #eee;"><td>Net Nakit Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_nakit.toFixed(2) + ' TL</td></tr>';
+            if (includeQR && ozet.net_qr_taksit > 0) {
+                html += '<tr style="border-bottom:1px dashed #eee;"><td>Net QR Taksit Toplamı</td><td style="text-align:right; font-weight:bold;">' + ozet.net_qr_taksit.toFixed(2) + ' TL</td></tr>';
+            }
             html += '<tr style="border-top:1px solid #000;"><td style="font-weight:bold; font-size:14px; padding-top:4px;">NET KASA TOPLAMI</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:4px;">' + netCiro.toFixed(2) + ' TL</td></tr>';
+            if (!includeQR && ozet.net_qr_taksit > 0) {
+                html += '<tr><td style="font-size:11px; color:#555; font-style:italic;">(HARİCİ NET QR TAKSİT: ' + ozet.net_qr_taksit.toFixed(2) + ' TL)</td><td style="text-align:right; font-size:11px; color:#555;">Dahil Değil</td></tr>';
+            }
             html += '</table>';
             html += '</div>';
 
@@ -576,12 +620,14 @@
 
             var ozet = rapor.ozet;
             var html = '';
+            var includeQR = !!(this.els.gunSonuIncludeQR && this.els.gunSonuIncludeQR.checked);
 
             var netKart = (ozet.kart_toplam || 0) - (ozet.iade_kart || 0);
             var netIban = (ozet.iban_toplam || 0) - (ozet.iade_iban || 0);
             var netQrTaksit = (ozet.qr_taksit_toplam || 0) - (ozet.iade_qr_taksit || 0);
             var netNakit = (ozet.nakit_toplam || 0) - (ozet.iade_nakit || 0);
-            var genelToplam = (ozet.toplam_ciro_kupon_haric ?? ozet.toplam_ciro ?? 0) - (ozet.toplam_iade_kupon_haric ?? ozet.toplam_iade ?? 0);
+
+            var genelToplam = includeQR ? ((ozet.toplam_ciro_kupon_haric ?? ozet.toplam_ciro ?? 0) - (ozet.toplam_iade_kupon_haric ?? ozet.toplam_iade ?? 0)) : (netKart + netIban + netNakit);
             
             var masrafKart = (ozet.kart_masraf || 0);
             var masrafIban = (ozet.iban_masraf || 0);
@@ -608,8 +654,13 @@
             html += '<tr style="border-bottom:1px dashed #000;"><td style="padding:4px 0;">GENEL TOPLAM</td><td style="text-align:right; font-weight:bold;">' + genelToplam.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td style="padding:4px 0;">KART TOPLAM</td><td style="text-align:right;">' + netKart.toFixed(2) + ' TL</td></tr>';
             html += '<tr><td style="padding:4px 0;">IBAN TOPLAM</td><td style="text-align:right;">' + netIban.toFixed(2) + ' TL</td></tr>';
-            if (netQrTaksit > 0) html += '<tr><td style="padding:4px 0;">QR TAKSİT TOPLAM</td><td style="text-align:right;">' + netQrTaksit.toFixed(2) + ' TL</td></tr>';
+            if (includeQR && netQrTaksit > 0) {
+                html += '<tr><td style="padding:4px 0;">QR TAKSİT TOPLAM</td><td style="text-align:right;">' + netQrTaksit.toFixed(2) + ' TL</td></tr>';
+            }
             html += '<tr><td style="padding:4px 0;">NAKİT TOPLAM</td><td style="text-align:right;">' + netNakit.toFixed(2) + ' TL</td></tr>';
+            if (!includeQR && netQrTaksit > 0) {
+                html += '<tr><td style="padding:4px 0; color:#555;">(HARİCİ QR TAKSİT)</td><td style="text-align:right; color:#555;">' + netQrTaksit.toFixed(2) + ' TL</td></tr>';
+            }
             
             if (toplamMasraf > 0) {
                 html += '<tr><td colspan="2" style="height:10px;"></td></tr>';
