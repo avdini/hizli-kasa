@@ -106,6 +106,12 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
         $gun_map              = [];
         $satis_listesi        = [];
         $variation_map        = [];
+        $odeme_map = [
+            'nakit'     => 0.0,
+            'kart'      => 0.0,
+            'iban'      => 0.0,
+            'qr_taksit' => 0.0,
+        ];
 
         foreach ($all_orders as $order) {
             $is_refund  = ($order->get_meta('_hizli_kasa_is_refund') === 'yes');
@@ -164,6 +170,17 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
                     $satis_adet += $item_qty;
                     $satis_ciro += $item_total;
                     $toplam_iskonto_tutar += $item_iskonto;
+
+                    $base_payment = $order->get_meta('_hizli_kasa_base_odeme_tipi');
+                    if ($base_payment === 'cash') {
+                        $odeme_map['nakit'] += $item_total;
+                    } elseif ($base_payment === 'iban') {
+                        $odeme_map['iban'] += $item_total;
+                    } elseif ($base_payment === 'qr_taksit' || $order->get_payment_method() === 'qr_sanal_pos') {
+                        $odeme_map['qr_taksit'] += $item_total;
+                    } else {
+                        $odeme_map['kart'] += $item_total;
+                    }
 
                     $gun_map[$gun_key]['satis_adet']    += $item_qty;
                     $gun_map[$gun_key]['satis_ciro']    += $item_total;
@@ -244,6 +261,12 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
                 'maliyet_kaynak'     => $this->get_cost_source_label($product_data),
                 'toplam_maliyet'     => $toplam_maliyet,
                 'brut_kar'           => $brut_kar,
+                'odeme_dagilimi'     => [
+                    'nakit'     => round($odeme_map['nakit'], 2),
+                    'kart'      => round($odeme_map['kart'], 2),
+                    'iban'      => round($odeme_map['iban'], 2),
+                    'qr_taksit' => round($odeme_map['qr_taksit'], 2),
+                ],
             ],
             'gunluk_trend'    => $gunluk_trend,
             'satis_listesi'   => $satis_listesi,

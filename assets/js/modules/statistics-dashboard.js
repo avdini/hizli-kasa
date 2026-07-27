@@ -293,9 +293,9 @@
 
             // --- Ödeme dağılımı doughnut ---
             if (document.getElementById('stat-chart-odeme')) {
-                var odemeLabels = ['💵 Nakit', '💳 Kart', '🏦 IBAN'];
-                var odemeData   = [odeme.nakit || 0, odeme.kart || 0, odeme.iban || 0];
-                var odemeColors = ['#10b981', '#3b82f6', '#8b5cf6'];
+                var odemeLabels = ['💵 Nakit', '💳 Kart', '🏦 IBAN', '📱 QR Taksit'];
+                var odemeData   = [odeme.nakit || 0, odeme.kart || 0, odeme.iban || 0, odeme.qr_taksit || 0];
+                var odemeColors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b'];
 
                 self.charts.odeme = new Chart(document.getElementById('stat-chart-odeme'), {
                     type: 'doughnut',

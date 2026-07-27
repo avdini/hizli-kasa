@@ -326,6 +326,17 @@
                 html += '<div class="psr-cost-source-note">📌 Maliyet kaynağı: <strong>' + kaynakLabel + '</strong></div>';
             }
 
+            if (kpi.odeme_dagilimi) {
+                var od = kpi.odeme_dagilimi;
+                html += '<div class="psr-payment-breakdown-bar" style="display:flex; gap:12px; flex-wrap:wrap; background:var(--hk-bg-subtle, #f8f9fa); padding:10px 15px; border-radius:8px; margin-bottom:15px; border:1px solid var(--hk-border, #e2e8f0); font-size:12px; align-items:center;">';
+                html += '<strong style="color:var(--hk-text-main);">💳 Ödeme Dağılımı:</strong>';
+                html += '<span style="color:#10b981; font-weight:600;">💵 Nakit: ' + self._currency(od.nakit || 0) + '</span>';
+                html += '<span style="color:#3b82f6; font-weight:600;">💳 Kart: ' + self._currency(od.kart || 0) + '</span>';
+                html += '<span style="color:#8b5cf6; font-weight:600;">🏦 IBAN: ' + self._currency(od.iban || 0) + '</span>';
+                html += '<span style="color:#d97706; font-weight:600;">📱 QR Taksit: ' + self._currency(od.qr_taksit || 0) + '</span>';
+                html += '</div>';
+            }
+
             // Birleşik Trend & İskonto Grafiği
             if (!self.activeTrendMode) {
                 self.activeTrendMode = 'satis';

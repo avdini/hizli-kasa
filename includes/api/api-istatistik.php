@@ -63,6 +63,7 @@ function hizli_kasa_statistics_summary($request) {
     $nakit_toplam  = 0;
     $kart_toplam   = 0;
     $iban_toplam   = 0;
+    $qr_taksit_toplam = 0;
     $siparis_sayisi = 0;
     $iade_sayisi   = 0;
 
@@ -89,6 +90,14 @@ function hizli_kasa_statistics_summary($request) {
         $nakit_toplam += (float) $order->get_meta('_odeme_nakit');
         $kart_toplam  += (float) $order->get_meta('_odeme_kart');
         $iban_toplam  += (float) $order->get_meta('_odeme_iban');
+        $o_qr_taksit   = (float) $order->get_meta('_odeme_qr_taksit');
+
+        if ($o_qr_taksit == 0 && $order->get_payment_method() === 'qr_sanal_pos') {
+            $o_qr_taksit = $order_total;
+            $kart_toplam -= $order_total;
+            if ($kart_toplam < 0) $kart_toplam = 0;
+        }
+        $qr_taksit_toplam += $o_qr_taksit;
 
         $order_discount = (float) $order->get_meta('_hk_toplam_iskonto');
         $order_subtotal = 0;
@@ -326,9 +335,10 @@ function hizli_kasa_statistics_summary($request) {
             'iade_sayisi'            => $iade_sayisi,
         ],
         'odeme_dagilimi' => [
-            'nakit' => round($nakit_toplam, 2),
-            'kart'  => round($kart_toplam, 2),
-            'iban'  => round($iban_toplam, 2),
+            'nakit'     => round($nakit_toplam, 2),
+            'kart'      => round($kart_toplam, 2),
+            'iban'      => round($iban_toplam, 2),
+            'qr_taksit' => round($qr_taksit_toplam, 2),
         ],
         'saatlik_dagilim' => $saatlik,
         'gunluk_trend'    => $gunluk,
