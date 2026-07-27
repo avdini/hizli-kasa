@@ -647,8 +647,9 @@ window.HizliKasa = window.HizliKasa || {};
                     }
 
                     if (onaylaBtn) {
-                        onaylaBtn.innerText = "✅ Ödeme Alındı (Fiş Bekliyor)";
-                        onaylaBtn.disabled = true;
+                        onaylaBtn.innerText = "🖨️ Fişi Yazdır ve Tamamla";
+                        onaylaBtn.disabled = false;
+                        onaylaBtn.style.pointerEvents = "auto";
                         onaylaBtn.style.setProperty("background", "#10b981", "important");
                     }
                     return;

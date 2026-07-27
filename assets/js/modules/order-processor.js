@@ -65,6 +65,24 @@
                 if (self.isProcessing) return;
 
                 var state = HK.State;
+                if (state.qrLockData && state.qrLockData.status === 'paid') {
+                    var orderId = state.qrLockData.orderId;
+                    var kasaId = state.aktifKasaId;
+
+                    if (HK.QRPaymentManager && typeof HK.QRPaymentManager.fetchAndShowReceipt === 'function') {
+                        HK.QRPaymentManager.fetchAndShowReceipt(orderId);
+                    }
+                    if (HK.CartManager) {
+                        HK.CartManager.kasaKilidiniAc(kasaId);
+                        HK.CartManager.sepetiTemizle(kasaId);
+                    }
+                    if (HK.UIRenderer) {
+                        HK.UIRenderer.sidebarGuncelle();
+                        HK.UIRenderer.arayuzuGuncelle();
+                    }
+                    return;
+                }
+
                 if (state.sepet.length === 0) return;
 
                 // İskonto Telefon Zorunluluğu Kontrolü
