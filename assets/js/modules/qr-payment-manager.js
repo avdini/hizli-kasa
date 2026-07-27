@@ -217,6 +217,31 @@
             var apiBase = (typeof kasaAyar !== 'undefined' && kasaAyar.rootApiUrl) ? kasaAyar.rootApiUrl : (window.location.origin + '/wp-json/');
             paymentObj.isStopped = false;
 
+            if (typeof paymentObj.remaining_seconds === 'undefined') {
+                paymentObj.remaining_seconds = (self.timeoutMinutes || 15) * 60;
+            }
+            paymentObj.last_sync_time = Date.now();
+
+            // 1 Saniyelik Canlı Ticker Döngüsü (Modal sayacının donmasını önler)
+            if (paymentObj.local_timer_interval) {
+                clearInterval(paymentObj.local_timer_interval);
+            }
+            paymentObj.local_timer_interval = setInterval(function () {
+                if (paymentObj.isStopped) return;
+
+                var elapsed = Math.floor((Date.now() - paymentObj.last_sync_time) / 1000);
+                var rem = Math.max(0, paymentObj.remaining_seconds - elapsed);
+
+                if (self.currentViewingOrderId === paymentObj.order_id) {
+                    var timerEl = document.getElementById("qr-modal-timer");
+                    if (timerEl) {
+                        var mins = Math.floor(rem / 60);
+                        var secs = rem % 60;
+                        timerEl.innerText = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+                    }
+                }
+            }, 1000);
+
             var checkStatus = async function () {
                 if (paymentObj.isStopped) return;
                 try {
@@ -237,15 +262,9 @@
                             self.stopPollingForOrder(paymentObj);
                             self.onPaymentFailed(paymentObj, statusData);
                         } else if (statusData.status === 'waiting') {
-                            // Geri sayım sayacını modalda güncelle
-                            if (self.currentViewingOrderId === paymentObj.order_id) {
-                                var timerEl = document.getElementById("qr-modal-timer");
-                                if (timerEl) {
-                                    var rem = statusData.remaining_seconds || 0;
-                                    var mins = Math.floor(rem / 60);
-                                    var secs = rem % 60;
-                                    timerEl.innerText = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
-                                }
+                            if (typeof statusData.remaining_seconds !== 'undefined') {
+                                paymentObj.remaining_seconds = statusData.remaining_seconds;
+                                paymentObj.last_sync_time = Date.now();
                             }
                         }
                     }
@@ -269,6 +288,10 @@
                 if (payment.interval_id) {
                     clearInterval(payment.interval_id);
                     payment.interval_id = null;
+                }
+                if (payment.local_timer_interval) {
+                    clearInterval(payment.local_timer_interval);
+                    payment.local_timer_interval = null;
                 }
                 if (payment.timeout_id) {
                     clearTimeout(payment.timeout_id);
