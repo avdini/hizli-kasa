@@ -63,12 +63,16 @@
 
         fetchPrintData: async function(options) {
             var type = options.type || 'order';
-            var url = kasaAyar.rootApiUrl + 'hizli-kasa/v2/print/' + type;
+            var endpoint = type;
+            if (type === 'zreport' || type === 'z-report') {
+                endpoint = 'z-report';
+            }
+            var url = kasaAyar.rootApiUrl + 'hizli-kasa/v2/print/' + endpoint;
 
             if (type === 'order') {
                 url += '/' + (options.id || options.order_id || 0);
-            } else if (type === 'zreport') {
-                url += '?kasa_no=' + (options.kasa_no || '1') + '&depo_id=' + (options.depo_id || 0) + '&tarih=' + (options.tarih || '');
+            } else if (type === 'zreport' || type === 'z-report') {
+                url += '?kasa_no=' + encodeURIComponent(options.kasa_no || '1') + '&depo_id=' + (options.depo_id || 0) + '&tarih=' + encodeURIComponent(options.tarih || '');
             }
 
             var method = (type === 'barcode') ? 'POST' : 'GET';
