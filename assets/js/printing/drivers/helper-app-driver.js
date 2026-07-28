@@ -91,8 +91,10 @@
 
             targetEl.style.display = 'block';
             targetEl.style.position = 'fixed';
-            targetEl.style.left = '-9999px';
-            targetEl.style.top = '0';
+            targetEl.style.left = '0px';
+            targetEl.style.top = '0px';
+            targetEl.style.zIndex = '-9999';
+            targetEl.style.opacity = '0.99';
             targetEl.style.background = '#ffffff';
             if (options.type !== 'barcode') {
                 targetEl.style.width = '300px';
