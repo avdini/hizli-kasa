@@ -12,6 +12,7 @@ const RefundManager = (function () {
     let manualSearchController = null;
     let currentSearchPage = 1;
     let activeSearchParams = null;
+    let latestManualSearchResults = [];
 
     function init() {
         // İade sekmesi her yüklendiğinde (lazy load sonrası) elementleri tekrar yakala
@@ -298,6 +299,7 @@ const RefundManager = (function () {
             });
 
             const results = await response.json();
+            latestManualSearchResults = results;
             renderManualSearchResults(results);
 
             // Eğer tam eşleşme ise ve tek ürün geldiyse doğrudan ekle
@@ -357,7 +359,7 @@ const RefundManager = (function () {
             const isVariation = product.type === 'variation' || product.parent_id > 0;
             const btnHtml = isVariable 
                 ? `<span class="iade-uyari-text">Varyant Seçin</span>`
-                : `<button class="iade-ekle-btn" onclick="RefundManager.addManualToRefundCart(${JSON.stringify(product).replace(/"/g, '&quot;')})">İadeye Ekle</button>`;
+                : `<button class="iade-ekle-btn" onclick="RefundManager.addManualById(${product.id})">İadeye Ekle</button>`;
 
             const imageSrc = (product.images && product.images.length > 0)
                 ? product.images[0].src
@@ -392,6 +394,7 @@ const RefundManager = (function () {
     }
 
     function addManualToRefundCart(product) {
+        const isVariation = product.type === 'variation' || (product.parent_id && product.parent_id > 0);
         const itemId = 'manual_' + product.id;
         const cartItem = refundCart.find(i => i.item_id === itemId);
 
@@ -416,6 +419,13 @@ const RefundManager = (function () {
         }
 
         renderRefundCart();
+    }
+
+    function addManualById(productId) {
+        const product = latestManualSearchResults.find(p => p.id == productId);
+        if (product) {
+            addManualToRefundCart(product);
+        }
     }
 
     async function advancedSearchOrders() {
@@ -1363,9 +1373,11 @@ const RefundManager = (function () {
         selectOrder,
         closeSearchResults,
         addManualToRefundCart,
+        addManualById,
         editRefundCartItemPrice,
         sendToRegisterForExchange
     };
 })();
 
+window.RefundManager = RefundManager;
 RefundManager.init();
