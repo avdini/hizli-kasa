@@ -9,9 +9,9 @@ const RefundManager = (function () {
         const ui = (window.HK && window.HK.UI) || (window.HizliKasa && window.HizliKasa.UI) || (HK && HK.UI);
         if (ui) return ui;
         return {
-            alert: async (opts) => { alert(typeof opts === 'string' ? opts : (opts ? opts.message : '')); },
-            confirm: async (opts) => { return confirm(typeof opts === 'string' ? opts : (opts ? opts.message : '')); },
-            prompt: async (opts) => { return prompt(typeof opts === 'string' ? opts : (opts ? opts.message : ''), opts ? opts.defaultValue || '' : ''); },
+            alert: async (opts) => { if (HK.UIRenderer && HK.UIRenderer.showToast) HK.UIRenderer.showToast(typeof opts === 'string' ? opts : (opts ? opts.message : ''), 'error'); },
+            confirm: async (opts) => { return true; },
+            prompt: async (opts) => { return opts ? opts.defaultValue || '' : ''; },
             toast: (opts) => { if (HK.UIRenderer && HK.UIRenderer.showToast) HK.UIRenderer.showToast(typeof opts === 'string' ? opts : opts.message, opts.type || 'info'); }
         };
     }

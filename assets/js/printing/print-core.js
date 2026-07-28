@@ -52,10 +52,10 @@
                 return true;
             } catch (err) {
                 console.error('[PrintCore Error]', err);
-                if (HK.ModalManager && typeof HK.ModalManager.alert === 'function') {
-                    HK.ModalManager.alert('Yazdırma Hatası: ' + err.message);
-                } else {
-                    alert('Yazdırma Hatası: ' + err.message);
+                if (window.HK && window.HK.UI && typeof window.HK.UI.alert === 'function') {
+                    await window.HK.UI.alert({ title: '🖨️ Yazdırma Hatası', message: err.message, type: 'error' });
+                } else if (HK.UIRenderer && typeof HK.UIRenderer.showToast === 'function') {
+                    HK.UIRenderer.showToast('Yazdırma Hatası: ' + err.message, 'error', true);
                 }
                 throw err;
             }
