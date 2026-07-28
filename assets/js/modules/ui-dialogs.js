@@ -9,7 +9,8 @@
     'use strict';
 
     // Global HK Namespace
-    window.HK = window.HK || {};
+    window.HK = window.HK || window.HizliKasa || {};
+    window.HizliKasa = window.HK;
 
     var HKUI = {
         _activeResolver: null,
@@ -466,7 +467,10 @@
         }
     };
 
-    // Expose HK.UI
+    // Expose HK.UI and HizliKasa.UI
+    window.HK = window.HK || {};
+    window.HizliKasa = window.HizliKasa || window.HK;
     window.HK.UI = HKUI;
+    window.HizliKasa.UI = HKUI;
 
 })(window);
