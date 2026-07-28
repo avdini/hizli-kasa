@@ -1374,7 +1374,7 @@ const RefundManager = (function () {
 
         const newPrice = HK.CurrencyMask ? HK.CurrencyMask.parse(inputStr) : parseFloat(inputStr.replace(',', '.'));
         if (isNaN(newPrice) || newPrice < 0) {
-            HK.UI.alert('Geçersiz birim fiyat.');
+            getUI().alert('Geçersiz birim fiyat.');
             return;
         }
 

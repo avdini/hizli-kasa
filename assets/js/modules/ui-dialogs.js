@@ -105,10 +105,10 @@
          * @param {Object|String} options
          * @returns {Promise<void>}
          */
-        alert: function(options) {
+        alert: function(options, titleParam) {
             var self = this;
             if (typeof options === 'string') {
-                options = { message: options };
+                options = { message: options, title: titleParam || '📌 Bilgilendirme' };
             }
             options = options || {};
             var title = options.title || '📌 Bilgilendirme';
@@ -233,10 +233,10 @@
          * @param {Object|String} options
          * @returns {Promise<String|null>}
          */
-        prompt: function(options) {
+        prompt: function(options, defaultValueParam) {
             var self = this;
             if (typeof options === 'string') {
-                options = { message: options };
+                options = { message: options, defaultValue: defaultValueParam || '' };
             }
             options = options || {};
             var title = options.title || '✏️ Metin Girişi';
