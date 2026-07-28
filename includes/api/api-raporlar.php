@@ -586,6 +586,9 @@ function hizli_kasa_get_reports_data($request, $report_type = 'pos_orders')
 
     // Rapor Türüne Göre Filtreleme
     if ($report_type === 'pos_orders' || $report_type === 'pos_refunds') {
+        if ($report_type === 'pos_refunds') {
+            $args['status'] = ['processing', 'completed', 'on-hold', 'cancelled'];
+        }
         // Sadece POS Siparişlerini Getir
         $meta_query[] = [
             'key' => '_hizli_kasa_kasa_no',

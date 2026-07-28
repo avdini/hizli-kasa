@@ -466,3 +466,24 @@ if (!defined('ABSPATH')) exit;
     </div>
 </div>
 
+<!-- İade İptal Modalı -->
+<div id="iade-iptal-modal" class="modal-cerceve" style="display:none;">
+    <div class="modal-icerik modal-icerik-sm">
+        <h3 style="color:#ef4444; display:flex; align-items:center; gap:8px;">
+            <span>🚫</span> <span>İade İptali</span>
+        </h3>
+        <p style="font-size:13px; color:#64748b; margin-bottom:12px;">
+            <strong id="iade-iptal-order-title">İade #--</strong> işlemini iptal etmek üzeresiniz. Stoklar depoya geri düşülecek ve kasa bakiyesi düzelecektir.
+        </p>
+        <div class="masraf-form-group">
+            <label style="font-weight:bold; font-size:13px; color:#334155;">İptal Nedeni / Açıklaması <span style="color:#ef4444;">*</span></label>
+            <textarea id="iade-iptal-neden-input" class="hk-input" rows="3" placeholder="Örn: Hatalı ürün iadesi seçildi, müşteri iadeden vazgeçti..."></textarea>
+            <small id="iade-iptal-hata-mesaji" style="color:#ef4444; display:none; margin-top:4px; font-weight:bold;"></small>
+        </div>
+        <div class="modal-butonlar" style="margin-top:16px;">
+            <button id="iade-iptal-vazgec" class="modal-btn-cancel">Vazgeç</button>
+            <button id="iade-iptal-onayla" class="hk-btn-primary" style="background:#ef4444; border-color:#ef4444; padding:12px;">İadeyi İptal Et</button>
+        </div>
+    </div>
+</div>
+

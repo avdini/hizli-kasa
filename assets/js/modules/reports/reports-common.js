@@ -342,6 +342,16 @@
                     
                     if (type === 'orders') {
                         actionButtons += '<button class="btn-reprint" data-id="' + this.escapeHtml(order.id || '') + '">🧾 Fiş Yazdır</button>';
+                    } else if (type === 'refunds') {
+                        var isCancelled = (order.status === 'İptal Edildi' || order.status === 'Cancelled' || (order.meta && order.meta._hizli_kasa_refund_cancelled === 'yes'));
+                        if (isCancelled) {
+                            var cancelReason = (order.meta && order.meta._hizli_kasa_refund_cancel_reason) ? order.meta._hizli_kasa_refund_cancel_reason : '';
+                            var cancelledBy = (order.meta && order.meta._hizli_kasa_refund_cancelled_by) ? order.meta._hizli_kasa_refund_cancelled_by : '';
+                            var tooltip = 'İptal Eden: ' + this.escapeHtml(cancelledBy) + (cancelReason ? ' | Nedeni: ' + this.escapeHtml(cancelReason) : '');
+                            actionButtons += '<span class="badge-cancelled-refund" style="background:#fee2e2; color:#991b1b; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:600; display:inline-block;" title="' + tooltip + '">❌ İptal Edildi</span>';
+                        } else {
+                            actionButtons += '<button class="btn-cancel-refund" data-id="' + this.escapeHtml(order.id || '') + '" style="background:#ef4444; color:#fff; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:600; margin-left:4px;">🚫 İadeyi İptal Et</button>';
+                        }
                     }
                     
                     tr.innerHTML = `
@@ -363,6 +373,15 @@
                 detailTr.id = `meta-row-${order.id}`;
                 detailTr.innerHTML = `<td colspan="${colCount}"><div class="meta-details-container">${metaDetails || 'Detay bilgisi yok.'}</div></td>`;
                 tbody.appendChild(detailTr);
+            });
+
+            tbody.querySelectorAll(".btn-cancel-refund").forEach(btn => {
+                btn.addEventListener("click", function() {
+                    var id = this.dataset.id;
+                    if (HK.ReportRefunds && typeof HK.ReportRefunds.openCancelModal === 'function') {
+                        HK.ReportRefunds.openCancelModal(id);
+                    }
+                });
             });
 
             tbody.querySelectorAll(".btn-detail").forEach(btn => {
