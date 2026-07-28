@@ -7,40 +7,38 @@ $items       = $data['items'] ?? [];
 $totals      = $data['totals'] ?? [];
 $audit_trail = $data['audit_trail'] ?? [];
 ?>
-<div class="hk-unified-print-container receipt-modified" style="color:#000; background:#fff; width:100%; max-width:300px; margin:0 auto; padding:4px 0; box-sizing:border-box; font-family: Arial, Helvetica, sans-serif; font-size:12px; line-height:1.2; box-shadow:none !important; border:none !important;">
+<div class="hk-unified-print-container receipt-modified" style="color:#000; background:#fff; width:100%; max-width:300px; margin:0 auto; padding:4px 0; box-sizing:border-box; font-family:'Courier New', Courier, monospace; font-size:12px; line-height:1.2; box-shadow:none !important; border:none !important;">
     <!-- Store Header -->
     <div style="text-align:center; margin-bottom:8px; border-bottom:1px solid #000; padding-bottom:8px;">
-        <h2 style="margin:0; font-size:18px; font-weight:bold; color:#000;"><?php echo esc_html($header['store_name'] ?? get_bloginfo('name')); ?></h2>
-        <p style="margin:4px 0 2px 0; font-size:12px; font-weight:bold; color:#000;">İŞLEM GÖRMÜŞ SATIŞ FİŞİ</p>
-        <p style="margin:0; font-size:11px; color:#000;"><?php echo esc_html($header['date'] ?? ''); ?></p>
-        <p style="margin:4px 0 0 0; font-weight:bold; font-size:14px; color:#000;">SİPARİŞ NO: #<?php echo esc_html($header['order_number'] ?? ''); ?></p>
+        <h2 style="margin:0; font-size:18px; font-weight:bold; color:#000; font-family:'Courier New', Courier, monospace;"><?php echo esc_html($header['store_name'] ?? get_bloginfo('name')); ?></h2>
+        <p style="margin:4px 0 2px 0; font-size:12px; font-weight:bold; color:#000; font-family:'Courier New', Courier, monospace;">İŞLEM GÖRMÜŞ SATIŞ FİŞİ</p>
+        <p style="margin:0; font-size:11px; color:#000; font-family:'Courier New', Courier, monospace;"><?php echo esc_html($header['date'] ?? ''); ?></p>
+        <p style="margin:4px 0 0 0; font-weight:bold; font-size:14px; color:#000; font-family:'Courier New', Courier, monospace;">SİPARİŞ NO: #<?php echo esc_html($header['order_number'] ?? ''); ?></p>
         <?php if (!empty($header['cashier'])): ?>
-            <p style="margin:2px 0 0 0; font-size:10px; color:#000;">Kasiyer: <?php echo esc_html($header['cashier']); ?> | <?php echo esc_html($header['register_no'] ?? 'Kasa 1'); ?></p>
+            <p style="margin:2px 0 0 0; font-size:10px; color:#000; font-family:'Courier New', Courier, monospace;">Kasiyer: <?php echo esc_html($header['cashier']); ?> | <?php echo esc_html($header['register_no'] ?? 'Kasa 1'); ?></p>
         <?php endif; ?>
     </div>
 
-    <!-- Items Table (Current & Refunded Breakdown) -->
-    <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:8px;">
+    <!-- Items Table -->
+    <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:8px; border:none; font-family:'Courier New', Courier, monospace;">
         <thead>
             <tr style="border-bottom:1px solid #000;">
-                <th style="text-align:left; padding:4px 0; color:#000;">Ürün</th>
-                <th style="text-align:right; padding:4px 0; color:#000;">Toplam</th>
+                <th style="text-align:left; padding:4px 0; color:#000; font-family:'Courier New', Courier, monospace;">Ürün</th>
+                <th style="text-align:right; padding:4px 0; color:#000; font-family:'Courier New', Courier, monospace;">Toplam</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($items as $item): ?>
-                <tr style="border-bottom:1px dashed #ccc;">
-                    <td style="padding:4px 0; vertical-align:top; color:#000; line-height:1.2;">
-                        <div style="font-weight:bold; font-size:12px; text-transform:uppercase; color:#000;"><?php echo esc_html($item['name']); ?></div>
-                        <div style="font-size:10px; color:#000;">
-                            Net: <?php echo esc_html($item['net_qty']); ?> / Toplam: <?php echo esc_html($item['qty']); ?> Adet
-                        </div>
+                <tr>
+                    <td class="fis-item-td-left" style="padding:2px 0; vertical-align:top; color:#000; line-height:1.1;">
+                        <div class="fis-item-name" style="font-weight:bold; font-size:12px; text-transform:uppercase; color:#000; font-family:'Courier New', Courier, monospace;"><?php echo esc_html($item['name']); ?></div>
+                        <div class="fis-item-sku-qty" style="font-size:10px; color:#000; font-family:'Courier New', Courier, monospace;">Net: <?php echo esc_html($item['net_qty']); ?> / Toplam: <?php echo esc_html($item['qty']); ?> Adet</div>
                         <?php if ($item['refunded_qty'] > 0): ?>
-                            <div style="font-size:9px; font-weight:bold; color:#000;">(<?php echo esc_html($item['refunded_qty']); ?> Adet İade Edildi)</div>
+                            <div style="font-size:9px; font-weight:bold; color:#000; font-family:'Courier New', Courier, monospace;">(<?php echo esc_html($item['refunded_qty']); ?> Adet İade Edildi)</div>
                         <?php endif; ?>
                     </td>
-                    <td style="text-align:right; padding:4px 0; vertical-align:middle; white-space:nowrap; font-weight:bold; font-size:13px; color:#000;">
-                        <?php echo hk_format_price($item['net_total']); ?>
+                    <td class="fis-item-td-right" style="text-align:right; padding:2px 0 2px 10px; vertical-align:middle; white-space:nowrap; font-weight:bold; font-size:13px; color:#000;">
+                        <div class="fis-item-price" style="font-family:'Courier New', Courier, monospace;"><?php echo hk_format_price($item['net_total']); ?></div>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -48,7 +46,7 @@ $audit_trail = $data['audit_trail'] ?? [];
     </table>
 
     <!-- Financial Totals -->
-    <div style="border-top:1px solid #000; padding-top:6px; font-size:12px; margin-bottom:8px;">
+    <div style="border-top:1px solid #000; padding-top:6px; font-size:12px; margin-bottom:8px; font-family:'Courier New', Courier, monospace;">
         <div style="display:flex; justify-content:space-between; margin-bottom:2px; color:#000;">
             <span>İlk Sipariş Toplamı:</span>
             <span><?php echo hk_format_price($totals['order_total'] ?? 0); ?></span>
@@ -71,9 +69,9 @@ $audit_trail = $data['audit_trail'] ?? [];
         </div>
     </div>
 
-    <!-- Audit Trail History -->
+    <!-- Audit Trail -->
     <?php if (!empty($audit_trail)): ?>
-        <div style="border-top:1px dashed #000; padding-top:6px; margin-bottom:8px;">
+        <div style="border-top:1px dashed #000; padding-top:6px; margin-bottom:8px; font-family:'Courier New', Courier, monospace;">
             <div style="font-weight:bold; font-size:10px; text-transform:uppercase; margin-bottom:3px; color:#000;">
                 İşlem Geçmişi
             </div>
@@ -95,7 +93,7 @@ $audit_trail = $data['audit_trail'] ?? [];
         </div>
     <?php endif; ?>
 
-    <div style="text-align:center; margin-top:10px; font-size:10px; border-top:1px solid #000; padding-top:8px; color:#000;">
+    <div style="text-align:center; margin-top:10px; font-size:10px; border-top:1px solid #000; padding-top:8px; color:#000; font-family:'Courier New', Courier, monospace;">
         Bu fiş siparişin güncel durumunu gösterir.
     </div>
 </div>

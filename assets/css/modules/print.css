@@ -2,31 +2,36 @@
    YAZDIRMA STİLLERİ
    ============================================= */
 
-#fis-sablon, #gun-sonu-sablon, #report-fis-sablon, #fis-coupon-sablon, #iade-paket-fis-sablon {
-    display: none;
-    font-family: 'Courier New', Courier, monospace;
+#fis-sablon, #gun-sonu-sablon, #report-fis-sablon, #fis-coupon-sablon, #iade-paket-fis-sablon, #hk-unified-print-container, .hk-unified-print-container {
+    font-family: 'Courier New', Courier, monospace !important;
     width: 80mm;
-    padding: 3mm;
+    box-sizing: border-box;
     background: white;
     color: #000 !important;
-}
-
-#fis-sablon *, #gun-sonu-sablon *, #report-fis-sablon *, #fis-coupon-sablon *, #iade-paket-fis-sablon * {
-    color: #000 !important;
-    border-color: #000 !important;
     box-shadow: none !important;
-}
-
-#fis-sablon table, #gun-sonu-sablon table, #report-fis-sablon table, #fis-coupon-sablon table, #iade-paket-fis-sablon table {
-    border-collapse: collapse;
-    width: 100%;
     border: none !important;
 }
 
+#fis-sablon *, #gun-sonu-sablon *, #report-fis-sablon *, #fis-coupon-sablon *, #iade-paket-fis-sablon *, #hk-unified-print-container *, .hk-unified-print-container * {
+    color: #000 !important;
+    border-color: #000 !important;
+    box-shadow: none !important;
+    font-family: 'Courier New', Courier, monospace !important;
+}
+
+#fis-sablon table, #gun-sonu-sablon table, #report-fis-sablon table, #fis-coupon-sablon table, #iade-paket-fis-sablon table, #hk-unified-print-container table, .hk-unified-print-container table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 #fis-sablon td, #fis-sablon th, #gun-sonu-sablon td, #gun-sonu-sablon th, #report-fis-sablon td, #report-fis-sablon th, #fis-coupon-sablon td, #fis-coupon-sablon th, #iade-paket-fis-sablon td, #iade-paket-fis-sablon th,
-#fis-sablon tr, #gun-sonu-sablon tr, #fis-coupon-sablon tr, #iade-paket-fis-sablon tr,
-#fis-sablon thead, #gun-sonu-sablon thead, #fis-coupon-sablon thead, #iade-paket-fis-sablon thead,
-#fis-sablon tbody, #gun-sonu-sablon tbody, #report-fis-sablon tr, #report-fis-sablon thead, #report-fis-sablon tbody, #fis-coupon-sablon tbody, #iade-paket-fis-sablon tbody {
+#hk-unified-print-container td, #hk-unified-print-container th, .hk-unified-print-container td, .hk-unified-print-container th,
+#fis-sablon tr, #gun-sonu-sablon tr, #fis-coupon-sablon tr, #iade-paket-fis-sablon tr, #hk-unified-print-container tr, .hk-unified-print-container tr,
+#fis-sablon thead, #gun-sonu-sablon thead, #fis-coupon-sablon thead, #iade-paket-fis-sablon thead, #hk-unified-print-container thead, .hk-unified-print-container thead,
+#fis-sablon tbody, #gun-sonu-sablon tbody, #report-fis-sablon tr, #report-fis-sablon thead, #report-fis-sablon tbody, #fis-coupon-sablon tbody, #iade-paket-fis-sablon tbody, #hk-unified-print-container tbody, .hk-unified-print-container tbody {
     border: none !important;
     padding: 2px 0;
 }
