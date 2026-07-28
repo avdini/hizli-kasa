@@ -78,11 +78,13 @@
             if (type === 'order') {
                 url += '/' + (options.id || options.order_id || 0);
             } else if (type === 'zreport' || type === 'z-report') {
+                var formatVal = options.format || (options.include_details === true ? 'detayli' : (options.include_details === 'basit' ? 'basit' : 'ozet'));
                 url += '?kasa_no=' + encodeURIComponent(options.kasa_no || '1') +
                        '&depo_id=' + (options.depo_id || 0) +
                        '&tarih=' + encodeURIComponent(options.tarih || '') +
                        '&include_qr=' + (options.include_qr ? '1' : '0') +
-                       '&include_details=' + (options.include_details === false ? '0' : '1');
+                       '&format=' + encodeURIComponent(formatVal) +
+                       '&include_details=' + encodeURIComponent(formatVal);
             }
 
             var method = (type === 'barcode') ? 'POST' : 'GET';

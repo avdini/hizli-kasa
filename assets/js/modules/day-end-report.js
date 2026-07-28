@@ -562,10 +562,12 @@
 
         /**
          * Fiş şablonunu yazdır
-         * @param {Boolean} includeDetails Detaylı rapor mu?
+         * @param {Boolean|String} includeDetails Rapor modu (true: detayli, false: ozet)
          */
         _yazdir: function (includeDetails) {
             if (!this.data) return;
+
+            var formatMode = (includeDetails === true || includeDetails === 'detayli') ? 'detayli' : 'ozet';
 
             if (HK.PrintCore && typeof HK.PrintCore.print === 'function') {
                 HK.PrintCore.print({
@@ -575,7 +577,8 @@
                     depo_name: HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '',
                     tarih: this.data.tarih || '',
                     include_qr: !!(this.els.gunSonuIncludeQR && this.els.gunSonuIncludeQR.checked),
-                    include_details: includeDetails
+                    format: formatMode,
+                    include_details: formatMode
                 });
             }
         },
@@ -594,7 +597,8 @@
                     depo_name: HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '',
                     tarih: this.data.tarih || '',
                     include_qr: !!(this.els.gunSonuIncludeQR && this.els.gunSonuIncludeQR.checked),
-                    include_details: false
+                    format: 'basit',
+                    include_details: 'basit'
                 });
             }
         },

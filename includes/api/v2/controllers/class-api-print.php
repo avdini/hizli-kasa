@@ -69,8 +69,8 @@ class Hizli_Kasa_API_Print extends Hizli_Kasa_API_Controller_Base {
         $depo_id = intval($request->get_param('depo_id') ?: 0);
         $depo_name = sanitize_text_field($request->get_param('depo_name') ?: '');
         $tarih   = sanitize_text_field($request->get_param('tarih') ?: '');
-        $param_details = $request->get_param('include_details');
-        $include_details = ($param_details !== null) ? filter_var($param_details, FILTER_VALIDATE_BOOLEAN) : true;
+        $include_qr = filter_var($request->get_param('include_qr'), FILTER_VALIDATE_BOOLEAN);
+        $format = sanitize_text_field($request->get_param('format') ?: $request->get_param('include_details') ?: 'ozet');
 
         if (!class_exists('Hizli_Kasa_Print_Engine')) {
             require_once HIZLI_KASA_PATH . 'includes/printing/class-print-engine.php';
@@ -83,7 +83,8 @@ class Hizli_Kasa_API_Print extends Hizli_Kasa_API_Controller_Base {
                 'depo_name' => $depo_name,
                 'tarih'   => $tarih,
                 'include_qr' => $include_qr,
-                'include_details' => $include_details
+                'format'  => $format,
+                'include_details' => $format
             ]);
             return Hizli_Kasa_API_Response::success($result);
         } catch (Exception $e) {

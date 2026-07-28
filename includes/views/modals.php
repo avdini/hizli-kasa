@@ -194,11 +194,11 @@ if (!defined('ABSPATH')) exit;
         <div id="gun-sonu-icerik" style="display:none;"></div>
 
         <!-- Butonlar -->
-        <div class="modal-butonlar" style="margin-top:20px; flex-shrink:0;">
+        <div class="modal-butonlar" style="margin-top:20px; flex-shrink:0; display:flex; gap:8px; justify-content:flex-end; align-items:center;">
             <button id="gun-sonu-kapat" class="modal-btn-cancel">Kapat</button>
-            <button id="gun-sonu-yazdir-basit" class="hk-btn-primary gun-sonu-btn-yazdir" style="display:none;">🖨️ Basit Yazdır</button>
-            <button id="gun-sonu-yazdir-ozet" class="hk-btn-primary" style="display:none; padding:12px; width:auto; min-width:150px;">🖨️ Yazdır</button>
-            <button id="gun-sonu-yazdir" style="background:var(--hk-border); color:var(--hk-text-main); display:none; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold;">🖨️ Detaylı Yazdır</button>
+            <button id="gun-sonu-yazdir-basit" class="hk-btn-secondary" style="display:none; padding:10px 14px; border-radius:6px; font-weight:600; cursor:pointer;">🖨️ Basit Yazdır</button>
+            <button id="gun-sonu-yazdir-ozet" class="hk-btn-primary" style="display:none; padding:10px 14px; border-radius:6px; font-weight:bold; cursor:pointer;">🖨️ Yazdır</button>
+            <button id="gun-sonu-yazdir" style="background:var(--hk-border, #e2e8f0); color:var(--hk-text-main, #1e293b); display:none; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; font-weight:bold;">🖨️ Detaylı Yazdır</button>
         </div>
     </div>
 </div>
