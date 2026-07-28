@@ -217,39 +217,33 @@
          * @param {Object} couponData Kupon bilgileri (code, amount, phone, date)
          */
         printCouponReceipt: function(couponData) {
-            var els = {
-                tarih: document.getElementById('fis-coupon-tarih'),
-                kodu: document.getElementById('fis-coupon-kodu'),
-                tutar: document.getElementById('fis-coupon-tutar'),
-                telefon: document.getElementById('fis-coupon-telefon')
-            };
+            couponData = couponData || {};
+            var storeName = (window.kasaAyar && window.kasaAyar.store_name) ? window.kasaAyar.store_name : 'HIZLI KASA';
+            var dateStr = couponData.date || new Date().toLocaleString('tr-TR');
+            var codeStr = couponData.code || '';
+            var amountStr = parseFloat(couponData.amount || 0).toFixed(2) + " TL";
+            var phoneStr = couponData.phone || '';
 
-            if (!els.tarih || !els.kodu) return;
+            var couponHtml = '<div class="hk-unified-print-container receipt-coupon" style="color:#000; background:#fff; width:100%; max-width:300px; margin:0 auto; padding:10px 0; text-align:center; font-family:\'Courier New\', Courier, monospace; font-size:12px; line-height:1.2;">' +
+                '<h2 style="margin:0; font-size:16px; font-weight:bold; font-family:\'Courier New\', Courier, monospace;">' + storeName + '</h2>' +
+                '<p style="margin:4px 0; font-size:13px; font-weight:bold; font-family:\'Courier New\', Courier, monospace;">İADE KUPONU</p>' +
+                '<p style="margin:0; font-size:10px;">' + dateStr + '</p>' +
+                '<div style="margin:12px 0; padding:8px; border:1px dashed #000;">' +
+                    '<div style="font-size:10px;">KUPON TUTARI</div>' +
+                    '<div style="font-size:20px; font-weight:bold; margin-top:2px;">' + amountStr + '</div>' +
+                '</div>' +
+                '<img class="hk-print-barcode-img" data-barcode="' + codeStr + '" style="width:100%; max-width:220px; height:auto; margin:0 auto; display:block;" />' +
+                '<p style="margin:4px 0 0 0; font-weight:bold; font-size:14px; font-family:\'Courier New\', Courier, monospace;">' + codeStr + '</p>' +
+                (phoneStr ? '<p style="margin:2px 0 0 0; font-size:10px;">Müşteri Tel: ' + phoneStr + '</p>' : '') +
+                '<div style="margin-top:12px; font-size:9px; border-top:1px solid #000; padding-top:6px;">Bu kupon mağazamızda geçerlidir. Lütfen saklayınız.</div>' +
+            '</div>';
 
-            els.tarih.innerText = couponData.date || new Date().toLocaleString('tr-TR');
-            els.kodu.innerText = couponData.code;
-            els.tutar.innerText = parseFloat(couponData.amount).toFixed(2) + " TL";
-            els.telefon.innerText = couponData.phone;
-
-            // Barkod Üret (CODE128)
-            if (typeof JsBarcode === "function") {
-                try {
-                    JsBarcode("#fis-coupon-barkod", couponData.code, {
-                        format: "CODE128",
-                        width: 2,
-                        height: 50,
-                        displayValue: false,
-                        margin: 0,
-                        background: "#ffffff",
-                        lineColor: "#000000"
-                    });
-                } catch (e) {
-                    console.error("Kupon barkodu oluşturulamadı:", e);
-                }
+            if (HK.PrintCore && typeof HK.PrintCore.createSandbox === 'function') {
+                var sandbox = HK.PrintCore.createSandbox('coupon', couponHtml);
+                HK.PrintCore.print({ type: 'order', element: sandbox });
+            } else {
+                HK.PrintManager.print('coupon');
             }
-
-            // Doğrudan kupon yazdırma modunu tetikle
-            HK.PrintManager.print('coupon');
         },
 
         currentOrderId: 0,

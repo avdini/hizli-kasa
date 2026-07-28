@@ -577,21 +577,7 @@
                     include_qr: !!(this.els.gunSonuIncludeQR && this.els.gunSonuIncludeQR.checked),
                     include_details: includeDetails
                 });
-                return;
             }
-
-            this._fisSablonuDoldur(this.data, includeDetails);
-            var sablon = this.els.gunSonuSablon;
-            if (!sablon) return;
-
-            // Termal fiş şablonunu göster, yazdır, gizle
-            // Normal fiş şablonunu gizle (çakışma önleme)
-            var normalFis = document.getElementById("fis-sablon");
-            if (normalFis) normalFis.style.display = "none";
-
-            sablon.style.display = "block";
-            HK.PrintManager.print('report');
-            sablon.style.display = "none";
         },
 
         /**
@@ -610,19 +596,7 @@
                     include_qr: !!(this.els.gunSonuIncludeQR && this.els.gunSonuIncludeQR.checked),
                     include_details: false
                 });
-                return;
             }
-
-            this._fisSablonuDoldurBasit(this.data);
-            var sablon = this.els.gunSonuSablon;
-            if (!sablon) return;
-
-            var normalFis = document.getElementById("fis-sablon");
-            if (normalFis) normalFis.style.display = "none";
-
-            sablon.style.display = "block";
-            HK.PrintManager.print('report');
-            sablon.style.display = "none";
         },
 
         /**

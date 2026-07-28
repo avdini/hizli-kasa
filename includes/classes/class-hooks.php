@@ -125,7 +125,7 @@ class Hizli_Kasa_Hooks {
                     font-family: 'Courier New', Courier, monospace;
                     color: #000;
                 }
-                #fis-coupon-sablon {
+                #hk-unified-print-container, .hk-unified-print-container {
                     width: 100%;
                     max-width: 80mm;
                     margin: 0 auto;
@@ -145,7 +145,7 @@ class Hizli_Kasa_Hooks {
             <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
         </head>
         <body>
-            <div id="fis-coupon-sablon">
+            <div id="hk-unified-print-container" class="hk-unified-print-container">
                 <?php include HIZLI_KASA_PATH . 'includes/views/receipt-coupon-template.php'; ?>
             </div>
 

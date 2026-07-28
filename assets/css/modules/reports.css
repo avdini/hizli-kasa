@@ -90,15 +90,7 @@
     font-size: 15px !important;
 }
 
-/* Gün Sonu Fiş Şablonu */
-#gun-sonu-sablon {
-    display: none;
-    font-family: 'Courier New', Courier, monospace;
-    width: 80mm;
-    padding: 5mm;
-    background: white;
-    color: black;
-}
+
 
 /* Detaylı Raporlar Sipariş Kalemleri */
 .order-item-list {

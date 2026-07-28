@@ -29,19 +29,6 @@
             try {
                 if (HK.PrintCore && typeof HK.PrintCore.print === 'function') {
                     await HK.PrintCore.print({ type: 'order', id: orderId });
-                } else {
-                    var url = kasaAyar.rootApiUrl + 'hizli-kasa/v1/reports/order-receipt/' + orderId;
-                    var response = await fetch(url, {
-                        headers: { 'X-WP-Nonce': kasaAyar.nonce }
-                    });
-
-                    var payload = await response.json();
-                    if (!response.ok) {
-                        throw new Error(payload && payload.message ? payload.message : 'Fiş verisi alınamadı.');
-                    }
-
-                    this.fillTemplate(payload);
-                    HK.PrintManager.print('report-receipt');
                 }
 
             } catch (err) {

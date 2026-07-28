@@ -931,62 +931,55 @@ const MalkabulManager = (function () {
     function printIadeFis(iade) {
         if (!iade) return;
 
-        document.getElementById('iade-paket-no').innerText = iade.iade_no;
-        document.getElementById('iade-paket-tarih').innerText = iade.created_at ? new Date(iade.created_at.replace(' ', 'T')).toLocaleString('tr-TR') : new Date().toLocaleString('tr-TR');
-        document.getElementById('iade-paket-supplier').innerText = iade.supplier_name;
-        document.getElementById('iade-paket-cesit').innerText = iade.toplam_cesit;
-        document.getElementById('iade-paket-adet').innerText = parseFloat(iade.toplam_adet);
-        
-        const sebepEl = document.getElementById('iade-paket-sebep');
-        const sebepRow = document.getElementById('iade-paket-sebep-satiri');
-        if (iade.iade_sebep) {
-            sebepEl.innerText = iade.iade_sebep;
-            sebepRow.style.display = 'block';
-        } else {
-            sebepRow.style.display = 'none';
-        }
+        var storeName = (window.kasaAyar && window.kasaAyar.store_name) ? window.kasaAyar.store_name : 'HIZLI KASA';
+        var tarihStr = iade.created_at ? new Date(iade.created_at.replace(' ', 'T')).toLocaleString('tr-TR') : new Date().toLocaleString('tr-TR');
 
-        const notEl = document.getElementById('iade-paket-not');
-        const notRow = document.getElementById('iade-paket-not-satiri');
-        if (iade.not) {
-            notEl.innerText = iade.not;
-            notRow.style.display = 'block';
-        } else {
-            notRow.style.display = 'none';
-        }
+        var rowsHtml = (iade.kalemler || []).map(function(item) {
+            return '<tr style="border-bottom:1px dashed #ccc;">' +
+                '<td style="padding:4px 0; line-height: 1.2;">' +
+                    '<strong>' + (item.urun_adi || '') + '</strong><br>' +
+                    '<span style="font-size: 9px; color: #444;">' + (item.sku || '') + '</span>' +
+                '</td>' +
+                '<td style="text-align:right; padding:4px 0; font-weight: bold; vertical-align: middle;">x ' + parseFloat(item.adet || 0) + '</td>' +
+            '</tr>';
+        }).join('');
 
-        const tbody = document.getElementById('iade-paket-urunler-body');
-        tbody.innerHTML = iade.kalemler.map(item => `
-            <tr style="border-bottom:1px dashed #ccc;">
-                <td style="padding:4px 0; line-height: 1.2;">
-                    <strong>${item.urun_adi}</strong><br>
-                    <span style="font-size: 9px; color: #444;">${item.sku}</span>
-                </td>
-                <td style="text-align:right; padding:4px 0; font-weight: bold; vertical-align: middle;">x ${parseFloat(item.adet)}</td>
-            </tr>
-        `).join('');
+        var html = '<div class="hk-unified-print-container receipt-supplier-return" style="color:#000; background:#fff; width:100%; max-width:300px; margin:0 auto; padding:10px; box-sizing:border-box; font-family:\'Courier New\', Courier, monospace; font-size:11px; line-height:1.3;">' +
+            '<div style="text-align:center; margin-bottom:10px; border-bottom:1px dashed #000; padding-bottom:10px;">' +
+                '<h2 style="margin:0; font-size:16px; text-transform: uppercase; font-weight: bold; font-family:\'Courier New\', Courier, monospace;">' + storeName + '</h2>' +
+                '<p style="margin:4px 0 0; font-size:12px; font-weight: bold; letter-spacing: 1px; font-family:\'Courier New\', Courier, monospace;">TEDARİKÇİ İADE FİŞİ</p>' +
+            '</div>' +
+            '<div style="font-size:11px; margin-bottom:10px; line-height: 1.3;">' +
+                '<div><strong>İADE NO:</strong> ' + (iade.iade_no || '') + '</div>' +
+                '<div><strong>TARİH:</strong> ' + tarihStr + '</div>' +
+                '<div><strong>TEDARİKÇİ:</strong> ' + (iade.supplier_name || '') + '</div>' +
+            '</div>' +
+            '<table style="width:100%; border-collapse:collapse; font-size:11px; margin-bottom:10px; font-family:\'Courier New\', Courier, monospace;">' +
+                '<thead>' +
+                    '<tr style="border-bottom:1px dashed #000; font-weight: bold;">' +
+                        '<th style="text-align:left; padding:4px 0;">Ürün</th>' +
+                        '<th style="text-align:right; padding:4px 0; width: 50px;">Adet</th>' +
+                    '</tr>' +
+                '</thead>' +
+                '<tbody>' + rowsHtml + '</tbody>' +
+            '</table>' +
+            '<div style="border-top:1px dashed #000; padding-top:6px; font-size:11px; line-height: 1.3; margin-bottom: 10px;">' +
+                '<div style="display:flex; justify-content:space-between; font-weight:bold;"><span>TOPLAM ÇEŞİT:</span><span>' + (iade.toplam_cesit || 0) + '</span></div>' +
+                '<div style="display:flex; justify-content:space-between; font-weight:bold;"><span>TOPLAM ADET:</span><span>' + parseFloat(iade.toplam_adet || 0) + '</span></div>' +
+            '</div>' +
+            (iade.iade_sebep ? '<div style="font-size:10px; margin-bottom:4px;"><strong>SEBEP:</strong> ' + iade.iade_sebep + '</div>' : '') +
+            (iade.not ? '<div style="font-size:10px; margin-bottom:4px;"><strong>NOT:</strong> ' + iade.not + '</div>' : '') +
+            '<div style="text-align:center; margin-top:8px;">' +
+                '<img class="hk-print-barcode-img" data-barcode="' + (iade.iade_no || '') + '" style="width:100%; max-width:200px; height:auto; margin:0 auto; display:block;" />' +
+                '<span style="font-size: 9px; display: block; margin-top: 2px;">' + (iade.iade_no || '') + '</span>' +
+            '</div>' +
+        '</div>';
 
-        if (typeof JsBarcode === "function") {
-            try {
-                JsBarcode("#iade-paket-barkod", iade.iade_no, {
-                    format: "CODE128",
-                    width: 2,
-                    height: 40,
-                    displayValue: false,
-                    margin: 0,
-                    background: "#ffffff",
-                    lineColor: "#000000"
-                });
-                document.getElementById('iade-paket-barkod-text').innerText = iade.iade_no;
-            } catch (e) {
-                console.error("Barkod üretilemedi:", e);
-            }
-        }
-
-        if (window.HizliKasa && window.HizliKasa.PrintManager) {
+        if (window.HizliKasa && window.HizliKasa.PrintCore && typeof window.HizliKasa.PrintCore.createSandbox === 'function') {
+            var sandbox = window.HizliKasa.PrintCore.createSandbox('supplier-return', html);
+            window.HizliKasa.PrintCore.print({ type: 'order', element: sandbox });
+        } else if (window.HizliKasa && window.HizliKasa.PrintManager) {
             window.HizliKasa.PrintManager.print('iade-paket-fis');
-        } else {
-            console.error("PrintManager bulunamadı!");
         }
     }
 
