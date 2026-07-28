@@ -33,7 +33,7 @@
          * Yazdırma işlemini başlatır
          * @param {'receipt'|'barcode'|'report'|'report-receipt'|'coupon'} mode - Yazdırma modu
          */
-        print: function(mode) {
+        print: function(mode, options) {
             if (HK.PrintCore && typeof HK.PrintCore.print === 'function') {
                 var typeMap = {
                     'receipt': 'order',
@@ -44,7 +44,16 @@
                     'iade-paket-fis': 'order'
                 };
                 var type = typeMap[mode] || 'order';
-                return HK.PrintCore.print({ type: type });
+                var printOpts = { type: type };
+                if (typeof options === 'object' && options !== null) {
+                    Object.assign(printOpts, options);
+                } else if (typeof options === 'number' || typeof options === 'string') {
+                    printOpts.id = options;
+                }
+                if (!printOpts.id && (type === 'order') && HK.ReceiptPrinter && HK.ReceiptPrinter.currentOrderId) {
+                    printOpts.id = HK.ReceiptPrinter.currentOrderId;
+                }
+                return HK.PrintCore.print(printOpts);
             }
 
             var self = this;

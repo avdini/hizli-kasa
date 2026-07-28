@@ -53,59 +53,63 @@
 
             // Yardımcı: Meta verisinden değer çek
             var getMeta = function(metaArray, key) {
+                metaArray = metaArray || [];
                 var found = metaArray.find(function(m) { return m.key === key; });
                 return found ? found.value : null;
             };
 
-            els.fisOrderNo.innerText = "#" + (order.id || order.number);
-            els.fisNoText.innerText = "SİPARİŞ NO: " + (order.id || order.number);
-            els.fisTarih.innerText = new Date().toLocaleString('tr-TR');
+            if (els.fisOrderNo) els.fisOrderNo.innerText = "#" + (order.id || order.number);
+            if (els.fisNoText) els.fisNoText.innerText = "SİPARİŞ NO: " + (order.id || order.number);
+            if (els.fisTarih) els.fisTarih.innerText = new Date().toLocaleString('tr-TR');
 
-            els.fisUrunlerBody.innerHTML = "";
-            order.line_items.forEach(function(item) {
-                var etiketFiyat = parseFloat(getMeta(item.meta_data, "_etiket_fiyat") || item.subtotal / item.quantity);
-                var kampanyaFiyat = parseFloat(getMeta(item.meta_data, "_kampanya_fiyat") || item.subtotal / item.quantity);
-                var netFiyat = parseFloat(item.total) / item.quantity;
-                var urunIskonto = getMeta(item.meta_data, "_hk_item_discount");
-                
-                var satirEtiketToplam = etiketFiyat * item.quantity;
-                var satirKampanyaToplam = kampanyaFiyat * item.quantity;
-                var satirNetToplam = parseFloat(item.total);
+            if (els.fisUrunlerBody) {
+                els.fisUrunlerBody.innerHTML = "";
+                (order.line_items || []).forEach(function(item) {
+                    var etiketFiyat = parseFloat(getMeta(item.meta_data, "_etiket_fiyat") || item.subtotal / item.quantity);
+                    var kampanyaFiyat = parseFloat(getMeta(item.meta_data, "_kampanya_fiyat") || item.subtotal / item.quantity);
+                    var netFiyat = parseFloat(item.total) / item.quantity;
+                    var urunIskonto = getMeta(item.meta_data, "_hk_item_discount");
+                    
+                    var satirEtiketToplam = etiketFiyat * item.quantity;
+                    var satirKampanyaToplam = kampanyaFiyat * item.quantity;
+                    var satirNetToplam = parseFloat(item.total);
 
-                var tr = document.createElement("tr");
-                var fiyatHTML = "";
-                
-                // Üç katmanlı fiyat gösterimi - SADECE SİYAH
-                if (satirEtiketToplam > satirKampanyaToplam) {
-                    fiyatHTML += '<div style="font-size: 10px; text-decoration: line-through;">' + satirEtiketToplam.toFixed(2) + '</div>';
-                }
-                if (satirKampanyaToplam > satirNetToplam + 0.01) {
-                    fiyatHTML += '<div style="font-size: 10px; text-decoration: line-through;">' + satirKampanyaToplam.toFixed(2) + '</div>';
-                }
-                fiyatHTML += '<div style="font-weight: bold; font-size: 13px;">' + satirNetToplam.toFixed(2) + '</div>';
+                    var tr = document.createElement("tr");
+                    var fiyatHTML = "";
+                    
+                    // Üç katmanlı fiyat gösterimi - SADECE SİYAH
+                    if (satirEtiketToplam > satirKampanyaToplam) {
+                        fiyatHTML += '<div style="font-size: 10px; text-decoration: line-through;">' + satirEtiketToplam.toFixed(2) + '</div>';
+                    }
+                    if (satirKampanyaToplam > satirNetToplam + 0.01) {
+                        fiyatHTML += '<div style="font-size: 10px; text-decoration: line-through;">' + satirKampanyaToplam.toFixed(2) + '</div>';
+                    }
+                    fiyatHTML += '<div style="font-weight: bold; font-size: 13px;">' + satirNetToplam.toFixed(2) + '</div>';
 
-                // Ürüne düşen iskonto bilgisi
-                var iskontoInfo = '';
-                if (urunIskonto && parseFloat(urunIskonto) > 0) {
-                    iskontoInfo = '<div style="font-size:9px; color:#666;">(İsk: -' + parseFloat(urunIskonto).toFixed(2) + ')</div>';
-                }
+                    // Ürüne düşen iskonto bilgisi
+                    var iskontoInfo = '';
+                    if (urunIskonto && parseFloat(urunIskonto) > 0) {
+                        iskontoInfo = '<div style="font-size:9px; color:#666;">(İsk: -' + parseFloat(urunIskonto).toFixed(2) + ')</div>';
+                    }
 
-                tr.innerHTML = '<td style="padding:1px 0; line-height: 1.1;">' + 
-                        '<div style="font-weight:bold; font-size:12px; text-transform:uppercase;">' + item.name + '</div>' +
-                        '<div style="font-size:10px;">' + (item.sku ? item.sku + ' | ' : '') + item.quantity + ' Adet' + '</div>' +
-                        iskontoInfo +
-                    '</td>' +
-                    '<td style="text-align:right; padding:1px 0; vertical-align: middle; white-space:nowrap; padding-left:10px;">' + fiyatHTML + '</td>';
-                els.fisUrunlerBody.appendChild(tr);
-            });
+                    tr.innerHTML = '<td style="padding:1px 0; line-height: 1.1;">' + 
+                            '<div style="font-weight:bold; font-size:12px; text-transform:uppercase;">' + item.name + '</div>' +
+                            '<div style="font-size:10px;">' + (item.sku ? item.sku + ' | ' : '') + item.quantity + ' Adet' + '</div>' +
+                            iskontoInfo +
+                        '</td>' +
+                        '<td style="text-align:right; padding:1px 0; vertical-align: middle; white-space:nowrap; padding-left:10px;">' + fiyatHTML + '</td>';
+                    els.fisUrunlerBody.appendChild(tr);
+                });
+            }
 
             // Alt Toplamlar
             var etiketToplam = parseFloat(getMeta(order.meta_data, "_etiket_toplami") || order.subtotal);
             var araToplam = parseFloat(getMeta(order.meta_data, "_ara_toplam") || order.total);
 
-            els.fisListeToplamiSatiri.style.display = "flex";
-            document.querySelector("#fis-liste-toplami-satiri span:first-child").innerText = "ETİKET TOPLAMI:";
-            els.fisListeToplamiTutar.innerText = etiketToplam.toFixed(2) + " TL";
+            if (els.fisListeToplamiSatiri) els.fisListeToplamiSatiri.style.display = "flex";
+            var listeToplamiEtiket = document.querySelector("#fis-liste-toplami-satiri span:first-child");
+            if (listeToplamiEtiket) listeToplamiEtiket.innerText = "ETİKET TOPLAMI:";
+            if (els.fisListeToplamiTutar) els.fisListeToplamiTutar.innerText = etiketToplam.toFixed(2) + " TL";
 
             // Ara Toplam Satırı (Kampanyalı Toplam)
             var araToplamElemen = document.getElementById("fis-ara-toplam-satiri");
@@ -115,37 +119,45 @@
                 yeniSatir.id = "fis-ara-toplam-satiri";
                 yeniSatir.style = "display:flex; justify-content:space-between; margin-bottom:2px; font-size:12px;";
                 yeniSatir.innerHTML = '<span>ARA TOPLAM:</span> <span id="fis-ara-toplam-tutar"></span>';
-                els.fisListeToplamiSatiri.parentNode.insertBefore(yeniSatir, els.fisNakitIndirimSatiri);
+                if (els.fisListeToplamiSatiri && els.fisListeToplamiSatiri.parentNode) {
+                    els.fisListeToplamiSatiri.parentNode.insertBefore(yeniSatir, els.fisNakitIndirimSatiri);
+                }
                 araToplamElemen = yeniSatir;
             }
-            document.getElementById("fis-ara-toplam-tutar").innerText = araToplam.toFixed(2) + " TL";
+            var araToplamTutarElem = document.getElementById("fis-ara-toplam-tutar");
+            if (araToplamTutarElem) araToplamTutarElem.innerText = araToplam.toFixed(2) + " TL";
 
             var autoDiscountLabel = order.payment_method === "cod" ? "Nakit İndirimi (%5):" : (order.payment_method === "bacs" ? "Havale İndirimi (%5):" : "İndirim (%5):");
             
             var indirimFarki = araToplam - parseFloat(order.total);
             var iskontoTutar = parseFloat(getMeta(order.meta_data, "_hk_toplam_iskonto") || 0);
             if (iskontoTutar === 0) {
-                var iskontoFee = order.fee_lines.find(function(f) { return f.name === "İskonto"; });
+                var iskontoFee = (order.fee_lines || []).find(function(f) { return f.name === "İskonto"; });
                 iskontoTutar = iskontoFee ? Math.abs(parseFloat(iskontoFee.total)) : 0;
             }
             var otomatikIndirimMeta = getMeta(order.meta_data, "_hk_otomatik_indirim");
             var nakitIndirimTutar = otomatikIndirimMeta !== null ? parseFloat(otomatikIndirimMeta) : (indirimFarki - iskontoTutar);
 
             if (nakitIndirimTutar > 0.01) {
-                els.fisNakitIndirimSatiri.style.display = "flex";
-                els.fisNakitIndirimSatiri.style.fontSize = "12px";
-                document.getElementById("fis-nakit-indirim-etiket").innerText = autoDiscountLabel;
-                els.fisNakitIndirimTutar.innerText = "-" + nakitIndirimTutar.toFixed(2) + " TL";
+                if (els.fisNakitIndirimSatiri) {
+                    els.fisNakitIndirimSatiri.style.display = "flex";
+                    els.fisNakitIndirimSatiri.style.fontSize = "12px";
+                }
+                var nakitIndirimEtiket = document.getElementById("fis-nakit-indirim-etiket");
+                if (nakitIndirimEtiket) nakitIndirimEtiket.innerText = autoDiscountLabel;
+                if (els.fisNakitIndirimTutar) els.fisNakitIndirimTutar.innerText = "-" + nakitIndirimTutar.toFixed(2) + " TL";
             } else {
-                els.fisNakitIndirimSatiri.style.display = "none";
+                if (els.fisNakitIndirimSatiri) els.fisNakitIndirimSatiri.style.display = "none";
             }
 
             if (iskontoTutar > 0) {
-                els.fisIskontoSatiri.style.display = "flex";
-                els.fisIskontoSatiri.style.fontSize = "12px";
-                els.fisIskontoTutar.innerText = "-" + iskontoTutar.toFixed(2) + " TL";
+                if (els.fisIskontoSatiri) {
+                    els.fisIskontoSatiri.style.display = "flex";
+                    els.fisIskontoSatiri.style.fontSize = "12px";
+                }
+                if (els.fisIskontoTutar) els.fisIskontoTutar.innerText = "-" + iskontoTutar.toFixed(2) + " TL";
             } else {
-                els.fisIskontoSatiri.style.display = "none";
+                if (els.fisIskontoSatiri) els.fisIskontoSatiri.style.display = "none";
             }
 
             // Kupon satırını ekle/güncelle
@@ -156,8 +168,10 @@
                     kuponSatirEleman = document.createElement("div");
                     kuponSatirEleman.id = "fis-kupon-satiri";
                     kuponSatirEleman.style = "display:flex; justify-content:space-between; margin-bottom:3px; font-size:12px;";
-                    var parent = els.fisIskontoSatiri.parentNode;
-                    parent.insertBefore(kuponSatirEleman, els.fisDegisimFarkiSatiri || els.fisGenelToplam.parentNode);
+                    var parentNode = els.fisIskontoSatiri ? els.fisIskontoSatiri.parentNode : (els.fisGenelToplam ? els.fisGenelToplam.parentNode : null);
+                    if (parentNode) {
+                        parentNode.insertBefore(kuponSatirEleman, els.fisDegisimFarkiSatiri || (els.fisGenelToplam ? els.fisGenelToplam : null));
+                    }
                 }
                 kuponSatirEleman.style.display = "flex";
                 kuponSatirEleman.innerHTML = '<span>' + couponFee.name + ':</span> <span>' + parseFloat(couponFee.total).toFixed(2) + ' TL</span>';
@@ -176,26 +190,30 @@
                 if (els.fisDegisimFarkiSatiri) {
                     els.fisDegisimFarkiSatiri.style.display = "flex";
                     els.fisDegisimFarkiSatiri.style.fontSize = "12px";
-                    els.fisDegisimFarkiSatiri.querySelector("span:first-child").innerText = "Değişim Mahsubu:";
-                    els.fisDegisimFarkiTutar.innerText = "-" + exchangeRefundTotal.toFixed(2) + " TL";
+                    var degisimLabel = els.fisDegisimFarkiSatiri.querySelector("span:first-child");
+                    if (degisimLabel) degisimLabel.innerText = "Değişim Mahsubu:";
                 }
+                if (els.fisDegisimFarkiTutar) els.fisDegisimFarkiTutar.innerText = "-" + exchangeRefundTotal.toFixed(2) + " TL";
             } else if (degisimFarkiFee && parseFloat(degisimFarkiFee.total) > 0) {
                 if (els.fisDegisimFarkiSatiri) {
                     els.fisDegisimFarkiSatiri.style.display = "flex";
                     els.fisDegisimFarkiSatiri.style.fontSize = "12px";
-                    els.fisDegisimFarkiSatiri.querySelector("span:first-child").innerText = "Ekstra Değişim Farkı:";
-                    els.fisDegisimFarkiTutar.innerText = parseFloat(degisimFarkiFee.total).toFixed(2) + " TL";
+                    var degisimLabel = els.fisDegisimFarkiSatiri.querySelector("span:first-child");
+                    if (degisimLabel) degisimLabel.innerText = "Ekstra Değişim Farkı:";
                 }
+                if (els.fisDegisimFarkiTutar) els.fisDegisimFarkiTutar.innerText = parseFloat(degisimFarkiFee.total).toFixed(2) + " TL";
             } else if (els.fisDegisimFarkiSatiri) {
                 els.fisDegisimFarkiSatiri.style.display = "none";
             }
 
-            els.fisGenelToplam.style.borderTop = "1px solid #000";
-            els.fisGenelToplam.style.paddingTop = "5px";
-            els.fisGenelToplam.innerText = customerPaidTotal.toFixed(2) + " TL";
+            if (els.fisGenelToplam) {
+                els.fisGenelToplam.style.borderTop = "1px solid #000";
+                els.fisGenelToplam.style.paddingTop = "5px";
+                els.fisGenelToplam.innerText = customerPaidTotal.toFixed(2) + " TL";
+            }
 
             // Barkod Üret (CODE128)
-            if (typeof JsBarcode === "function") {
+            if (typeof JsBarcode === "function" && document.querySelector("#fis-barkod")) {
                 try {
                     JsBarcode("#fis-barkod", (order.id || order.number).toString(), {
                         format: "CODE128",
@@ -263,16 +281,20 @@
                 }
             };
 
-            els.fisYazdirTetik.addEventListener("click", function() {
-                triggerPrint();
-            });
+            if (els.fisYazdirTetik) {
+                els.fisYazdirTetik.addEventListener("click", function() {
+                    triggerPrint();
+                });
+            }
 
-            els.fisYazdirKapat.addEventListener("click", function() {
-                els.fisOnayModal.style.display = "none";
-            });
+            if (els.fisYazdirKapat) {
+                els.fisYazdirKapat.addEventListener("click", function() {
+                    if (els.fisOnayModal) els.fisOnayModal.style.display = "none";
+                });
+            }
 
             document.addEventListener("keydown", function(e) {
-                if (els.fisOnayModal.style.display === "flex") {
+                if (els.fisOnayModal && els.fisOnayModal.style.display === "flex") {
                     if (e.key === "Enter") {
                         triggerPrint();
                     } else if (e.key === "Escape") {

@@ -74,11 +74,27 @@ class Hizli_Kasa_Order_Print_Builder {
                 $item_status = ($net_qty === 0) ? 'fully_refunded' : 'partially_refunded';
             }
 
+            $sku = '';
+            $product = $item->get_product();
+            if ($product) {
+                $sku = $product->get_sku();
+            }
+
+            $meta_etiket = $item->get_meta('_etiket_fiyat');
+            $meta_kampanya = $item->get_meta('_kampanya_fiyat');
+            $unit_subtotal = $qty > 0 ? ($line_subtotal / $qty) : 0;
+            
+            $etiket_fiyat = ($meta_etiket !== '' && $meta_etiket !== null) ? (float)$meta_etiket : $unit_subtotal;
+            $kampanya_fiyat = ($meta_kampanya !== '' && $meta_kampanya !== null) ? (float)$meta_kampanya : $unit_subtotal;
+
             $items[] = [
                 'item_id'         => $item_id,
                 'name'            => $item->get_name(),
+                'sku'             => $sku,
                 'qty'             => $qty,
-                'price'           => $qty > 0 ? ($line_subtotal / $qty) : 0,
+                'price'           => $unit_subtotal,
+                'etiket_fiyat'    => $etiket_fiyat,
+                'kampanya_fiyat'  => $kampanya_fiyat,
                 'line_subtotal'   => $line_subtotal,
                 'line_total'      => $line_total,
                 'item_discount'   => $item_discount,
@@ -95,15 +111,12 @@ class Hizli_Kasa_Order_Print_Builder {
         $order_total = (float)$order->get_total();
         $total_refunded = (float)$order->get_total_refunded();
         $auto_discount = (float)($order->get_meta('_hk_otomatik_indirim') ?: 0);
-        $manual_discount = (float)($order->get_meta('_hk_toplam_iskonto') ?: 0);
         $coupon_discount = (float)$order->get_discount_total();
         $exchange_diff = (float)($order->get_meta('_hk_exchange_refund_total') ?: 0);
-
         $totals = [
             'gross_total'         => $gross_total,
             'item_discount_total' => $total_item_discount,
             'auto_discount'       => $auto_discount,
-            'manual_discount'     => $manual_discount,
             'coupon_discount'     => $coupon_discount,
             'exchange_diff'       => $exchange_diff,
             'order_total'         => $order_total,

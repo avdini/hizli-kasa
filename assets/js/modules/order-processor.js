@@ -295,8 +295,8 @@
             var durumMetni = document.getElementById("durum");
             var stokUyariListe = document.getElementById("stok-uyari-liste");
 
-            durumMetni.innerText = "Site ve depo stokları kontrol ediliyor...";
-            stokUyariListe.innerHTML = "";
+            if (durumMetni) durumMetni.innerText = "Site ve depo stokları kontrol ediliyor...";
+            if (stokUyariListe) stokUyariListe.innerHTML = "";
             var sorunluUrunler = [];
 
             var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
@@ -330,7 +330,18 @@
                     })
                 });
 
-                var results = await response.json();
+                if (!response.ok) {
+                    console.warn("Stok kontrol API yanıtı başarısız (HTTP " + response.status + ")");
+                    return sorunluUrunler;
+                }
+
+                var results;
+                try {
+                    results = await response.json();
+                } catch (jsonErr) {
+                    console.warn("Stok kontrol API JSON ayrıştırma hatası:", jsonErr);
+                    return sorunluUrunler;
+                }
 
                 if (Array.isArray(results)) {
                     results.forEach(function (r) {
@@ -767,7 +778,7 @@
                         }
                         document.getElementById("fis-onay-modal").style.display = "flex";
                         if (HK.PrintManager) {
-                            HK.PrintManager.print('receipt');
+                            HK.PrintManager.print('receipt', orderResult.id || orderResult.number);
                         }
                     } catch (fisErr) {
                         console.error("Fiş hazırlama hatası:", fisErr);

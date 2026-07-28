@@ -303,9 +303,16 @@ function hizli_kasa_gun_sonu_raporu($request)
 
     uasort($urun_map, fn($a, $b) => $b['qty'] - $a['qty']);
 
+    $depo_name_val = '';
+    if ($depo_id > 0) {
+        $depo_table = Hizli_Kasa_Database::get_tables()['depolar'];
+        $depo_name_val = (string) $wpdb->get_var($wpdb->prepare("SELECT name FROM {$depo_table} WHERE id = %d", $depo_id));
+    }
+
     $report_data = [
         'kasa_no' => ($kasa_no === 'all') ? 'Genel' : $kasa_no,
         'depo_id' => $depo_id,
+        'depo_adi' => $depo_name_val,
         'tarih' => $tarih,
         'tarih_okunabilir' => date_i18n('d.m.Y l', strtotime($tarih)),
         'rapor_zamani' => current_time('d.m.Y H:i:s'),

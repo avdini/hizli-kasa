@@ -130,193 +130,199 @@ function hizli_kasa_ozel_arama($data)
  */
 function hizli_kasa_warehouse_stock_check($request)
 {
-    $data    = $request->get_json_params();
-    $items   = $data['items'] ?? [];
-    $depo_id = intval($data['depo_id'] ?? 0);
-    $order_id = intval($data['order_id'] ?? 0);
+    try {
+        $params   = $request ? $request->get_json_params() : [];
+        $data     = is_array($params) ? $params : [];
+        $items    = $data['items'] ?? [];
+        $depo_id  = intval($data['depo_id'] ?? 0);
+        $order_id = intval($data['order_id'] ?? 0);
 
-    if (empty($items)) {
-        return new WP_Error('no_items', 'Kontrol edilecek ürün yok.', ['status' => 400]);
-    }
+        if (!is_array($items) || empty($items)) {
+            return new WP_Error('no_items', 'Kontrol edilecek ürün yok.', ['status' => 400]);
+        }
 
-    $order_qtys = [];
-    if ($order_id > 0) {
-        $order = wc_get_order($order_id);
-        if ($order) {
-            foreach ($order->get_items() as $item) {
-                if ($item instanceof WC_Order_Item_Product) {
-                    $pid = (int) $item->get_product_id();
-                    $vid = (int) $item->get_variation_id();
-                    $k = $pid . '_' . $vid;
-                    $order_qtys[$k] = (float) $item->get_quantity();
+        $order_qtys = [];
+        if ($order_id > 0 && function_exists('wc_get_order')) {
+            $order = wc_get_order($order_id);
+            if ($order && method_exists($order, 'get_items')) {
+                foreach ($order->get_items() as $item) {
+                    if ($item instanceof WC_Order_Item_Product) {
+                        $pid = (int) $item->get_product_id();
+                        $vid = (int) $item->get_variation_id();
+                        $k   = $pid . '_' . $vid;
+                        $order_qtys[$k] = (float) $item->get_quantity();
+                    }
                 }
             }
         }
-    }
 
-    global $wpdb;
-    $tables     = Hizli_Kasa_Database::get_tables();
-    $stok_table = $tables['stok_konumlari'];
+        global $wpdb;
+        $tables     = Hizli_Kasa_Database::get_tables();
+        $stok_table = $tables['stok_konumlari'] ?? '';
 
-    // --- Girdi Normalizasyonu ---
-    // target_id: variation_id varsa variation, yoksa product_id (WC meta'sı bu ID'ye yazılır)
-    $target_ids = [];
-    $item_map   = []; // target_id => [product_id, variation_id, qty]
+        $target_ids = [];
+        $item_map   = [];
 
-    foreach ($items as $item) {
-        $pid = intval($item['product_id'] ?? 0);
-        $vid = intval($item['variation_id'] ?? 0);
-        $qty = intval($item['qty'] ?? 0);
-        if ($pid === 0) {
-            continue;
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $pid = intval($item['product_id'] ?? 0);
+            $vid = intval($item['variation_id'] ?? 0);
+            $qty = intval($item['qty'] ?? 0);
+            if ($pid === 0) {
+                continue;
+            }
+            $tid          = $vid ?: $pid;
+            $target_ids[] = $tid;
+            $item_map[$tid] = ['product_id' => $pid, 'variation_id' => $vid, 'qty' => $qty];
         }
-        $tid          = $vid ?: $pid;
-        $target_ids[] = $tid;
-        $item_map[$tid] = ['product_id' => $pid, 'variation_id' => $vid, 'qty' => $qty];
-    }
 
-    if ($target_ids === []) {
-        return [];
-    }
+        if (empty($target_ids)) {
+            return [];
+        }
 
-    $ids_placeholder = implode(',', array_map('intval', $target_ids));
+        $ids_placeholder = implode(',', array_map('intval', array_unique($target_ids)));
 
-    // =========================================================
-    // BATCH 1 — Ürün başlıkları (posts tablosu)
-    // Önceden: wc_get_product() ile her ürün için ayrı sorgu
-    // =========================================================
-    $name_rows = $wpdb->get_results(
-        "SELECT ID, post_title FROM {$wpdb->posts} WHERE ID IN ($ids_placeholder)"
-    );
-    $name_map = [];
-    foreach ($name_rows as $row) {
-        $name_map[(int) $row->ID] = $row->post_title;
-    }
+        $name_rows = $wpdb->get_results(
+            "SELECT ID, post_title FROM {$wpdb->posts} WHERE ID IN ($ids_placeholder)"
+        );
+        $name_map = [];
+        if (is_array($name_rows)) {
+            foreach ($name_rows as $row) {
+                if (isset($row->ID)) {
+                    $name_map[(int) $row->ID] = $row->post_title ?? '';
+                }
+            }
+        }
 
-    // =========================================================
-    // BATCH 2 — WooCommerce stok meta verileri (postmeta)
-    // _manage_stock, _stock, _stock_status — tek sorguda hepsi
-    // Önceden: her ürün için wc_get_product() içinde N meta sorgusu
-    // =========================================================
-    $meta_rows = $wpdb->get_results(
-        "SELECT post_id, meta_key, meta_value
-         FROM {$wpdb->postmeta}
-         WHERE post_id IN ($ids_placeholder)
-           AND meta_key IN ('_manage_stock', '_stock', '_stock_status')"
-    );
-    $meta_map = []; // [post_id][meta_key] = meta_value
-    foreach ($meta_rows as $row) {
-        $meta_map[(int) $row->post_id][$row->meta_key] = $row->meta_value;
-    }
+        $meta_rows = $wpdb->get_results(
+            "SELECT post_id, meta_key, meta_value
+             FROM {$wpdb->postmeta}
+             WHERE post_id IN ($ids_placeholder)
+               AND meta_key IN ('_manage_stock', '_stock', '_stock_status')"
+        );
+        $meta_map = [];
+        if (is_array($meta_rows)) {
+            foreach ($meta_rows as $row) {
+                if (isset($row->post_id, $row->meta_key)) {
+                    $meta_map[(int) $row->post_id][$row->meta_key] = $row->meta_value ?? '';
+                }
+            }
+        }
 
-    // =========================================================
-    // BATCH 3 — Tüm depo stoklarını tek sorguda çek
-    // PHP'de aktif depo / diğer depolar olarak ayır
-    // Önceden: her ürün için 2 ayrı DB sorgusu (aktif + diğerleri)
-    // =========================================================
-    $all_product_ids = array_unique(array_column(array_values($item_map), 'product_id'));
-    $all_pids_ph     = implode(',', array_map('intval', $all_product_ids));
+        $all_product_ids = array_unique(array_filter(array_column(array_values($item_map), 'product_id')));
+        $depo_stock_map  = [];
+        $other_depo_agg  = [];
 
-    $depo_rows = $wpdb->get_results(
-        "SELECT product_id, variation_id, location_id, quantity, reserved
-         FROM $stok_table
-         WHERE product_id IN ($all_pids_ph)"
-    );
+        if (!empty($all_product_ids) && !empty($stok_table)) {
+            $all_pids_ph = implode(',', array_map('intval', $all_product_ids));
+            $depo_rows   = $wpdb->get_results(
+                "SELECT product_id, variation_id, location_id, quantity, reserved
+                 FROM $stok_table
+                 WHERE product_id IN ($all_pids_ph)"
+            );
 
-    $depo_stock_map = []; // aktif depo: "pid_vid" => {quantity, reserved}
-    $other_depo_agg = []; // diğer depolar toplam: "pid_vid" => {total_qty, total_res}
+            if (is_array($depo_rows)) {
+                foreach ($depo_rows as $row) {
+                    if (!isset($row->product_id, $row->variation_id, $row->location_id)) {
+                        continue;
+                    }
+                    $k = $row->product_id . '_' . $row->variation_id;
+                    if ((int) $row->location_id === $depo_id) {
+                        $depo_stock_map[$k] = [
+                            'quantity' => (float) ($row->quantity ?? 0),
+                            'reserved' => (float) ($row->reserved ?? 0),
+                        ];
+                    } else {
+                        if (!isset($other_depo_agg[$k])) {
+                            $other_depo_agg[$k] = ['total_qty' => 0.0, 'total_res' => 0.0];
+                        }
+                        $other_depo_agg[$k]['total_qty'] += (float) ($row->quantity ?? 0);
+                        $other_depo_agg[$k]['total_res'] += (float) ($row->reserved ?? 0);
+                    }
+                }
+            }
+        }
 
-    foreach ($depo_rows as $row) {
-        $k = $row->product_id . '_' . $row->variation_id;
-        if ((int) $row->location_id === $depo_id) {
-            $depo_stock_map[$k] = [
-                'quantity' => (float) $row->quantity,
-                'reserved' => (float) $row->reserved,
+        $results = [];
+
+        foreach ($item_map as $tid => $info) {
+            if (!is_array($info)) {
+                continue;
+            }
+            $pid           = intval($info['product_id'] ?? 0);
+            $vid           = intval($info['variation_id'] ?? 0);
+            $requested_qty = intval($info['qty'] ?? 0);
+            $k             = $pid . '_' . $vid;
+
+            $name         = $name_map[$tid] ?? "Ürün #$tid";
+            $meta         = (is_array($meta_map) && isset($meta_map[$tid]) && is_array($meta_map[$tid])) ? $meta_map[$tid] : [];
+            $manage_stock = isset($meta['_manage_stock']) && $meta['_manage_stock'] === 'yes';
+            $site_stock   = $manage_stock ? (float) ($meta['_stock'] ?? 0) : null;
+            $stock_status = $meta['_stock_status'] ?? 'instock';
+
+            $depo_data     = (is_array($depo_stock_map) && isset($depo_stock_map[$k]) && is_array($depo_stock_map[$k])) ? $depo_stock_map[$k] : ['quantity' => 0.0, 'reserved' => 0.0];
+            $depo_stock    = (float) ($depo_data['quantity'] ?? 0.0);
+            $depo_reserved = (float) ($depo_data['reserved'] ?? 0.0);
+
+            $other_data  = (is_array($other_depo_agg) && isset($other_depo_agg[$k]) && is_array($other_depo_agg[$k])) ? $other_depo_agg[$k] : ['total_qty' => 0.0, 'total_res' => 0.0];
+            $other_stock = (float) ($other_data['total_qty'] ?? 0.0);
+            $other_res   = (float) ($other_data['total_res'] ?? 0.0);
+
+            $available_depo = $depo_stock - $depo_reserved;
+
+            $site_ok = true;
+            $depo_ok = true;
+            $warning = null;
+
+            $original_qty = (float) ($order_qtys[$k] ?? 0.0);
+            $net_qty      = $requested_qty - $original_qty;
+
+            if ($net_qty > 0) {
+                if ($manage_stock && $site_stock !== null) {
+                    $site_ok = ($net_qty <= $site_stock);
+                } elseif ($stock_status === 'outofstock') {
+                    $site_ok = false;
+                }
+
+                if ($depo_id !== 0) {
+                    $depo_ok = ($net_qty <= $available_depo);
+                }
+            }
+
+            if ($site_ok && !$depo_ok) {
+                if (($depo_stock + $other_stock - $depo_reserved - $other_res) >= $net_qty) {
+                    $warning = "Sitede var ama bu depoda rezerve/yok — başka depoda gözüküyor!";
+                } elseif ($depo_reserved > 0) {
+                    $warning = "⚠️ Kritik Stok Uyarısı! Ürünün {$depo_reserved} adedi internet siparişleri için ayırtılmıştır. (Depoda Toplam: " . (int) $depo_stock . ")";
+                } else {
+                    $warning = "Depoda yetersiz stok! (Depo: " . (int) $depo_stock . ", İlave İhtiyaç: $net_qty)";
+                }
+            } elseif (!$site_ok) {
+                $warning = "Site stoğu yetersiz! (Site: " . ($site_stock !== null ? (int) $site_stock : 'N/A') . ", İlave İhtiyaç: $net_qty)";
+            }
+
+            $results[] = [
+                'product_id'       => $pid,
+                'variation_id'     => $vid,
+                'name'             => $name,
+                'site_stock'       => $site_stock,
+                'depo_stock'       => $depo_stock,
+                'depo_reserved'    => $depo_reserved,
+                'available_stock'  => $available_depo,
+                'other_depo_stock' => $other_stock,
+                'requested_qty'    => $requested_qty,
+                'site_ok'          => $site_ok,
+                'depo_ok'          => $depo_ok,
+                'warning'          => $warning,
             ];
-        } else {
-            if (!isset($other_depo_agg[$k])) {
-                $other_depo_agg[$k] = ['total_qty' => 0.0, 'total_res' => 0.0];
-            }
-            $other_depo_agg[$k]['total_qty'] += (float) $row->quantity;
-            $other_depo_agg[$k]['total_res'] += (float) $row->reserved;
         }
+
+        return $results;
+    } catch (\Throwable $e) {
+        return new WP_Error('warehouse_stock_check_error', $e->getMessage(), ['status' => 500]);
     }
-
-    // =========================================================
-    // In-memory değerlendirme — sıfır ek DB sorgusu
-    // =========================================================
-    $results = [];
-
-    foreach ($item_map as $tid => $info) {
-        $pid           = $info['product_id'];
-        $vid           = $info['variation_id'];
-        $requested_qty = $info['qty'];
-        $k             = $pid . '_' . $vid;
-
-        $name         = $name_map[$tid] ?? "Ürün #$tid";
-        $meta         = $meta_map[$tid] ?? [];
-        $manage_stock = isset($meta['_manage_stock']) && $meta['_manage_stock'] === 'yes';
-        $site_stock   = $manage_stock ? (float) ($meta['_stock'] ?? 0) : null;
-        $stock_status = $meta['_stock_status'] ?? 'instock';
-
-        $depo_data     = $depo_stock_map[$k] ?? ['quantity' => 0.0, 'reserved' => 0.0];
-        $depo_stock    = $depo_data['quantity'];
-        $depo_reserved = $depo_data['reserved'];
-
-        $other_data  = $other_depo_agg[$k] ?? ['total_qty' => 0.0, 'total_res' => 0.0];
-        $other_stock = $other_data['total_qty'];
-        $other_res   = $other_data['total_res'];
-
-        $available_depo = $depo_stock - $depo_reserved;
-
-        $site_ok = true;
-        $depo_ok = true;
-        $warning = null;
-
-        $original_qty = $order_qtys[$k] ?? 0.0;
-        $net_qty = $requested_qty - $original_qty;
-
-        if ($net_qty > 0) {
-            if ($manage_stock && $site_stock !== null) {
-                $site_ok = ($net_qty <= $site_stock);
-            } elseif ($stock_status === 'outofstock') {
-                $site_ok = false;
-            }
-
-            if ($depo_id !== 0) {
-                $depo_ok = ($net_qty <= $available_depo);
-            }
-        }
-
-        if ($site_ok && !$depo_ok) {
-            if (($depo_stock + $other_stock - $depo_reserved - $other_res) >= $net_qty) {
-                $warning = "Sitede var ama bu depoda rezerve/yok — başka depoda gözüküyor!";
-            } elseif ($depo_reserved > 0) {
-                $warning = "⚠️ Kritik Stok Uyarısı! Ürünün {$depo_reserved} adedi internet siparişleri için ayırtılmıştır. (Depoda Toplam: " . (int) $depo_stock . ")";
-            } else {
-                $warning = "Depoda yetersiz stok! (Depo: " . (int) $depo_stock . ", İlave İhtiyaç: $net_qty)";
-            }
-        } elseif (!$site_ok) {
-            $warning = "Site stoğu yetersiz! (Site: " . ($site_stock !== null ? (int) $site_stock : 'N/A') . ", İlave İhtiyaç: $net_qty)";
-        }
-
-        $results[] = [
-            'product_id'       => $pid,
-            'variation_id'     => $vid,
-            'name'             => $name,
-            'site_stock'       => $site_stock,
-            'depo_stock'       => $depo_stock,
-            'depo_reserved'    => $depo_reserved,
-            'available_stock'  => $available_depo,
-            'other_depo_stock' => $other_stock,
-            'requested_qty'    => $requested_qty,
-            'site_ok'          => $site_ok,
-            'depo_ok'          => $depo_ok,
-            'warning'          => $warning,
-        ];
-    }
-
-    return $results;
 }
 
 /**

@@ -16,7 +16,7 @@ if ($format === '1' || $format === 'true' || $format === true) {
 }
 
 $money = static function ($value) {
-    return number_format((float) $value, 2, '.', '') . ' TL';
+    return hk_format_price($value);
 };
 $value = static function ($array, $key, $default = 0) {
     return $array[$key] ?? $default;
@@ -30,39 +30,69 @@ $report_time = $rapor['rapor_zamani'] ?? ($header['report_time'] ?? '');
 <div class="hk-unified-print-container receipt-zreport" style="font-family:'Courier New', Courier, monospace; color:#000; background:#fff; width:100%; max-width:300px; margin:0 auto; padding:4px 8px; box-sizing:border-box; font-size:12px; line-height:1.2; box-shadow:none !important; border:none !important;">
     <div style="text-align:center; margin-bottom:8px; border-bottom:1px solid #000; padding-bottom:8px;">
         <h2 style="margin:0; font-size:18px; font-weight:bold; color:#000; font-family:'Courier New', Courier, monospace;"><?php echo esc_html($header['store_name'] ?? get_bloginfo('name')); ?></h2>
-        <p style="margin:4px 0 2px 0; font-size:13px; font-weight:bold; color:#000; font-family:'Courier New', Courier, monospace;"><?php echo $is_general ? 'GENEL GÜN SONU RAPORU' : 'GÜN SONU RAPORU'; ?></p>
+        <p style="margin:4px 0 2px 0; font-size:13px; font-weight:bold; color:#000; font-family:'Courier New', Courier, monospace;">GÜN SONU RAPORU</p>
         <p style="margin:0; font-size:11px; color:#000; font-family:'Courier New', Courier, monospace;">Kasa: <?php echo esc_html($kasa_no . ($depo_name ? ' / ' . $depo_name : '')); ?></p>
-        <p style="margin:2px 0 0 0; font-size:11px; color:#000; font-family:'Courier New', Courier, monospace;"><?php echo esc_html($date_label); ?></p>
-        <p style="margin:2px 0 0 0; font-size:10px; color:#000; font-family:'Courier New', Courier, monospace;">Rapor Zamanı: <?php echo esc_html($report_time); ?></p>
+        <p style="margin:2px 0 0 0; font-size:11px; color:#000; font-family:'Courier New', Courier, monospace;"><?php echo esc_html(!empty($report_time) ? $report_time : $date_label); ?></p>
     </div>
-
     <?php if ($format === 'basit'):
-        $net_kart = (float) $value($ozet, 'kart_toplam') - (float) $value($ozet, 'iade_kart');
-        $net_iban = (float) $value($ozet, 'iban_toplam') - (float) $value($ozet, 'iade_iban');
-        $net_qr = (float) $value($ozet, 'qr_taksit_toplam') - (float) $value($ozet, 'iade_qr_taksit');
-        $net_nakit = (float) $value($ozet, 'nakit_toplam') - (float) $value($ozet, 'iade_nakit');
-        $general_total = $include_qr
-            ? (float) $value($ozet, 'toplam_ciro_kupon_haric', $value($ozet, 'toplam_ciro')) - (float) $value($ozet, 'toplam_iade_kupon_haric', $value($ozet, 'toplam_iade'))
-            : $net_kart + $net_iban + $net_nakit;
-        $total_expense = (float) $value($ozet, 'toplam_masraf');
+        $gross_kart  = (float) $value($ozet, 'kart_toplam') - (float) $value($ozet, 'iade_kart');
+        $gross_iban  = (float) $value($ozet, 'iban_toplam') - (float) $value($ozet, 'iade_iban');
+        $gross_qr    = (float) $value($ozet, 'qr_taksit_toplam') - (float) $value($ozet, 'iade_qr_taksit');
+        $gross_nakit = (float) $value($ozet, 'nakit_toplam') - (float) $value($ozet, 'iade_nakit');
+
+        $nakit_masraf = (float) $value($ozet, 'nakit_masraf');
+        $kart_masraf  = (float) $value($ozet, 'kart_masraf');
+        $iban_masraf  = (float) $value($ozet, 'iban_masraf');
+        $total_masraf = $nakit_masraf + $kart_masraf + $iban_masraf;
+
+        $net_kart  = $gross_kart - $kart_masraf;
+        $net_iban  = $gross_iban - $iban_masraf;
+        $net_qr    = $gross_qr;
+        $net_nakit = $gross_nakit - $nakit_masraf;
+
+        $general_total  = $gross_kart + $gross_iban + $gross_nakit + ($include_qr ? $gross_qr : 0);
+        $net_kasa_total = $general_total - $total_masraf;
         ?>
         <div style="margin-bottom:8px;">
             <table style="width:100%; font-size:13px; border-collapse:collapse; color:#000; font-family:'Courier New', Courier, monospace;">
-                <tr style="border-bottom:1px solid #000;"><td style="padding:4px 0; font-weight:bold;">GENEL TOPLAM</td><td style="text-align:right; font-weight:bold;"><?php echo esc_html($money($general_total)); ?></td></tr>
-                <tr><td style="padding:3px 0;">KART TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($net_kart)); ?></td></tr>
-                <tr><td style="padding:3px 0;">IBAN TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($net_iban)); ?></td></tr>
-                <?php if ($include_qr && $net_qr > 0): ?><tr><td style="padding:3px 0;">QR TAKSİT TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($net_qr)); ?></td></tr><?php endif; ?>
-                <tr><td style="padding:3px 0;">NAKİT TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($net_nakit)); ?></td></tr>
-                <?php if ($total_expense > 0): ?>
-                    <tr><td colspan="2" style="height:6px;"></td></tr>
-                    <?php if ($general_total < ($net_kart + $net_iban + $net_nakit) || (float) $value($ozet, 'toplam_iade') > 0): ?><tr><td style="padding:3px 0;">İADE EDİLEN TOPLAM</td><td style="text-align:right;">-<?php echo esc_html($money($value($ozet, 'toplam_iade'))); ?></td></tr><?php endif; ?>
-                    <?php foreach (['kart_masraf' => 'KART MASRAF', 'iban_masraf' => 'IBAN MASRAF', 'nakit_masraf' => 'NAKİT MASRAF'] as $expense_key => $expense_label): ?>
-                        <?php if ((float) $value($ozet, $expense_key) > 0): ?><tr><td style="padding:3px 0;"><?php echo esc_html($expense_label); ?></td><td style="text-align:right;">-<?php echo esc_html($money($value($ozet, $expense_key))); ?></td></tr><?php endif; ?>
-                    <?php endforeach; ?>
-                    <tr><td colspan="2" style="height:6px;"></td></tr>
-                    <?php foreach (['kart_masraf' => ['NET KART', $net_kart], 'iban_masraf' => ['NET IBAN', $net_iban], 'nakit_masraf' => ['NET NAKİT', $net_nakit]] as $expense_key => $net_item): ?>
-                        <?php if ((float) $value($ozet, $expense_key) > 0): ?><tr style="font-size:13px; border-top:1px solid #000;"><td style="padding:4px 0; font-weight:bold;"><?php echo esc_html($net_item[0]); ?></td><td style="text-align:right; font-weight:bold;"><?php echo esc_html($money($net_item[1] - (float) $value($ozet, $expense_key))); ?></td></tr><?php endif; ?>
-                    <?php endforeach; ?>
+                <tr style="border-bottom:1px solid #000;">
+                    <td style="padding:4px 0; font-weight:bold;">GENEL TOPLAM</td>
+                    <td style="text-align:right; font-weight:bold;"><?php echo esc_html($money($general_total)); ?></td>
+                </tr>
+                <?php if ($gross_kart > 0 || $net_kart > 0): ?>
+                    <tr><td style="padding:3px 0;">KART TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($gross_kart)); ?></td></tr>
+                <?php endif; ?>
+                <?php if ($gross_iban > 0 || $net_iban > 0): ?>
+                    <tr><td style="padding:3px 0;">IBAN TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($gross_iban)); ?></td></tr>
+                <?php endif; ?>
+                <?php if ($include_qr && ($gross_qr > 0 || $net_qr > 0)): ?>
+                    <tr><td style="padding:3px 0;">QR TAKSİT TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($gross_qr)); ?></td></tr>
+                <?php endif; ?>
+                <?php if ($gross_nakit > 0 || $net_nakit > 0): ?>
+                    <tr><td style="padding:3px 0;">NAKİT TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($gross_nakit)); ?></td></tr>
+                <?php endif; ?>
+
+                <?php if ($total_masraf > 0): ?>
+                    <tr><td colspan="2" style="height:6px; border-bottom:1px dashed #000;"></td></tr>
+                    <?php if ($kart_masraf > 0): ?>
+                        <tr><td style="padding:3px 0;">KART MASRAF</td><td style="text-align:right;">-<?php echo esc_html($money($kart_masraf)); ?></td></tr>
+                    <?php endif; ?>
+                    <?php if ($iban_masraf > 0): ?>
+                        <tr><td style="padding:3px 0;">IBAN MASRAF</td><td style="text-align:right;">-<?php echo esc_html($money($iban_masraf)); ?></td></tr>
+                    <?php endif; ?>
+                    <?php if ($nakit_masraf > 0): ?>
+                        <tr><td style="padding:3px 0;">NAKİT MASRAF</td><td style="text-align:right;">-<?php echo esc_html($money($nakit_masraf)); ?></td></tr>
+                    <?php endif; ?>
+                    <tr><td colspan="2" style="height:6px; border-bottom:1px solid #000;"></td></tr>
+                    <?php if ($kart_masraf > 0): ?>
+                        <tr><td style="padding:3px 0; font-weight:bold;">NET KART</td><td style="text-align:right; font-weight:bold;"><?php echo esc_html($money($net_kart)); ?></td></tr>
+                    <?php endif; ?>
+                    <?php if ($iban_masraf > 0): ?>
+                        <tr><td style="padding:3px 0; font-weight:bold;">NET IBAN</td><td style="text-align:right; font-weight:bold;"><?php echo esc_html($money($net_iban)); ?></td></tr>
+                    <?php endif; ?>
+                    <?php if ($nakit_masraf > 0): ?>
+                        <tr><td style="padding:3px 0; font-weight:bold;">NET NAKİT</td><td style="text-align:right; font-weight:bold;"><?php echo esc_html($money($net_nakit)); ?></td></tr>
+                    <?php endif; ?>
                 <?php endif; ?>
             </table>
         </div>
@@ -94,13 +124,13 @@ $report_time = $rapor['rapor_zamani'] ?? ($header['report_time'] ?? '');
             <tr style="border-top:1px solid #000;"><td style="font-weight:bold; font-size:13px; padding-top:3px;">TOPLAM CİRO</td><td style="text-align:right; font-weight:bold; font-size:13px; padding-top:3px;"><?php echo esc_html($money($base_total)); ?></td></tr>
         </table></div>
         <?php
-        $total_expense = $base_refund + ($is_general ? (float) $value($ozet, 'toplam_masraf') : 0);
-        if ($total_expense > 0): ?>
-            <div style="margin-bottom:8px;"><p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000; padding-bottom:2px; color:#000; font-family:'Courier New', Courier, monospace;">GİDERLER</p><table style="width:100%; font-size:12px; border-collapse:collapse; color:#000; font-family:'Courier New', Courier, monospace;">
-                <?php if ($base_refund > 0): ?><tr><td style="font-weight:bold;">İADE EDİLEN TOPLAM</td><td style="text-align:right; font-weight:bold;">-<?php echo esc_html($money($base_refund)); ?></td></tr><?php endif; ?>
-                <?php foreach (['iade_kart' => 'Kart İade', 'iade_iban' => 'IBAN İade', 'iade_nakit' => 'Nakit İade', 'iade_qr_taksit' => 'QR Taksit İade', 'iade_kupon' => 'Kupon İade'] as $refund_key => $refund_label): ?><?php if ($include_qr || $refund_key !== 'iade_qr_taksit'): ?><?php if ((float) $value($ozet, $refund_key) > 0): ?><tr><td><?php echo esc_html($refund_label); ?></td><td style="text-align:right;">-<?php echo esc_html($money($value($ozet, $refund_key))); ?></td></tr><?php endif; ?><?php endif; ?><?php endforeach; ?>
-                <?php if ($is_general): ?><?php foreach (['kart_masraf' => 'Kart Masraf', 'iban_masraf' => 'IBAN Masraf', 'nakit_masraf' => 'Nakit Masraf'] as $expense_key => $expense_label): ?><?php if ((float) $value($ozet, $expense_key) > 0): ?><tr><td><?php echo esc_html($expense_label); ?></td><td style="text-align:right;">-<?php echo esc_html($money($value($ozet, $expense_key))); ?></td></tr><?php endif; ?><?php endforeach; ?><?php endif; ?>
-                <tr style="border-top:1px solid #000;"><td style="font-weight:bold; font-size:12px; padding-top:2px;">TOPLAM GİDER</td><td style="text-align:right; font-weight:bold; font-size:12px; padding-top:2px;">-<?php echo esc_html($money($total_expense)); ?></td></tr>
+        $total_masraf = (float) $value($ozet, 'toplam_masraf');
+        if ($total_masraf > 0): ?>
+            <div style="margin-bottom:8px;"><p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000; padding-bottom:2px; color:#000; font-family:'Courier New', Courier, monospace;">KASA MASRAFLARI</p><table style="width:100%; font-size:12px; border-collapse:collapse; color:#000; font-family:'Courier New', Courier, monospace;">
+                <?php foreach (['nakit_masraf' => 'Nakit Masraf', 'kart_masraf' => 'Kart Masraf', 'iban_masraf' => 'IBAN Masraf'] as $expense_key => $expense_label): ?>
+                    <?php if ((float) $value($ozet, $expense_key) > 0): ?><tr><td><?php echo esc_html($expense_label); ?></td><td style="text-align:right;">-<?php echo esc_html($money($value($ozet, $expense_key))); ?></td></tr><?php endif; ?>
+                <?php endforeach; ?>
+                <tr style="border-top:1px solid #000;"><td style="font-weight:bold; font-size:12px; padding-top:2px;">TOPLAM MASRAF</td><td style="text-align:right; font-weight:bold; font-size:12px; padding-top:2px;">-<?php echo esc_html($money($total_masraf)); ?></td></tr>
             </table></div>
         <?php endif; ?>
         <div style="margin-bottom:8px;"><p style="font-weight:bold; font-size:12px; text-align:center; margin:0 0 4px; border-bottom:1px solid #000; padding-bottom:2px; color:#000; font-family:'Courier New', Courier, monospace;">--- NET KASA DURUMU ---</p><table style="width:100%; font-size:12px; border-collapse:collapse; color:#000; font-family:'Courier New', Courier, monospace;">
