@@ -25,18 +25,7 @@
             var type = options.type || 'order';
 
             try {
-                // 1. Eğer DOM'da önceden oluşturulmuş bir alan varsa (örn: Toplu Barkod #hk-barcode-print-area) kullan
-                if (!options.element) {
-                    var modeSelector = HK.PrintManager && HK.PrintManager.modeToElement ? HK.PrintManager.modeToElement[type] : null;
-                    if (modeSelector) {
-                        var existing = document.querySelector(modeSelector);
-                        if (existing && existing.children.length > 0) {
-                            options.element = existing;
-                        }
-                    }
-                }
-
-                // 2. Eğer DOM elementi henüz yoksa V2 REST API'den çek
+                // 1. Eğer DOM elementi doğrudan aktarılmadıysa V2 REST API'den çek
                 if (!options.element) {
                     var printData = await this.fetchPrintData(options);
                     var container = this.getOrCreateContainer();
@@ -44,12 +33,12 @@
                     options.element = container.firstElementChild || container;
                 }
 
-                // 3. Sürücü Haritasından Yazıcı Adı Seçimi
+                // 2. Sürücü Haritasından Yazıcı Adı Seçimi
                 if (!options.printerName) {
                     options.printerName = this.getPrinterNameForType(type);
                 }
 
-                // 4. Uygun Sürücüyü Çalıştır
+                // 3. Uygun Sürücüyü Çalıştır
                 var helperDriver = this.drivers['helper-app'];
                 var isHelperAvailable = helperDriver && await helperDriver.isAvailable();
 
@@ -60,7 +49,7 @@
                     await nativeDriver.print(options);
                 }
 
-                return printData;
+                return true;
             } catch (err) {
                 console.error('[PrintCore Error]', err);
                 if (HK.ModalManager && typeof HK.ModalManager.alert === 'function') {
@@ -115,9 +104,15 @@
             if (!el) {
                 el = document.createElement('div');
                 el.id = 'hk-unified-print-container';
-                el.style.display = 'none';
                 document.body.appendChild(el);
             }
+            el.style.display = 'block';
+            el.style.position = 'fixed';
+            el.style.left = '-9999px';
+            el.style.top = '0';
+            el.style.width = '300px';
+            el.style.background = '#ffffff';
+            el.style.zIndex = '999999';
             return el;
         },
 

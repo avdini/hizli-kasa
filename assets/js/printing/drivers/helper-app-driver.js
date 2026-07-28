@@ -81,37 +81,63 @@
                 }
             });
 
-            // html2canvas rasterization
-            var scale = (options.type === 'barcode') ? 3.0 : 2.0;
-            var canvas = await html2canvas(targetEl, {
-                scale: scale,
-                backgroundColor: '#ffffff',
-                logging: false,
-                useCORS: true
-            });
+            // Off-screen preparation for html2canvas
+            var origDisplay = targetEl.style.display;
+            var origPos = targetEl.style.position;
+            var origLeft = targetEl.style.left;
+            var origTop = targetEl.style.top;
+            var origBg = targetEl.style.background;
+            var origWidth = targetEl.style.width;
 
-            var base64Image = canvas.toDataURL('image/png');
-            var rotateAngle = (options.type === 'barcode') ? 270 : 0;
-
-            var res = await fetch('http://127.0.0.1:' + port + '/print', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({
-                    printer_name: printerName,
-                    image: base64Image,
-                    rotate: rotateAngle
-                })
-            });
-
-            if (!res.ok) {
-                var errJson = await res.json().catch(function() { return {}; });
-                throw new Error(errJson.message || 'Yazıcı servisi yazdırma işlemini reddetti.');
+            targetEl.style.display = 'block';
+            targetEl.style.position = 'fixed';
+            targetEl.style.left = '-9999px';
+            targetEl.style.top = '0';
+            targetEl.style.background = '#ffffff';
+            if (options.type !== 'barcode') {
+                targetEl.style.width = '300px';
             }
 
-            return true;
+            try {
+                // html2canvas rasterization
+                var scale = (options.type === 'barcode') ? 3.0 : 2.0;
+                var canvas = await html2canvas(targetEl, {
+                    scale: scale,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    useCORS: true
+                });
+
+                var base64Image = canvas.toDataURL('image/png');
+                var rotateAngle = (options.type === 'barcode') ? 270 : 0;
+
+                var res = await fetch('http://127.0.0.1:' + port + '/print', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({
+                        printer_name: printerName,
+                        image: base64Image,
+                        rotate: rotateAngle
+                    })
+                });
+
+                if (!res.ok) {
+                    var errJson = await res.json().catch(function() { return {}; });
+                    throw new Error(errJson.message || 'Yazıcı servisi yazdırma işlemini reddetti.');
+                }
+
+                return true;
+            } finally {
+                targetEl.style.display = origDisplay;
+                targetEl.style.position = origPos;
+                targetEl.style.left = origLeft;
+                targetEl.style.top = origTop;
+                targetEl.style.background = origBg;
+                targetEl.style.width = origWidth;
+            }
         }
     }
 

@@ -205,12 +205,51 @@
     }
 
     /* 6. Renk ve Font Kalınlığı (Gri Yazıları Engeller) */
-    #fis-sablon *, #gun-sonu-sablon *, #report-fis-sablon *, #hk-barcode-print-area *, #fis-coupon-sablon *, #iade-paket-fis-sablon * {
+    #fis-sablon *, #gun-sonu-sablon *, #report-fis-sablon *, #hk-barcode-print-area *, #fis-coupon-sablon *, #iade-paket-fis-sablon *, #hk-unified-print-container * {
         color: #000 !important;
         opacity: 1 !important;
         font-weight: 600 !important; /* Tüm metinleri siyah yapmak için kalınlaştırır */
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+    }
+
+    /* 7. Unified Print Engine (#hk-unified-print-container) */
+    body.print-mode-order *,
+    body.print-mode-zreport *,
+    body.print-mode-barcode * {
+        visibility: hidden !important;
+    }
+    body.print-mode-order #hk-unified-print-container,
+    body.print-mode-order #hk-unified-print-container *,
+    body.print-mode-zreport #hk-unified-print-container,
+    body.print-mode-zreport #hk-unified-print-container *,
+    body.print-mode-barcode #hk-unified-print-container,
+    body.print-mode-barcode #hk-unified-print-container * {
+        visibility: visible !important;
+    }
+    body.print-mode-order #hk-unified-print-container,
+    body.print-mode-zreport #hk-unified-print-container {
+        display: block !important;
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        max-width: 80mm !important;
+        margin: 0 !important;
+        padding: 0 4mm !important;
+        z-index: 999999 !important;
+        box-sizing: border-box !important;
+    }
+    body.print-mode-barcode #hk-unified-print-container {
+        display: block !important;
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 50mm !important;
+        height: 35mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        z-index: 999999 !important;
     }
 
     /* Zaten kalın olması gereken yerler */
