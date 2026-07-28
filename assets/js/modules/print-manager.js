@@ -34,6 +34,19 @@
          * @param {'receipt'|'barcode'|'report'|'report-receipt'|'coupon'} mode - Yazdırma modu
          */
         print: function(mode) {
+            if (HK.PrintCore && typeof HK.PrintCore.print === 'function') {
+                var typeMap = {
+                    'receipt': 'order',
+                    'report-receipt': 'order',
+                    'report': 'zreport',
+                    'barcode': 'barcode',
+                    'coupon': 'order',
+                    'iade-paket-fis': 'order'
+                };
+                var type = typeMap[mode] || 'order';
+                return HK.PrintCore.print({ type: type });
+            }
+
             var self = this;
             var silentEnabled = localStorage.getItem('hk_silent_print_enabled') === '1';
             var token = localStorage.getItem('hk_print_token');
@@ -41,7 +54,6 @@
             var selector = this.modeToElement[mode];
             var element = selector ? document.querySelector(selector) : null;
 
-            // Eğer sessiz yazdırma aktifse, token varsa, yazıcı seçilmişse ve element mevcutsa sessiz yazdır
             if (silentEnabled && token && printerName && element) {
                 this.printSilently(element, printerName, token, function(success) {
                     if (!success) {
@@ -50,7 +62,6 @@
                     }
                 });
             } else {
-                // Değilse doğrudan tarayıcı yazdırmasına geç (hiç bekleme/tarama yapma)
                 this.printNative(mode);
             }
         },

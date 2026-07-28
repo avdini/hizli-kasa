@@ -168,58 +168,6 @@ if (!defined('ABSPATH')) exit;
     </div>
 </div>
 
-<!-- Gizli Fiş Şablonu (Sadece Yazdırma İçin) -->
-<div id="fis-sablon" style="display:none; color:#000;">
-    <div style="text-align:center; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:10px;">
-        <h2 style="margin:0; font-size:18px;"><?php echo get_bloginfo('name'); ?></h2>
-        <p style="margin:5px 0; font-size:12px;">HIZLI KASA SATIŞ FİŞİ</p>
-        <p id="fis-tarih" style="margin:0; font-size:11px;"></p>
-        <p id="fis-no-text" style="font-weight:bold; margin:5px 0; font-size:14px;"></p>
-        <div style="text-align:center; margin-bottom:10px;">
-            <img id="fis-barkod" style="width: 100%; max-width: 240px; height: auto; margin: 0 auto; display: block;" />
-        </div>
-    </div>
-
-    <table style="width:100%; border-collapse:collapse; font-size:12px; margin-bottom:10px;">
-        <thead>
-            <tr style="border-bottom:1px solid #000;">
-                <th style="text-align:left; padding:5px 0;">Ürün</th>
-                <th style="text-align:right; padding:5px 0;">Toplam</th>
-            </tr>
-        </thead>
-        <tbody id="fis-urunler-body">
-            <!-- Ürünler buraya gelecek -->
-        </tbody>
-    </table>
-
-    <div style="border-top:1px solid #000; padding-top:10px; font-size:13px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:3px;" id="fis-liste-toplami-satiri">
-            <span>Etiket Toplamı:</span>
-            <span id="fis-liste-toplami-tutar"></span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:3px; display:none;" id="fis-nakit-indirim-satiri">
-            <span id="fis-nakit-indirim-etiket">İndirim (%5):</span>
-            <span id="fis-nakit-indirim-tutar"></span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:3px;" id="fis-iskonto-satiri">
-            <span>İskonto:</span>
-            <span id="fis-iskonto-tutar"></span>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom:3px; display:none;" id="fis-degisim-farki-satiri">
-            <span>Ekstra Değişim Farkı:</span>
-            <span id="fis-degisim-farki-tutar"></span>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:16px; margin-top:5px;">
-            <span>TOPLAM:</span>
-            <span id="fis-genel-toplam"></span>
-        </div>
-    </div>
-
-    <div style="text-align:center; margin-top:20px; font-size:11px; border-top:1px solid #000; padding-top:10px;">
-        Bizi tercih ettiğiniz için teşekkür ederiz.
-    </div>
-</div>
-
 <!-- İade Kuponu Fiş Şablonu (Sadece Yazdırma İçin) -->
 <div id="fis-coupon-sablon" style="color:#000; font-family: 'Courier New', Courier, monospace; padding: 10px 0; box-sizing: border-box; text-align: center;">
     <?php
@@ -315,10 +263,7 @@ if (!defined('ABSPATH')) exit;
     </div>
 </div>
 
-<!-- Gün Sonu Fiş Şablonu (Sadece Yazdırma İçin) -->
-<div id="gun-sonu-sablon">
-    <!-- JS tarafından doldurulacak -->
-</div>
+
 
 <!-- Sipariş Düzenleme Modalı -->
 <div id="order-edit-modal" class="modal-cerceve" style="display:none;">

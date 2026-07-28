@@ -1,20 +1,8 @@
 /* =============================================
-   YAZDIRMA STİLLERİ
+   BIRLESIK YAZDIRMA STILERI (UNIFIED PRINT ENGINE)
    ============================================= */
 
-/* 1. Eski Şablonlar (Ekranda Gizli) */
-#fis-sablon, #gun-sonu-sablon, #report-fis-sablon, #fis-coupon-sablon, #iade-paket-fis-sablon {
-    display: none;
-    font-family: 'Courier New', Courier, monospace !important;
-    width: 80mm;
-    box-sizing: border-box;
-    background: white;
-    color: #000 !important;
-    box-shadow: none !important;
-    border: none !important;
-}
-
-/* 2. Birleşik Yazdırma Konteyneri (Ekranda Sol Dışarıda, html2canvas İçin Render Edilebilir) */
+/* 1. Birleşik Yazdırma Konteyneri (Ekranda Sol Dışarıda, html2canvas & Native İçin Render Edilebilir) */
 #hk-unified-print-container,
 .hk-unified-print-container {
     display: block !important;
@@ -24,7 +12,7 @@
     width: 300px !important;
     max-width: 300px !important;
     background: #ffffff !important;
-    color: #000 !important;
+    color: #000000 !important;
     font-family: 'Courier New', Courier, monospace !important;
     box-sizing: border-box !important;
     box-shadow: none !important;
@@ -33,14 +21,16 @@
     z-index: -9999 !important;
 }
 
-#fis-sablon *, #gun-sonu-sablon *, #report-fis-sablon *, #fis-coupon-sablon *, #iade-paket-fis-sablon *, #hk-unified-print-container *, .hk-unified-print-container * {
-    color: #000 !important;
-    border-color: #000 !important;
+#hk-unified-print-container *,
+.hk-unified-print-container * {
+    color: #000000 !important;
+    border-color: #000000 !important;
     box-shadow: none !important;
     font-family: 'Courier New', Courier, monospace !important;
 }
 
-#fis-sablon table, #gun-sonu-sablon table, #report-fis-sablon table, #fis-coupon-sablon table, #iade-paket-fis-sablon table, #hk-unified-print-container table, .hk-unified-print-container table {
+#hk-unified-print-container table,
+.hk-unified-print-container table {
     border-collapse: collapse !important;
     width: 100% !important;
     border: none !important;
@@ -48,16 +38,21 @@
     padding: 0 !important;
 }
 
-#fis-sablon td, #fis-sablon th, #gun-sonu-sablon td, #gun-sonu-sablon th, #report-fis-sablon td, #report-fis-sablon th, #fis-coupon-sablon td, #fis-coupon-sablon th, #iade-paket-fis-sablon td, #iade-paket-fis-sablon th,
-#hk-unified-print-container td, #hk-unified-print-container th, .hk-unified-print-container td, .hk-unified-print-container th,
-#fis-sablon tr, #gun-sonu-sablon tr, #fis-coupon-sablon tr, #iade-paket-fis-sablon tr, #hk-unified-print-container tr, .hk-unified-print-container tr,
-#fis-sablon thead, #gun-sonu-sablon thead, #fis-coupon-sablon thead, #iade-paket-fis-sablon thead, #hk-unified-print-container thead, .hk-unified-print-container thead,
-#fis-sablon tbody, #gun-sonu-sablon tbody, #report-fis-sablon tr, #report-fis-sablon thead, #report-fis-sablon tbody, #fis-coupon-sablon tbody, #iade-paket-fis-sablon tbody, #hk-unified-print-container tbody, .hk-unified-print-container tbody {
+#hk-unified-print-container td,
+#hk-unified-print-container th,
+#hk-unified-print-container tr,
+#hk-unified-print-container thead,
+#hk-unified-print-container tbody,
+.hk-unified-print-container td,
+.hk-unified-print-container th,
+.hk-unified-print-container tr,
+.hk-unified-print-container thead,
+.hk-unified-print-container tbody {
     border: none !important;
     padding: 2px 0;
 }
 
-/* --- Fiş ve Rapor Fişi Kalem Stilleri --- */
+/* --- Fiş Kalem Stilleri --- */
 .fis-item-td-left {
     padding: 1px 0;
     line-height: 1.1;
@@ -97,10 +92,7 @@
         width: 100% !important;
         height: auto !important;
         overflow: visible !important;
-        background: white !important;
-        left: 0 !important;
-        top: 0 !important;
-        position: relative !important;
+        background: #ffffff !important;
     }
 
     /* 2. Admin Bar ve Diğer Boşlukları Tamamen Kaldır */
@@ -108,154 +100,15 @@
     .admin-bar body, 
     #wp-admin-bar-root-default {
         display: none !important;
-        margin-top: 0 !important;
     }
 
-    /* 3. Normal Satış Fişi Modu */
-    body.print-mode-receipt * {
-        visibility: hidden;
-    }
-    body.print-mode-receipt #fis-sablon, 
-    body.print-mode-receipt #fis-sablon * {
-        visibility: visible;
-    }
-    body.print-mode-receipt #fis-sablon {
-        display: block !important;
-        position: fixed !important; 
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        max-width: 80mm !important;
-        margin: 0 !important;
-        padding: 0 4mm !important;
-        z-index: 99999 !important;
-        box-sizing: border-box !important;
-    }
-
-    /* 3.1 İade Kuponu Fişi Modu */
-    body.print-mode-coupon * {
-        visibility: hidden;
-    }
-    body.print-mode-coupon #fis-coupon-sablon, 
-    body.print-mode-coupon #fis-coupon-sablon * {
-        visibility: visible;
-    }
-    body.print-mode-coupon #fis-coupon-sablon {
-        display: block !important;
-        position: fixed !important; 
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        max-width: 80mm !important;
-        margin: 0 !important;
-        padding: 0 4mm !important;
-        z-index: 99999 !important;
-        box-sizing: border-box !important;
-    }
-
-    /* 3.2 Tedarikçi İade Paket Fişi Modu */
-    body.print-mode-iade-paket-fis * {
-        visibility: hidden;
-    }
-    body.print-mode-iade-paket-fis #iade-paket-fis-sablon, 
-    body.print-mode-iade-paket-fis #iade-paket-fis-sablon * {
-        visibility: visible;
-    }
-    body.print-mode-iade-paket-fis #iade-paket-fis-sablon {
-        display: block !important;
-        position: fixed !important; 
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        max-width: 80mm !important;
-        margin: 0 !important;
-        padding: 0 4mm !important;
-        z-index: 99999 !important;
-        box-sizing: border-box !important;
-    }
-
-    /* 4. Barkod Modu */
-    body.print-mode-barcode > *:not(#hk-barcode-print-area) {
-        display: none !important;
-    }
-    body.print-mode-barcode #hk-barcode-print-area {
-        display: block !important;
-        position: relative !important; /* Flow içinde kalsın ki sayfalamayı bozmasın */
-        width: 50mm !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    body.print-mode-barcode #hk-barcode-print-area * {
-        visibility: visible !important;
-    }
-
-    /* 5. Rapor Modu */
-    body.print-mode-report * {
-        visibility: hidden;
-    }
-    body.print-mode-report #gun-sonu-sablon, 
-    body.print-mode-report #gun-sonu-sablon * {
-        visibility: visible;
-    }
-    body.print-mode-report #gun-sonu-sablon {
-        display: block !important;
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        max-width: 80mm !important;
-        z-index: 99999 !important;
-        padding: 0 4mm !important;
-        box-sizing: border-box !important;
-    }
-
-    /* 5.1 Raporlar Sipariş Fişi Modu (izole) */
-    body.print-mode-report-receipt * {
-        visibility: hidden;
-    }
-    body.print-mode-report-receipt #report-fis-sablon,
-    body.print-mode-report-receipt #report-fis-sablon * {
-        visibility: visible;
-    }
-    body.print-mode-report-receipt #report-fis-sablon {
-        display: block !important;
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        max-width: 80mm !important;
-        margin: 0 !important;
-        padding: 0 4mm !important;
-        z-index: 99999 !important;
-        box-sizing: border-box !important;
-    }
-
-    /* 6. Renk ve Font Kalınlığı (Gri Yazıları Engeller) */
-    #fis-sablon *, #gun-sonu-sablon *, #report-fis-sablon *, #hk-barcode-print-area *, #fis-coupon-sablon *, #iade-paket-fis-sablon *, #hk-unified-print-container * {
-        color: #000 !important;
-        opacity: 1 !important;
-        font-weight: 600 !important; /* Tüm metinleri siyah yapmak için kalınlaştırır */
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        box-shadow: none !important;
-        text-shadow: none !important;
-    }
-
-    #hk-unified-print-container,
-    .hk-unified-print-container {
-        box-shadow: none !important;
-        border: none !important;
-        border-radius: 0 !important;
-        background: #ffffff !important;
-        outline: none !important;
-    }
-
-    /* 7. Unified Print Engine (#hk-unified-print-container) */
+    /* 3. Birleşik Yazdırma Modları */
     body.print-mode-order *,
     body.print-mode-zreport *,
     body.print-mode-barcode * {
         visibility: hidden !important;
     }
+
     body.print-mode-order #hk-unified-print-container,
     body.print-mode-order #hk-unified-print-container *,
     body.print-mode-zreport #hk-unified-print-container,
@@ -264,20 +117,7 @@
     body.print-mode-barcode #hk-unified-print-container * {
         visibility: visible !important;
     }
-    body.print-mode-zreport #hk-unified-print-container {
-        width: 80mm !important;
-        max-width: 80mm !important;
-        margin: 0 !important;
-        padding: 0 4mm !important;
-        box-sizing: border-box !important;
-    }
-    body.print-mode-zreport #hk-unified-print-container .receipt-zreport {
-        width: 100% !important;
-        max-width: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
-    }
+
     body.print-mode-order #hk-unified-print-container,
     body.print-mode-zreport #hk-unified-print-container {
         display: block !important;
@@ -291,11 +131,7 @@
         z-index: 999999 !important;
         box-sizing: border-box !important;
     }
-    body.print-mode-zreport #hk-unified-print-container {
-        width: 80mm !important;
-        max-width: 80mm !important;
-        padding: 0 4mm !important;
-    }
+
     body.print-mode-barcode #hk-unified-print-container {
         display: block !important;
         position: fixed !important;
@@ -306,10 +142,5 @@
         margin: 0 !important;
         padding: 0 !important;
         z-index: 999999 !important;
-    }
-
-    /* Zaten kalın olması gereken yerler */
-    #fis-sablon h2, #fis-sablon b, #fis-sablon strong, #report-fis-sablon h2, #report-fis-sablon b, #report-fis-sablon strong, #fis-coupon-sablon h2, #fis-coupon-sablon b, #fis-coupon-sablon strong, #iade-paket-fis-sablon h2, #iade-paket-fis-sablon b, #iade-paket-fis-sablon strong, .toplam-deger {
-        font-weight: 900 !important;
     }
 }

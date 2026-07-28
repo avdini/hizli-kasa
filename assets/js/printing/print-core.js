@@ -23,14 +23,14 @@
         print: async function(options) {
             options = options || {};
             var type = options.type || 'order';
+            var sandbox = null;
 
             try {
-                // 1. Eğer DOM elementi doğrudan aktarılmadıysa V2 REST API'den çek
+                // 1. Eğer DOM elementi doğrudan aktarılmadıysa V2 REST API'den çek ve dinamik sandbox oluştur
                 if (!options.element) {
                     var printData = await this.fetchPrintData(options);
-                    var container = this.getOrCreateContainer();
-                    container.innerHTML = printData.rendered_html;
-                    options.element = container.firstElementChild || container;
+                    sandbox = this.createSandbox(type, printData.rendered_html);
+                    options.element = sandbox;
                 }
 
                 // 2. Sürücü Haritasından Yazıcı Adı Seçimi
@@ -58,6 +58,11 @@
                     HK.UIRenderer.showToast('Yazdırma Hatası: ' + err.message, 'error', true);
                 }
                 throw err;
+            } finally {
+                // 4. Yazdırma işlemi bittiğinde sandbox elementini DOM'dan tamamen kaldır
+                if (sandbox) {
+                    this.destroySandbox(sandbox);
+                }
             }
         },
 
@@ -103,21 +108,39 @@
             return json.data;
         },
 
-        getOrCreateContainer: function() {
-            var el = document.getElementById('hk-unified-print-container');
-            if (!el) {
-                el = document.createElement('div');
-                el.id = 'hk-unified-print-container';
-                document.body.appendChild(el);
+        createSandbox: function(type, html) {
+            this.destroySandbox(); // Var olan eski kalıntı varsa temizle
+
+            var sandbox = document.createElement('div');
+            sandbox.id = 'hk-unified-print-container';
+            sandbox.className = 'hk-unified-print-container print-type-' + type;
+
+            var width = (type === 'barcode') ? '50mm' : '300px';
+
+            Object.assign(sandbox.style, {
+                display: 'block',
+                position: 'fixed',
+                left: '-9999px',
+                top: '0',
+                width: width,
+                maxWidth: width,
+                backgroundColor: '#ffffff',
+                color: '#000000',
+                zIndex: '-9999',
+                overflow: 'hidden',
+                boxSizing: 'border-box'
+            });
+
+            sandbox.innerHTML = html;
+            document.body.appendChild(sandbox);
+            return sandbox;
+        },
+
+        destroySandbox: function(el) {
+            var target = el || document.getElementById('hk-unified-print-container');
+            if (target && target.parentNode) {
+                target.parentNode.removeChild(target);
             }
-            el.style.display = 'block';
-            el.style.position = 'fixed';
-            el.style.left = '-9999px';
-            el.style.top = '0';
-            el.style.width = '300px';
-            el.style.background = '#ffffff';
-            el.style.zIndex = '999999';
-            return el;
         },
 
         getPrinterNameForType: function(type) {
