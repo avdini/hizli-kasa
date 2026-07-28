@@ -2,7 +2,8 @@
    YAZDIRMA STİLLERİ
    ============================================= */
 
-#fis-sablon, #gun-sonu-sablon, #report-fis-sablon, #fis-coupon-sablon, #iade-paket-fis-sablon, #hk-unified-print-container, .hk-unified-print-container {
+/* 1. Eski Şablonlar (Ekranda Gizli) */
+#fis-sablon, #gun-sonu-sablon, #report-fis-sablon, #fis-coupon-sablon, #iade-paket-fis-sablon {
     display: none;
     font-family: 'Courier New', Courier, monospace !important;
     width: 80mm;
@@ -11,6 +12,25 @@
     color: #000 !important;
     box-shadow: none !important;
     border: none !important;
+}
+
+/* 2. Birleşik Yazdırma Konteyneri (Ekranda Sol Dışarıda, html2canvas İçin Render Edilebilir) */
+#hk-unified-print-container,
+.hk-unified-print-container {
+    display: block !important;
+    position: fixed !important;
+    left: -9999px !important;
+    top: 0 !important;
+    width: 300px !important;
+    max-width: 300px !important;
+    background: #ffffff !important;
+    color: #000 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    box-sizing: border-box !important;
+    box-shadow: none !important;
+    border: none !important;
+    outline: none !important;
+    z-index: -9999 !important;
 }
 
 #fis-sablon *, #gun-sonu-sablon *, #report-fis-sablon *, #fis-coupon-sablon *, #iade-paket-fis-sablon *, #hk-unified-print-container *, .hk-unified-print-container * {
