@@ -343,7 +343,7 @@
             } catch (err) {
                 console.error("Camera start failed definitively:", err);
                 const errorMsg = this.getCameraErrorMessage(err);
-                alert(errorMsg);
+                HK.UI.alert(errorMsg);
                 this.state.isScanning = false;
                 return false;
             }

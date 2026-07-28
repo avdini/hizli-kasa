@@ -191,7 +191,7 @@ $online_depo_id = get_option('hizli_kasa_varsayilan_online_depo');
                                         </button>
                                         <a href="<?php echo wp_nonce_url('admin.php?page=hizli-kasa&tab=depolar&delete_depo=' . $depo->id, 'delete_depo_' . $depo->id); ?>" 
                                            class="hk-btn-action hk-btn-action-danger" style="padding:4px 10px; font-size:12px; text-decoration:none;" 
-                                           onclick="return confirm('Bu depoyu silmek üzeresiniz. Stok verileri de etkilenebilir. Emin misiniz?')">
+                                           onclick="event.preventDefault(); (async () => { if(await HK.UI.confirm('Bu depoyu silmek üzeresiniz. Stok verileri de etkilenebilir. Emin misiniz?')) window.location.href = this.href; })();">
                                             <span class="dashicons dashicons-trash" style="font-size:14px; width:14px; height:14px;"></span> Sil
                                         </a>
                                     </div>

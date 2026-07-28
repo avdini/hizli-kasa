@@ -198,11 +198,15 @@ function hizli_kasa_uygulamasi()
     // Ses Yöneticisi (Sound Manager)
     wp_enqueue_script('kasa-sound-manager', $js_base . 'modules/sound-manager.js', [], $pos_version, true);
 
+    // HK.UI Bütünleşik Dialog & Notification Motoru
+    wp_enqueue_style('kasa-modal-dialogs-css', HIZLI_KASA_URL . 'assets/css/modal-dialogs.css', [], $pos_version);
+    wp_enqueue_script('kasa-ui-dialogs', $js_base . 'modules/ui-dialogs.js', ['kasa-sound-manager'], $pos_version, true);
+
     wp_enqueue_script('kasa-html2canvas', $js_base . 'lib/html2canvas.min.js', [], $pos_version, true);
     wp_enqueue_script('kasa-print-manager', $js_base . 'modules/print-manager.js', ['kasa-html2canvas'], $pos_version, true);
     wp_enqueue_script('kasa-currency-mask', $js_base . 'modules/currency-mask.js', [], $pos_version, true);
     wp_enqueue_script('kasa-cart-manager', $js_base . 'modules/cart-manager.js', [], $pos_version, true);
-    wp_enqueue_script('kasa-ui-renderer', $js_base . 'modules/ui-renderer.js', ['kasa-cart-manager', 'kasa-currency-mask'], $pos_version, true);
+    wp_enqueue_script('kasa-ui-renderer', $js_base . 'modules/ui-renderer.js', ['kasa-cart-manager', 'kasa-currency-mask', 'kasa-ui-dialogs'], $pos_version, true);
     wp_enqueue_script('kasa-barcode-scanner', $js_base . 'modules/barcode-scanner.js', ['kasa-cart-manager', 'kasa-ui-renderer'], $pos_version, true);
     wp_enqueue_script('kasa-modal-manager', $js_base . 'modules/modal-manager.js', ['kasa-cart-manager', 'kasa-ui-renderer'], $pos_version, true);
     wp_enqueue_script('kasa-qrcode-lib', $js_base . 'lib/qrcode.min.js', [], $pos_version, true);

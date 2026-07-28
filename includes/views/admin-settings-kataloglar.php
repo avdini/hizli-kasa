@@ -133,12 +133,12 @@ $shares = Hizli_Kasa_Catalog_Share_Manager::get_all_shares();
             })
             .catch(err => {
                 console.error('Kopyalama başarısız:', err);
-                alert('Bağlantı kopyalanamadı, lütfen manuel kopyalayın: ' + text);
+                HK.UI.alert('Bağlantı kopyalanamadı, lütfen manuel kopyalayın: ' + text);
             });
     }
 
-    function deleteCatalogShare(token, button) {
-        if (!confirm('Bu paylaşılan katalog bağlantısını silmek istediğinize emin misiniz?')) {
+    async function deleteCatalogShare(token, button) {
+        if (!(await HK.UI.confirm('Bu paylaşılan katalog bağlantısını silmek istediğinize emin misiniz?'))) {
             return;
         }
         
@@ -181,14 +181,14 @@ $shares = Hizli_Kasa_Catalog_Share_Manager::get_all_shares();
                     }, 300);
                 }
             } else {
-                alert('Hata: ' + (res.data ? res.data.message : 'Bilinmeyen bir hata oluştu.'));
+                HK.UI.alert('Hata: ' + (res.data ? res.data.message : 'Bilinmeyen bir hata oluştu.'));
                 button.disabled = false;
                 button.textContent = 'Sil';
             }
         })
         .catch(err => {
             console.error(err);
-            alert('İstek gönderilirken bir hata oluştu.');
+            HK.UI.alert('İstek gönderilirken bir hata oluştu.');
             button.disabled = false;
             button.textContent = 'Sil';
         });

@@ -123,7 +123,7 @@ const AppNavigation = (function () {
 
         } catch (error) {
             console.error('Hata:', error);
-            alert('Sayfa yüklenirken bir sorun oluştu.');
+            HK.UI.alert('Sayfa yüklenirken bir sorun oluştu.');
         } finally {
             hideLoading();
         }

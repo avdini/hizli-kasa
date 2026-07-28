@@ -359,7 +359,7 @@
                 }
             });
 
-            if (requests.length === 0) return alert("Lütfen en az 1 adet seçin.");
+            if (requests.length === 0) return HK.UI.alert("Lütfen en az 1 adet seçin.");
 
             btn.disabled = true;
             btn.innerText = 'Hazırlanıyor...';
@@ -385,7 +385,7 @@
 
             } catch (e) {
                 console.error(e);
-                alert("Barkod verileri alınırken bir hata oluştu.");
+                HK.UI.alert("Barkod verileri alınırken bir hata oluştu.");
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'Yazıcıya Gönder';

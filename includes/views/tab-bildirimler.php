@@ -148,7 +148,7 @@ jQuery(document).ready(function($) {
             if (res.success) {
                 location.reload();
             } else {
-                alert('Kontrol sırasında bir hata oluştu.');
+                HK.UI.alert('Kontrol sırasında bir hata oluştu.');
             }
         });
     });

@@ -215,7 +215,7 @@ const MalkabulManager = (function () {
     }
 
     async function addCustomProductToPO() {
-        const customName = prompt("Sitede olmayan bağımsız ürünün adını girin:");
+        const customName = await HK.UI.prompt("Sitede olmayan bağımsız ürünün adını girin:");
         if (!customName || customName.trim() === '') return;
 
         poItems.push({
@@ -849,7 +849,7 @@ const MalkabulManager = (function () {
 
     async function deleteDraftIade() {
         if (!activeIade) return;
-        if (!confirm('Bu iade taslağını silmek istediğinize emin misiniz?')) return;
+        if (!(await HK.UI.confirm('Bu iade taslağını silmek istediğinize emin misiniz?'))) return;
 
         try {
             const res = await fetch(`${API_URL}/tedarikci-iade/sil`, {

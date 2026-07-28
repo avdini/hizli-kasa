@@ -187,8 +187,8 @@ jQuery(document).ready(function($) {
     }
 });
 
-function deleteUnmatched(id, qty) {
-    if(!confirm('Bu kaydı listeden kaldırmak istediğinize emin misiniz?')) return;
+async function deleteUnmatched(id, qty) {
+    if(!(await HK.UI.confirm('Bu kaydı listeden kaldırmak istediğinize emin misiniz?'))) return;
     
     jQuery.post(ajaxurl, {
         action: 'hizli_kasa_delete_unmatched',
@@ -229,15 +229,15 @@ function deleteUnmatched(id, qty) {
     });
 }
 
-function deleteAllUnmatched(force = false) {
+async function deleteAllUnmatched(force = false) {
     if(!force) return;
-    if(!confirm('TÜM uyuşmazlık listesini temizlemek istediğinize emin misiniz? Bu işlem geri alınamaz.')) return;
+    if(!(await HK.UI.confirm('TÜM uyuşmazlık listesini temizlemek istediğinize emin misiniz? Bu işlem geri alınamaz.'))) return;
     
     jQuery.post(ajaxurl, {
         action: 'hizli_kasa_clear_all_unmatched'
     }, function(res) {
         if(res.success) {
-            alert(res.data.message);
+            HK.UI.alert(res.data.message);
             location.reload();
         }
     });

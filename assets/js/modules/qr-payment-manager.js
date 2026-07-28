@@ -399,7 +399,7 @@
          */
         cancelPayment: async function (orderId) {
             var self = this;
-            if (!confirm("Bu QR ödeme siparişini iptal etmek istediğinizden emin misiniz?")) {
+            if (!(await HK.UI.confirm("Bu QR ödeme siparişini iptal etmek istediğinizden emin misiniz?"))) {
                 return;
             }
 

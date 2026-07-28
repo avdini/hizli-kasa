@@ -195,7 +195,7 @@
     });
 
     // ===== Click event handler =====
-    document.addEventListener('click', function(event) {
+    document.addEventListener('click', async function(event) {
         var root = event.target.closest('.hk-admin-order-tools');
         if (!root) {
             return;
@@ -259,7 +259,7 @@
         }
 
         if (event.target.id === 'hk-aot-save') {
-            if (!window.confirm(hkAdminOrderTools.labels.confirm)) {
+            if (!(await HK.UI.confirm(hkAdminOrderTools.labels.confirm))) {
                 return;
             }
 

@@ -141,7 +141,7 @@
                 if (window.swal) {
                     swal('Başarılı', res.data && res.data.message ? res.data.message : 'İade başarıyla iptal edildi.', 'success');
                 } else {
-                    alert(res.data && res.data.message ? res.data.message : 'İade başarıyla iptal edildi.');
+                    HK.UI.toast(res.data && res.data.message ? res.data.message : 'İade başarıyla iptal edildi.', 'success');
                 }
 
                 self.loadRefunds(self.currentPageRefunds);

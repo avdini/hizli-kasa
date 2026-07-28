@@ -808,7 +808,7 @@
             var change = parseFloat(document.getElementById('modal-degisim-input').value);
             var btn = document.getElementById('stok-kaydet-onay');
 
-            if (isNaN(change) || change === 0) return alert("Lütfen geçerli bir miktar girin.");
+            if (isNaN(change) || change === 0) return HK.UI.alert("Lütfen geçerli bir miktar girin.");
 
             // Yönetim yetkisi kontrolü
             var activeDepo = (window.HizliKasa && HizliKasa.DepoManager)
@@ -816,7 +816,7 @@
                 : null;
             
             if (!activeDepo || !HizliKasa.DepoManager.canManageDepo(activeDepo)) {
-                return alert('Bu depoda stok değiştirme yetkiniz yok.');
+                return HK.UI.alert('Bu depoda stok değiştirme yetkiniz yok.');
             }
 
             btn.disabled = true;
@@ -843,11 +843,11 @@
                     document.getElementById('stok-duzenle-modal').style.display = 'none';
                     this.loadProducts(false);
                 } else {
-                    alert("Hata: " + (res.message || res.data?.message || 'Bilinmeyen hata'));
+                    HK.UI.alert("Hata: " + (res.message || res.data?.message || 'Bilinmeyen hata'));
                 }
             } catch (e) {
                 console.error(e);
-                alert("Bir hata oluştu.");
+                HK.UI.alert("Bir hata oluştu.");
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'Hareketi Kaydet';
@@ -930,7 +930,7 @@
 
             // Yetki kontrolü (Yönetim yetkisi yoksa kaydetme)
             if (!window.HizliKasa || !HizliKasa.DepoManager || !HizliKasa.DepoManager.canManageDepo(depoId)) {
-                alert('Bu depoda depo kodu değiştirme yetkiniz yok.');
+                HK.UI.alert('Bu depoda depo kodu değiştirme yetkiniz yok.');
                 return;
             }
 
@@ -938,7 +938,7 @@
             
             if (rawValue !== '') {
                 if (rawValue.length > 6 || !/^[A-Z0-9]+$/.test(rawValue)) {
-                    alert('Depo kodu en fazla 6 haneli olmalı, yalnızca harf ve rakamlardan oluşmalıdır.');
+                    HK.UI.alert('Depo kodu en fazla 6 haneli olmalı, yalnızca harf ve rakamlardan oluşmalıdır.');
                     var product = this.state.products.find(p => p.id === id);
                     var originalValue = '';
                     if (vid > 0 && product && product.variations) {
@@ -991,12 +991,12 @@
                         }
                     }
                 } else {
-                    alert('Hata: ' + (res.errors ? res.errors.join(', ') : 'Depo kodu güncellenemedi.'));
+                    HK.UI.alert('Hata: ' + (res.errors ? res.errors.join(', ') : 'Depo kodu güncellenemedi.'));
                     input.style.borderColor = '#ef4444';
                 }
             } catch (e) {
                 console.error(e);
-                alert('İletişim hatası oluştu.');
+                HK.UI.alert('İletişim hatası oluştu.');
                 input.style.borderColor = '#ef4444';
             } finally {
                 input.disabled = false;

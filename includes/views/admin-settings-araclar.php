@@ -173,22 +173,22 @@ $debug_aktif = get_option('hizli_kasa_debug_log_aktif', '0');
 <script>
 jQuery(document).ready(function($) {
     // 1. Sistemi Başlat
-    $('#btn-hizli-kasa-setup').on('click', function() {
+    $('#btn-hizli-kasa-setup').on('click', async function() {
         const depoId = $('#setup-target-depo').val();
-        if(!depoId) return alert('Lütfen bir hedef depo seçin.');
-        if(!confirm('Tüm ürün stokları bu depoya kopyalanacak. Devam edilsin mi?')) return;
+        if(!depoId) return HK.UI.alert('Lütfen bir hedef depo seçin.');
+        if(!(await HK.UI.confirm('Tüm ürün stokları bu depoya kopyalanacak. Devam edilsin mi?'))) return;
         
         const btn = $(this);
         btn.prop('disabled', true).text('İşleniyor...');
         $.post(ajaxurl, { action: 'hizli_kasa_setup', depo_id: depoId }, function(res) {
-            alert(res.data.message);
+            HK.UI.alert(res.data.message);
             location.reload();
         });
     });
 
     // 2. Depo Stoklarını Siteye Eşitle
-    $('#btn-hizli-kasa-sync-wh-to-wc').on('click', function() {
-        if(!confirm('Tüm depoların toplam stoğu WooCommerce ana site stoğu olarak yazılacak. Emin misiniz?')) return;
+    $('#btn-hizli-kasa-sync-wh-to-wc').on('click', async function() {
+        if(!(await HK.UI.confirm('Tüm depoların toplam stoğu WooCommerce ana site stoğu olarak yazılacak. Emin misiniz?'))) return;
         
         const btn = $(this);
         btn.prop('disabled', true).text('İşleniyor...');
@@ -205,7 +205,7 @@ jQuery(document).ready(function($) {
         
         $.post(ajaxurl, { action: 'hizli_kasa_sync_wh_to_wc_start' }, function(res) {
             if(!res.success || !res.data.ids || res.data.ids.length === 0) {
-                alert(res.data.message || 'Eşitlenecek ürün bulunamadı.');
+                HK.UI.alert(res.data.message || 'Eşitlenecek ürün bulunamadı.');
                 btn.prop('disabled', false).html('<span class="dashicons dashicons-update"></span> Depo Stoklarını Siteye Eşitle');
                 progressWrapper.hide();
                 return;
@@ -220,7 +220,7 @@ jQuery(document).ready(function($) {
                 if(processed >= total) {
                     statusSpan.text('Eşitleme başarıyla tamamlandı!');
                     btn.prop('disabled', false).html('<span class="dashicons dashicons-update"></span> Depo Stoklarını Siteye Eşitle');
-                    alert('Tüm depo stokları başarıyla siteye eşitlendi!');
+                    HK.UI.alert('Tüm depo stokları başarıyla siteye eşitlendi!');
                     location.reload();
                     return;
                 }
@@ -236,11 +236,11 @@ jQuery(document).ready(function($) {
                         progressText.text(pct + '%');
                         processNextBatch();
                     } else {
-                        alert('Eşitleme sırasında hata oluştu: ' + (stepRes.data.message || 'Bilinmeyen Hata'));
+                        HK.UI.alert('Eşitleme sırasında hata oluştu: ' + (stepRes.data.message || 'Bilinmeyen Hata'));
                         btn.prop('disabled', false).html('<span class="dashicons dashicons-update"></span> Depo Stoklarını Siteye Eşitle');
                     }
                 }).fail(function() {
-                    alert('Bağlantı hatası oluştu, işlem durduruldu.');
+                    HK.UI.alert('Bağlantı hatası oluştu, işlem durduruldu.');
                     btn.prop('disabled', false).html('<span class="dashicons dashicons-update"></span> Depo Stoklarını Siteye Eşitle');
                 });
             }
@@ -250,14 +250,14 @@ jQuery(document).ready(function($) {
     });
 
     // 3. Sistemi Sıfırla
-    $('#btn-hizli-kasa-reset').on('click', function() {
-        if(!confirm('DİKKAT! Tüm veriler silinecek. Bu işlem geri alınamaz. Emin misiniz?')) return;
-        if(!confirm('SON UYARI: Gerçekten her şeyi silmek istiyor musunuz?')) return;
+    $('#btn-hizli-kasa-reset').on('click', async function() {
+        if(!(await HK.UI.confirm('DİKKAT! Tüm veriler silinecek. Bu işlem geri alınamaz. Emin misiniz?'))) return;
+        if(!(await HK.UI.confirm('SON UYARI: Gerçekten her şeyi silmek istiyor musunuz?'))) return;
 
         const btn = $(this);
         btn.prop('disabled', true).text('Siliniyor...');
         $.post(ajaxurl, { action: 'hizli_kasa_reset' }, function(res) {
-            alert(res.data.message);
+            HK.UI.alert(res.data.message);
             location.reload();
         });
     });
@@ -267,7 +267,7 @@ jQuery(document).ready(function($) {
         const btn = $(this);
         btn.prop('disabled', true).text('Onarılıyor...');
         $.post(ajaxurl, { action: 'hizli_kasa_repair_db' }, function(res) {
-            alert(res.data.message);
+            HK.UI.alert(res.data.message);
             location.reload();
         });
     });

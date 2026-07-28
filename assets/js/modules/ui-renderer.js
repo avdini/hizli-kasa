@@ -667,8 +667,8 @@ window.HizliKasa = window.HizliKasa || {};
                                          '<button class="mod-qr-goster-btn" style="margin-left:5px;">QR Göster</button>' +
                                          '</div>';
 
-                    modAlani.querySelector(".mod-qr-degistir-btn").addEventListener("click", function() {
-                        if (confirm("QR ödemeyi iptal edip başka bir ödeme yöntemiyle devam etmek istiyor musunuz?")) {
+                    modAlani.querySelector(".mod-qr-degistir-btn").addEventListener("click", async function() {
+                        if (await HK.UI.confirm("QR ödemeyi iptal edip başka bir ödeme yöntemiyle devam etmek istiyor musunuz?")) {
                             if (HK.QRPaymentManager) {
                                 HK.QRPaymentManager.changePaymentMethod(state.aktifKasaId);
                             }
@@ -713,8 +713,8 @@ window.HizliKasa = window.HizliKasa || {};
                                          '<button class="mod-iptal-btn">İptal</button>' +
                                          '</div>';
                     
-                    modAlani.querySelector(".mod-iptal-btn").addEventListener("click", function() {
-                        if (confirm("Sipariş düzenleme modundan çıkmak istiyor musunuz? Sepet temizlenecektir.")) {
+                    modAlani.querySelector(".mod-iptal-btn").addEventListener("click", async function() {
+                        if (await HK.UI.confirm("Sipariş düzenleme modundan çıkmak istiyor musunuz? Sepet temizlenecektir.")) {
                             state.editingOrderId = null;
                             HK.CartManager.sepetiTemizle(state.aktifKasaId);
                             HK.UIRenderer.arayuzuGuncelle();
@@ -742,8 +742,8 @@ window.HizliKasa = window.HizliKasa || {};
                                          '<button class="mod-iptal-btn">İptal</button>' +
                                          '</div>';
                     
-                    modAlani.querySelector(".mod-iptal-btn").addEventListener("click", function() {
-                        if (confirm("Değişim/İade işlemini iptal etmek istediğinize emin misiniz? Sepetteki tüm iade ürünleri çıkarılacaktır.")) {
+                    modAlani.querySelector(".mod-iptal-btn").addEventListener("click", async function() {
+                        if (await HK.UI.confirm("Değişim/İade işlemini iptal etmek istediğinize emin misiniz? Sepetteki tüm iade ürünleri çıkarılacaktır.")) {
                             state.sepet = state.sepet.filter(function(item) {
                                 return !item._is_exchange_return;
                             });
@@ -1027,19 +1027,14 @@ window.HizliKasa = window.HizliKasa || {};
          * @param {boolean} requireClose Manuel kapatma gerektirir mi?
          */
         showToast: function(msg, type, requireClose) {
-            console.log("HK Toast:", type, msg); // Debug log
-            
-            type = type || 'info';
-            // Hatalar veya açıkça istenen durumlar manuel kapatılır
-            requireClose = (requireClose === true) || (type === 'error'); 
-
-            var container = document.getElementById('hk-toast-container');
-            if (!container) {
-                console.error("Toast container (hk-toast-container) bulunamadı!");
-                // Yedek: Eğer konteyner yoksa ama çok gerekliyse (hata) alert bas
-                if (type === 'error') alert("HATA: " + msg);
-                return;
+            if (window.HK && window.HK.UI && typeof window.HK.UI.toast === 'function') {
+                return window.HK.UI.toast({
+                    message: msg,
+                    type: type || 'info',
+                    autoClose: !(requireClose === true || type === 'error')
+                });
             }
+            console.log("HK Toast:", type, msg);
 
             var toast = document.createElement('div');
             toast.className = 'hk-toast ' + type;

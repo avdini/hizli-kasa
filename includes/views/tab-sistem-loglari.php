@@ -495,18 +495,18 @@ $nonce = wp_create_nonce('wp_rest');
 
         // Clear Logs
         document.getElementById('hk-btn-clear-logs').addEventListener('click', async () => {
-            if (!confirm('Tüm log kayıtları temizlenecek. Emin misiniz?')) return;
+            if (!(await HK.UI.confirm('Tüm log kayıtları temizlenecek. Emin misiniz?'))) return;
             try {
                 const res = await fetch(API_BASE + '/clear', {
                     method: 'DELETE',
                     headers: { 'X-WP-Nonce': NONCE }
                 });
                 const data = await res.json();
-                alert(data.data.message || 'Loglar temizlendi.');
+                HK.UI.alert(data.data.message || 'Loglar temizlendi.');
                 fetchStats();
                 fetchLogs();
             } catch (err) {
-                alert('Loglar temizlenirken bir hata oluştu.');
+                HK.UI.alert('Loglar temizlenirken bir hata oluştu.');
             }
         });
     });

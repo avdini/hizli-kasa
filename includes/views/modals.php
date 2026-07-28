@@ -487,3 +487,23 @@ if (!defined('ABSPATH')) exit;
     </div>
 </div>
 
+<!-- Bütünleşik HK Global Dialog Modalı (alert, confirm, prompt) -->
+<div id="hk-global-dialog-modal" class="modal-cerceve" style="display:none; z-index: 12000;">
+    <div class="modal-icerik modal-icerik-sm">
+        <h3 id="hk-global-dialog-title">📌 Uyarı</h3>
+        <p id="hk-global-dialog-message"></p>
+        <div id="hk-global-dialog-input-wrapper" style="display:none;">
+            <input type="text" id="hk-global-dialog-input" class="hk-input" autocomplete="off" />
+            <textarea id="hk-global-dialog-textarea" class="hk-input" rows="3" style="display:none;"></textarea>
+            <small id="hk-global-dialog-error" class="hk-input-error" style="display:none;"></small>
+        </div>
+        <div class="modal-butonlar">
+            <button id="hk-global-dialog-cancel" class="modal-btn-cancel">Vazgeç</button>
+            <button id="hk-global-dialog-confirm" class="hk-btn-primary">Onayla</button>
+        </div>
+    </div>
+</div>
+
+<!-- Bütünleşik HK Toast Yüzen Baloncuk Container -->
+<div id="hk-toast-container" class="hk-toast-stack-container"></div>
+

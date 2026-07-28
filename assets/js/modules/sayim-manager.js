@@ -166,7 +166,7 @@
             });
 
             // Table quantity adjustments and delete delegation
-            this.elements.itemsBody.addEventListener('click', function(e) {
+            this.elements.itemsBody.addEventListener('click', async function(e) {
                 var target = e.target;
                 var row = target.closest('tr');
                 if (!row) return;
@@ -181,7 +181,7 @@
                     var newQty = Math.max(0, parseFloat(item.counted_qty) - 1);
                     self.updateItemQty(item, newQty);
                 } else if (target.classList.contains('btn-sayim-kalem-sil') || target.parentNode.classList.contains('btn-sayim-kalem-sil')) {
-                    if (confirm('Bu ürünü sayım listesinden çıkartmak istediğinize emin misiniz?')) {
+                    if (await HK.UI.confirm('Bu ürünü sayım listesinden çıkartmak istediğinize emin misiniz?')) {
                         self.deleteItem(item);
                     }
                 }
@@ -615,7 +615,7 @@
             var self = this;
             if (!this.state.activeSession) return;
 
-            if (!confirm('Bu sayım seansını İPTAL etmek istediğinize emin misiniz? Sayılmış tüm veriler arşivlenecek ancak stoklar güncellenmeyecektir!')) {
+            if (!(await HK.UI.confirm('Bu sayım seansını İPTAL etmek istediğinize emin misiniz? Sayılmış tüm veriler arşivlenecek ancak stoklar güncellenmeyecektir!'))) {
                 return;
             }
 
@@ -695,7 +695,7 @@
 
             self.elements.bitirModal.style.display = 'none';
 
-            if (updateType === 'full' && !confirm('DİKKAT! Tam Eşitleme yöntemini seçtiniz. Bu depodaki listede yer almayan TÜM diğer ürünlerin stokları 0 yapılacaktır. Devam etmek istiyor musunuz?')) {
+            if (updateType === 'full' && !(await HK.UI.confirm('DİKKAT! Tam Eşitleme yöntemini seçtiniz. Bu depodaki listede yer almayan TÜM diğer ürünlerin stokları 0 yapılacaktır. Devam etmek istiyor musunuz?'))) {
                 return;
             }
 
@@ -717,7 +717,7 @@
                 var data = await response.json();
 
                 if (response.ok && data.success) {
-                    alert('Başarılı!\n\nSunucu tüm güncel sayım listesini aldı ve stok eşitleme işlemini arka planda devraldı.\n\nArtık bu sekmeyi güvenle kapatabilirsiniz veya POS üzerinden satış yapmaya devam edebilirsiniz. İşlem arka planda tamamlandığında raporlar sekmesinde arşivlenecektir.');
+                    HK.UI.alert('Başarılı!\n\nSunucu tüm güncel sayım listesini aldı ve stok eşitleme işlemini arka planda devraldı.\n\nArtık bu sekmeyi güvenle kapatabilirsiniz veya POS üzerinden satış yapmaya devam edebilirsiniz. İşlem arka planda tamamlandığında raporlar sekmesinde arşivlenecektir.');
                     self.loadActiveSession();
                 } else {
                     var msg = data.message || 'Sayım tamamlanamadı!';

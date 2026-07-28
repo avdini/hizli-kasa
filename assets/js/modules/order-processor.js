@@ -382,7 +382,7 @@
                 if (HK.UIRenderer && typeof HK.UIRenderer.showToast === "function") {
                     HK.UIRenderer.showToast("Sepette satışı yapılacak ürün bulunmamaktadır!", "error", true);
                 } else {
-                    alert("Sepette satışı yapılacak ürün bulunmamaktadır!");
+                    HK.UI.alert("Sepette satışı yapılacak ürün bulunmamaktadır!");
                 }
                 return;
             }
@@ -469,7 +469,7 @@
                 durumMetni.innerText = "Sadece iade işlemi tamamlandı.";
                 durumMetni.style.color = "#27ae60";
                 HK.CartManager.sepetiTemizle(siparisKasaId);
-                alert("Sadece iade işlemi yapıldı. İade Sipariş No: #" + exchangeRefundOrderId);
+                HK.UI.toast({ message: "Sadece iade işlemi yapıldı. İade Sipariş No: #" + exchangeRefundOrderId, type: "success" });
                 if (HK.UIRenderer) {
                     HK.UIRenderer.arayuzuGuncelle();
                 }
@@ -822,7 +822,7 @@
             var durumMetni = document.getElementById("durum");
 
             // Düzenleme Sebebi Girişi (Zorunlu)
-            var reason = prompt("Lütfen bu siparişi düzenleme sebebinizi giriniz (Zorunlu):");
+            var reason = await HK.UI.prompt("Lütfen bu siparişi düzenleme sebebinizi giriniz (Zorunlu):");
             if (reason === null) {
                 return; // Kasiyer iptal etti
             }
@@ -833,7 +833,7 @@
                 return;
             }
 
-            if (!confirm("Sipariş düzenlenecek ve stoklar güncellenecek. Emin misiniz?")) {
+            if (!(await HK.UI.confirm("Sipariş düzenlenecek ve stoklar güncellenecek. Emin misiniz?"))) {
                 return;
             }
 

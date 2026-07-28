@@ -141,7 +141,7 @@ const RefundManager = (function () {
                 
                 if (originalOrder && originalOrder.has_item_discount) {
                     modalToplamInput.value = HK.CurrencyMask.format(cartTotal);
-                    alert('Bu siparişte iskonto ürün fiyatlarına yedirilmiştir. Ekstra iskonto düşülemez.');
+                    HK.UI.alert('Bu siparişte iskonto ürün fiyatlarına yedirilmiştir. Ekstra iskonto düşülemez.');
                     if (document.querySelector('input[name="iade_payment_method"]:checked')?.value === 'split') {
                         calculateRefundSplit();
                     }
@@ -168,7 +168,7 @@ const RefundManager = (function () {
                         requiredDiscount = maxDusebilir;
                         finalTotal = cartTotal - maxDusebilir;
                         hasCorrection = true;
-                        alert('⚠️ Maksimum iskonto limitini aştınız!\nTutar izin verilen limite (' + finalTotal.toFixed(2) + ' TL) göre düzeltildi.');
+                        HK.UI.alert('⚠️ Maksimum iskonto limitini aştınız!\nTutar izin verilen limite (' + finalTotal.toFixed(2) + ' TL) göre düzeltildi.');
                     }
                 }
                 
@@ -465,7 +465,7 @@ const RefundManager = (function () {
             renderSearchResults(data, append);
 
         } catch (error) {
-            alert('Arama hatası: ' + error.message);
+            HK.UI.alert('Arama hatası: ' + error.message);
         } finally {
             hideLoading();
         }
@@ -599,7 +599,7 @@ const RefundManager = (function () {
             renderOrderDetails();
 
         } catch (error) {
-            alert('Hata: ' + error.message);
+            HK.UI.alert('Hata: ' + error.message);
             originalOrder = null;
         } finally {
             hideLoading();
@@ -976,7 +976,7 @@ const RefundManager = (function () {
             if (cartItem.qty < item.qty) {
                 cartItem.qty++;
             } else {
-                alert('Siparişteki adetten fazla iade edilemez.');
+                HK.UI.alert('Siparişteki adetten fazla iade edilemez.');
             }
         } else {
             refundCart.push({
@@ -1090,7 +1090,7 @@ const RefundManager = (function () {
 
     async function processRefund() {
         if (isRefundProcessing) return;
-        if (!confirm('İade faturası oluşturulacak. Onaylıyor musunuz?')) return;
+        if (!(await HK.UI.confirm('İade faturası oluşturulacak. Onaylıyor musunuz?'))) return;
 
         isRefundProcessing = true;
         showLoading();
@@ -1100,7 +1100,7 @@ const RefundManager = (function () {
             const paymentMethod = document.querySelector('input[name="iade_payment_method"]:checked')?.value || "nakit";
 
             if (paymentMethod === 'split' && !refundSplitData) {
-                alert('Lütfen bölünmüş ödeme tutarlarını kontrol edin! Toplam eşleşmiyor.');
+                HK.UI.alert('Lütfen bölünmüş ödeme tutarlarını kontrol edin! Toplam eşleşmiyor.');
                 return;
             }
 
@@ -1108,14 +1108,14 @@ const RefundManager = (function () {
             if (paymentMethod === 'coupon') {
                 if (window.refundIti) {
                     if (!window.refundIti.isValidNumber()) {
-                        alert('Lütfen kupon için geçerli bir telefon numarası girin!');
+                        HK.UI.alert('Lütfen kupon için geçerli bir telefon numarası girin!');
                         return;
                     }
                     couponPhone = window.refundIti.getNumber();
                 } else {
                     couponPhone = document.getElementById('iade-coupon-phone') ? document.getElementById('iade-coupon-phone').value.trim() : '';
                     if (couponPhone.replace(/\D/g, '').length < 10) {
-                        alert('Lütfen kupon için geçerli bir telefon numarası girin!');
+                        HK.UI.alert('Lütfen kupon için geçerli bir telefon numarası girin!');
                         return;
                     }
                 }
@@ -1152,7 +1152,7 @@ const RefundManager = (function () {
 
             const data = await response.json();
             if (data.success) {
-                alert('İade başarıyla tamamlandı. Sipariş No: #' + data.order_id);
+                HK.UI.toast('İade başarıyla tamamlandı. Sipariş No: #' + data.order_id, 'success');
                 
                 if (paymentMethod === 'coupon' && data.coupon) {
                     if (window.HizliKasa && window.HizliKasa.ReceiptPrinter && typeof window.HizliKasa.ReceiptPrinter.printCouponReceipt === 'function') {
@@ -1180,7 +1180,7 @@ const RefundManager = (function () {
             }
 
         } catch (error) {
-            alert('Hata: ' + error.message);
+            HK.UI.alert('Hata: ' + error.message);
         } finally {
             isRefundProcessing = false;
             hideLoading();
@@ -1268,21 +1268,21 @@ const RefundManager = (function () {
      * İade sepetindeki ürünleri kasa sepetine negatif satır olarak gönderir.
      * Müşteri yeni ürünleri de ekleyip tek sipariş olarak kapatabilir (değişim akışı).
      */
-    function sendToRegisterForExchange() {
+    async function sendToRegisterForExchange() {
         if (refundCart.length === 0) return;
 
         const HK = window.HizliKasa;
         if (!HK || !HK.CartManager || !HK.State) {
-            alert('Kasa modülü yüklenemedi. Lütfen sayfayı yenileyin.');
+            HK.UI.alert('Kasa modülü yüklenemedi. Lütfen sayfayı yenileyin.');
             return;
         }
 
         if (HK.State.editingOrderId) {
-            alert("Kasada şu anda aktif bir sipariş düzenleme işlemi var! Lütfen önce düzenlemeyi tamamlayın veya iptal edin.");
+            HK.UI.alert("Kasada şu anda aktif bir sipariş düzenleme işlemi var! Lütfen önce düzenlemeyi tamamlayın veya iptal edin.");
             return;
         }
 
-        if (!confirm(`${refundCart.length} ürün değişim için kasaya gönderilecek. Devam edilsin mi?`)) return;
+        if (!(await HK.UI.confirm(`${refundCart.length} ürün değişim için kasaya gönderilecek. Devam edilsin mi?`))) return;
 
         // İade sepetindeki ürünleri kasa sepetine negatif satır olarak ekle
         refundCart.forEach(item => {
@@ -1349,16 +1349,16 @@ const RefundManager = (function () {
         }
     }
 
-    function editRefundCartItemPrice(itemId) {
+    async function editRefundCartItemPrice(itemId) {
         const item = refundCart.find(i => i.item_id == itemId);
         if (!item) return;
 
-        const inputStr = prompt(`"${item.name}" için yeni İade Birim Fiyatını (TL) girin:`, item.price.toFixed(2));
+        const inputStr = await HK.UI.prompt(`"${item.name}" için yeni İade Birim Fiyatını (TL) girin:`, item.price.toFixed(2));
         if (inputStr === null) return;
 
         const newPrice = HK.CurrencyMask ? HK.CurrencyMask.parse(inputStr) : parseFloat(inputStr.replace(',', '.'));
         if (isNaN(newPrice) || newPrice < 0) {
-            alert('Geçersiz birim fiyat.');
+            HK.UI.alert('Geçersiz birim fiyat.');
             return;
         }
 

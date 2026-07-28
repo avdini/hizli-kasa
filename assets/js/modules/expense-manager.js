@@ -158,7 +158,7 @@
 
             const amount = HK.CurrencyMask.parse(tutarInput.value);
             if (!category || isNaN(amount) || amount <= 0) {
-                alert('Lütfen kategori ve geçerli bir tutar girin.');
+                HK.UI.alert('Lütfen kategori ve geçerli bir tutar girin.');
                 return;
             }
 
@@ -202,7 +202,7 @@
                 jQuery(document).trigger('hk:masraf-guncellendi');
 
             } catch (error) {
-                alert('Hata: ' + error.message);
+                HK.UI.alert('Hata: ' + error.message);
             } finally {
                 this.isProcessing = false;
                 btn.disabled = false;
@@ -217,7 +217,7 @@
             const self = this;
             document.querySelectorAll('.masraf-sil-btn').forEach(btn => {
                 btn.onclick = async function() {
-                    if (!confirm('Bu masraf kaydını silmek istediğinize emin misiniz?')) return;
+                    if (!(await HK.UI.confirm('Bu masraf kaydını silmek istediğinize emin misiniz?'))) return;
                     
                     const id = this.getAttribute('data-id');
                     try {
@@ -231,7 +231,7 @@
                             jQuery(document).trigger('hk:masraf-guncellendi');
                         }
                     } catch (error) {
-                        alert('Silme hatası');
+                        HK.UI.alert('Silme hatası');
                     }
                 };
             });

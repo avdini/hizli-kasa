@@ -22,6 +22,7 @@ Bu klasör projenin "hafızasıdır". Çalıştığınız alanda daha önce bir 
 ### Önemli Bellek Dokümanları:
 -   **Genel Kılavuzlar:** [guidelines.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/context/guidelines.md)
 -   **Modal ve Mesaj Kutusu Standartları:** [modal-notification-standards.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/context/modal-notification-standards.md)
+-   **Bildirim Merkezi ve Canlı Olay Mimarisi:** [notification-center-architecture.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/context/notification-center-architecture.md)
 -   **V2 REST API Standartları:** [api-development.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/skills/api-development.md)
 -   **Loglama ve Logger Standartları:** [logging.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/skills/logging.md)
 -   **Stok Sayımı ve Arka Plan Eşitleme Mimarisi:** [stock-sync-architecture.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/context/stock-sync-architecture.md)

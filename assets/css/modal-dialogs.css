@@ -1,0 +1,219 @@
+/**
+ * Hızlı Kasa POS - UI Dialogs, Modals & Toast Notifications Styling
+ *
+ * @package HizliKasa
+ * @version 2.0
+ */
+
+/* ==========================================================================
+   1. GLOBAL DYNAMIC DIALOG MODAL (#hk-global-dialog-modal)
+   ========================================================================== */
+
+#hk-global-dialog-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 12000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.25s ease;
+}
+
+#hk-global-dialog-modal.hk-modal-show {
+    opacity: 1;
+    visibility: visible;
+}
+
+#hk-global-dialog-modal .modal-icerik {
+    background: var(--hk-bg-card, #ffffff);
+    color: var(--hk-text-main, #1e293b);
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+    padding: 24px;
+    width: 90%;
+    max-width: 440px;
+    transform: scale(0.92) translateY(10px);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1px solid var(--hk-border, #e2e8f0);
+}
+
+#hk-global-dialog-modal.hk-modal-show .modal-icerik {
+    transform: scale(1) translateY(0);
+}
+
+#hk-global-dialog-title {
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--hk-text-main, #0f172a);
+}
+
+#hk-global-dialog-message {
+    margin: 0 0 20px 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--hk-text-muted, #475569);
+    word-break: break-word;
+}
+
+#hk-global-dialog-input-wrapper {
+    margin-bottom: 20px;
+}
+
+#hk-global-dialog-input,
+#hk-global-dialog-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1.5px solid var(--hk-border, #cbd5e1);
+    background: var(--hk-bg-input, #f8fafc);
+    color: var(--hk-text-main, #0f172a);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box;
+}
+
+#hk-global-dialog-input:focus,
+#hk-global-dialog-textarea:focus {
+    border-color: var(--hk-primary, #3b82f6);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+#hk-global-dialog-error {
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: 6px;
+    display: block;
+}
+
+#hk-global-dialog-modal .modal-butonlar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* ==========================================================================
+   2. FLOATING TOAST STACK CONTAINER (#hk-toast-container)
+   ========================================================================== */
+
+#hk-toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 12500;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 10px;
+    max-width: 380px;
+    width: calc(100vw - 48px);
+    pointer-events: none;
+}
+
+.hk-toast-item {
+    pointer-events: auto;
+    background: var(--hk-bg-card, #ffffff);
+    color: var(--hk-text-main, #0f172a);
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.12), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid #3b82f6;
+    border-top: 1px solid var(--hk-border, #f1f5f9);
+    border-right: 1px solid var(--hk-border, #f1f5f9);
+    border-bottom: 1px solid var(--hk-border, #f1f5f9);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    animation: hkToastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.hk-toast-item.hk-toast-hiding {
+    opacity: 0;
+    transform: translateX(30px);
+}
+
+@keyframes hkToastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.hk-toast-icon {
+    font-size: 18px;
+    line-height: 1;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
+.hk-toast-content {
+    flex-grow: 1;
+}
+
+.hk-toast-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 3px;
+    color: var(--hk-text-main, #0f172a);
+}
+
+.hk-toast-message {
+    font-size: 13px;
+    color: var(--hk-text-muted, #475569);
+    line-height: 1.4;
+}
+
+.hk-toast-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.hk-toast-close {
+    background: none;
+    border: none;
+    color: var(--hk-text-muted, #94a3b8);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    transition: color 0.15s ease;
+}
+
+.hk-toast-close:hover {
+    color: var(--hk-text-main, #0f172a);
+}
+
+/* Toast Type Variants */
+.hk-toast-item.hk-toast-success { border-left-color: #10b981; }
+.hk-toast-item.hk-toast-error   { border-left-color: #ef4444; }
+.hk-toast-item.hk-toast-warning { border-left-color: #f59e0b; }
+.hk-toast-item.hk-toast-info    { border-left-color: #3b82f6; }
+
+/* Responsive Adjustments */
+@media (max-width: 480px) {
+    #hk-toast-container {
+        bottom: 12px;
+        right: 12px;
+        left: 12px;
+        width: auto;
+        max-width: none;
+    }
+}

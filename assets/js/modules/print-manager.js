@@ -428,11 +428,11 @@
                         'Authorization': 'Bearer ' + token
                     },
                     success: function() {
-                        alert('Eşleştirme Başarılı! Yazıcı listesi alınıyor...');
+                        HK.UI.toast('Eşleştirme Başarılı! Yazıcı listesi alınıyor...', 'success');
                         checkHelperStatus();
                     },
                     error: function(xhr) {
-                        alert('Eşleştirme başarısız: ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Sunucu yanıt vermedi.'));
+                        HK.UI.alert('Eşleştirme başarısız: ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Sunucu yanıt vermedi.'));
                     },
                     complete: function() {
                         selfBtn.prop('disabled', false).text('Yeniden Eşleştir').css({

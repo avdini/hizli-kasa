@@ -170,13 +170,13 @@ class Hizli_Kasa_Admin_Product_Export {
                         document.getElementById('hkExpireInfo').textContent    = '⏱ Geçerlilik: ' + data.data.expires_in;
                         document.getElementById('hkDeleteBtn').dataset.token   = _hkToken;
                     } else {
-                        alert('Hata: ' + (data.data && data.data.message ? data.data.message : 'Bilinmeyen hata.'));
+                        HK.UI.alert('Hata: ' + (data.data && data.data.message ? data.data.message : 'Bilinmeyen hata.'));
                     }
                 })
                 .catch(() => {
                     btn.textContent = 'Link Oluştur';
                     btn.disabled    = false;
-                    alert('Bağlantı hatası.');
+                    HK.UI.alert('Bağlantı hatası.');
                 });
         }
 
@@ -190,8 +190,8 @@ class Hizli_Kasa_Admin_Product_Export {
             });
         }
 
-        function hkDeleteShare() {
-            if (!_hkToken || !confirm('Bu paylaşım linkini silmek istediğinize emin misiniz?')) return;
+        async function hkDeleteShare() {
+            if (!_hkToken || !(await HK.UI.confirm('Bu paylaşım linkini silmek istediğinize emin misiniz?'))) return;
             var fd = new FormData();
             fd.append('action', 'hk_delete_catalog_share');
             fd.append('nonce', _hkNonce);

@@ -525,7 +525,7 @@ jQuery(document).ready(function($) {
     function handleFileSelect(file) {
         const ext = file.name.split('.').pop().toLowerCase();
         if (ext !== 'csv' && ext !== 'json') {
-            alert('Lütfen geçerli bir CSV veya JSON dosyası seçin.');
+            HK.UI.alert('Lütfen geçerli bir CSV veya JSON dosyası seçin.');
             return;
         }
         $('#selected-file-info').text('Seçilen Dosya: ' + file.name).show();
@@ -825,11 +825,11 @@ jQuery(document).ready(function($) {
                 clearSelection();
                 loadStockList(currentPage);
             } else {
-                alert('Kaydetme hatası: ' + (res.data ? res.data.message : 'Bilinmeyen hata'));
+                HK.UI.alert('Kaydetme hatası: ' + (res.data ? res.data.message : 'Bilinmeyen hata'));
                 $('#btn-save-changes').prop('disabled', false).text('💾 Değişiklikleri Kaydet');
             }
         }).fail(function() {
-            alert('Sunucu hatası oluştu!');
+            HK.UI.alert('Sunucu hatası oluştu!');
             $('#btn-save-changes').prop('disabled', false).text('💾 Değişiklikleri Kaydet');
         });
     };
@@ -845,7 +845,7 @@ jQuery(document).ready(function($) {
     window.broadcastToSelected = function() {
         const targetCol = $('#bulk-col-select').val(); // 'wc_stock' veya 'did_1' vb.
         const val = $('#bulk-val-input').val();
-        if (val === '') { alert('Lütfen bir değer girin.'); return; }
+        if (val === '') { HK.UI.alert('Lütfen bir değer girin.'); return; }
         
         $('.hk-row-cb:checked').each(function() {
             const $tr = $(this).closest('tr');

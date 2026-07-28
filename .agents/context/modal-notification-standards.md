@@ -1,88 +1,174 @@
-# Hızlı Kasa Modal, Mesaj Kutusu ve Kullanıcı Bildirim Standartları
+# Hızlı Kasa UI & Notification Architecture Specification (Agent-Native Spec v2.0)
 
-Bu doküman, Hızlı Kasa WooCommerce POS eklentisinde kullanıcı etkileşimleri (onay, bilgi, uyarı, metin/girdi alma) için geçerli olan **ZORUNLU** modal ve bildirim standartlarını açıklar.
-
----
-
-## 1. Temel İlkeler ve Kurallar
-
-1. **Tarayıcı Varsayılan Popup'ları Kesinlikle Yasaktır:**
-   - Kod içerisinde `window.alert()`, `window.confirm()` veya `window.prompt()` **KESİNLİKLE KULLANILAMAZ**.
-   - Tarayıcının varsayılan mesaj balonları (pop-up) kullanıcı deneyimini bozmakta, dokunmatik kilitli POS ekranlarında kitlenmelere yol açmakta ve uygulamanın modern tasarım kimliğini zedelemektedir.
-
-2. **Hızlı Kasa Özel Modal Yapısı Kullanılmalıdır:**
-   - Onay isteme, metin alma veya form doldurma işlemleri için `includes/views/modals.php` dosyası altında HTML modal şablonu tanımlanmalı ve JS modülü üzerinden kontrol edilmelidir.
-   - Bilgilendirme ve hızlı başarı/hata uyarılarında SweetAlert (`swal('Başlıklı', 'Mesaj', 'success|error|warning')`) veya toast bildirimleri kullanılmalıdır.
-
-3. **Mobil ve Dokunmatik (POS) Uyumluluğu:**
-   - Modallar dokunmatik ekranlara ve farklı ekran çözünürlüklerine uyumlu olmalı, klavye kısayollarını (Örn: `Esc` ile kapatma, `Enter` ile onaylama) desteklemelidir.
+> **TARGET AGENT DIRECTIVE**: This document defines the exact architecture, JS API schemas, DOM bindings, and strict compliance rules for all UI dialogs, modals, toast notifications, and notification badges in Hızlı Kasa POS.
 
 ---
 
-## 2. Modal Mimarisi ve Bileşen Konumları
+## 1. COMPLIANCE CONSTRAINTS & ZERO-TOLERANCE RULES
 
-Hızlı Kasa sisteminde modal altyapısı üç katmandan oluşur:
-
-### A. HTML Görünüm Katmanı (`includes/views/modals.php`)
-- Tüm global modallar `includes/views/modals.php` dosyasında bulunur.
-- Şablon Yapısı:
-  ```html
-  <div id="ornek-modal" class="modal-cerceve" style="display:none;">
-      <div class="modal-icerik modal-icerik-sm">
-          <h3>📌 Modal Başlığı</h3>
-          <p>Açıklama veya form metni...</p>
-          <div class="masraf-form-group">
-              <label>Girdi Alanı</label>
-              <textarea id="ornek-input" class="hk-input"></textarea>
-          </div>
-          <div class="modal-butonlar">
-              <button id="ornek-vazgec" class="modal-btn-cancel">Vazgeç</button>
-              <button id="ornek-onay" class="hk-btn-primary">Onayla</button>
-          </div>
-      </div>
-  </div>
-  ```
-
-### B. JavaScript Kontrol Katmanı (`assets/js/modules/modal-manager.js` veya Modül JS)
-- Modalların açma/kapama durumları, `style.display = 'flex'` veya `'none'` mantığıyla yönetilir.
-- Modal açıldığında odak (focus) otomatik olarak ilk input/textarea alanına verilir.
-- Buton klikleri ve doğrulama (validation) kuralları JS içerisinde işlenir.
+```yaml
+rules:
+  no_native_dialogs:
+    forbidden_tokens:
+      - "window.alert"
+      - "window.confirm"
+      - "window.prompt"
+      - "alert("
+      - "confirm("
+      - "prompt("
+    enforcement: "STRICT_BUILD_FAIL"
+    action: "Replace with HK.UI asynchronous Promise-based methods."
+  async_flow:
+    pattern: "async/await"
+    return_types:
+      alert: "Promise<void>"
+      confirm: "Promise<boolean>"
+      prompt: "Promise<string|null>"
+  v2_api_integration:
+    error_extraction: "res.errors ? res.errors.join('<br>') : res.data?.message"
+    no_cache_enforcement: true
+```
 
 ---
 
-## 3. İşlem Türlerine Göre Kullanım Kılavuzu
+## 2. HK.UI JAVASCRIPT API SCHEMAS & INTERFACES
 
-| İşlem Türü | Yanlış Kullanım (Yasak) | Doğru Kullanım (Zorunlu) |
-| :--- | :--- | :--- |
-| **Metin / Gerekçe Alma** | `prompt("Neden giriniz:")` | HTML Modal (`#iade-iptal-modal`) içerisindeki `<textarea>` veya `<input>` |
-| **İşlem Onayı İsteme** | `confirm("İptal edilsin mi?")` | HTML Modal şablonu veya SweetAlert onay diyaloğu |
-| **Başarı / Bilgi Uyarısı** | `alert("İşlem tamamlandı!")` | `swal('Başarılı', 'İşlem tamamlandı.', 'success')` |
-| **Hata Uyarısı** | `alert("Hata oluştu!")` | `swal('Hata', 'Hata mesajı...', 'error')` veya modal içi `<small id="hata-mesaji">` |
+### 2.1 Type Definitions (TypeScript / JSDoc Specs)
 
----
+```typescript
+type DialogType = 'success' | 'error' | 'warning' | 'info' | 'danger';
+type InputType = 'text' | 'number' | 'textarea';
+type ToastVariant = 'compact' | 'card' | 'banner';
 
-## 4. Örnek Kod Standartları
+interface AlertOptions {
+    title?: string;
+    message: string;
+    type?: DialogType;
+    confirmText?: string;
+}
 
-### Doğru Modal Açma ve Doğrulama Örneği (JS):
-```javascript
-openCancelModal: function(orderId) {
-    var modal = document.getElementById("iade-iptal-modal");
-    var input = document.getElementById("iade-iptal-neden-input");
-    var errorEl = document.getElementById("iade-iptal-hata-mesaji");
+interface ConfirmOptions {
+    title?: string;
+    message: string;
+    confirmText?: string;
+    cancelText?: string;
+    type?: DialogType;
+}
 
-    if (!modal) return;
+interface PromptOptions {
+    title?: string;
+    message: string;
+    placeholder?: string;
+    defaultValue?: string;
+    inputType?: InputType;
+    required?: boolean;
+    confirmText?: string;
+    cancelText?: string;
+}
 
-    input.value = '';
-    errorEl.style.display = 'none';
-    modal.style.display = "flex";
+interface ToastAction {
+    label: string;
+    class?: string;
+    onClick: (toastInstance: { close: () => void }) => void;
+}
 
-    setTimeout(function() { input.focus(); }, 100);
+interface ToastOptions {
+    title?: string;
+    message: string;
+    type?: DialogType;
+    variant?: ToastVariant;
+    autoClose?: boolean;
+    duration?: number; // default: 4000
+    actions?: ToastAction[];
 }
 ```
 
-### Yanıt Bildirimi Örneği (JS):
+### 2.2 Global Method Signatures
+
 ```javascript
-if (window.swal) {
-    swal('Başarılı', 'İade başarıyla iptal edildi.', 'success');
+HK.UI = {
+    // Katman 1: Blocking Interactive Modals
+    alert: (options: AlertOptions) => Promise<void>,
+    confirm: (options: ConfirmOptions) => Promise<boolean>,
+    prompt: (options: PromptOptions) => Promise<string | null>,
+
+    // Katman 2: Non-blocking Floating Toasts & Action Cards
+    toast: (options: ToastOptions) => { close: () => void },
+    toastCard: (options: ToastOptions) => { close: () => void },
+    banner: (options: ToastOptions) => { close: () => void },
+
+    // Katman 3: Notification Center & Badge State Sync
+    badge: {
+        set: (count: number) => void,
+        increment: (step?: number) => void,
+        decrement: (step?: number) => void
+    }
+};
+```
+
+---
+
+## 3. DOM INJECTION & CSS SELECTOR SPECIFICATIONS
+
+### 3.1 Global Dynamic Dialog Container (`includes/views/modals.php`)
+```html
+<div id="hk-global-dialog-modal" class="modal-cerceve" style="display:none; z-index: 1200;">
+    <div class="modal-icerik modal-icerik-sm">
+        <h3 id="hk-global-dialog-title"></h3>
+        <p id="hk-global-dialog-message"></p>
+        <div id="hk-global-dialog-input-wrapper" style="display:none;">
+            <input type="text" id="hk-global-dialog-input" class="hk-input" autocomplete="off" />
+            <textarea id="hk-global-dialog-textarea" class="hk-input" style="display:none;"></textarea>
+            <small id="hk-global-dialog-error" class="hk-input-error" style="display:none;"></small>
+        </div>
+        <div class="modal-butonlar">
+            <button id="hk-global-dialog-cancel" class="modal-btn-cancel">Vazgeç</button>
+            <button id="hk-global-dialog-confirm" class="hk-btn-primary">Onayla</button>
+        </div>
+    </div>
+</div>
+<div id="hk-toast-container" class="hk-toast-stack-container"></div>
+```
+
+### 3.2 Key DOM IDs & Classes Reference
+- Container: `#hk-global-dialog-modal`
+- Title Element: `#hk-global-dialog-title`
+- Message Element: `#hk-global-dialog-message`
+- Input Element (Text/Number): `#hk-global-dialog-input`
+- Textarea Element: `#hk-global-dialog-textarea`
+- Error Message Element: `#hk-global-dialog-error`
+- Confirm Button: `#hk-global-dialog-confirm`
+- Cancel Button: `#hk-global-dialog-cancel`
+- Toast Container: `#hk-toast-container`
+
+---
+
+## 4. SOUND & ACCESSIBILITY INTEGRATION
+
+```json
+{
+  "accessibility": {
+    "auto_focus": "First input or confirm button on modal display flex",
+    "hotkeys": {
+      "Enter": "Triggers #hk-global-dialog-confirm",
+      "Escape": "Triggers #hk-global-dialog-cancel"
+    },
+    "touch_target_min_height": "44px"
+  },
+  "sound_integration": {
+    "source_state": "window.HK_DATA.soundSettings",
+    "triggers": {
+      "confirm_success": "HK.SoundManager.play('sharp_click')",
+      "alert_error": "HK.SoundManager.play('high_alert')",
+      "toast_success": "HK.SoundManager.play('soft')"
+    }
+  }
 }
 ```
+
+---
+
+## 5. NOTIFICATION CENTER & EVENT ROUTING ARCHITECTURE
+
+For multi-warehouse, real-time, and role-based notification center specifications, database schema, V2 API endpoints, and event routing triggers (e.g., stock transfer alerts, e-commerce sale stock depletion notices), see:
+- [notification-center-architecture.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/context/notification-center-architecture.md)

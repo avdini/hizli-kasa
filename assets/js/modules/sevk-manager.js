@@ -36,7 +36,7 @@
         if (HK.UIRenderer && HK.UIRenderer.showToast) {
             HK.UIRenderer.showToast(message, type || 'success', type === 'error');
         } else {
-            alert(message);
+            HK.UI.alert(message);
         }
     };
 
@@ -380,7 +380,7 @@
 
         directComplete: async function() {
             if (!this.activeSevk) return;
-            if (!confirm('Bu işlem hedef depodan onay alınmasını bypass edecek ve stokları anında güncelleyecektir. Devam etmek istiyor musunuz?')) return;
+            if (!(await HK.UI.confirm('Bu işlem hedef depodan onay alınmasını bypass edecek ve stokları anında güncelleyecektir. Devam etmek istiyor musunuz?'))) return;
             var note = document.getElementById('sevk-cikis-not');
             try {
                 var data = await api('sevk/direkt-tamamla', {
@@ -764,8 +764,8 @@
                     });
                 }
                 if (modalSilBtn) {
-                    modalSilBtn.addEventListener('click', function() {
-                        if (confirm('Bu sevk taslağını tamamen silmek istediğinize emin misiniz?')) {
+                    modalSilBtn.addEventListener('click', async function() {
+                        if (await HK.UI.confirm('Bu sevk taslağını tamamen silmek istediğinize emin misiniz?')) {
                             self.deleteDraft(sevk.id);
                             modal.style.display = 'none';
                         }
@@ -960,8 +960,8 @@
                     newDevam.addEventListener('click', function() {
                         self.resumeDraft(draft);
                     });
-                    newSil.addEventListener('click', function() {
-                        if (confirm('Bu sevk taslağını tamamen silmek istediğinize emin misiniz?')) {
+                    newSil.addEventListener('click', async function() {
+                        if (await HK.UI.confirm('Bu sevk taslağını tamamen silmek istediğinize emin misiniz?')) {
                             self.deleteDraft(draft.id);
                         }
                     });

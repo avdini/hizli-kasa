@@ -506,7 +506,7 @@
                 var fark = netHedef - girenToplam;
 
                 if (Math.abs(fark) >= 0.01) {
-                    alert("Dikkat! Ödeme tutarı ile sepet toplamı eşleşmiyor.\nFark: " + fark.toFixed(2) + " TL\nLütfen tutarları kontrol edin.");
+                    HK.UI.alert("Dikkat! Ödeme tutarı ile sepet toplamı eşleşmiyor.\nFark: " + fark.toFixed(2) + " TL\nLütfen tutarları kontrol edin.");
                     return;
                 }
 
