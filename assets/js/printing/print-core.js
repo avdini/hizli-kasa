@@ -23,22 +23,28 @@
         print: async function(options) {
             options = options || {};
             var type = options.type || 'order';
-            var sandbox = null;
 
             try {
-                // 1. Eğer DOM elementi doğrudan aktarılmadıysa V2 REST API'den çek ve dinamik sandbox oluştur
-                if (!options.element) {
+                // 1. Fiş HTML'ini al (eğer parametrede verilmediyse V2 REST API'den çek)
+                var html = options.html;
+                if (!html && options.element) {
+                    html = options.element.outerHTML || options.element.innerHTML;
+                }
+                if (!html) {
                     var printData = await this.fetchPrintData(options);
-                    sandbox = this.createSandbox(type, printData.rendered_html);
-                    options.element = sandbox;
+                    html = printData.rendered_html;
                 }
 
-                // 2. Sürücü Haritasından Yazıcı Adı Seçimi
+                // 2. İzole edilmiş görünmez Iframe içine yazdırılacak içeriği yerleştir
+                var iframeBody = this.prepareIframe(type, html);
+                options.element = iframeBody;
+
+                // 3. Sürücü Haritasından Yazıcı Adı Seçimi
                 if (!options.printerName) {
                     options.printerName = this.getPrinterNameForType(type);
                 }
 
-                // 3. Uygun Sürücüyü Çalıştır
+                // 4. Uygun Sürücüyü Çalıştır
                 var helperDriver = this.drivers['helper-app'];
                 var isHelperAvailable = helperDriver && await helperDriver.isAvailable();
 
@@ -58,11 +64,6 @@
                     HK.UIRenderer.showToast('Yazdırma Hatası: ' + err.message, 'error', true);
                 }
                 throw err;
-            } finally {
-                // 4. Yazdırma işlemi bittiğinde sandbox elementini DOM'dan tamamen kaldır
-                if (sandbox) {
-                    this.destroySandbox(sandbox);
-                }
             }
         },
 
@@ -77,7 +78,7 @@
             if (type === 'order') {
                 url += '/' + (options.id || options.order_id || 0);
             } else if (type === 'zreport' || type === 'z-report') {
-                url += '?kasa_no=' + encodeURIComponent(options.kasa_no || '1') + '&depo_id=' + (options.depo_id || 0) + '&depo_name=' + encodeURIComponent(options.depo_name || '') + '&tarih=' + encodeURIComponent(options.tarih || '') + '&include_qr=' + (options.include_qr ? '1' : '0') + '&include_details=' + (options.include_details === false ? '0' : '1');
+                url += '?kasa_no=' + encodeURIComponent(options.kasa_no || '1') + '&depo_id=' + (options.depo_id || 0) + '&tarih=' + encodeURIComponent(options.tarih || '');
             }
 
             var method = (type === 'barcode') ? 'POST' : 'GET';
@@ -108,32 +109,50 @@
             return json.data;
         },
 
-        createSandbox: function(type, html) {
-            this.destroySandbox(); // Var olan eski kalıntı varsa temizle
+        getPrintIframe: function() {
+            var iframe = document.getElementById('hk-print-iframe');
+            if (!iframe) {
+                iframe = document.createElement('iframe');
+                iframe.id = 'hk-print-iframe';
+                iframe.name = 'hk-print-iframe';
+                Object.assign(iframe.style, {
+                    position: 'fixed',
+                    right: '0',
+                    bottom: '0',
+                    width: '300px',
+                    height: '600px',
+                    border: 'none',
+                    opacity: '0',
+                    pointerEvents: 'none',
+                    zIndex: '-1'
+                });
+                document.body.appendChild(iframe);
+            }
+            return iframe;
+        },
 
-            var sandbox = document.createElement('div');
-            sandbox.id = 'hk-unified-print-container';
-            sandbox.className = 'hk-unified-print-container print-type-' + type;
-
+        prepareIframe: function(type, html) {
+            var iframe = this.getPrintIframe();
             var width = (type === 'barcode') ? '50mm' : '300px';
+            iframe.style.width = width;
 
-            Object.assign(sandbox.style, {
-                display: 'block',
-                position: 'fixed',
-                left: '-9999px',
-                top: '0',
-                width: width,
-                maxWidth: width,
-                backgroundColor: '#ffffff',
-                color: '#000000',
-                zIndex: '-9999',
-                overflow: 'hidden',
-                boxSizing: 'border-box'
-            });
+            var doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write('<!DOCTYPE html><html><head><meta charset="utf-8">' +
+                '<style>' +
+                '@page { size: ' + (type === 'barcode' ? '50mm 35mm' : 'auto') + '; margin: 0; } ' +
+                'html, body { margin: 0; padding: 0; background: #ffffff; color: #000000; font-family: "Courier New", Courier, monospace; width: ' + width + '; box-sizing: border-box; } ' +
+                'table { border-collapse: collapse; width: 100%; border: none; margin: 0; padding: 0; } ' +
+                'td, th { padding: 2px 0; border: none; color: #000000; font-family: "Courier New", Courier, monospace; } ' +
+                '.fis-item-td-left { padding: 1px 0; line-height: 1.1; } ' +
+                '.fis-item-name { font-weight: bold; font-size: 12px; text-transform: uppercase; } ' +
+                '.fis-item-sku-qty { font-size: 10px; } ' +
+                '.fis-item-td-right { text-align: right; padding: 1px 0 1px 10px; vertical-align: middle; white-space: nowrap; } ' +
+                '.fis-item-price { font-weight: bold; font-size: 13px; } ' +
+                '</style></head><body>' + html + '</body></html>');
+            doc.close();
 
-            sandbox.innerHTML = html;
-            document.body.appendChild(sandbox);
-            return sandbox;
+            return doc.body;
         },
 
         destroySandbox: function(el) {

@@ -39,35 +39,14 @@
                 }
             });
 
-            var body = document.body;
-            var modeClass = 'print-mode-' + type;
-            body.classList.add(modeClass);
-
-            var pageStyle = document.getElementById('hk-dynamic-page-style');
-            if (!pageStyle) {
-                pageStyle = document.createElement('style');
-                pageStyle.id = 'hk-dynamic-page-style';
-                document.head.appendChild(pageStyle);
+            var iframe = document.getElementById('hk-print-iframe');
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.focus();
+                iframe.contentWindow.print();
+                return true;
             }
 
-            if (type === 'barcode') {
-                pageStyle.textContent = '@media print { @page { size: 50mm 35mm; margin: 0; } }';
-            } else {
-                pageStyle.textContent = '@media print { @page { size: auto; margin: 0; } }';
-            }
-
-            var cleanup = function() {
-                body.classList.remove(modeClass);
-                if (pageStyle) pageStyle.textContent = '';
-                window.removeEventListener('afterprint', cleanup);
-            };
-
-            window.addEventListener('afterprint', cleanup);
-
-            setTimeout(function() {
-                window.print();
-            }, 50);
-
+            window.print();
             return true;
         }
     }

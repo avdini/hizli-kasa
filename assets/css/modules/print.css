@@ -1,15 +1,24 @@
 /* =============================================
-   BIRLESIK YAZDIRMA STILERI (UNIFIED PRINT ENGINE)
+   BIRLESIK YAZDIRMA STİLERİ (UNIFIED PRINT ENGINE)
    ============================================= */
 
-/* 1. Birleşik Yazdırma Konteyneri (Ekranda Sol Dışarıda, html2canvas & Native İçin Render Edilebilir) */
-#hk-unified-print-container,
+/* 1. İzole Yazdırma Iframe'i (Görünmez Korumalı Pencere) */
+#hk-print-iframe {
+    position: fixed !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 300px !important;
+    height: 600px !important;
+    border: none !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -1 !important;
+}
+
+/* 2. Birleşik Yazdırma Şablon Stilleri */
 .hk-unified-print-container {
     display: block !important;
-    position: fixed !important;
-    left: -9999px !important;
-    top: 0 !important;
-    width: 300px !important;
+    width: 100% !important;
     max-width: 300px !important;
     background: #ffffff !important;
     color: #000000 !important;
@@ -18,10 +27,8 @@
     box-shadow: none !important;
     border: none !important;
     outline: none !important;
-    z-index: -9999 !important;
 }
 
-#hk-unified-print-container *,
 .hk-unified-print-container * {
     color: #000000 !important;
     border-color: #000000 !important;
@@ -29,7 +36,6 @@
     font-family: 'Courier New', Courier, monospace !important;
 }
 
-#hk-unified-print-container table,
 .hk-unified-print-container table {
     border-collapse: collapse !important;
     width: 100% !important;
@@ -38,11 +44,6 @@
     padding: 0 !important;
 }
 
-#hk-unified-print-container td,
-#hk-unified-print-container th,
-#hk-unified-print-container tr,
-#hk-unified-print-container thead,
-#hk-unified-print-container tbody,
 .hk-unified-print-container td,
 .hk-unified-print-container th,
 .hk-unified-print-container tr,
@@ -81,7 +82,6 @@
 }
 
 @media print {
-    /* 1. Sayfa Marjlarını ve Konumu Sıfırla */
     @page {
         margin: 0 !important;
     }
@@ -89,52 +89,6 @@
     html, body {
         margin: 0 !important;
         padding: 0 !important;
-        width: 100% !important;
-        height: auto !important;
-        overflow: visible !important;
         background: #ffffff !important;
-    }
-
-    /* 2. Admin Bar ve Diğer Boşlukları Tamamen Kaldır */
-    #wpadminbar, 
-    .admin-bar body, 
-    #wp-admin-bar-root-default {
-        display: none !important;
-    }
-
-    /* 3. Birleşik Yazdırma Modları */
-    body[class*="print-mode-"] * {
-        visibility: hidden !important;
-    }
-
-    body[class*="print-mode-"] #hk-unified-print-container,
-    body[class*="print-mode-"] #hk-unified-print-container * {
-        visibility: visible !important;
-    }
-
-    body[class*="print-mode-"] #hk-unified-print-container {
-        display: block !important;
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        max-width: 80mm !important;
-        margin: 0 !important;
-        padding: 0 4mm !important;
-        z-index: 999999 !important;
-        box-sizing: border-box !important;
-    }
-
-    body.print-mode-barcode #hk-unified-print-container {
-        display: block !important;
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 50mm !important;
-        max-width: 50mm !important;
-        height: 35mm !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        z-index: 999999 !important;
     }
 }
