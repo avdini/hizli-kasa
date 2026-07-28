@@ -73,7 +73,7 @@ $report_time = $rapor['rapor_zamani'] ?? ($header['report_time'] ?? '');
                 <?php endif; ?>
 
                 <?php if ($total_masraf > 0): ?>
-                    <tr><td colspan="2" style="height:6px; border-bottom:1px dashed #000;"></td></tr>
+                    <tr><td colspan="2" style="height:6px; border-bottom:1px solid #000;"></td></tr>
                     <?php if ($kart_masraf > 0): ?>
                         <tr><td style="padding:3px 0;">KART MASRAF</td><td style="text-align:right;">-<?php echo esc_html($money($kart_masraf)); ?></td></tr>
                     <?php endif; ?>
