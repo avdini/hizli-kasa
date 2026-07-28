@@ -25,14 +25,24 @@
             var type = options.type || 'order';
 
             try {
-                // 1. V2 REST API'den veriyi ve render edilmiş HTML'i çek
-                var printData = await this.fetchPrintData(options);
+                // 1. Eğer DOM'da önceden oluşturulmuş bir alan varsa (örn: Toplu Barkod #hk-barcode-print-area) kullan
+                if (!options.element) {
+                    var modeSelector = HK.PrintManager && HK.PrintManager.modeToElement ? HK.PrintManager.modeToElement[type] : null;
+                    if (modeSelector) {
+                        var existing = document.querySelector(modeSelector);
+                        if (existing && existing.children.length > 0) {
+                            options.element = existing;
+                        }
+                    }
+                }
 
-                // 2. DOM'da birleşik konteyner oluştur/güncelle
-                var container = this.getOrCreateContainer();
-                container.innerHTML = printData.rendered_html;
-
-                options.element = container.firstElementChild || container;
+                // 2. Eğer DOM elementi henüz yoksa V2 REST API'den çek
+                if (!options.element) {
+                    var printData = await this.fetchPrintData(options);
+                    var container = this.getOrCreateContainer();
+                    container.innerHTML = printData.rendered_html;
+                    options.element = container.firstElementChild || container;
+                }
 
                 // 3. Sürücü Haritasından Yazıcı Adı Seçimi
                 if (!options.printerName) {

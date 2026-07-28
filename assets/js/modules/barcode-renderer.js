@@ -438,13 +438,11 @@
 
             // Yazdırma işlemini başlat
             setTimeout(() => {
+                var printAreaEl = document.getElementById('hk-barcode-print-area');
                 if (HK.PrintCore && typeof HK.PrintCore.print === 'function') {
-                    var firstItem = (printData && printData[0]) ? printData[0].label : {};
                     HK.PrintCore.print({
                         type: 'barcode',
-                        product_id: firstItem.product_id || 0,
-                        variation_id: firstItem.variation_id || 0,
-                        qty: firstItem.qty || 1
+                        element: printAreaEl
                     }).catch(function() {
                         HK.PrintManager.print('barcode');
                     });
