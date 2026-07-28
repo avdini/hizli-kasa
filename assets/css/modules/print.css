@@ -211,6 +211,17 @@
         font-weight: 600 !important; /* Tüm metinleri siyah yapmak için kalınlaştırır */
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+
+    #hk-unified-print-container,
+    .hk-unified-print-container {
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        background: #ffffff !important;
+        outline: none !important;
     }
 
     /* 7. Unified Print Engine (#hk-unified-print-container) */
