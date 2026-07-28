@@ -72,7 +72,7 @@
             if (type === 'order') {
                 url += '/' + (options.id || options.order_id || 0);
             } else if (type === 'zreport' || type === 'z-report') {
-                url += '?kasa_no=' + encodeURIComponent(options.kasa_no || '1') + '&depo_id=' + (options.depo_id || 0) + '&tarih=' + encodeURIComponent(options.tarih || '');
+                url += '?kasa_no=' + encodeURIComponent(options.kasa_no || '1') + '&depo_id=' + (options.depo_id || 0) + '&depo_name=' + encodeURIComponent(options.depo_name || '') + '&tarih=' + encodeURIComponent(options.tarih || '') + '&include_qr=' + (options.include_qr ? '1' : '0') + '&include_details=' + (options.include_details === false ? '0' : '1');
             }
 
             var method = (type === 'barcode') ? 'POST' : 'GET';
@@ -124,7 +124,7 @@
             if (type === 'barcode') {
                 return localStorage.getItem('hk_barcode_printer') || '';
             }
-            if (type === 'zreport') {
+            if (type === 'zreport' || type === 'report') {
                 return localStorage.getItem('hk_report_printer') || '';
             }
             return localStorage.getItem('hk_receipt_printer') || '';

@@ -63,8 +63,14 @@ class Hizli_Kasa_API_Print extends Hizli_Kasa_API_Controller_Base {
 
     protected function get_zreport_print($request) {
         $kasa_no = sanitize_text_field($request->get_param('kasa_no') ?: '1');
+        if (strtolower($kasa_no) === 'genel') {
+            $kasa_no = 'all';
+        }
         $depo_id = intval($request->get_param('depo_id') ?: 0);
+        $depo_name = sanitize_text_field($request->get_param('depo_name') ?: '');
         $tarih   = sanitize_text_field($request->get_param('tarih') ?: '');
+        $include_qr = filter_var($request->get_param('include_qr'), FILTER_VALIDATE_BOOLEAN);
+        $include_details = $request->get_param('include_details') !== '0';
 
         if (!class_exists('Hizli_Kasa_Print_Engine')) {
             require_once HIZLI_KASA_PATH . 'includes/printing/class-print-engine.php';
@@ -74,7 +80,10 @@ class Hizli_Kasa_API_Print extends Hizli_Kasa_API_Controller_Base {
             $result = Hizli_Kasa_Print_Engine::render('zreport', [
                 'kasa_no' => $kasa_no,
                 'depo_id' => $depo_id,
-                'tarih'   => $tarih
+                'depo_name' => $depo_name,
+                'tarih'   => $tarih,
+                'include_qr' => $include_qr,
+                'include_details' => $include_details
             ]);
             return Hizli_Kasa_API_Response::success($result);
         } catch (Exception $e) {

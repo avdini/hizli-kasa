@@ -227,6 +227,20 @@
     body.print-mode-barcode #hk-unified-print-container * {
         visibility: visible !important;
     }
+    body.print-mode-zreport #hk-unified-print-container {
+        width: 80mm !important;
+        max-width: 80mm !important;
+        margin: 0 !important;
+        padding: 0 4mm !important;
+        box-sizing: border-box !important;
+    }
+    body.print-mode-zreport #hk-unified-print-container .receipt-zreport {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
+    }
     body.print-mode-order #hk-unified-print-container,
     body.print-mode-zreport #hk-unified-print-container {
         display: block !important;
@@ -239,6 +253,11 @@
         padding: 0 4mm !important;
         z-index: 999999 !important;
         box-sizing: border-box !important;
+    }
+    body.print-mode-zreport #hk-unified-print-container {
+        width: 80mm !important;
+        max-width: 80mm !important;
+        padding: 0 4mm !important;
     }
     body.print-mode-barcode #hk-unified-print-container {
         display: block !important;

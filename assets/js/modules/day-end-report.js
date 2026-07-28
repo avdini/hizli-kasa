@@ -572,18 +572,19 @@
                     type: 'zreport',
                     kasa_no: this.data.kasa_no || '1',
                     depo_id: this.data.depo_id || 0,
-                    tarih: this.data.tarih || ''
+                    depo_name: HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '',
+                    tarih: this.data.tarih || '',
+                    include_qr: !!(this.els.gunSonuIncludeQR && this.els.gunSonuIncludeQR.checked),
+                    include_details: includeDetails
                 });
                 return;
             }
 
-            // Yazdırmadan önce şablonu güncelleyelim (detaylı veya özet)
             this._fisSablonuDoldur(this.data, includeDetails);
-
-            // Termal fiş şablonunu göster, yazdır, gizle
             var sablon = this.els.gunSonuSablon;
             if (!sablon) return;
 
+            // Termal fiş şablonunu göster, yazdır, gizle
             // Normal fiş şablonunu gizle (çakışma önleme)
             var normalFis = document.getElementById("fis-sablon");
             if (normalFis) normalFis.style.display = "none";
@@ -604,13 +605,15 @@
                     type: 'zreport',
                     kasa_no: this.data.kasa_no || '1',
                     depo_id: this.data.depo_id || 0,
-                    tarih: this.data.tarih || ''
+                    depo_name: HK.DepoManager ? HK.DepoManager.getActiveDepoName() : '',
+                    tarih: this.data.tarih || '',
+                    include_qr: !!(this.els.gunSonuIncludeQR && this.els.gunSonuIncludeQR.checked),
+                    include_details: false
                 });
                 return;
             }
 
             this._fisSablonuDoldurBasit(this.data);
-
             var sablon = this.els.gunSonuSablon;
             if (!sablon) return;
 

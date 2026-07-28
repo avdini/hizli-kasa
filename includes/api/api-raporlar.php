@@ -114,6 +114,7 @@ function hizli_kasa_gun_sonu_raporu($request)
     if (empty($orders)) {
         return [
             'kasa_no' => ($kasa_no === 'all') ? 'Genel' : $kasa_no,
+            'depo_id' => $depo_id,
             'tarih' => $tarih,
             'siparis_sayisi' => 0,
             'siparisler' => [],
@@ -304,6 +305,7 @@ function hizli_kasa_gun_sonu_raporu($request)
 
     $report_data = [
         'kasa_no' => ($kasa_no === 'all') ? 'Genel' : $kasa_no,
+        'depo_id' => $depo_id,
         'tarih' => $tarih,
         'tarih_okunabilir' => date_i18n('d.m.Y l', strtotime($tarih)),
         'rapor_zamani' => current_time('d.m.Y H:i:s'),
