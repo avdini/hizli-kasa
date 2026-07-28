@@ -3,6 +3,7 @@
    ============================================= */
 
 #fis-sablon, #gun-sonu-sablon, #report-fis-sablon, #fis-coupon-sablon, #iade-paket-fis-sablon, #hk-unified-print-container, .hk-unified-print-container {
+    display: none;
     font-family: 'Courier New', Courier, monospace !important;
     width: 80mm;
     box-sizing: border-box;

@@ -169,7 +169,7 @@ if (!defined('ABSPATH')) exit;
 </div>
 
 <!-- Gizli Fiş Şablonu (Sadece Yazdırma İçin) -->
-<div id="fis-sablon" style="color:#000;">
+<div id="fis-sablon" style="display:none; color:#000;">
     <div style="text-align:center; margin-bottom:10px; border-bottom:1px solid #000; padding-bottom:10px;">
         <h2 style="margin:0; font-size:18px;"><?php echo get_bloginfo('name'); ?></h2>
         <p style="margin:5px 0; font-size:12px;">HIZLI KASA SATIŞ FİŞİ</p>
