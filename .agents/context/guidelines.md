@@ -26,6 +26,7 @@ Bu klasör projenin "hafızasıdır". Çalıştığınız alanda daha önce bir 
 -   **V2 REST API Standartları:** [api-development.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/skills/api-development.md)
 -   **Loglama ve Logger Standartları:** [logging.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/skills/logging.md)
 -   **Stok Sayımı ve Arka Plan Eşitleme Mimarisi:** [stock-sync-architecture.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/context/stock-sync-architecture.md)
+-   **Birleşik Yazdırma Mimarisi & Sürücü Standartları:** [unified-printing-architecture.md](file:///c:/Users/fikri/Desktop/avdini.com/hizli-kasa/.agents/context/unified-printing-architecture.md)
 
 ---
 

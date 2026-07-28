@@ -567,6 +567,16 @@
         _yazdir: function (includeDetails) {
             if (!this.data) return;
 
+            if (HK.PrintCore && typeof HK.PrintCore.print === 'function') {
+                HK.PrintCore.print({
+                    type: 'zreport',
+                    kasa_no: this.data.kasa_no || '1',
+                    depo_id: this.data.depo_id || 0,
+                    tarih: this.data.tarih || ''
+                });
+                return;
+            }
+
             // Yazdırmadan önce şablonu güncelleyelim (detaylı veya özet)
             this._fisSablonuDoldur(this.data, includeDetails);
 
@@ -588,6 +598,16 @@
          */
         _yazdirBasit: function () {
             if (!this.data) return;
+
+            if (HK.PrintCore && typeof HK.PrintCore.print === 'function') {
+                HK.PrintCore.print({
+                    type: 'zreport',
+                    kasa_no: this.data.kasa_no || '1',
+                    depo_id: this.data.depo_id || 0,
+                    tarih: this.data.tarih || ''
+                });
+                return;
+            }
 
             this._fisSablonuDoldurBasit(this.data);
 

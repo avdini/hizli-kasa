@@ -204,6 +204,10 @@ function hizli_kasa_uygulamasi()
 
     wp_enqueue_script('kasa-html2canvas', $js_base . 'lib/html2canvas.min.js', [], $pos_version, true);
     wp_enqueue_script('kasa-print-manager', $js_base . 'modules/print-manager.js', ['kasa-html2canvas'], $pos_version, true);
+    wp_enqueue_script('kasa-print-base-driver', $js_base . 'printing/drivers/base-driver.js', [], $pos_version, true);
+    wp_enqueue_script('kasa-print-helper-driver', $js_base . 'printing/drivers/helper-app-driver.js', ['kasa-print-base-driver', 'kasa-html2canvas'], $pos_version, true);
+    wp_enqueue_script('kasa-print-native-driver', $js_base . 'printing/drivers/browser-native-driver.js', ['kasa-print-base-driver'], $pos_version, true);
+    wp_enqueue_script('kasa-print-core', $js_base . 'printing/print-core.js', ['kasa-print-helper-driver', 'kasa-print-native-driver', 'kasa-print-manager'], $pos_version, true);
     wp_enqueue_script('kasa-currency-mask', $js_base . 'modules/currency-mask.js', [], $pos_version, true);
     wp_enqueue_script('kasa-cart-manager', $js_base . 'modules/cart-manager.js', [], $pos_version, true);
     wp_enqueue_script('kasa-ui-renderer', $js_base . 'modules/ui-renderer.js', ['kasa-cart-manager', 'kasa-currency-mask', 'kasa-ui-dialogs'], $pos_version, true);
@@ -262,7 +266,8 @@ function hizli_kasa_uygulamasi()
         'kasa-sevk-manager',
         'kasa-malkabul-manager',
         'kasa-currency-mask',
-        'kasa-qr-payment-manager'
+        'kasa-qr-payment-manager',
+        'kasa-print-core'
     ], $pos_version, true);
 
     // JavaScript'e veri aktarımı

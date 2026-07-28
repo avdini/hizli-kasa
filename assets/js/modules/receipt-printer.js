@@ -49,6 +49,7 @@
             var els = this.els;
             var state = HK.State;
             var self = this;
+            this.currentOrderId = order.id || order.number || 0;
 
             // Yardımcı: Meta verisinden değer çek
             var getMeta = function(metaArray, key) {
@@ -251,14 +252,25 @@
             HK.PrintManager.print('coupon');
         },
 
+        currentOrderId: 0,
+
         /**
          * Yazdır/Kapat butonları ve klavye kısayollarını bağla
          */
         _bindEvents: function() {
             var els = this.els;
+            var self = this;
+
+            var triggerPrint = function() {
+                if (HK.PrintCore && self.currentOrderId) {
+                    HK.PrintCore.print({ type: 'order', id: self.currentOrderId });
+                } else {
+                    HK.PrintManager.print('receipt');
+                }
+            };
 
             els.fisYazdirTetik.addEventListener("click", function() {
-                HK.PrintManager.print('receipt');
+                triggerPrint();
             });
 
             els.fisYazdirKapat.addEventListener("click", function() {
@@ -268,7 +280,7 @@
             document.addEventListener("keydown", function(e) {
                 if (els.fisOnayModal.style.display === "flex") {
                     if (e.key === "Enter") {
-                        HK.PrintManager.print('receipt');
+                        triggerPrint();
                     } else if (e.key === "Escape") {
                         els.fisOnayModal.style.display = "none";
                     }
