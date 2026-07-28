@@ -8,16 +8,17 @@ class Hizli_Kasa_ZReport_Print_Builder {
         $depo_id = isset($params['depo_id']) ? intval($params['depo_id']) : 0;
         $tarih   = !empty($params['tarih']) ? sanitize_text_field($params['tarih']) : current_time('Y-m-d');
 
-        // Fetch day end report data from helper/function
         if (!function_exists('hizli_kasa_gun_sonu_raporu')) {
             require_once HIZLI_KASA_PATH . 'includes/api/api-raporlar.php';
         }
 
-        $report_data = hizli_kasa_gun_sonu_raporu([
+        $request = new WP_REST_Request('GET', '/hizli-kasa/v1/gun-sonu-raporu');
+        $request->set_query_params([
             'kasa_no' => $kasa_no,
             'depo_id' => $depo_id,
             'tarih'   => $tarih
         ]);
+        $report_data = hizli_kasa_gun_sonu_raporu($request);
 
         if (is_wp_error($report_data)) {
             throw new Exception($report_data->get_error_message());
