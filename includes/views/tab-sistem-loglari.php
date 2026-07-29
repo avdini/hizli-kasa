@@ -66,6 +66,12 @@ $nonce = wp_create_nonce('wp_rest');
             justify-content: center;
             font-size: 20px;
         }
+        .hk-kpi-icon .dashicons {
+            font-size: 22px;
+            width: 22px;
+            height: 22px;
+            line-height: 1;
+        }
         .hk-kpi-icon.total { background: #e0f2fe; color: #0284c7; }
         .hk-kpi-icon.info { background: #dcfce7; color: #16a34a; }
         .hk-kpi-icon.warning { background: #fef3c7; color: #d97706; }
@@ -374,7 +380,7 @@ $nonce = wp_create_nonce('wp_rest');
                 <p>Bugünkü Hatalar</p>
                 <h3 id="stat-today-errors">-</h3>
             </div>
-            <div class="hk-kpi-icon error"><span class="dashicons dashicons-dismiss"></span></div>
+            <div class="hk-kpi-icon error"><span class="dashicons dashicons-no-alt"></span></div>
         </div>
     </div>
 
