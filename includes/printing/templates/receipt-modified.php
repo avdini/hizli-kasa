@@ -19,8 +19,8 @@ $audit_trail = $data['audit_trail'] ?? [];
         <?php endif; ?>
         
         <?php if (!empty($data['barcode_value'])): ?>
-            <div style="text-align:center; margin-top:6px;">
-                <img class="hk-print-barcode-img" data-barcode="<?php echo esc_attr($data['barcode_value']); ?>" style="width:100%; max-width:220px; height:auto; margin:0 auto; display:block;" />
+            <div style="text-align:center; margin-top:4px;">
+                <?php echo hk_render_barcode_svg($data['barcode_value']); ?>
             </div>
         <?php endif; ?>
     </div>

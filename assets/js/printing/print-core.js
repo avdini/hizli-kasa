@@ -187,30 +187,84 @@
             doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><style>' + barcodeCss + '</style></head><body>' + html + '</body></html>');
             doc.close();
 
-            var jsBarcodeFn = window.JsBarcode || (iframe.contentWindow && iframe.contentWindow.JsBarcode);
-            if (typeof jsBarcodeFn === 'function') {
-                var barcodeImgs = doc.querySelectorAll('.hk-print-barcode-img, [data-barcode]');
-                barcodeImgs.forEach(function(img) {
-                    var val = img.dataset ? img.dataset.barcode : img.getAttribute('data-barcode');
-                    if (val) {
-                        try {
-                            jsBarcodeFn(img, val, {
-                                format: 'CODE128',
-                                width: 2,
-                                height: 50,
-                                displayValue: false,
-                                margin: 0,
-                                background: '#ffffff',
-                                lineColor: '#000000'
-                            });
-                        } catch (err) {
-                            console.error('[PrintCore] Barcode render error:', err);
-                        }
+            var self = this;
+            var barcodeImgs = doc.querySelectorAll('.hk-print-barcode-img, [data-barcode]');
+            barcodeImgs.forEach(function(img) {
+                if (img.tagName && img.tagName.toLowerCase() === 'svg') return;
+                var val = img.dataset ? img.dataset.barcode : img.getAttribute('data-barcode');
+                if (val) {
+                    var svgHtml = self.generateCode128Svg(val, 45);
+                    var tempDiv = doc.createElement('div');
+                    tempDiv.innerHTML = svgHtml;
+                    var svgEl = tempDiv.firstElementChild;
+                    if (svgEl && img.parentNode) {
+                        img.parentNode.replaceChild(svgEl, img);
                     }
-                });
-            }
+                }
+            });
 
             return doc.body;
+        },
+
+        generateCode128Svg: function(text, height) {
+            text = String(text || '');
+            if (!text) return '';
+            height = height || 45;
+
+            var patterns = [
+                '212222', '222122', '222221', '121223', '121322', '131222', '122213', '122312', '132212', '221213',
+                '221312', '231212', '112232', '122132', '122231', '113222', '123122', '123221', '223211', '221132',
+                '221231', '213212', '223112', '312131', '311222', '321122', '321221', '312212', '322112', '322211',
+                '212123', '212321', '222121', '111224', '112214', '112412', '114212', '121124', '121421', '141122',
+                '141221', '112241', '112421', '122141', '122411', '142112', '142211', '241211', '221114', '411122',
+                '411221', '421112', '421211', '212141', '214121', '412121', '111143', '111341', '113141', '114113',
+                '114311', '411113', '411311', '113114', '114131', '311141', '411131', '211412', '211214', '211232',
+                '233111', '211133', '211331', '221114', '221411', '241112', '131114', '131411', '141113', '411113',
+                '411311', '113114', '114131', '311141', '411131', '211412', '211214', '211232', '233111', '200000',
+                '321312', '111422', '121142', '121241', '114212', '124112', '124211', '411212', '421112', '421211',
+                '212411', '214112', '412112', '104411', '104141', '101441', '2331112'
+            ];
+
+            var codeValues = [104];
+            var checksum = 104;
+
+            for (var i = 0; i < text.length; i++) {
+                var code = text.charCodeAt(i);
+                var val = code - 32;
+                if (val < 0 || val > 95) val = 0;
+                codeValues.push(val);
+                checksum += val * (i + 1);
+            }
+
+            codeValues.push(checksum % 103);
+            codeValues.push(106);
+
+            var barcodeStr = '';
+            codeValues.forEach(function(v) {
+                barcodeStr += patterns[v] || '111111';
+            });
+
+            var totalModules = 0;
+            for (var j = 0; j < barcodeStr.length; j++) {
+                totalModules += parseInt(barcodeStr[j], 10);
+            }
+
+            var barWidth = 2;
+            var svgWidth = totalModules * barWidth;
+            var svgHtml = '<svg class="hk-print-barcode-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + svgWidth + ' ' + height + '" style="width:100%; max-width:220px; height:' + height + 'px; display:block; margin:4px auto 0 auto;" data-barcode="' + text + '">';
+
+            var x = 0;
+            var isBar = true;
+            for (var k = 0; k < barcodeStr.length; k++) {
+                var w = parseInt(barcodeStr[k], 10) * barWidth;
+                if (isBar && w > 0) {
+                    svgHtml += '<rect x="' + x + '" y="0" width="' + w + '" height="' + height + '" fill="#000000" />';
+                }
+                x += w;
+                isBar = !isBar;
+            }
+            svgHtml += '</svg>';
+            return svgHtml;
         },
 
         destroySandbox: function(el) {
