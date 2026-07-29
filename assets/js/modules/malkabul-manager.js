@@ -975,9 +975,8 @@ const MalkabulManager = (function () {
             '</div>' +
         '</div>';
 
-        if (window.HizliKasa && window.HizliKasa.PrintCore && typeof window.HizliKasa.PrintCore.createSandbox === 'function') {
-            var sandbox = window.HizliKasa.PrintCore.createSandbox('supplier-return', html);
-            window.HizliKasa.PrintCore.print({ type: 'order', element: sandbox });
+        if (window.HizliKasa && window.HizliKasa.PrintCore && typeof window.HizliKasa.PrintCore.print === 'function') {
+            window.HizliKasa.PrintCore.print({ html: html });
         } else if (window.HizliKasa && window.HizliKasa.PrintManager) {
             window.HizliKasa.PrintManager.print('iade-paket-fis');
         }

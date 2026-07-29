@@ -183,13 +183,6 @@ class Hizli_Kasa_Stock_Manager {
         ]);
     }
 
-    /**
-     * @deprecated Devre dışı.
-     */
-    public static function sync_to_wc_stock($product_id, $variation_id)
-    {
-    }
-
     // --- Backward compatibility wrappers ---
 
     public static function handle_pos_order_stock($order_id, $order = false) {

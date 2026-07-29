@@ -256,10 +256,9 @@
                 '<div style="margin-top:12px; font-size:9px; border-top:1px solid #000; padding-top:6px;">Bu kupon mağazamızda geçerlidir. Lütfen saklayınız.</div>' +
             '</div>';
 
-            if (HK.PrintCore && typeof HK.PrintCore.createSandbox === 'function') {
-                var sandbox = HK.PrintCore.createSandbox('coupon', couponHtml);
-                HK.PrintCore.print({ type: 'order', element: sandbox });
-            } else {
+            if (HK.PrintCore && typeof HK.PrintCore.print === 'function') {
+                HK.PrintCore.print({ html: couponHtml });
+            } else if (HK.PrintManager) {
                 HK.PrintManager.print('coupon');
             }
         },
