@@ -401,21 +401,30 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
      * @return array
      */
     protected function format_product_item($row, $scope) {
+        global $wpdb;
+
         $post_id = intval($row->ID);
         $product = wc_get_product($post_id);
 
         if (!$product) {
             return [
-                'id'         => $post_id,
-                'title'      => $row->post_title,
-                'type'       => 'unknown',
-                'stock'      => 0,
-                'categories' => [],
-                'brands'     => [],
+                'id'              => $post_id,
+                'name'            => $row->post_title ?: 'Ürün #' . $post_id,
+                'title'           => $row->post_title ?: 'Ürün #' . $post_id,
+                'type'            => 'unknown',
+                'stock_quantity'  => 0,
+                'warehouse_stock' => 0,
+                'images'          => [],
+                'image_url'       => wc_placeholder_img_src(),
+                'categories'      => [],
+                'brands'          => [],
+                'variations'      => [],
+                'is_variable'     => false,
             ];
         }
 
         $is_variation = $product->is_type('variation');
+        $is_variable  = $product->is_type('variable');
         $parent_id    = $is_variation ? $product->get_parent_id() : $post_id;
         $parent_product = $is_variation ? wc_get_product($parent_id) : $product;
 
@@ -464,30 +473,119 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             $stock_qty = floatval($product->get_stock_quantity() ?: 0);
         }
 
+        // Warehouse Stock & Shelf Codes Map
+        $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+        $all_stocks = [];
+        $all_codes  = [];
+        if ($wpdb->get_var("SHOW TABLES LIKE '{$stok_table}'") === $stok_table) {
+            $stock_rows = $wpdb->get_results($wpdb->prepare("
+                SELECT location_id, quantity, depo_kodu 
+                FROM {$stok_table}
+                WHERE " . ($is_variation ? "variation_id = %d" : "product_id = %d AND variation_id = 0"),
+                $post_id
+            ));
+            if (!empty($stock_rows)) {
+                foreach ($stock_rows as $sr) {
+                    $all_stocks[(string)$sr->location_id] = floatval($sr->quantity);
+                    if (!empty($sr->depo_kodu)) {
+                        $all_codes[(string)$sr->location_id] = $sr->depo_kodu;
+                    }
+                }
+            }
+        }
+
         // Variation attributes
         $variation_attributes = [];
         if ($is_variation) {
             $attributes = $product->get_variation_attributes();
             foreach ($attributes as $key => $val) {
                 $clean_key = str_replace('attribute_', '', $key);
+                $clean_key = str_replace('pa_', '', $clean_key);
                 $variation_attributes[$clean_key] = $val;
             }
         }
+
+        // Children Variations for Variable Products
+        $formatted_variations = [];
+        if ($is_variable) {
+            $child_ids = $product->get_children();
+            if (!empty($child_ids)) {
+                foreach ($child_ids as $cid) {
+                    $child_var = wc_get_product($cid);
+                    if (!$child_var) continue;
+
+                    $c_img_id  = $child_var->get_image_id() ?: $image_id;
+                    $c_img_url = $c_img_id ? wp_get_attachment_image_url($c_img_id, 'thumbnail') : $image_url;
+
+                    $c_all_stocks = [];
+                    $c_all_codes  = [];
+                    if ($wpdb->get_var("SHOW TABLES LIKE '{$stok_table}'") === $stok_table) {
+                        $c_stock_rows = $wpdb->get_results($wpdb->prepare("
+                            SELECT location_id, quantity, depo_kodu FROM {$stok_table} WHERE variation_id = %d", $cid
+                        ));
+                        if (!empty($c_stock_rows)) {
+                            foreach ($c_stock_rows as $csr) {
+                                $c_all_stocks[(string)$csr->location_id] = floatval($csr->quantity);
+                                if (!empty($csr->depo_kodu)) {
+                                    $c_all_codes[(string)$csr->location_id] = $csr->depo_kodu;
+                                }
+                            }
+                        }
+                    }
+
+                    $c_attrs = [];
+                    foreach ($child_var->get_variation_attributes() as $ckey => $cval) {
+                        $clean_k = str_replace(['attribute_', 'pa_'], '', $ckey);
+                        $c_attrs[$clean_k] = $cval;
+                    }
+
+                    $formatted_variations[] = [
+                        'id'              => $cid,
+                        'parent_id'       => $post_id,
+                        'type'            => 'variation',
+                        'name'            => $child_var->get_name(),
+                        'title'           => $child_var->get_name(),
+                        'sku'             => $child_var->get_sku() ?: '',
+                        'price'           => floatval($child_var->get_price()),
+                        'regular_price'   => floatval($child_var->get_regular_price() ?: $child_var->get_price()),
+                        'warehouse_stock' => floatval($child_var->get_stock_quantity() ?: 0),
+                        'stock_quantity'  => floatval($child_var->get_stock_quantity() ?: 0),
+                        'all_stocks'      => (object)$c_all_stocks,
+                        'all_codes'       => (object)$c_all_codes,
+                        'images'          => [['src' => $c_img_url]],
+                        'image_url'       => $c_img_url,
+                        'attributes'      => $c_attrs,
+                    ];
+                }
+            }
+        }
+
+        $title_name = $product->get_name();
+        $regular_price = floatval($product->get_regular_price() ?: $product->get_price());
 
         return [
             'id'                   => $post_id,
             'parent_id'            => $parent_id,
             'type'                 => $product->get_type(),
-            'title'                => $product->get_name(),
+            'name'                 => $title_name,
+            'title'                => $title_name,
             'sku'                  => $sku,
             'barcode'              => $barcode,
             'price'                => floatval($product->get_price()),
+            'regular_price'        => $regular_price,
             'stock_quantity'       => $stock_qty,
+            'warehouse_stock'      => $stock_qty,
             'stock_status'         => $product->get_stock_status(),
             'categories'           => $categories,
             'brands'               => $brands,
             'variation_attributes' => $variation_attributes,
             'image_url'            => $image_url,
+            'images'               => [['src' => $image_url]],
+            'all_stocks'           => (object)$all_stocks,
+            'all_codes'            => (object)$all_codes,
+            'permalink'            => get_permalink($post_id),
+            'is_variable'          => $is_variable,
+            'variations'           => $formatted_variations,
             'created_at'           => get_the_date('Y-m-d H:i:s', $post_id),
         ];
     }

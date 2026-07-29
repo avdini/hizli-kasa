@@ -846,22 +846,27 @@
                 var p = this.state.products[i];
                 if (!p) continue;
 
-                var isVariable = p.is_variable && p.variations && p.variations.length > 0;
+                var isVariable = (p.is_variable || p.type === 'variable') && p.variations && p.variations.length > 0;
+                var pName = p.name || p.title || ('Ürün #' + p.id);
                 
-                // Stok kaynağı: all_stocks[depoId] tercih, yoksa warehouse_stock fallback
-                var pDepoStock = (p.all_stocks && depoId && p.all_stocks[String(depoId)] != null) ? parseFloat(p.all_stocks[String(depoId)]) : parseFloat(p.warehouse_stock || 0);
+                // Stok kaynağı: all_stocks[depoId] tercih, yoksa warehouse_stock / stock_quantity fallback
+                var pDepoStock = (p.all_stocks && depoId && p.all_stocks[String(depoId)] != null) 
+                    ? parseFloat(p.all_stocks[String(depoId)]) 
+                    : parseFloat(p.warehouse_stock !== undefined ? p.warehouse_stock : (p.stock_quantity || 0));
 
                 // Stok durumunu belirle (Grup toplamı)
                 var totalGroupStock = isVariable 
                     ? p.variations.reduce(function(sum, v) {
-                        var vStock = (v.all_stocks && depoId && v.all_stocks[String(depoId)] != null) ? parseFloat(v.all_stocks[String(depoId)]) : parseFloat(v.warehouse_stock || 0);
+                        var vStock = (v.all_stocks && depoId && v.all_stocks[String(depoId)] != null) 
+                            ? parseFloat(v.all_stocks[String(depoId)]) 
+                            : parseFloat(v.warehouse_stock !== undefined ? v.warehouse_stock : (v.stock_quantity || 0));
                         return sum + vStock;
                     }, 0)
                     : pDepoStock;
                 
                 var isStockOut = totalGroupStock <= 0;
                 var isCritical = !isVariable && pDepoStock > 0 && pDepoStock <= threshold;
-                var img = p.images && p.images[0] ? p.images[0].src : '';
+                var img = (p.images && p.images[0] && p.images[0].src) ? p.images[0].src : (p.image_url || '');
 
                 // Fiyat Hesaplamaları
                 var currentPrice = parseFloat(p.price || 0);
@@ -875,7 +880,7 @@
                         <img src="${img}" class="urun-img" alt="">
                         <div class="urun-detay">
                             <div class="urun-temel-bilgi">
-                                <div class="urun-ad">${p.name} ${isVariable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
+                                <div class="urun-ad">${pName} ${isVariable ? '<span class="var-badge">VARYASYONLU</span>' : ''}</div>
                                 <div class="urun-sku-grup">
                                     <div class="urun-sku">${p.sku || 'SKU YOK'} | Toplam: ${totalGroupStock}</div>
                                     <div class="depo-kodu-container ${canManage ? '' : 'readonly'}">
@@ -952,9 +957,12 @@
                     });
 
                     sortedVariations.forEach(v => {
-                        var vDepoStock = (v.all_stocks && depoId && v.all_stocks[String(depoId)] != null) ? parseFloat(v.all_stocks[String(depoId)]) : parseFloat(v.warehouse_stock || 0);
+                        var vDepoStock = (v.all_stocks && depoId && v.all_stocks[String(depoId)] != null) 
+                            ? parseFloat(v.all_stocks[String(depoId)]) 
+                            : parseFloat(v.warehouse_stock !== undefined ? v.warehouse_stock : (v.stock_quantity || 0));
                         var vCritical = vDepoStock > 0 && vDepoStock <= threshold;
-                        var vImg = (v.images && v.images[0]) ? v.images[0].src : '';
+                        var vImg = (v.images && v.images[0] && v.images[0].src) ? v.images[0].src : (v.image_url || img);
+                        var vName = v.name || v.title || ('Varyasyon #' + v.id);
                         
                         // Varyasyon Fiyatları
                         var vCurrentPrice = parseFloat(v.price || 0);
@@ -965,10 +973,10 @@
                         html += `
                             <div class="terminal-urun-kart variation-item" data-id="${v.parent_id}" data-vid="${v.id}">
                                 <div class="variation-indent"></div>
-                                <img src="${vImg || img}" class="variation-img" alt="">
+                                <img src="${vImg}" class="variation-img" alt="">
                                 <div class="urun-detay">
                                     <div class="urun-temel-bilgi">
-                                        <div class="urun-ad">${v.name}</div>
+                                        <div class="urun-ad">${vName}</div>
                                         <div class="urun-sku-grup">
                                             <div class="urun-sku">${v.sku || 'SKU YOK'} | Toplam: ${vDepoStock}</div>
                                             <div class="depo-kodu-container ${canManage ? '' : 'readonly'}">
