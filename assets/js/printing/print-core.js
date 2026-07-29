@@ -209,7 +209,7 @@
         generateCode128Svg: function(text, height) {
             text = String(text || '');
             if (!text) return '';
-            height = height || 45;
+            height = height || 50;
 
             var patterns = [
                 '212222', '222122', '222221', '121223', '121322', '131222', '122213', '122312', '132212', '221213',
@@ -251,7 +251,7 @@
 
             var barWidth = 2;
             var svgWidth = totalModules * barWidth;
-            var svgHtml = '<svg class="hk-print-barcode-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + svgWidth + ' ' + height + '" style="width:100%; max-width:220px; height:' + height + 'px; display:block; margin:4px auto 0 auto;" data-barcode="' + text + '">';
+            var svgHtml = '<svg class="hk-print-barcode-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + svgWidth + ' ' + height + '" style="width:100%; max-width:260px; height:' + height + 'px; display:block; margin:4px auto 0 auto;" data-barcode="' + text + '">';
 
             var x = 0;
             var isBar = true;
