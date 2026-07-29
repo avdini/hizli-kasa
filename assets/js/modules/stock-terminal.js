@@ -119,43 +119,58 @@
                 });
             }
 
+            const handleFilterChange = function(e) {
+                console.log('%c[Hızlı Kasa StockTerminal] Filtre Değişti / Tetiklendi:', 'color: #10b981; font-weight: bold;', e ? e.target.id : 'Manuel');
+                self.readFiltersFromUI();
+                self.state.currentPage = 1;
+                self.loadProducts();
+                self.renderActiveChips();
+            };
+
             if (applyFiltersBtn) {
-                applyFiltersBtn.addEventListener('click', function() {
-                    self.readFiltersFromUI();
-                    self.state.currentPage = 1;
-                    self.loadProducts();
-                    self.renderActiveChips();
+                applyFiltersBtn.addEventListener('click', function(e) {
+                    if (e) e.preventDefault();
+                    console.log('%c[Hızlı Kasa StockTerminal] Sonuçları Göster Butonuna Tıklandı', 'color: #059669; font-weight: bold;');
+                    handleFilterChange(e);
                     toggleDrawer(false);
                 });
             }
 
             if (clearFiltersBtn) {
-                clearFiltersBtn.addEventListener('click', function() {
+                clearFiltersBtn.addEventListener('click', function(e) {
+                    if (e) e.preventDefault();
                     self.resetFiltersUI();
-                    self.readFiltersFromUI();
-                    self.state.currentPage = 1;
-                    self.loadProducts();
-                    self.renderActiveChips();
+                    handleFilterChange(e);
                 });
             }
 
             if (clearAllChipsBtn) {
-                clearAllChipsBtn.addEventListener('click', function() {
+                clearAllChipsBtn.addEventListener('click', function(e) {
+                    if (e) e.preventDefault();
                     self.resetFiltersUI();
-                    self.readFiltersFromUI();
-                    self.state.currentPage = 1;
-                    self.loadProducts();
-                    self.renderActiveChips();
+                    handleFilterChange(e);
                 });
             }
 
-            // --- Nitelik Seçici Değişimi ---
-            const filterAttr = document.getElementById('filter-attribute');
-            if (filterAttr) {
-                filterAttr.addEventListener('change', function() {
-                    self.updateAttributeTermsUI(this.value);
-                });
-            }
+            // --- Tüm Çekmece Filtre Elemanlarına Canlı Dinleyici Bağlama ---
+            const filterInputIds = [
+                'filter-scope', 'filter-min-stock', 'filter-max-stock', 
+                'filter-stock-status', 'filter-category', 'filter-brand', 
+                'filter-attribute', 'filter-attribute-term', 'filter-days-unsold'
+            ];
+
+            filterInputIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    const eventType = (el.tagName === 'INPUT' && el.type === 'number') ? 'input' : 'change';
+                    el.addEventListener(eventType, function(e) {
+                        if (id === 'filter-attribute') {
+                            self.updateAttributeTermsUI(this.value);
+                        }
+                        handleFilterChange(e);
+                    });
+                }
+            });
 
             // --- Sıralama Seçici ---
             const sortSelect = document.getElementById('terminal-siralama-select');

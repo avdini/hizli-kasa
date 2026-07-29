@@ -264,11 +264,11 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
 
         if ($stock_status !== 'all') {
             if ($stock_status === 'instock') {
-                $where[] = "pm_stock_status.meta_value = 'instock'";
+                $where[] = "(pm_stock_status.meta_value = 'instock' OR p.ID IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} p_v INNER JOIN {$wpdb->postmeta} pm_vs ON p_v.ID = pm_vs.post_id WHERE p_v.post_type = 'product_variation' AND pm_vs.meta_key = '_stock_status' AND pm_vs.meta_value = 'instock'))";
             } elseif ($stock_status === 'outofstock') {
-                $where[] = "pm_stock_status.meta_value = 'outofstock'";
+                $where[] = "(pm_stock_status.meta_value = 'outofstock' OR p.ID IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} p_v INNER JOIN {$wpdb->postmeta} pm_vs ON p_v.ID = pm_vs.post_id WHERE p_v.post_type = 'product_variation' AND pm_vs.meta_key = '_stock_status' AND pm_vs.meta_value = 'outofstock'))";
             } elseif ($stock_status === 'lowstock') {
-                $where[] = "(CAST(pm_stock.meta_value AS SIGNED) <= 2 AND pm_stock_status.meta_value = 'instock')";
+                $where[] = "((CAST(pm_stock.meta_value AS SIGNED) <= 2 AND pm_stock_status.meta_value = 'instock') OR p.ID IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} p_v INNER JOIN {$wpdb->postmeta} pm_vq ON p_v.ID = pm_vq.post_id INNER JOIN {$wpdb->postmeta} pm_vs ON p_v.ID = pm_vs.post_id WHERE p_v.post_type = 'product_variation' AND pm_vq.meta_key = '_stock' AND pm_vs.meta_key = '_stock_status' AND CAST(pm_vq.meta_value AS SIGNED) <= 2 AND pm_vs.meta_value = 'instock'))";
             }
         }
 
@@ -332,11 +332,33 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
 
         } else {
             // Standard variation / simple / all scope
-            if ($has_min_stock) {
-                $where[] = $wpdb->prepare("CAST(pm_stock.meta_value AS SIGNED) >= %f", $min_stock);
-            }
-            if ($has_max_stock) {
-                $where[] = $wpdb->prepare("CAST(pm_stock.meta_value AS SIGNED) <= %f", $max_stock);
+            if ($has_min_stock || $has_max_stock) {
+                $stock_sub_conds = [];
+                $var_sub_conds   = [];
+
+                if ($has_min_stock) {
+                    $stock_sub_conds[] = $wpdb->prepare("CAST(pm_stock.meta_value AS SIGNED) >= %f", $min_stock);
+                    $var_sub_conds[]   = $wpdb->prepare("CAST(pm_v_stock.meta_value AS SIGNED) >= %f", $min_stock);
+                }
+                if ($has_max_stock) {
+                    $stock_sub_conds[] = $wpdb->prepare("CAST(pm_stock.meta_value AS SIGNED) <= %f", $max_stock);
+                    $var_sub_conds[]   = $wpdb->prepare("CAST(pm_v_stock.meta_value AS SIGNED) <= %f", $max_stock);
+                }
+
+                $direct_stock_sql = implode(' AND ', $stock_sub_conds);
+                $var_stock_sql    = implode(' AND ', $var_sub_conds);
+
+                $where[] = "(
+                    ({$direct_stock_sql})
+                    OR
+                    p.ID IN (
+                        SELECT DISTINCT p_v.post_parent
+                        FROM {$wpdb->posts} p_v
+                        INNER JOIN {$wpdb->postmeta} pm_v_stock ON (p_v.ID = pm_v_stock.post_id AND pm_v_stock.meta_key = '_stock')
+                        WHERE p_v.post_type = 'product_variation'
+                          AND ({$var_stock_sql})
+                    )
+                )";
             }
 
             $where_sql = implode(' AND ', $where);
