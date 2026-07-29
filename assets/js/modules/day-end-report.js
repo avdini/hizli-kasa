@@ -39,7 +39,6 @@
                 this.els.gunSonuIncludeQR.addEventListener("change", function () {
                     if (self.data) {
                         self._raporuGoster(self.data);
-                        self._fisSablonuDoldur(self.data, true);
                     }
                 });
                 this.els.gunSonuIncludeQR.dataset.bound = "true";
@@ -141,7 +140,6 @@
 
                 self.data = rapor;
                 self._raporuGoster(rapor);
-                self._fisSablonuDoldur(rapor, true);
             } catch (error) {
                 console.error("Gün sonu raporu hatası:", error);
                 self.els.gunSonuYukleniyor.innerHTML = '<p style="color: #e74c3c; text-align:center;">Rapor yüklenirken hata oluştu!</p>';
