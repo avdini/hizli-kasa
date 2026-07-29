@@ -20,14 +20,25 @@
             currentPage: 1,
             perPage: 24,
             isLoading: false,
-            orderby: 'date',
-            order: 'desc',
+            sortBy: 'date_desc',
             total: 0,
             warehouses: [],
+            filterData: {
+                categories: [],
+                brands: [],
+                attributes: [],
+                tags: []
+            },
             filters: {
+                scope: 'all',
+                minStock: '',
+                maxStock: '',
+                stockStatus: 'all',
                 category: 0,
                 brand: 0,
-                stockStatus: 'all'
+                attribute: '',
+                attributeTerm: 0,
+                daysUnsold: 0
             }
         },
 
@@ -47,7 +58,6 @@
                             if (!self.initialized) {
                                 self.init();
                             } else {
-                                // Sekme tekrar açıldığında en güncel stokları çek
                                 self.loadProducts();
                             }
                         }
@@ -64,67 +74,94 @@
                 self.loadProducts();
             });
 
-            // --- Filtre Paneli Toggle ---
+            // --- Filtre Çekmecesi (Drawer) Toggle & Backdrop ---
             const filterToggleBtn = document.getElementById('btn-terminal-filtre-toggle');
-            const filterBar = document.getElementById('terminal-filtre-bar');
-            if (filterToggleBtn && filterBar) {
+            const drawer = document.getElementById('stock-filter-drawer');
+            const backdrop = document.getElementById('drawer-backdrop');
+            const closeDrawerBtn = document.getElementById('btn-close-drawer');
+            const applyFiltersBtn = document.getElementById('btn-apply-filters');
+            const clearFiltersBtn = document.getElementById('btn-clear-filters');
+            const clearAllChipsBtn = document.getElementById('btn-clear-all-chips');
+
+            const toggleDrawer = function(show) {
+                if (!drawer) return;
+                const isVisible = show !== undefined ? show : drawer.style.display === 'none';
+                drawer.style.display = isVisible ? 'flex' : 'none';
+                if (backdrop) backdrop.style.display = isVisible ? 'block' : 'none';
+                if (filterToggleBtn) filterToggleBtn.classList.toggle('active', isVisible);
+
+                if (isVisible && !self._filtersLoaded) {
+                    self.loadFilterOptions();
+                }
+            };
+
+            if (filterToggleBtn) {
                 filterToggleBtn.addEventListener('click', function() {
-                    const isHidden = filterBar.style.display === 'none';
-                    filterBar.style.display = isHidden ? 'flex' : 'none';
-                    filterToggleBtn.classList.toggle('active', isHidden);
-                    
-                    // Eğer ilk kez açılıyorsa filtreleri yükle
-                    if (isHidden && !self._filtersLoaded) {
-                        self.loadFilterOptions();
-                    }
+                    toggleDrawer();
                 });
             }
 
-            // --- Filtre Dinleyicileri ---
-            const filterCat = document.getElementById('filter-category');
-            const filterBrand = document.getElementById('filter-brand');
-            const filterStock = document.getElementById('filter-stock-status');
-            const clearFilters = document.getElementById('btn-clear-filters');
+            if (closeDrawerBtn) {
+                closeDrawerBtn.addEventListener('click', function() {
+                    toggleDrawer(false);
+                });
+            }
 
-            if (filterCat) {
-                filterCat.addEventListener('change', function() {
-                    self.state.filters.category = parseInt(this.value);
+            if (backdrop) {
+                backdrop.addEventListener('click', function() {
+                    toggleDrawer(false);
+                });
+            }
+
+            if (applyFiltersBtn) {
+                applyFiltersBtn.addEventListener('click', function() {
+                    self.readFiltersFromUI();
+                    self.state.currentPage = 1;
+                    self.loadProducts();
+                    self.renderActiveChips();
+                    toggleDrawer(false);
+                });
+            }
+
+            if (clearFiltersBtn) {
+                clearFiltersBtn.addEventListener('click', function() {
+                    self.resetFiltersUI();
+                    self.readFiltersFromUI();
+                    self.state.currentPage = 1;
+                    self.loadProducts();
+                    self.renderActiveChips();
+                });
+            }
+
+            if (clearAllChipsBtn) {
+                clearAllChipsBtn.addEventListener('click', function() {
+                    self.resetFiltersUI();
+                    self.readFiltersFromUI();
+                    self.state.currentPage = 1;
+                    self.loadProducts();
+                    self.renderActiveChips();
+                });
+            }
+
+            // --- Nitelik Seçici Değişimi ---
+            const filterAttr = document.getElementById('filter-attribute');
+            if (filterAttr) {
+                filterAttr.addEventListener('change', function() {
+                    self.updateAttributeTermsUI(this.value);
+                });
+            }
+
+            // --- Sıralama Seçici ---
+            const sortSelect = document.getElementById('terminal-siralama-select');
+            if (sortSelect) {
+                sortSelect.addEventListener('change', function() {
+                    self.state.sortBy = this.value;
                     self.state.currentPage = 1;
                     self.loadProducts();
                 });
             }
 
-            if (filterBrand) {
-                filterBrand.addEventListener('change', function() {
-                    self.state.filters.brand = parseInt(this.value);
-                    self.state.currentPage = 1;
-                    self.loadProducts();
-                });
-            }
-
-            if (filterStock) {
-                filterStock.addEventListener('change', function() {
-                    self.state.filters.stockStatus = this.value;
-                    self.state.currentPage = 1;
-                    self.loadProducts();
-                });
-            }
-
-            if (clearFilters) {
-                clearFilters.addEventListener('click', function() {
-                    if (filterCat) filterCat.value = 0;
-                    if (filterBrand) filterBrand.value = 0;
-                    if (filterStock) filterStock.value = 'all';
-                    
-                    self.state.filters.category = 0;
-                    self.state.filters.brand = 0;
-                    self.state.filters.stockStatus = 'all';
-                    self.state.currentPage = 1;
-                    self.loadProducts();
-                });
-            }
-
-            // --- Paginaton Listeners ---
+            // --- Sayfalandırma ---
             var prevBtn = document.getElementById('prev-page');
             var nextBtn = document.getElementById('next-page');
             var perPageSelect = document.getElementById('per-page-select');
@@ -156,22 +193,10 @@
                 });
             }
 
-            // --- Sıralama Dinleyicisi ---
-            var sortSelect = document.getElementById('terminal-siralama-select');
-            if (sortSelect) {
-                sortSelect.addEventListener('change', function() {
-                    var parts = this.value.split('|');
-                    self.state.orderby = parts[0];
-                    self.state.order   = parts[1];
-                    self.state.currentPage = 1;
-                    self.loadProducts();
-                });
-            }
-
             // İlk ürünleri yükle
             this.loadProducts();
 
-            // Arama dinleyicisi
+            // Metin Araması Dinleyicisi
             input.addEventListener('input', function() {
                 clearTimeout(self.state.searchTimer);
                 self.state.searchTimer = setTimeout(function() {
@@ -355,49 +380,276 @@
         },
 
         /**
-         * Filtre seçeneklerini (kategori ve marka) API'den yükler.
+         * Arayüzdeki filtre girdilerini okur ve state'e yazar.
+         */
+        readFiltersFromUI: function() {
+            const scope = document.getElementById('filter-scope');
+            const minStock = document.getElementById('filter-min-stock');
+            const maxStock = document.getElementById('filter-max-stock');
+            const stockStatus = document.getElementById('filter-stock-status');
+            const category = document.getElementById('filter-category');
+            const brand = document.getElementById('filter-brand');
+            const attribute = document.getElementById('filter-attribute');
+            const attributeTerm = document.getElementById('filter-attribute-term');
+            const daysUnsold = document.getElementById('filter-days-unsold');
+
+            this.state.filters.scope         = scope ? scope.value : 'all';
+            this.state.filters.minStock      = minStock ? minStock.value : '';
+            this.state.filters.maxStock      = maxStock ? maxStock.value : '';
+            this.state.filters.stockStatus   = stockStatus ? stockStatus.value : 'all';
+            this.state.filters.category      = category ? parseInt(category.value) || 0 : 0;
+            this.state.filters.brand         = brand ? parseInt(brand.value) || 0 : 0;
+            this.state.filters.attribute     = attribute ? attribute.value : '';
+            this.state.filters.attributeTerm = attributeTerm ? parseInt(attributeTerm.value) || 0 : 0;
+            this.state.filters.daysUnsold    = daysUnsold ? parseInt(daysUnsold.value) || 0 : 0;
+        },
+
+        /**
+         * Filtre arayüzünü varsayılan değerlere sıfırlar.
+         */
+        resetFiltersUI: function() {
+            const scope = document.getElementById('filter-scope');
+            const minStock = document.getElementById('filter-min-stock');
+            const maxStock = document.getElementById('filter-max-stock');
+            const stockStatus = document.getElementById('filter-stock-status');
+            const category = document.getElementById('filter-category');
+            const brand = document.getElementById('filter-brand');
+            const attribute = document.getElementById('filter-attribute');
+            const attributeTerm = document.getElementById('filter-attribute-term');
+            const daysUnsold = document.getElementById('filter-days-unsold');
+
+            if (scope) scope.value = 'all';
+            if (minStock) minStock.value = '';
+            if (maxStock) maxStock.value = '';
+            if (stockStatus) stockStatus.value = 'all';
+            if (category) category.value = 0;
+            if (brand) brand.value = 0;
+            if (attribute) attribute.value = '';
+            if (attributeTerm) attributeTerm.value = 0;
+            if (daysUnsold) daysUnsold.value = 0;
+
+            const termsWrapper = document.getElementById('attribute-terms-wrapper');
+            if (termsWrapper) termsWrapper.style.display = 'none';
+        },
+
+        /**
+         * Seçilen nitelik tipine göre değerlerini açılır kutuya doldurur.
+         */
+        updateAttributeTermsUI: function(slug) {
+            const wrapper = document.getElementById('attribute-terms-wrapper');
+            const termSelect = document.getElementById('filter-attribute-term');
+            if (!wrapper || !termSelect) return;
+
+            termSelect.innerHTML = '<option value="0">Tümü</option>';
+
+            if (!slug) {
+                wrapper.style.display = 'none';
+                return;
+            }
+
+            const attrObj = (this.state.filterData.attributes || []).find(a => a.slug === slug);
+            if (attrObj && attrObj.terms && attrObj.terms.length > 0) {
+                attrObj.terms.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.name;
+                    termSelect.appendChild(opt);
+                });
+                wrapper.style.display = 'block';
+            } else {
+                wrapper.style.display = 'none';
+            }
+        },
+
+        /**
+         * Aktif filtre rozetlerini (Chips) ve filtre sayısı göstergesini çizer.
+         */
+        renderActiveChips: function() {
+            const chipsBar = document.getElementById('active-filter-chips');
+            const chipsContainer = document.getElementById('chips-container');
+            const badge = document.getElementById('active-filter-badge');
+
+            if (!chipsBar || !chipsContainer) return;
+
+            const chips = [];
+            const f = this.state.filters;
+
+            if (f.scope && f.scope !== 'all') {
+                let scopeText = 'Tümü';
+                if (f.scope === 'parent_sum') scopeText = 'Toplamsal Ürün Stoğu';
+                else if (f.scope === 'variation') scopeText = 'Tekil Varyasyon Stoğu';
+                else if (f.scope === 'simple') scopeText = 'Sadece Basit Ürünler';
+                chips.push({ key: 'scope', label: 'Kapsam: ' + scopeText });
+            }
+
+            if (f.minStock !== '' || f.maxStock !== '') {
+                const min = f.minStock !== '' ? f.minStock : '0';
+                const max = f.maxStock !== '' ? f.maxStock : '∞';
+                chips.push({ key: 'stockRange', label: `Stok: ${min} - ${max}` });
+            }
+
+            if (f.stockStatus && f.stockStatus !== 'all') {
+                let statusText = f.stockStatus;
+                if (f.stockStatus === 'instock') statusText = 'Stokta Var';
+                else if (f.stockStatus === 'lowstock') statusText = 'Kritik Stok (<=2)';
+                else if (f.stockStatus === 'outofstock') statusText = 'Stokta Yok';
+                chips.push({ key: 'stockStatus', label: 'Stok Durumu: ' + statusText });
+            }
+
+            if (f.category > 0) {
+                const catObj = (this.state.filterData.categories || []).find(c => c.id === f.category);
+                const catName = catObj ? catObj.name : '#' + f.category;
+                chips.push({ key: 'category', label: 'Kategori: ' + catName });
+            }
+
+            if (f.brand > 0) {
+                const brandObj = (this.state.filterData.brands || []).find(b => b.id === f.brand);
+                const brandName = brandObj ? brandObj.name : '#' + f.brand;
+                chips.push({ key: 'brand', label: 'Marka: ' + brandName });
+            }
+
+            if (f.attribute) {
+                const attrObj = (this.state.filterData.attributes || []).find(a => a.slug === f.attribute);
+                let attrLabel = attrObj ? attrObj.label : f.attribute;
+                if (f.attributeTerm > 0 && attrObj) {
+                    const termObj = (attrObj.terms || []).find(t => t.id === f.attributeTerm);
+                    if (termObj) attrLabel += ': ' + termObj.name;
+                }
+                chips.push({ key: 'attribute', label: 'Nitelik: ' + attrLabel });
+            }
+
+            if (f.daysUnsold > 0) {
+                chips.push({ key: 'daysUnsold', label: `Hareketsiz: Son ${f.daysUnsold} Gündür Satılmayan` });
+            }
+
+            if (chips.length > 0) {
+                chipsBar.style.display = 'flex';
+                if (badge) {
+                    badge.textContent = chips.length;
+                    badge.style.display = 'inline-block';
+                }
+
+                const self = this;
+                chipsContainer.innerHTML = chips.map(c => `
+                    <span class="filter-chip">
+                        ${c.label}
+                        <span class="remove-chip" data-key="${c.key}">&times;</span>
+                    </span>
+                `).join('');
+
+                chipsContainer.querySelectorAll('.remove-chip').forEach(el => {
+                    el.addEventListener('click', function() {
+                        const key = this.dataset.key;
+                        self.removeSingleFilter(key);
+                    });
+                });
+            } else {
+                chipsBar.style.display = 'none';
+                if (badge) badge.style.display = 'none';
+                chipsContainer.innerHTML = '';
+            }
+        },
+
+        /**
+         * Tek bir filtre rozetini kaldırır.
+         */
+        removeSingleFilter: function(key) {
+            if (key === 'scope') {
+                const el = document.getElementById('filter-scope');
+                if (el) el.value = 'all';
+            } else if (key === 'stockRange') {
+                const min = document.getElementById('filter-min-stock');
+                const max = document.getElementById('filter-max-stock');
+                if (min) min.value = '';
+                if (max) max.value = '';
+            } else if (key === 'stockStatus') {
+                const el = document.getElementById('filter-stock-status');
+                if (el) el.value = 'all';
+            } else if (key === 'category') {
+                const el = document.getElementById('filter-category');
+                if (el) el.value = 0;
+            } else if (key === 'brand') {
+                const el = document.getElementById('filter-brand');
+                if (el) el.value = 0;
+            } else if (key === 'attribute') {
+                const el = document.getElementById('filter-attribute');
+                const elTerm = document.getElementById('filter-attribute-term');
+                if (el) el.value = '';
+                if (elTerm) elTerm.value = 0;
+                this.updateAttributeTermsUI('');
+            } else if (key === 'daysUnsold') {
+                const el = document.getElementById('filter-days-unsold');
+                if (el) el.value = 0;
+            }
+
+            this.readFiltersFromUI();
+            this.state.currentPage = 1;
+            this.loadProducts();
+            this.renderActiveChips();
+        },
+
+        /**
+         * Filtre seçeneklerini V2 REST API'den yükler.
          */
         loadFilterOptions: async function() {
             if (this._filtersLoading) return;
             this._filtersLoading = true;
 
             try {
-                const response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v1/terminal/filters', {
+                const response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v2/products/filter-options', {
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });
-                const data = await response.json();
+                const res = await response.json();
 
-                const filterCat = document.getElementById('filter-category');
-                const filterBrand = document.getElementById('filter-brand');
+                if (res.success && res.data) {
+                    const data = res.data;
+                    this.state.filterData = data;
 
-                if (filterCat && data.categories) {
-                    data.categories.forEach(cat => {
-                        const opt = document.createElement('option');
-                        opt.value = cat.id;
-                        opt.textContent = cat.name;
-                        filterCat.appendChild(opt);
-                    });
-                }
+                    const filterCat   = document.getElementById('filter-category');
+                    const filterBrand = document.getElementById('filter-brand');
+                    const filterAttr  = document.getElementById('filter-attribute');
 
-                if (filterBrand && data.brands) {
-                    data.brands.forEach(brand => {
-                        const opt = document.createElement('option');
-                        opt.value = brand.id;
-                        opt.textContent = brand.name;
-                        filterBrand.appendChild(opt);
-                    });
+                    if (filterCat && data.categories) {
+                        filterCat.innerHTML = '<option value="0">Tüm Kategoriler</option>';
+                        data.categories.forEach(cat => {
+                            const opt = document.createElement('option');
+                            opt.value = cat.id;
+                            opt.textContent = cat.name + (cat.count ? ` (${cat.count})` : '');
+                            filterCat.appendChild(opt);
+                        });
+                    }
+
+                    if (filterBrand && data.brands) {
+                        filterBrand.innerHTML = '<option value="0">Tüm Markalar</option>';
+                        data.brands.forEach(brand => {
+                            const opt = document.createElement('option');
+                            opt.value = brand.id;
+                            opt.textContent = brand.name + (brand.count ? ` (${brand.count})` : '');
+                            filterBrand.appendChild(opt);
+                        });
+                    }
+
+                    if (filterAttr && data.attributes) {
+                        filterAttr.innerHTML = '<option value="">Seçiniz...</option>';
+                        data.attributes.forEach(attr => {
+                            const opt = document.createElement('option');
+                            opt.value = attr.slug;
+                            opt.textContent = attr.label;
+                            filterAttr.appendChild(opt);
+                        });
+                    }
                 }
 
                 this._filtersLoaded = true;
             } catch (e) {
-                console.error("Filtreler yüklenemedi", e);
+                console.error("V2 Filtreler yüklenemedi", e);
             } finally {
                 this._filtersLoading = false;
             }
         },
 
         /**
-         * Ürünleri API'den yükler.
+         * Ürünleri V2 REST API'den yükler.
          */
         loadProducts: async function() {
             var container = document.getElementById('terminal-urun-listesi');
@@ -424,24 +676,32 @@
             var requestToken = ++this.state.lastRequestToken;
             this.state.requestController = controller;
 
-            // Liste başa sarılıyor (her sayfa değişiminde liste temizlenir)
             this.state.products = [];
             container.innerHTML = '<div class="terminal-loading"><div class="spin"></div><p>Ürünler yükleniyor...</p></div>';
             
             this.state.isLoading = true;
 
             try {
-                var offset = (this.state.currentPage - 1) * this.state.perPage;
-                var url = kasaAyar.rootApiUrl + 'hizli-kasa/v1/terminal/products?limit=' + this.state.perPage + '&offset=' + offset + '&depo_id=' + depoId + '&_=' + Date.now();
-                
-                if (s) url += '&s=' + encodeURIComponent(s);
-                if (this.state.orderby) url += '&orderby=' + this.state.orderby;
-                if (this.state.order)   url += '&order=' + this.state.order;
+                var f = this.state.filters;
+                var queryParams = [
+                    'page=' + this.state.currentPage,
+                    'per_page=' + this.state.perPage,
+                    'scope=' + encodeURIComponent(f.scope || 'all'),
+                    'stock_status=' + encodeURIComponent(f.stockStatus || 'all'),
+                    'sort_by=' + encodeURIComponent(this.state.sortBy || 'date_desc'),
+                    '_=' + Date.now()
+                ];
 
-                // Gelişmiş Filtreler
-                if (this.state.filters.category > 0) url += '&cat=' + this.state.filters.category;
-                if (this.state.filters.brand > 0)    url += '&brand=' + this.state.filters.brand;
-                if (this.state.filters.stockStatus !== 'all') url += '&stock_status=' + this.state.filters.stockStatus;
+                if (s) queryParams.push('search=' + encodeURIComponent(s));
+                if (f.minStock !== '') queryParams.push('min_stock=' + encodeURIComponent(f.minStock));
+                if (f.maxStock !== '') queryParams.push('max_stock=' + encodeURIComponent(f.maxStock));
+                if (f.category > 0) queryParams.push('category_ids=' + f.category);
+                if (f.brand > 0) queryParams.push('brand_ids=' + f.brand);
+                if (f.attribute) queryParams.push('attribute_slug=' + encodeURIComponent(f.attribute));
+                if (f.attributeTerm > 0) queryParams.push('attribute_term_ids=' + f.attributeTerm);
+                if (f.daysUnsold > 0) queryParams.push('days_since_last_sale=' + f.daysUnsold);
+
+                var url = kasaAyar.rootApiUrl + 'hizli-kasa/v2/products/stock-search?' + queryParams.join('&');
 
                 var fetchOptions = { headers: { 'X-WP-Nonce': kasaAyar.nonce } };
                 if (controller) {
@@ -451,34 +711,31 @@
                 var response = await fetch(url, fetchOptions);
                 if (!response.ok) throw new Error("Sunucu hatası: " + response.status);
                 
-                var data = await response.json();
+                var res = await response.json();
                 if (requestToken !== this.state.lastRequestToken) {
                     return;
                 }
 
-                this.state.products = data.products || [];
-                this.state.warehouses = data.warehouses || [];
-                this.state.total = data.total || 0;
+                if (res.success && res.data) {
+                    var data = res.data;
+                    this.state.products = data.items || [];
+                    this.state.total = (data.pagination && data.pagination.total_items) ? data.pagination.total_items : this.state.products.length;
 
-                // UI Güncelleme
-                this.updatePaginationUI();
-                
-                if (document.getElementById('basit-urun-sayisi')) {
-                    document.getElementById('basit-urun-sayisi').innerText = data.simple_count || 0;
-                }
-                if (document.getElementById('varyasyonlu-urun-sayisi')) {
-                    document.getElementById('varyasyonlu-urun-sayisi').innerText = data.variable_count || 0;
-                }
-                if (document.getElementById('toplam-kalem-sayisi')) {
-                    document.getElementById('toplam-kalem-sayisi').innerText = data.grand_total_items || 0;
-                }
-                if (document.getElementById('kritik-stok-sayisi')) {
-                    document.getElementById('kritik-stok-sayisi').innerText = data.critical_count || 0;
-                }
+                    this.updatePaginationUI();
+                    
+                    if (document.getElementById('toplam-kalem-sayisi')) {
+                        document.getElementById('toplam-kalem-sayisi').innerText = this.state.total;
+                    }
 
+                    const applyBtnText = document.getElementById('btn-apply-text');
+                    if (applyBtnText) {
+                        applyBtnText.innerText = `${this.state.total} Ürünü Göster`;
+                    }
 
-
-                this.renderProducts();
+                    this.renderProducts();
+                } else {
+                    throw new Error("Veri formatı geçersiz");
+                }
             } catch (e) {
                 if (e && e.name === 'AbortError') {
                     return;

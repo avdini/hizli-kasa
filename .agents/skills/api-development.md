@@ -323,10 +323,31 @@ Kasadan QR Taksitli Ödeme siparişi oluşturur ve Sanal POS eklentilerinin (iyz
 - **İçerik Tipi:** `application/json`
 
 #### Adres Enjeksiyon Mimarisi:
-Sanal POS entegrasyonlarının `ShippingAddress` uyarısı vermemesi için:
-1. Sipariş oluşturulurken `billing` ve `shipping` adresleri mağaza varsayılanları veya gönderilen verilerle eksiksiz doldurulur.
-2. `woocommerce_order_needs_shipping_address` filtresi QR siparişleri için `true` döndürür.
-3. `order-pay` sayfasında hem `$_POST`/`$_REQUEST` hem `WC()->customer` oturumu hem de gizli form girdileri üzerinden teslimat adresi otomatik enjekte edilir.
+330: 
+331: ---
+332: 
+333: ### 3.5. Detaylı Ürün & Stok Arama API'si (Stock Search)
+334: Gelişmiş süzme, varyasyon/toplam stok hesaplaması, nitelikler, kategoriler, markalar ve tarih bazlı arama.
+335: 
+336: #### 3.5.1. Stok Arama Endpoint'i
+337: - **URL:** `/wp-json/hizli-kasa/v2/products/stock-search`
+338: - **Metot:** `GET`
+339: - **Parametreler:**
+340:   - `scope`: `all` | `parent_sum` | `variation` | `simple`
+341:   - `min_stock` & `max_stock`: Stok miktarı süzgeci (Örn: min:1, max:1)
+342:   - `stock_status`: `all` | `instock` | `lowstock` | `outofstock`
+343:   - `category_ids`, `brand_ids`, `tag_ids`: Virgülle ayrılmış ID listesi
+344:   - `attribute_slug` & `attribute_term_ids`: Nitelik (pa_size vb.) süzgeci
+345:   - `search`: Ürün adı, SKU veya Barkod
+346:   - `days_since_last_sale`: Son X gündür satılmayanlar (Örn: 30)
+347:   - `sort_by`: `date_desc`, `title_asc`, `stock_asc`, `price_asc` vb.
+348:   - `page` & `per_page`: Sayfalandırma
+349: 
+350: #### 3.5.2. Filtre Opsiyonları Endpoint'i
+351: Panel UI kontrollerini doldurmak için kategorileri, markaları, nitelikleri ve etiketleri döner.
+352: - **URL:** `/wp-json/hizli-kasa/v2/products/filter-options`
+353: - **Metot:** `GET`
+
 
 
 

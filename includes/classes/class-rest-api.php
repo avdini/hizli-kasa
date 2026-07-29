@@ -42,6 +42,7 @@ require_once $api_dir . 'v2/controllers/class-api-qr-payment.php';
 require_once $api_dir . 'v2/controllers/class-api-logs.php';
 require_once $api_dir . 'v2/controllers/class-api-refund-cancellation.php';
 require_once $api_dir . 'v2/controllers/class-api-print.php';
+require_once $api_dir . 'v2/controllers/class-api-stock-search.php';
 
 // Register V2 REST Routes
 add_action('rest_api_init', function () {
@@ -89,6 +90,9 @@ add_action('rest_api_init', function () {
 
     $print_controller = new Hizli_Kasa_API_Print();
     $print_controller->register_routes();
+
+    $stock_search_controller = new Hizli_Kasa_API_Stock_Search();
+    $stock_search_controller->register_routes();
 });
 
 
