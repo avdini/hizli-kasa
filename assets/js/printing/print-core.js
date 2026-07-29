@@ -149,29 +149,28 @@
                 '@import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"); ' +
                 '@page { size: 50mm 35mm; margin: 0; } ' +
                 'html, body { margin: 0; padding: 0; background: #ffffff; color: #000000; font-family: "Inter", sans-serif; width: 50mm; box-sizing: border-box; overflow: hidden; } ' +
-                '.barcode-label { width: 50mm; height: 35mm; max-height: 35mm; padding: 2mm; box-sizing: border-box; background: #fff; color: #000; display: flex; flex-direction: column; page-break-after: always; break-after: page; overflow: hidden; font-family: "Inter", sans-serif; } ' +
+                '.barcode-label { width: 50mm; height: 35mm; max-height: 35mm; padding: 1.5mm 2mm; box-sizing: border-box; background: #fff; color: #000; display: flex; flex-direction: column; page-break-after: always; break-after: page; overflow: hidden; font-family: "Inter", sans-serif; } ' +
                 '.barcode-label:last-child { page-break-after: avoid !important; break-after: auto !important; } ' +
                 '.label-header { text-align: center; margin-bottom: 1mm; } ' +
-                '.product-name { font-size: 9pt; font-weight: 800; line-height: 1.1; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-transform: uppercase; } ' +
-                '.label-body { display: flex; flex: 1; gap: 1mm; padding-left: 2mm; } ' +
-                '.col-left { width: 48%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 1mm; } ' +
-                '.col-right { width: 52%; display: flex; flex-direction: column; justify-content: flex-end; padding-left: 1mm; padding-right: 1.5mm; padding-bottom: 0.2mm; } ' +
-                '.model-no { font-size: 6pt; font-weight: 600; margin-bottom: 0; transform: translateY(-3mm); } ' +
-                '.barcode-container { width: 100%; height: 11mm; display: flex; align-items: center; justify-content: center; margin: 0; overflow: hidden; transform: translateY(-3mm); } ' +
-                '.barcode-svg { width: 100% !important; height: 100% !important; display: block; } ' +
-                '.sku-text { font-size: 7pt; font-weight: 700; margin-top: 0; transform: translateY(-3mm); } ' +
-                '.attributes { font-size: 7pt; line-height: 1.2; } ' +
-                '.attr-color { margin-bottom: 0.7mm; display: flex; align-items: center; gap: 2px; line-height: 0.9; transform: translateY(-3mm); max-width: 100%; overflow: hidden; } ' +
-                '.attr-size { margin-bottom: 0mm; display: flex; align-items: center; gap: 2px; line-height: 0.9; transform: translateY(-3mm); max-width: 100%; overflow: hidden; } ' +
-                '.color-label, .size-label { font-family: "Inter", sans-serif !important; font-weight: 100 !important; font-size: 7pt; color: #000; white-space: nowrap; display: inline-block; transform: scaleX(0.8); transform-origin: left center; } ' +
-                '.color-val { font-size: 8pt; font-weight: 600; line-height: 0.9; white-space: nowrap; overflow: hidden; display: block; max-width: 100%; } ' +
+                '.product-name { font-size: 8.5pt; font-weight: 800; line-height: 1.1; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-transform: uppercase; } ' +
+                '.label-body { display: flex; flex: 1; gap: 1.5mm; padding-left: 0.5mm; min-height: 0; } ' +
+                '.col-left { width: 48%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding-bottom: 0.5mm; } ' +
+                '.col-right { width: 52%; display: flex; flex-direction: column; justify-content: space-between; padding-left: 0.5mm; padding-right: 0.5mm; padding-bottom: 0.5mm; height: 100%; box-sizing: border-box; } ' +
+                '.model-no { font-size: 6pt; font-weight: 600; margin: 0; line-height: 1; text-align: center; } ' +
+                '.barcode-container { width: 100%; height: 16mm; display: flex; align-items: center; justify-content: center; margin: 0.5mm 0; overflow: hidden; } ' +
+                '.barcode-svg, .hk-print-barcode-svg, .hk-print-barcode-img { width: 100% !important; height: 100% !important; display: block; shape-rendering: crispEdges !important; image-rendering: pixelated !important; image-rendering: crisp-edges !important; -ms-interpolation-mode: nearest-neighbor !important; } ' +
+                '.sku-text { font-size: 6.5pt; font-weight: 700; margin: 0; line-height: 1; text-align: center; } ' +
+                '.attributes { font-size: 7pt; line-height: 1.1; display: flex; flex-direction: column; gap: 1mm; justify-content: center; flex: 1; } ' +
+                '.attr-color, .attr-size { margin-bottom: 0; display: flex; align-items: baseline; justify-content: flex-start; gap: 4px; line-height: 1; max-width: 100%; overflow: hidden; } ' +
+                '.color-label, .size-label { font-family: "Inter", sans-serif !important; font-weight: 500 !important; font-size: 7pt; color: #000; white-space: nowrap; display: inline-block; } ' +
+                '.color-val { font-size: 8.5pt; font-weight: 800; line-height: 1; white-space: nowrap; overflow: hidden; display: block; max-width: 100%; } ' +
                 '.color-val.text-shrink { font-size: 6.5pt; } ' +
-                '.size-val { font-size: 14pt; font-weight: 900; line-height: 0.9; white-space: nowrap; overflow: hidden; display: block; max-width: 100%; } ' +
+                '.size-val { font-size: 14pt; font-weight: 900; line-height: 1; white-space: nowrap; overflow: hidden; display: block; max-width: 100%; } ' +
                 '.size-val.text-shrink { font-size: 10pt; } ' +
-                '.price-section { margin-top: -1.5mm; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; } ' +
-                '.price-single { font-size: 13pt; font-weight: 900; letter-spacing: -0.5px; } ' +
-                '.price-old { font-size: 10pt; color: #000; position: relative; text-decoration: none; display: inline-block; line-height: 0.9; margin-bottom: -0.5mm; } ' +
-                '.price-old::after { content: ""; position: absolute; left: 0; top: 50%; width: 100%; height: 1px; background: #000; transform: translateY(-50%) scaleY(0.3); transform-origin: center; } ' +
+                '.price-section { margin-top: auto; text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-end; white-space: nowrap; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; } ' +
+                '.price-single { font-size: 13pt; font-weight: 900; letter-spacing: -0.5px; line-height: 1; } ' +
+                '.price-old { font-size: 9.5pt; font-weight: 600; color: #000; display: inline-block; line-height: 1; margin-bottom: 0.5mm; text-decoration: line-through solid #000 !important; text-decoration-thickness: 1.3px !important; text-decoration-skip-ink: none !important; -webkit-text-decoration-skip-ink: none !important; } ' +
+                '.price-old::after { display: none !important; } ' +
                 '.price-new { font-size: 13.5pt; font-weight: 900; letter-spacing: -0.8px; line-height: 1; } ' :
                 '@page { size: auto; margin: 0; } ' +
                 'html, body { margin: 0; padding: 0; background: #ffffff; color: #000000; font-family: "Courier New", Courier, monospace; width: ' + width + '; box-sizing: border-box; } ' +
@@ -193,7 +192,7 @@
                 if (img.tagName && img.tagName.toLowerCase() === 'svg') return;
                 var val = img.dataset ? img.dataset.barcode : img.getAttribute('data-barcode');
                 if (val) {
-                    var svgHtml = self.generateCode128Svg(val, 45);
+                    var svgHtml = self.generateCode128Svg(val, 75);
                     var tempDiv = doc.createElement('div');
                     tempDiv.innerHTML = svgHtml;
                     var svgEl = tempDiv.firstElementChild;
@@ -209,7 +208,7 @@
         generateCode128Svg: function(text, height) {
             text = String(text || '');
             if (!text) return '';
-            height = height || 38;
+            height = height || 75;
 
             var patterns = [
                 '212222', '222122', '222221', '121223', '121322', '131222', '122213', '122312', '132212', '221213',
@@ -251,14 +250,14 @@
 
             var barWidth = 2;
             var svgWidth = totalModules * barWidth;
-            var svgHtml = '<svg class="hk-print-barcode-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + svgWidth + ' ' + height + '" preserveAspectRatio="none" style="width:100%; max-width:250px; height:' + height + 'px; display:block; margin:3px auto 0 auto;" data-barcode="' + text + '">';
+            var svgHtml = '<svg class="hk-print-barcode-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + svgWidth + ' ' + height + '" preserveAspectRatio="none" shape-rendering="crispEdges" style="width:100%; max-width:250px; height:' + height + 'px; display:block; margin:3px auto 0 auto; shape-rendering:crispEdges; image-rendering:pixelated;" data-barcode="' + text + '">';
 
             var x = 0;
             var isBar = true;
             for (var k = 0; k < barcodeStr.length; k++) {
                 var w = parseInt(barcodeStr[k], 10) * barWidth;
                 if (isBar && w > 0) {
-                    svgHtml += '<rect x="' + x + '" y="0" width="' + w + '" height="' + height + '" fill="#000000" />';
+                    svgHtml += '<rect x="' + x + '" y="0" width="' + w + '" height="' + height + '" fill="#000000" shape-rendering="crispEdges" />';
                 }
                 x += w;
                 isBar = !isBar;

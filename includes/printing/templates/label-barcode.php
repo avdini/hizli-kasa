@@ -11,9 +11,10 @@ $barcode_no   = esc_html($label['barcode_no'] ?? $label['barcode_value'] ?? '');
 $attributes   = $label['attributes'] ?? [];
 $price_data   = $label['price_data'] ?? [];
 
-$colorVal = esc_html(is_array($attributes) ? ($attributes['color'] ?? '') : '');
-$sizeVal  = esc_html(is_array($attributes) ? ($attributes['size'] ?? '') : '');
-$sizeLabel = esc_html(is_array($attributes) ? ($attributes['label'] ?? 'Beden') : 'Beden');
+$colorVal   = esc_html(is_array($attributes) ? ($attributes['color'] ?? '') : '');
+$colorLabel = esc_html(is_array($attributes) ? ($attributes['color_label'] ?? 'Renk') : 'Renk');
+$sizeVal    = esc_html(is_array($attributes) ? ($attributes['size'] ?? '') : '');
+$sizeLabel  = esc_html(is_array($attributes) ? ($attributes['label'] ?? 'Beden') : 'Beden');
 
 $showColorLabel = (mb_strlen($colorVal) <= 8);
 $colorClass = (mb_strlen($colorVal) > 14) ? 'color-val text-shrink' : 'color-val';
@@ -31,7 +32,7 @@ for ($i = 0; $i < $qty; $i++):
         <div class="col-left">
             <div class="model-no">Model: <?php echo $model_no; ?></div>
             <div class="barcode-container">
-                <img class="hk-print-barcode-img" data-barcode="<?php echo $barcode_no; ?>" style="width:100%; height:100%; display:block;" />
+                <img class="hk-print-barcode-img" data-barcode="<?php echo $barcode_no; ?>" style="width:100%; height:100%; display:block; shape-rendering:crispEdges; image-rendering:pixelated; image-rendering:crisp-edges;" />
             </div>
             <div class="sku-text">SKU: <?php echo $barcode_no; ?></div>
         </div>
@@ -39,7 +40,7 @@ for ($i = 0; $i < $qty; $i++):
             <div class="attributes">
                 <?php if (!empty($colorVal)): ?>
                 <div class="attr-color">
-                    <?php if ($showColorLabel): ?><span class="color-label">Renk:</span><?php endif; ?>
+                    <?php if ($showColorLabel): ?><span class="color-label"><?php echo $colorLabel; ?>:</span><?php endif; ?>
                     <span class="<?php echo $colorClass; ?>"><?php echo $colorVal; ?></span>
                 </div>
                 <?php endif; ?>

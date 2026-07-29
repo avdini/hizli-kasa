@@ -426,13 +426,19 @@
                     JsBarcode(svg, code, {
                         format: format,
                         width: barWidth,
-                        height: 50,
+                        height: 75,
                         displayValue: false,
                         margin: 0
                     });
 
-                    // Barkodu kutuya tam sığdır (CSS ile birlikte çalışır)
+                    // Barkodu kutuya tam sığdır ve termal yazıcı için crisp piksellere kilitle
                     svg.setAttribute("preserveAspectRatio", "none");
+                    svg.setAttribute("shape-rendering", "crispEdges");
+                    if (svg.querySelectorAll) {
+                        svg.querySelectorAll("rect").forEach(function(r) {
+                            r.setAttribute("shape-rendering", "crispEdges");
+                        });
+                    }
                 }
             });
 
@@ -466,16 +472,17 @@
                 priceHtml = `<div class="price-single">${data.price_data.price}</div>`;
             }
 
-            // Renk için dinamik kontrol
+            // Renk / 1. Özellik için dinamik kontrol
             var colorHtml = '';
             if (data.attributes.color) {
                 var colorVal = data.attributes.color;
+                var colorLabel = data.attributes.color_label || 'Renk';
                 var showColorLabel = colorVal.length <= 8; // Eşik düşürüldü
                 var colorClass = colorVal.length > 14 ? 'color-val text-shrink' : 'color-val';
                 
                 colorHtml = `
                     <div class="attr-color">
-                        ${showColorLabel ? '<span class="color-label">Renk:</span>' : ''}
+                        ${showColorLabel ? `<span class="color-label">${colorLabel}:</span>` : ''}
                         <span class="${colorClass}">${colorVal}</span>
                     </div>
                 `;

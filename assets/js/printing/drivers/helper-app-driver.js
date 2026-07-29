@@ -73,7 +73,7 @@
                             jsBarcodeFn(img, String(val), {
                                 format: 'CODE128',
                                 width: 2,
-                                height: 45,
+                                height: 75,
                                 displayValue: false,
                                 margin: 0,
                                 background: '#ffffff',
@@ -91,13 +91,19 @@
                             jsBarcodeFn(svg, String(val), {
                                 format: 'CODE128',
                                 width: 2.0,
-                                height: 50,
+                                height: 75,
                                 displayValue: false,
                                 margin: 0,
                                 background: '#ffffff',
                                 lineColor: '#000000'
                             });
                             svg.setAttribute('preserveAspectRatio', 'none');
+                            svg.setAttribute('shape-rendering', 'crispEdges');
+                            if (svg.querySelectorAll) {
+                                svg.querySelectorAll('rect').forEach(function(r) {
+                                    r.setAttribute('shape-rendering', 'crispEdges');
+                                });
+                            }
                         } catch (ex) {}
                     }
                 });

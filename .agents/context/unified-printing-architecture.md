@@ -111,3 +111,10 @@ await HK.PrintCore.print({
 1. **Doğrudan String HTML Birleştirmeden Kaçının:** Fiş tasarımları JS içinde `html += '...'` şeklinde değil, `includes/printing/templates/` altındaki modüler PHP şablonlarında yapılmalıdır.
 2. **Sürücü Ekleme:** Yeni bir yazdırma yöntemi (örneğin WebUSB) eklenirken `assets/js/printing/drivers/base-driver.js` sınıfından türetilen yeni bir sürücü oluşturulmalıdır.
 3. **No Native Dialogs:** Yazdırma hatalarında asla tarayıcının `alert()` kutusu kullanılmamalı, `HK.ModalManager` veya `HK.UI` tercih edilmelidir.
+
+---
+
+## 6. Termal Barkod Yazdırma & Crisp-Rendering Standartları
+
+1. **Subpixel & Anti-Aliasing (Grileşme) Önleme:** Termal yazıcılar 1-bit monochrome mantığıyla çalışır. Çizgi kalınlıklarında tarayıcının kenar yumuşatma yapmaması için tüm barkod SVG elemanlarında `shape-rendering="crispEdges"` niteliği ve `image-rendering: pixelated; image-rendering: crisp-edges;` CSS kuralları zorunludur.
+2. **Dikey Yükseklik Entegrasyonu:** Barkod okuyucuların hızlı ve toleranslı taraması için etiket düzeninde dikey yükseklik maksimumda tutulmalıdır (`.barcode-container` 16mm, `JsBarcode` / SVG `height: 75px`). Negatif `transform: translateY` hizalama hack'lerinden kaçınılmalı, temiz flexbox düzeni kullanılmalıdır.
