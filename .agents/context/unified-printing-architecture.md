@@ -118,3 +118,13 @@ await HK.PrintCore.print({
 
 1. **Subpixel & Anti-Aliasing (Grileşme) Önleme:** Termal yazıcılar 1-bit monochrome mantığıyla çalışır. Çizgi kalınlıklarında tarayıcının kenar yumuşatma yapmaması için tüm barkod SVG elemanlarında `shape-rendering="crispEdges"` niteliği ve `image-rendering: pixelated; image-rendering: crisp-edges;` CSS kuralları zorunludur.
 2. **Dikey Yükseklik Entegrasyonu:** Barkod okuyucuların hızlı ve toleranslı taraması için etiket düzeninde dikey yükseklik maksimumda tutulmalıdır (`.barcode-container` 16mm, `JsBarcode` / SVG `height: 75px`). Negatif `transform: translateY` hizalama hack'lerinden kaçınılmalı, temiz flexbox düzeni kullanılmalıdır.
+
+---
+
+## 7. Termal Z-Raporu & Fiş Baskı Standartları
+
+1. **Font Yumuşatmayı Kapatma:** Termal yazıcı kafasında harflerin flu/bulanık görünmemesi için container üzerinde `-webkit-font-smoothing: none !important; font-smooth: never !important; text-rendering: pixelated !important;` kuralları zorunludur.
+2. **Saf Monochrome Renkler:** Arka plan saf beyaz (`#ffffff`), tüm metinler ve çizgiler saf siyah (`#000000`) olmalıdır. İnce gri (`#888`, `#ccc`) veya silik tonlar dither gürültüsüne sebep olduğu için kesinlikle kullanılmaz.
+3. **Keskin Kenarlıklar:** Ayraç ve çizgi alanlarında sub-pixel (ör. `0.5px`) kullanılmamalı, en az `1px solid #000000` ve ana bölüm separatörlerinde `2px solid #000000` tercih edilmelidir.
+4. **Monospace Font Ailesi:** Metin ve rakam sütun hizalamalarının bozulmaması için `'Courier New', 'Consolas', 'Lucida Console', 'Monaco', monospace` font ailesi ve `table-layout: fixed;` kullanılmalıdır.
+
