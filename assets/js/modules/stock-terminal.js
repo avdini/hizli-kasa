@@ -68,6 +68,10 @@
 
             this.initialized = true;
 
+            console.group('%c[Hızlı Kasa StockTerminal] Modül Başlatılıyor (init)', 'color: #3b82f6; font-weight: bold;');
+            console.log('Arama girdisi ve olay dinleyicileri yüklendi.');
+            console.groupEnd();
+
             // Depo değişince listeyi yenile
             document.addEventListener('hkViewDepoChanged', function() {
                 self.state.currentPage = 1;
@@ -89,6 +93,8 @@
                 drawer.style.display = isVisible ? 'flex' : 'none';
                 if (backdrop) backdrop.style.display = isVisible ? 'block' : 'none';
                 if (filterToggleBtn) filterToggleBtn.classList.toggle('active', isVisible);
+
+                console.log('%c[Hızlı Kasa StockTerminal] Filtre Çekmecesi Durumu:', 'color: #8b5cf6; font-weight: bold;', isVisible ? 'AÇIK' : 'KAPALI');
 
                 if (isVisible && !self._filtersLoaded) {
                     self.loadFilterOptions();
@@ -347,6 +353,7 @@
                             if (icon) {
                                 icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
                             }
+                            console.log('%c[Hızlı Kasa StockTerminal] Varyasyon Kartı Tıklandı:', 'color: #f59e0b; font-weight: bold;', 'Ürün ID:', id, 'Durum:', isHidden ? 'Açıldı' : 'Kapatıldı');
                         }
                     } else {
                         // Stok hareket modalı yarım kaldığı için geçici olarak devre dışı bırakıldı
@@ -402,6 +409,10 @@
             this.state.filters.attribute     = attribute ? attribute.value : '';
             this.state.filters.attributeTerm = attributeTerm ? parseInt(attributeTerm.value) || 0 : 0;
             this.state.filters.daysUnsold    = daysUnsold ? parseInt(daysUnsold.value) || 0 : 0;
+
+            console.group('%c[Hızlı Kasa StockTerminal] Filtreler Okundu:', 'color: #059669; font-weight: bold;');
+            console.log(JSON.parse(JSON.stringify(this.state.filters)));
+            console.groupEnd();
         },
 
         /**
@@ -523,6 +534,7 @@
             }
 
             if (chips.length > 0) {
+                console.log('%c[Hızlı Kasa StockTerminal] Aktif Filtre Rozetleri Çizdirildi:', 'color: #6366f1; font-weight: bold;', chips.map(c => c.label));
                 chipsBar.style.display = 'flex';
                 if (badge) {
                     badge.textContent = chips.length;
@@ -596,7 +608,9 @@
             this._filtersLoading = true;
 
             try {
-                const response = await fetch(kasaAyar.rootApiUrl + 'hizli-kasa/v2/products/filter-options', {
+                var optsUrl = kasaAyar.rootApiUrl + 'hizli-kasa/v2/products/filter-options';
+                console.log('%c[Hızlı Kasa StockTerminal] Filtre Seçenekleri API İsteği Atılıyor:', 'color: #0284c7; font-weight: bold;', optsUrl);
+                const response = await fetch(optsUrl, {
                     headers: { 'X-WP-Nonce': kasaAyar.nonce }
                 });
                 const res = await response.json();
@@ -604,6 +618,14 @@
                 if (res.success && res.data) {
                     const data = res.data;
                     this.state.filterData = data;
+
+                    console.group('%c[Hızlı Kasa StockTerminal] Filtre Seçenekleri Yüklendi:', 'color: #0284c7; font-weight: bold;');
+                    console.log('Seçenekler:', {
+                        categories: data.categories ? data.categories.length : 0,
+                        brands: data.brands ? data.brands.length : 0,
+                        attributes: data.attributes ? data.attributes.length : 0
+                    });
+                    console.groupEnd();
 
                     const filterCat   = document.getElementById('filter-category');
                     const filterBrand = document.getElementById('filter-brand');
@@ -703,6 +725,17 @@
 
                 var url = kasaAyar.rootApiUrl + 'hizli-kasa/v2/products/stock-search?' + queryParams.join('&');
 
+                console.group('%c[Hızlı Kasa StockTerminal] API İsteği Atılıyor:', 'color: #d97706; font-weight: bold;');
+                console.log('URL:', url);
+                console.log('Parametreler:', {
+                    page: this.state.currentPage,
+                    perPage: this.state.perPage,
+                    sortBy: this.state.sortBy,
+                    filters: JSON.parse(JSON.stringify(this.state.filters)),
+                    search: s
+                });
+                console.groupEnd();
+
                 var fetchOptions = { headers: { 'X-WP-Nonce': kasaAyar.nonce } };
                 if (controller) {
                     fetchOptions.signal = controller.signal;
@@ -720,6 +753,14 @@
                     var data = res.data;
                     this.state.products = data.items || [];
                     this.state.total = (data.pagination && data.pagination.total_items) ? data.pagination.total_items : this.state.products.length;
+
+                    console.group('%c[Hızlı Kasa StockTerminal] API Yanıtı Alındı:', 'color: #10b981; font-weight: bold;');
+                    console.log({
+                        total: this.state.total,
+                        itemsCount: this.state.products.length,
+                        rawItems: data.items
+                    });
+                    console.groupEnd();
 
                     this.updatePaginationUI();
                     
@@ -782,6 +823,26 @@
         renderProducts: function() {
             var self = this;
             var container = document.getElementById('terminal-urun-listesi');
+
+            var mainCount = 0;
+            var variationCount = 0;
+            for (var c = 0; c < this.state.products.length; c++) {
+                var item = this.state.products[c];
+                if (item.type === 'variation') {
+                    variationCount++;
+                } else {
+                    mainCount++;
+                    if (item.variations && item.variations.length > 0) {
+                        variationCount += item.variations.length;
+                    }
+                }
+            }
+
+            console.group('%c[Hızlı Kasa StockTerminal] Ürün Listesi Çizdirildi:', 'color: #ec4899; font-weight: bold;');
+            console.log(mainCount + ' adet ana ürün, ' + variationCount + ' adet varyasyon');
+            console.log('Ürün Verisi (state.products):', this.state.products);
+            console.groupEnd();
+
             if (this.state.products.length === 0) {
                 container.innerHTML = '<div class="terminal-uyari"><p>Ürün bulunamadı.</p></div>';
                 return;

@@ -173,7 +173,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             $where[] = "p.post_type = 'product'";
             $where[] = "p.ID NOT IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} WHERE post_type = 'product_variation')";
         } else {
-            $where[] = "p.post_type IN ('product', 'product_variation')";
+            $where[] = "p.post_type = 'product'";
         }
         $where[] = "p.post_status = 'publish'";
 
@@ -274,7 +274,6 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
 
         if ($scope === 'parent_sum') {
             // Calculate parent total stock sum across variations
-            $where[] = "p.post_type = 'product'";
             if ($has_min_stock || $has_max_stock) {
                 $sum_having = [];
                 if ($has_min_stock) {
