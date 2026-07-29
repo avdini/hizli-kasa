@@ -11,7 +11,7 @@ if (!function_exists('hk_format_price')) {
 }
 
 if (!function_exists('hk_render_barcode_svg')) {
-    function hk_render_barcode_svg($text, $height = 50) {
+    function hk_render_barcode_svg($text, $height = 38) {
         $text = (string)$text;
         if ($text === '') return '';
 
@@ -60,7 +60,7 @@ if (!function_exists('hk_render_barcode_svg')) {
         $bar_width = 2;
         $svg_width = $total_modules * $bar_width;
 
-        $svg = '<svg class="hk-print-barcode-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $svg_width . ' ' . $height . '" style="width:100%; max-width:260px; height:' . $height . 'px; display:block; margin:4px auto 0 auto;" data-barcode="' . esc_attr($text) . '">';
+        $svg = '<svg class="hk-print-barcode-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $svg_width . ' ' . $height . '" preserveAspectRatio="none" style="width:100%; max-width:250px; height:' . $height . 'px; display:block; margin:3px auto 0 auto;" data-barcode="' . esc_attr($text) . '">';
         $x = 0;
         $is_bar = true;
         for ($i = 0; $i < strlen($barcode_str); $i++) {
