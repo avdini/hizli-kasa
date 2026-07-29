@@ -59,18 +59,12 @@ $report_time = $rapor['rapor_zamani'] ?? ($header['report_time'] ?? '');
                     <td style="padding:4px 0; font-weight:bold;">GENEL TOPLAM</td>
                     <td style="text-align:right; font-weight:bold;"><?php echo esc_html($money($general_total)); ?></td>
                 </tr>
-                <?php if ($gross_kart > 0 || $net_kart > 0): ?>
-                    <tr><td style="padding:3px 0;">KART TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($gross_kart)); ?></td></tr>
-                <?php endif; ?>
-                <?php if ($gross_iban > 0 || $net_iban > 0): ?>
-                    <tr><td style="padding:3px 0;">IBAN TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($gross_iban)); ?></td></tr>
-                <?php endif; ?>
-                <?php if ($include_qr && ($gross_qr > 0 || $net_qr > 0)): ?>
+                <tr><td style="padding:3px 0;">KART TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($gross_kart)); ?></td></tr>
+                <tr><td style="padding:3px 0;">IBAN TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($gross_iban)); ?></td></tr>
+                <?php if ($include_qr): ?>
                     <tr><td style="padding:3px 0;">QR TAKSİT TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($gross_qr)); ?></td></tr>
                 <?php endif; ?>
-                <?php if ($gross_nakit > 0 || $net_nakit > 0): ?>
-                    <tr><td style="padding:3px 0;">NAKİT TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($gross_nakit)); ?></td></tr>
-                <?php endif; ?>
+                <tr><td style="padding:3px 0;">NAKİT TOPLAM</td><td style="text-align:right;"><?php echo esc_html($money($gross_nakit)); ?></td></tr>
 
                 <?php if ($total_masraf > 0): ?>
                     <tr><td colspan="2" style="height:6px; border-bottom:1px solid #000000;"></td></tr>
