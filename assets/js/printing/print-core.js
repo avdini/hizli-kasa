@@ -187,6 +187,29 @@
             doc.write('<!DOCTYPE html><html><head><meta charset="utf-8"><style>' + barcodeCss + '</style></head><body>' + html + '</body></html>');
             doc.close();
 
+            var jsBarcodeFn = window.JsBarcode || (iframe.contentWindow && iframe.contentWindow.JsBarcode);
+            if (typeof jsBarcodeFn === 'function') {
+                var barcodeImgs = doc.querySelectorAll('.hk-print-barcode-img, [data-barcode]');
+                barcodeImgs.forEach(function(img) {
+                    var val = img.dataset ? img.dataset.barcode : img.getAttribute('data-barcode');
+                    if (val) {
+                        try {
+                            jsBarcodeFn(img, val, {
+                                format: 'CODE128',
+                                width: 2,
+                                height: 50,
+                                displayValue: false,
+                                margin: 0,
+                                background: '#ffffff',
+                                lineColor: '#000000'
+                            });
+                        } catch (err) {
+                            console.error('[PrintCore] Barcode render error:', err);
+                        }
+                    }
+                });
+            }
+
             return doc.body;
         },
 
