@@ -259,8 +259,10 @@
         }
 
         if (event.target.id === 'hk-aot-save') {
-            if (!(await HK.UI.confirm(hkAdminOrderTools.labels.confirm))) {
-                return;
+            if (window.HK && window.HK.UI && typeof window.HK.UI.confirm === 'function') {
+                if (!(await window.HK.UI.confirm(hkAdminOrderTools.labels.confirm))) {
+                    return;
+                }
             }
 
             var button = event.target;

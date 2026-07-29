@@ -20,8 +20,42 @@
          * DOM Eleman Referanslarını Al
          */
         _getElements: function() {
+            var modal = document.getElementById('hk-global-dialog-modal');
+            var toastContainer = document.getElementById('hk-toast-container');
+
+            if (!modal && document.body) {
+                var modalWrapper = document.createElement('div');
+                modalWrapper.id = 'hk-global-dialog-modal';
+                modalWrapper.className = 'modal-cerceve';
+                modalWrapper.style.display = 'none';
+                modalWrapper.style.zIndex = '12000';
+                modalWrapper.innerHTML =
+                    '<div class="modal-icerik modal-icerik-sm">' +
+                    '    <h3 id="hk-global-dialog-title">📌 Uyarı</h3>' +
+                    '    <p id="hk-global-dialog-message"></p>' +
+                    '    <div id="hk-global-dialog-input-wrapper" style="display:none;">' +
+                    '        <input type="text" id="hk-global-dialog-input" class="hk-input" autocomplete="off" />' +
+                    '        <textarea id="hk-global-dialog-textarea" class="hk-input" rows="3" style="display:none;"></textarea>' +
+                    '        <small id="hk-global-dialog-error" class="hk-input-error" style="display:none;"></small>' +
+                    '    </div>' +
+                    '    <div class="modal-butonlar">' +
+                    '        <button id="hk-global-dialog-cancel" class="modal-btn-cancel">Vazgeç</button>' +
+                    '        <button id="hk-global-dialog-confirm" class="hk-btn-primary">Onayla</button>' +
+                    '    </div>' +
+                    '</div>';
+                document.body.appendChild(modalWrapper);
+                modal = modalWrapper;
+            }
+
+            if (!toastContainer && document.body) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'hk-toast-container';
+                toastContainer.className = 'hk-toast-stack-container';
+                document.body.appendChild(toastContainer);
+            }
+
             return {
-                modal: document.getElementById('hk-global-dialog-modal'),
+                modal: modal,
                 title: document.getElementById('hk-global-dialog-title'),
                 message: document.getElementById('hk-global-dialog-message'),
                 inputWrapper: document.getElementById('hk-global-dialog-input-wrapper'),
@@ -30,7 +64,7 @@
                 error: document.getElementById('hk-global-dialog-error'),
                 confirmBtn: document.getElementById('hk-global-dialog-confirm'),
                 cancelBtn: document.getElementById('hk-global-dialog-cancel'),
-                toastContainer: document.getElementById('hk-toast-container')
+                toastContainer: toastContainer
             };
         },
 

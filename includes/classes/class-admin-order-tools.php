@@ -69,16 +69,31 @@ class Hizli_Kasa_Admin_Order_Tools
         }
 
         wp_enqueue_style(
-            'hizli-kasa-admin-order-tools',
-            HIZLI_KASA_URL . 'assets/css/admin-order-tools.css',
+            'hizli-kasa-modal-dialogs',
+            HIZLI_KASA_URL . 'assets/css/modal-dialogs.css',
             [],
             HIZLI_KASA_VERSION
+        );
+
+        wp_enqueue_style(
+            'hizli-kasa-admin-order-tools',
+            HIZLI_KASA_URL . 'assets/css/admin-order-tools.css',
+            ['hizli-kasa-modal-dialogs'],
+            HIZLI_KASA_VERSION
+        );
+
+        wp_enqueue_script(
+            'kasa-ui-dialogs',
+            HIZLI_KASA_URL . 'assets/js/modules/ui-dialogs.js',
+            [],
+            HIZLI_KASA_VERSION,
+            true
         );
 
         wp_enqueue_script(
             'hizli-kasa-admin-order-tools',
             HIZLI_KASA_URL . 'assets/js/admin-order-tools.js',
-            [],
+            ['kasa-ui-dialogs'],
             HIZLI_KASA_VERSION,
             true
         );
