@@ -72,10 +72,10 @@ $nonce = wp_create_nonce('wp_rest');
             height: 22px;
             line-height: 1;
         }
-        .hk-kpi-icon.total { background: #e0f2fe; color: #0284c7; }
-        .hk-kpi-icon.info { background: #dcfce7; color: #16a34a; }
-        .hk-kpi-icon.warning { background: #fef3c7; color: #d97706; }
-        .hk-kpi-icon.error { background: #fee2e2; color: #dc2626; }
+        .hk-kpi-icon.hk-kpi-total { background: #e0f2fe; color: #0284c7; }
+        .hk-kpi-icon.hk-kpi-info-icon { background: #dcfce7; color: #16a34a; }
+        .hk-kpi-icon.hk-kpi-warning { background: #fef3c7; color: #d97706; }
+        .hk-kpi-icon.hk-kpi-error { background: #fee2e2; color: #dc2626; }
 
         /* Filtre Paneli */
         .hk-log-filter-box {
@@ -359,28 +359,28 @@ $nonce = wp_create_nonce('wp_rest');
                 <p>Toplam Kayıt</p>
                 <h3 id="stat-total-logs">-</h3>
             </div>
-            <div class="hk-kpi-icon total"><span class="dashicons dashicons-list-view"></span></div>
+            <div class="hk-kpi-icon hk-kpi-total"><span class="dashicons dashicons-list-view"></span></div>
         </div>
         <div class="hk-kpi-card">
             <div class="hk-kpi-info">
                 <p>Bilgi / Normal</p>
                 <h3 id="stat-info-logs">-</h3>
             </div>
-            <div class="hk-kpi-icon info"><span class="dashicons dashicons-yes-alt"></span></div>
+            <div class="hk-kpi-icon hk-kpi-info-icon"><span class="dashicons dashicons-yes-alt"></span></div>
         </div>
         <div class="hk-kpi-card">
             <div class="hk-kpi-info">
                 <p>Uyarılar</p>
                 <h3 id="stat-warning-logs">-</h3>
             </div>
-            <div class="hk-kpi-icon warning"><span class="dashicons dashicons-warning"></span></div>
+            <div class="hk-kpi-icon hk-kpi-warning"><span class="dashicons dashicons-warning"></span></div>
         </div>
         <div class="hk-kpi-card">
             <div class="hk-kpi-info">
                 <p>Bugünkü Hatalar</p>
                 <h3 id="stat-today-errors">-</h3>
             </div>
-            <div class="hk-kpi-icon error"><span class="dashicons dashicons-no-alt"></span></div>
+            <div class="hk-kpi-icon hk-kpi-error"><span class="dashicons dashicons-no-alt"></span></div>
         </div>
     </div>
 
