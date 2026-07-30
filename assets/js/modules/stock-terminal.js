@@ -88,13 +88,69 @@
             const clearAllChipsBtn = document.getElementById('btn-clear-all-chips');
 
             const toggleDrawer = function(show) {
-                if (!drawer) return;
+                if (!drawer) {
+                    console.error('[Hızlı Kasa StockTerminal] ❌ #stock-filter-drawer DOM\'da bulunamadı!');
+                    return;
+                }
                 const isVisible = show !== undefined ? show : drawer.style.display === 'none';
                 drawer.style.display = isVisible ? 'flex' : 'none';
                 if (backdrop) backdrop.style.display = isVisible ? 'block' : 'none';
                 if (filterToggleBtn) filterToggleBtn.classList.toggle('active', isVisible);
 
-                console.log('%c[Hızlı Kasa StockTerminal] Filtre Çekmecesi Durumu:', 'color: #8b5cf6; font-weight: bold;', isVisible ? 'AÇIK' : 'KAPALI');
+                console.group('%c[Hızlı Kasa StockTerminal] 🎛️ Filtre Çekmecesi Teşhis Logu:', 'color: #8b5cf6; font-weight: bold;');
+                console.log('Çekmece Durumu:', isVisible ? 'AÇIK (display: flex)' : 'KAPALI (display: none)');
+
+                if (isVisible) {
+                    const drawerStyle = window.getComputedStyle(drawer);
+                    const backdropStyle = backdrop ? window.getComputedStyle(backdrop) : null;
+                    const drawerRect = drawer.getBoundingClientRect();
+                    const backdropRect = backdrop ? backdrop.getBoundingClientRect() : null;
+
+                    console.log('📐 [Çekmece CSS - Computed Styles]:', {
+                        display: drawerStyle.display,
+                        position: drawerStyle.position,
+                        zIndex: drawerStyle.zIndex,
+                        opacity: drawerStyle.opacity,
+                        visibility: drawerStyle.visibility,
+                        width: drawerStyle.width,
+                        height: drawerStyle.height,
+                        top: drawerStyle.top,
+                        left: drawerStyle.left,
+                        transform: drawerStyle.transform,
+                        backgroundColor: drawerStyle.backgroundColor
+                    });
+
+                    console.log('📍 [Çekmece Bounding Rect]:', {
+                        top: drawerRect.top,
+                        left: drawerRect.left,
+                        width: drawerRect.width,
+                        height: drawerRect.height,
+                        visibleInViewport: (drawerRect.width > 0 && drawerRect.height > 0)
+                    });
+
+                    if (backdropStyle && backdropRect) {
+                        console.log('🖤 [Backdrop CSS & Rect]:', {
+                            display: backdropStyle.display,
+                            position: backdropStyle.position,
+                            zIndex: backdropStyle.zIndex,
+                            width: backdropRect.width,
+                            height: backdropRect.height
+                        });
+                    }
+
+                    const parent = drawer.parentElement;
+                    if (parent) {
+                        const parentStyle = window.getComputedStyle(parent);
+                        console.log('🏠 [Ebeveyn Konteyner - #' + (parent.id || parent.className) + ']:', {
+                            position: parentStyle.position,
+                            overflow: parentStyle.overflow,
+                            zIndex: parentStyle.zIndex,
+                            width: parentStyle.width,
+                            height: parentStyle.height
+                        });
+                    }
+                }
+                console.groupEnd();
 
                 if (isVisible && !self._filtersLoaded) {
                     self.loadFilterOptions();

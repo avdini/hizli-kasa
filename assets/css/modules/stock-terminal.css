@@ -1906,10 +1906,10 @@ body.dark-mode .other-stock-badge {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(15, 23, 42, 0.55);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    z-index: 40;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 1000;
     border-radius: 15px;
 }
 
@@ -1918,15 +1918,15 @@ body.dark-mode .other-stock-badge {
     top: 0;
     left: 0;
     bottom: 0;
-    width: 350px;
+    width: 360px;
     max-width: 85vw;
     height: 100%;
     background: var(--hk-bg-card, #1e293b);
-    border-right: 1px solid var(--hk-border, rgba(255, 255, 255, 0.1));
-    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.4);
+    border-right: 1px solid var(--hk-border, rgba(255, 255, 255, 0.12));
+    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
-    z-index: 50;
+    z-index: 1001;
     border-radius: 15px 0 0 15px;
     overflow: hidden;
 }
