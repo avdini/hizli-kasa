@@ -1898,16 +1898,34 @@ body.dark-mode .other-stock-badge {
 }
 
 /* Stock Filter Drawer (Sol Sütun & Off-Canvas Panel) */
+.drawer-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 99998;
+}
+
 .stock-filter-drawer {
-    width: 320px;
-    min-width: 320px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 340px;
+    max-width: 85vw;
+    height: 100vh;
     background: var(--hk-bg-card, #1e293b);
     border-right: 1px solid var(--hk-border, rgba(255, 255, 255, 0.08));
+    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
-    height: 100%;
-    z-index: 100;
+    z-index: 99999;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
 }
 .drawer-header {
     display: flex;
@@ -2021,27 +2039,10 @@ body.dark-mode .other-stock-badge {
     background: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
 
-/* Mobile & Small Screen Overlay Drawer Rules (< 1024px) */
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 480px) {
     .stock-filter-drawer {
-        position: fixed;
-        top: 0;
-        left: 0;
-        bottom: 0;
         width: 300px;
-        max-width: 85vw;
-        height: 100vh;
-        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
-    }
-    .drawer-backdrop {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(4px);
-        z-index: 99;
+        max-width: 90vw;
     }
 }
 
