@@ -1098,6 +1098,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
 
                 $prep_args = [];
                 $prep_args[] = $tax_name;
+                $prep_args[] = $tax_name;
 
                 $pm_keys = ['attribute_' . $tax_name, 'attribute_' . $raw_slug];
                 $pm_key_placeholders = implode(',', array_fill(0, count($pm_keys), '%s'));
@@ -1105,32 +1106,36 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                     $prep_args[] = $pmk;
                 }
 
-                $term_parts = [];
+                $term_parts_v = [];
+                $term_parts_p = [];
                 if (!empty($term_ids)) {
                     $ids_placeholders = implode(',', array_fill(0, count($term_ids), '%d'));
-                    $term_parts[] = "t.term_id IN ({$ids_placeholders})";
+                    $term_parts_v[] = "t_v.term_id IN ({$ids_placeholders})";
+                    $term_parts_p[] = "t_p.term_id IN ({$ids_placeholders})";
                     foreach ($term_ids as $tid) {
                         $prep_args[] = $tid;
                     }
                 }
                 if (!empty($term_slugs)) {
                     $slugs_placeholders = implode(',', array_fill(0, count($term_slugs), '%s'));
-                    $term_parts[] = "t.slug IN ({$slugs_placeholders})";
+                    $term_parts_v[] = "t_v.slug IN ({$slugs_placeholders})";
+                    $term_parts_p[] = "t_p.slug IN ({$slugs_placeholders})";
                     foreach ($term_slugs as $tslug) {
                         $prep_args[] = $tslug;
                     }
                 }
 
-                if (empty($term_parts)) {
+                if (empty($term_parts_v)) {
                     continue;
                 }
 
-                $term_match_sql = "(" . implode(" OR ", $term_parts) . ")";
+                $term_match_sql_v = "(" . implode(" OR ", $term_parts_v) . ")";
+                $term_match_sql_p = "(" . implode(" OR ", $term_parts_p) . ")";
 
-                $meta_val_parts = [];
+                $meta_val_specific = [];
                 if (!empty($term_slugs)) {
                     $slugs_placeholders = implode(',', array_fill(0, count($term_slugs), '%s'));
-                    $meta_val_parts[] = "pm_attr.meta_value IN ({$slugs_placeholders})";
+                    $meta_val_specific[] = "pm_attr.meta_value IN ({$slugs_placeholders})";
                     foreach ($term_slugs as $tslug) {
                         $prep_args[] = $tslug;
                     }
@@ -1139,24 +1144,37 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                     $found_slugs = $wpdb->get_col($wpdb->prepare("SELECT slug FROM {$wpdb->terms} WHERE term_id IN (" . implode(',', array_fill(0, count($term_ids), '%d')) . ")", ...$term_ids));
                     if (!empty($found_slugs)) {
                         $slugs_placeholders = implode(',', array_fill(0, count($found_slugs), '%s'));
-                        $meta_val_parts[] = "pm_attr.meta_value IN ({$slugs_placeholders})";
+                        $meta_val_specific[] = "pm_attr.meta_value IN ({$slugs_placeholders})";
                         foreach ($found_slugs as $fslug) {
                             $prep_args[] = $fslug;
                         }
                     }
                 }
-                $meta_val_parts[] = "pm_attr.meta_value = ''";
-                $meta_match_sql = "(" . implode(" OR ", $meta_val_parts) . ")";
+
+                $meta_match_specific_sql = !empty($meta_val_specific) ? "(" . implode(" OR ", $meta_val_specific) . ")" : "1=0";
 
                 $raw_sql_query = "
                     SELECT DISTINCT v.ID
                     FROM {$wpdb->posts} v
-                    LEFT JOIN {$wpdb->term_relationships} tr ON (v.ID = tr.object_id OR v.post_parent = tr.object_id)
-                    LEFT JOIN {$wpdb->term_taxonomy} tt ON (tr.term_taxonomy_id = tt.term_taxonomy_id AND tt.taxonomy = %s)
-                    LEFT JOIN {$wpdb->terms} t ON tt.term_id = t.term_id
                     LEFT JOIN {$wpdb->postmeta} pm_attr ON (v.ID = pm_attr.post_id AND pm_attr.meta_key IN ({$pm_key_placeholders}))
+                    LEFT JOIN {$wpdb->term_relationships} tr_v ON (v.ID = tr_v.object_id)
+                    LEFT JOIN {$wpdb->term_taxonomy} tt_v ON (tr_v.term_taxonomy_id = tt_v.term_taxonomy_id AND tt_v.taxonomy = %s)
+                    LEFT JOIN {$wpdb->terms} t_v ON (tt_v.term_id = t_v.term_id)
+                    LEFT JOIN {$wpdb->term_relationships} tr_p ON (v.post_parent = tr_p.object_id)
+                    LEFT JOIN {$wpdb->term_taxonomy} tt_p ON (tr_p.term_taxonomy_id = tt_p.term_taxonomy_id AND tt_p.taxonomy = %s)
+                    LEFT JOIN {$wpdb->terms} t_p ON (tt_p.term_id = t_p.term_id)
                     WHERE v.post_status = 'publish'
-                      AND ( ({$term_match_sql}) OR ({$meta_match_sql}) )
+                      AND v.post_type IN ('product', 'product_variation')
+                      AND (
+                          ({$meta_match_specific_sql})
+                          OR
+                          ({$term_match_sql_v})
+                          OR
+                          (
+                              ({$term_match_sql_p})
+                              AND (pm_attr.meta_value IS NULL OR pm_attr.meta_value = '' OR {$meta_match_specific_sql})
+                          )
+                      )
                 ";
 
                 $rule_v_sql = $wpdb->prepare($raw_sql_query, ...$prep_args);
@@ -1192,27 +1210,27 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                 $having_clause .= $wpdb->prepare(" AND SUM(CAST(pm.meta_value AS SIGNED)) {$op} %f", $val);
             }
 
-            $solo_parent_ids = array_map('absint', $wpdb->get_col("
-                SELECT (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) AS parent_id
-                FROM {$wpdb->posts} p
-                INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_stock'
-                WHERE p.post_status = 'publish' AND CAST(pm.meta_value AS SIGNED) > 0
-                GROUP BY parent_id
-                {$having_clause}
+            $solo_v_ids = array_map('absint', $wpdb->get_col("
+                SELECT v.ID
+                FROM {$wpdb->posts} v
+                INNER JOIN {$wpdb->postmeta} pm_s ON v.ID = pm_s.post_id AND pm_s.meta_key = '_stock'
+                WHERE v.post_status = 'publish'
+                  AND v.post_type IN ('product', 'product_variation')
+                  AND CAST(pm_s.meta_value AS SIGNED) > 0
+                  AND (CASE WHEN v.post_type = 'product_variation' THEN v.post_parent ELSE v.ID END) IN (
+                      SELECT (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) AS parent_id
+                      FROM {$wpdb->posts} p
+                      INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_stock'
+                      WHERE p.post_status = 'publish' AND CAST(pm.meta_value AS SIGNED) > 0
+                      GROUP BY parent_id
+                      {$having_clause}
+                  )
             ") ?: []);
 
             if ($candidate_v_ids !== null) {
-                if (empty($candidate_v_ids)) {
-                    return [];
-                }
-                $cand_v_str = implode(',', array_map('absint', $candidate_v_ids));
-                $cand_parent_ids = array_map('absint', $wpdb->get_col("
-                    SELECT DISTINCT (CASE WHEN post_type = 'product_variation' THEN post_parent ELSE ID END)
-                    FROM {$wpdb->posts} WHERE ID IN ({$cand_v_str})
-                ") ?: []);
-                return array_values(array_intersect($solo_parent_ids, $cand_parent_ids));
+                $candidate_v_ids = array_values(array_intersect($candidate_v_ids, $solo_v_ids));
             } else {
-                return $solo_parent_ids;
+                $candidate_v_ids = $solo_v_ids;
             }
         } elseif ($has_stock) {
             $op  = in_array($group['stock_operator'] ?? '=', ['=', '!=', '<', '<=', '>', '>='], true) ? $group['stock_operator'] : '=';
