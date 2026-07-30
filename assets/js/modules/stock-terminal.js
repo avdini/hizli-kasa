@@ -161,27 +161,49 @@
                 }
             };
 
-            if (filterToggleBtn) {
-                filterToggleBtn.addEventListener('click', function() {
+            // --- Event Delegation for Drawer Buttons & Backdrop ---
+            document.addEventListener('click', function(e) {
+                const toggleBtn = e.target.closest('#btn-terminal-filtre-toggle');
+                if (toggleBtn) {
+                    e.preventDefault();
                     toggleDrawer();
-                });
-            }
-
-            if (closeDrawerBtn) {
-                closeDrawerBtn.addEventListener('click', function() {
-                    toggleDrawer(false);
-                });
-            }
-
-            const bindBackdrop = function() {
-                const b = document.getElementById('drawer-backdrop');
-                if (b) {
-                    b.addEventListener('click', function() {
-                        toggleDrawer(false);
-                    });
+                    return;
                 }
-            };
-            bindBackdrop();
+                const closeBtn = e.target.closest('#btn-close-drawer');
+                if (closeBtn) {
+                    e.preventDefault();
+                    toggleDrawer(false);
+                    return;
+                }
+                const backdropEl = e.target.closest('#drawer-backdrop');
+                if (backdropEl && e.target === backdropEl) {
+                    e.preventDefault();
+                    toggleDrawer(false);
+                    return;
+                }
+                const applyBtn = e.target.closest('#btn-apply-filters');
+                if (applyBtn) {
+                    e.preventDefault();
+                    console.log('%c[Hızlı Kasa StockTerminal] Sonuçları Göster Butonuna Tıklandı', 'color: #059669; font-weight: bold;');
+                    handleFilterChange(e);
+                    toggleDrawer(false);
+                    return;
+                }
+                const clearBtn = e.target.closest('#btn-clear-filters');
+                if (clearBtn) {
+                    e.preventDefault();
+                    self.resetFiltersUI();
+                    handleFilterChange(e);
+                    return;
+                }
+                const clearChipsBtn = e.target.closest('#btn-clear-all-chips');
+                if (clearChipsBtn) {
+                    e.preventDefault();
+                    self.resetFiltersUI();
+                    handleFilterChange(e);
+                    return;
+                }
+            });
 
             const handleFilterChange = function(e) {
                 console.log('%c[Hızlı Kasa StockTerminal] Filtre Değişti / Tetiklendi:', 'color: #10b981; font-weight: bold;', e ? e.target.id : 'Manuel');
@@ -190,31 +212,6 @@
                 self.loadProducts();
                 self.renderActiveChips();
             };
-
-            if (applyFiltersBtn) {
-                applyFiltersBtn.addEventListener('click', function(e) {
-                    if (e) e.preventDefault();
-                    console.log('%c[Hızlı Kasa StockTerminal] Sonuçları Göster Butonuna Tıklandı', 'color: #059669; font-weight: bold;');
-                    handleFilterChange(e);
-                    toggleDrawer(false);
-                });
-            }
-
-            if (clearFiltersBtn) {
-                clearFiltersBtn.addEventListener('click', function(e) {
-                    if (e) e.preventDefault();
-                    self.resetFiltersUI();
-                    handleFilterChange(e);
-                });
-            }
-
-            if (clearAllChipsBtn) {
-                clearAllChipsBtn.addEventListener('click', function(e) {
-                    if (e) e.preventDefault();
-                    self.resetFiltersUI();
-                    handleFilterChange(e);
-                });
-            }
 
             // --- Tüm Çekmece Filtre Elemanlarına Canlı Dinleyici Bağlama ---
             const filterInputIds = [
