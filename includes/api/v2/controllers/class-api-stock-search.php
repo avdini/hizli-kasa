@@ -377,10 +377,14 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             $where_sql = implode(' AND ', $where);
             $join_sql  = implode(' ', $join);
 
+            $calculated_stock_expr = ($has_stok_table && $depo_id > 0)
+                ? "({$depo_stock_sql})"
+                : "COALESCE(SUM(CAST(pm_child_stock.meta_value AS SIGNED)), CAST(pm_stock.meta_value AS SIGNED), 0)";
+
             $count_query = "
                 SELECT COUNT(*) FROM (
                     SELECT p.ID, 
-                           COALESCE(SUM(CAST(pm_child_stock.meta_value AS SIGNED)), CAST(pm_stock.meta_value AS SIGNED), 0) AS total_calculated_stock
+                           {$calculated_stock_expr} AS total_calculated_stock
                     FROM {$wpdb->posts} p
                     {$join_sql}
                     LEFT JOIN {$wpdb->posts} p_child ON (p.ID = p_child.post_parent AND p_child.post_type = 'product_variation' AND p_child.post_status = 'publish')
@@ -419,7 +423,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
 
             $items_query = "
                 SELECT p.ID, p.post_title, p.post_date,
-                       COALESCE(SUM(CAST(pm_child_stock.meta_value AS SIGNED)), CAST(pm_stock.meta_value AS SIGNED), 0) AS total_calculated_stock
+                       {$calculated_stock_expr} AS total_calculated_stock
                 FROM {$wpdb->posts} p
                 {$join_sql}
                 LEFT JOIN {$wpdb->posts} p_child ON (p.ID = p_child.post_parent AND p_child.post_type = 'product_variation' AND p_child.post_status = 'publish')
