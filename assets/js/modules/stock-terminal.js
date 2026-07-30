@@ -283,6 +283,7 @@
             // Metin Araması Dinleyicisi
             input.addEventListener('input', function() {
                 clearTimeout(self.state.searchTimer);
+                console.log(`%c[StockTerminal Search] ⏳ Debounce Başlatıldı (300ms) - Girdi: "${this.value}"`, 'color: #8b5cf6; font-style: italic;');
                 self.state.searchTimer = setTimeout(function() {
                     self.state.currentPage = 1;
                     self.loadProducts();
@@ -293,6 +294,7 @@
             input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     clearTimeout(self.state.searchTimer);
+                    console.log(`%c[StockTerminal Search] ⚡ Enter / Barkod Okuyucu Tetiklendi - Girdi: "${this.value}"`, 'color: #ec4899; font-weight: bold;');
                     self.state.currentPage = 1;
                     self.loadProducts();
                 }
@@ -768,7 +770,12 @@
             var rawSearch = input ? input.value : '';
             var s = rawSearch ? rawSearch.trim() : '';
 
+            var requestStartTime = performance.now();
+
             if (this.state.requestController) {
+                console.group('%c[StockTerminal Search] ⚠️ Önceki İstek İptal Edildi (AbortController)', 'color: #f59e0b; font-weight: bold;');
+                console.log('İptal edilen Token ID:', this.state.lastRequestToken);
+                console.groupEnd();
                 this.state.requestController.abort();
             }
 
@@ -808,15 +815,12 @@
 
                 var url = kasaAyar.rootApiUrl + 'hizli-kasa/v2/products/stock-search?' + queryParams.join('&');
 
-                console.group('%c[Hızlı Kasa StockTerminal] API İsteği Atılıyor:', 'color: #d97706; font-weight: bold;');
+                console.group(`%c[StockTerminal Search] 🚀 API İsteği Gönderiliyor (Token #${requestToken})`, 'color: #3b82f6; font-weight: bold;');
+                console.log('Arama Sorgusu (Search):', s ? `"${s}"` : '(Boş - Tüm Ürünler)');
+                console.log('Request Token:', requestToken);
+                console.log('Depo ID:', depoId);
+                console.log('Sayfa:', this.state.currentPage, '| Per Page:', this.state.perPage);
                 console.log('URL:', url);
-                console.log('Parametreler:', {
-                    page: this.state.currentPage,
-                    perPage: this.state.perPage,
-                    sortBy: this.state.sortBy,
-                    filters: JSON.parse(JSON.stringify(this.state.filters)),
-                    search: s
-                });
                 console.groupEnd();
 
                 var fetchOptions = { headers: { 'X-WP-Nonce': kasaAyar.nonce } };
@@ -828,21 +832,35 @@
                 if (!response.ok) throw new Error("Sunucu hatası: " + response.status);
                 
                 var res = await response.json();
+                var requestDurationMs = Math.round(performance.now() - requestStartTime);
+
                 if (requestToken !== this.state.lastRequestToken) {
+                    console.group(`%c[StockTerminal Search] 🛑 Yanıt Yok Sayıldı (Token Mismatch #${requestToken})`, 'color: #ef4444; font-weight: bold;');
+                    console.log(`Tamamlanan Token: #${requestToken}, Güncel Son Token: #${this.state.lastRequestToken}`);
+                    console.groupEnd();
                     return;
                 }
 
                 if (res.success && res.data) {
                     var data = res.data;
+                    var meta = data.meta || {};
+                    var isExact = !!meta.exact_sku_match;
+                    var strategy = meta.search_strategy || (s ? 'LIKE_SEARCH' : 'NO_SEARCH');
+
                     this.state.products = data.items || [];
                     this.state.total = (data.pagination && data.pagination.total_items) ? data.pagination.total_items : this.state.products.length;
 
-                    console.group('%c[Hızlı Kasa StockTerminal] API Yanıtı Alındı:', 'color: #10b981; font-weight: bold;');
-                    console.log({
-                        total: this.state.total,
-                        itemsCount: this.state.products.length,
-                        rawItems: data.items
-                    });
+                    console.group(`%c[StockTerminal Search] ✅ API Yanıtı Alındı (Token #${requestToken} - ${requestDurationMs}ms)`, 'color: #10b981; font-weight: bold;');
+                    console.log('Arama Sorgusu:', s ? `"${s}"` : '(Tüm Ürünler)');
+                    console.log('Arama Stratejisi (Strategy):', strategy);
+                    console.log('SKU Eşleşme Tipi:', isExact ? '%c[EXACT SKU MATCH]' : '%c[LIKE / PARTIAL MATCH]', isExact ? 'color: #10b981; font-weight: bold;' : 'color: #d97706; font-weight: bold;');
+                    if (meta.exact_sku_product_id) {
+                        console.log('Eşleşen Ürün ID:', meta.exact_sku_product_id);
+                    }
+                    console.log('Ağ Süresi (Network Timing):', requestDurationMs + ' ms');
+                    console.log('Sonuç Sayısı (Total):', this.state.total);
+                    console.log('Gelen Kalem Sayısı:', this.state.products.length);
+                    console.log('Ürün Listesi:', this.state.products);
                     console.groupEnd();
 
                     this.updatePaginationUI();
@@ -862,9 +880,12 @@
                 }
             } catch (e) {
                 if (e && e.name === 'AbortError') {
+                    console.group(`%c[StockTerminal Search] ℹ️ Network İsteği Abort Edildi (Token #${requestToken})`, 'color: #6b7280; font-style: italic;');
+                    console.log('Hızlı yazma / yeni istek sebebiyle tarayıcı düzeyinde iptal edildi.');
+                    console.groupEnd();
                     return;
                 }
-                console.error("Hızlı Kasa: Yükleme hatası", e);
+                console.error("[StockTerminal Search] ❌ Yükleme hatası", e);
                 container.innerHTML = '<div class="terminal-uyari"><p>Ürünler yüklenirken bir hata oluştu.</p></div>';
             } finally {
                 if (requestToken === this.state.lastRequestToken) {

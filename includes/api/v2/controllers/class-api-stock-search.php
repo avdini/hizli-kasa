@@ -187,12 +187,44 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
         $where[] = "p.post_status = 'publish'";
 
         // Text Search (Name, SKU, Barcode)
+        $exact_sku_match      = false;
+        $exact_sku_product_id = 0;
+        $search_strategy      = 'NO_SEARCH';
+
         if (!empty($search)) {
+            $exact_match_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT (CASE WHEN p_m.post_type = 'product_variation' THEN p_m.post_parent ELSE pm.post_id END) 
+                 FROM {$wpdb->postmeta} pm
+                 INNER JOIN {$wpdb->posts} p_m ON pm.post_id = p_m.ID
+                 WHERE pm.meta_key IN ('_sku', '_barcode', '_gtin', '_ean') AND pm.meta_value = %s LIMIT 1",
+                $search
+            ));
+
+            if ($exact_match_id) {
+                $exact_sku_match      = true;
+                $exact_sku_product_id = intval($exact_match_id);
+                $search_strategy      = 'EXACT_SKU_MATCH';
+            } else {
+                $search_strategy      = 'PARTIAL_LIKE_SEARCH';
+            }
+
             $s_like = '%' . $wpdb->esc_like($search) . '%';
             $search_conds = [
                 $wpdb->prepare("p.post_title LIKE %s", $s_like),
-                $wpdb->prepare("p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s)", $s_like),
-                $wpdb->prepare("p.ID IN (SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ('_barcode', '_gtin', '_ean') AND meta_value LIKE %s)", $s_like),
+                $wpdb->prepare("p.ID IN (
+                    SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = '_sku' AND meta_value LIKE %s
+                    UNION
+                    SELECT p_v.post_parent FROM {$wpdb->posts} p_v
+                    INNER JOIN {$wpdb->postmeta} pm_v ON p_v.ID = pm_v.post_id
+                    WHERE p_v.post_type = 'product_variation' AND pm_v.meta_key = '_sku' AND pm_v.meta_value LIKE %s
+                )", $s_like, $s_like),
+                $wpdb->prepare("p.ID IN (
+                    SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ('_barcode', '_gtin', '_ean') AND meta_value LIKE %s
+                    UNION
+                    SELECT p_v.post_parent FROM {$wpdb->posts} p_v
+                    INNER JOIN {$wpdb->postmeta} pm_v ON p_v.ID = pm_v.post_id
+                    WHERE p_v.post_type = 'product_variation' AND pm_v.meta_key IN ('_barcode', '_gtin', '_ean') AND pm_v.meta_value LIKE %s
+                )", $s_like, $s_like),
             ];
             $where[] = "(" . implode(" OR ", $search_conds) . ")";
         }
@@ -342,6 +374,22 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             elseif ($sort_by === 'stock_asc') $order_sql = $has_stok_table ? "ORDER BY ({$depo_stock_sql}) ASC" : "ORDER BY total_calculated_stock ASC";
             elseif ($sort_by === 'stock_desc') $order_sql = $has_stok_table ? "ORDER BY ({$depo_stock_sql}) DESC" : "ORDER BY total_calculated_stock DESC";
 
+            if (!empty($search)) {
+                $exact_order_prefix = $wpdb->prepare(
+                    "ORDER BY (CASE WHEN p.ID IN (
+                        SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ('_sku', '_barcode', '_gtin', '_ean') AND meta_value = %s
+                        UNION
+                        SELECT p_v.post_parent FROM {$wpdb->posts} p_v
+                        INNER JOIN {$wpdb->postmeta} pm_v ON p_v.ID = pm_v.post_id
+                        WHERE p_v.post_type = 'product_variation' AND pm_v.meta_key IN ('_sku', '_barcode', '_gtin', '_ean') AND pm_v.meta_value = %s
+                    ) THEN 0 WHEN p.post_title = %s THEN 1 ELSE 2 END) ASC, ",
+                    $search,
+                    $search,
+                    $search
+                );
+                $order_sql = $exact_order_prefix . substr($order_sql, 9);
+            }
+
             $items_query = "
                 SELECT p.ID, p.post_title, p.post_date,
                        COALESCE(SUM(CAST(pm_child_stock.meta_value AS SIGNED)), CAST(pm_stock.meta_value AS SIGNED), 0) AS total_calculated_stock
@@ -418,6 +466,22 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             elseif ($sort_by === 'stock_asc') $order_sql = $has_stok_table ? "ORDER BY ({$depo_stock_sql}) ASC" : "ORDER BY CAST(pm_stock.meta_value AS SIGNED) ASC";
             elseif ($sort_by === 'stock_desc') $order_sql = $has_stok_table ? "ORDER BY ({$depo_stock_sql}) DESC" : "ORDER BY CAST(pm_stock.meta_value AS SIGNED) DESC";
 
+            if (!empty($search)) {
+                $exact_order_prefix = $wpdb->prepare(
+                    "ORDER BY (CASE WHEN p.ID IN (
+                        SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key IN ('_sku', '_barcode', '_gtin', '_ean') AND meta_value = %s
+                        UNION
+                        SELECT p_v.post_parent FROM {$wpdb->posts} p_v
+                        INNER JOIN {$wpdb->postmeta} pm_v ON p_v.ID = pm_v.post_id
+                        WHERE p_v.post_type = 'product_variation' AND pm_v.meta_key IN ('_sku', '_barcode', '_gtin', '_ean') AND pm_v.meta_value = %s
+                    ) THEN 0 WHEN p.post_title = %s THEN 1 ELSE 2 END) ASC, ",
+                    $search,
+                    $search,
+                    $search
+                );
+                $order_sql = $exact_order_prefix . substr($order_sql, 9);
+            }
+
             $items_query = "
                 SELECT DISTINCT p.ID, p.post_title, p.post_type, p.post_parent, p.post_date
                 FROM {$wpdb->posts} p
@@ -447,6 +511,12 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                 'total_pages'  => max(1, $total_pages),
                 'current_page' => $page,
                 'per_page'     => $per_page,
+            ],
+            'meta'       => [
+                'search'               => $search,
+                'search_strategy'      => $search_strategy,
+                'exact_sku_match'      => $exact_sku_match,
+                'exact_sku_product_id' => $exact_sku_product_id,
             ],
         ]);
     }
