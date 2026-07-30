@@ -350,6 +350,45 @@ if (!defined('ABSPATH')) exit;
     </div>
 </div>
 
+<!-- Gelişmiş Ürün Filtreleme Modalı -->
+<div id="gelismis-filtre-modal" class="modal-cerceve" style="display:none; z-index: 10500;">
+    <div class="modal-icerik modal-icerik-lg" style="max-width:720px; width:90%;">
+        <div class="modal-header" style="margin-bottom:16px;">
+            <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:18px;">
+                <span>🧩</span> <span>Gelişmiş Ürün Filtreleme</span>
+            </h3>
+            <p class="modal-subtitle" style="margin:4px 0 0 0; font-size:13px; color:var(--hk-text-muted, #94a3b8);">
+                Birden fazla ürün varyasyonunu ve mantıksal kuralları (VE / VEYA) kolayca tanımlayın.
+            </p>
+        </div>
+
+        <div class="modal-body-scrollable" style="max-height:60vh; overflow-y:auto; padding-right:4px;">
+            <!-- Dinamik Kartlar Konteynırı -->
+            <div id="filter-cards-container" class="filter-cards-container"></div>
+
+            <div class="filter-cards-actions" style="margin-top:14px;">
+                <button type="button" id="btn-add-filter-card" class="btn-add-filter-card">
+                    <span>➕ Yeni Arama Kartı Ekle (VEYA)</span>
+                </button>
+            </div>
+
+            <!-- Canlı İnsan Dili Özeti -->
+            <div id="filter-human-summary" class="human-summary-box" style="display:none; margin-top:16px;">
+                <div class="summary-icon">💬</div>
+                <div class="summary-text" id="human-summary-text">Henüz özel arama kartı eklenmedi.</div>
+            </div>
+        </div>
+
+        <div class="modal-butonlar" style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+            <button type="button" id="btn-clear-advanced-filters" class="modal-btn-cancel" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.4);">🗑️ Tümünü Temizle</button>
+            <div style="display:flex; gap:10px;">
+                <button type="button" id="btn-cancel-advanced-filters" class="modal-btn-cancel">Vazgeç</button>
+                <button type="button" id="btn-apply-advanced-filters" class="hk-btn-primary" style="padding:10px 20px;">✅ Filtreleri Uygula</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Bütünleşik HK Global Dialog Modalı (alert, confirm, prompt) -->
 <div id="hk-global-dialog-modal" class="modal-cerceve" style="display:none; z-index: 12000;">
     <div class="modal-icerik modal-icerik-sm">

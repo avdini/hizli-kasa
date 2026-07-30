@@ -115,27 +115,13 @@ if (!defined('ABSPATH')) exit;
                 </div>
             </div>
 
-            <!-- 3. Gelişmiş Kombinasyon Kartları (VE / VEYA Araması) -->
-            <div class="filter-section filter-cards-section">
-                <label class="filter-section-title">🧩 Gelişmiş Arama Kartları</label>
-                <p class="filter-section-desc">Birden fazla ürün varyasyonunu ve mantıksal kuralları kolayca tanımlayın.</p>
-
-                <!-- Dinamik Kartlar Konteynırı -->
-                <div id="filter-cards-container" class="filter-cards-container">
-                    <!-- JavaScript ile dinamik kartlar buraya çizilecek -->
-                </div>
-
-                <div class="filter-cards-actions">
-                    <button type="button" id="btn-add-filter-card" class="btn-add-filter-card">
-                        <span>➕ Yeni Arama Kartı Ekle (VEYA)</span>
-                    </button>
-                </div>
-
-                <!-- Canlı İnsan Dili Özeti -->
-                <div id="filter-human-summary" class="human-summary-box" style="display:none;">
-                    <div class="summary-icon">💬</div>
-                    <div class="summary-text" id="human-summary-text">Henüz özel arama kartı eklenmedi.</div>
-                </div>
+            <!-- 3. Gelişmiş Kombinasyon Kartları (Modal Tetikleyici) -->
+            <div class="filter-section">
+                <label class="filter-section-title">🧩 Gelişmiş Filtreleme</label>
+                <button type="button" id="btn-open-advanced-filter" class="btn-open-advanced-filter">
+                    <span>⚙️ Gelişmiş Arama Kartları</span>
+                    <span id="advanced-filter-badge" class="filter-badge" style="display:none;">0</span>
+                </button>
             </div>
 
             <!-- 4. Zaman & Hareketsiz Stok Analizi -->
@@ -184,6 +170,9 @@ if (!defined('ABSPATH')) exit;
 
         <!-- Sağ Sütun: Ürün Listesi Tablosu -->
         <div id="terminal-liste-paneli" class="terminal-liste-paneli">
+            <!-- Aktif Filtre Çipleri Barı -->
+            <div id="active-filter-chips-bar" class="active-filter-chips-bar" style="display:none;"></div>
+
             <div class="terminal-body" id="terminal-urun-listesi">
                 <div class="terminal-loading">
                     <div class="spin"></div>

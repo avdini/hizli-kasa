@@ -2249,4 +2249,90 @@ body.dark-mode .other-stock-badge {
     font-weight: 500;
 }
 
+/* Sol Filtre Paneli Gelişmiş Filtre Tetikleyici Butonu */
+.btn-open-advanced-filter {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--hk-bg-card, #1e293b);
+    border: 1px solid var(--hk-border, #334155);
+    border-radius: 8px;
+    color: var(--hk-text-primary, #f8fafc);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-open-advanced-filter:hover {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+}
+
+.btn-open-advanced-filter .filter-badge {
+    background: #3b82f6;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+}
+
+/* Ürün Listesi Üstü Aktif Filtre Çipleri Barı */
+.active-filter-chips-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    background: var(--hk-bg-card, #1e293b);
+    border: 1px solid var(--hk-border, #334155);
+    border-radius: 8px;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    border-radius: 16px;
+    color: #93c5fd;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.filter-chip-remove {
+    cursor: pointer;
+    font-weight: 700;
+    margin-left: 2px;
+    opacity: 0.75;
+    transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.filter-chip-remove:hover {
+    opacity: 1;
+    color: #ef4444;
+}
+
+.filter-chip-clear-all {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #fca5a5;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.filter-chip-clear-all:hover {
+    background: rgba(239, 68, 68, 0.25);
+    color: #ffffff;
+}
+
+
 

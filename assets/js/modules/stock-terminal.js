@@ -237,6 +237,33 @@
                 }
             });
 
+            // --- Gelişmiş Filtreleme Modalı Tetikleyici ve Buton Dinleyicileri ---
+            const btnOpenAdvanced = document.getElementById('btn-open-advanced-filter');
+            const btnApplyAdvanced = document.getElementById('btn-apply-advanced-filters');
+            const btnCancelAdvanced = document.getElementById('btn-cancel-advanced-filters');
+            const btnClearAdvanced = document.getElementById('btn-clear-advanced-filters');
+
+            if (btnOpenAdvanced) {
+                btnOpenAdvanced.addEventListener('click', function() {
+                    self.openAdvancedFilterModal();
+                });
+            }
+            if (btnApplyAdvanced) {
+                btnApplyAdvanced.addEventListener('click', function() {
+                    self.applyAdvancedFilters();
+                });
+            }
+            if (btnCancelAdvanced) {
+                btnCancelAdvanced.addEventListener('click', function() {
+                    self.closeAdvancedFilterModal();
+                });
+            }
+            if (btnClearAdvanced) {
+                btnClearAdvanced.addEventListener('click', function() {
+                    self.clearAdvancedFilters();
+                });
+            }
+
             // --- Sıralama Seçici ---
             const sortSelect = document.getElementById('terminal-siralama-select');
             if (sortSelect) {
@@ -644,6 +671,84 @@
                 chipsBar.style.display = 'none';
                 if (badge) badge.style.display = 'none';
                 chipsContainer.innerHTML = '';
+            }
+
+            // Gelişmiş Filtreleme Kart Çipleri Render
+            const activeChipsBar = document.getElementById('active-filter-chips-bar');
+            const advBadge = document.getElementById('advanced-filter-badge');
+
+            const groups = f.filterGroups || [];
+            const validGroups = groups.filter(g => (g.attributes && g.attributes.length > 0) || (g.stock_value !== null && g.stock_value !== undefined && g.stock_value !== ''));
+
+            if (advBadge) {
+                if (validGroups.length > 0) {
+                    advBadge.textContent = validGroups.length;
+                    advBadge.style.display = 'inline-block';
+                } else {
+                    advBadge.style.display = 'none';
+                }
+            }
+
+            if (activeChipsBar) {
+                if (validGroups.length > 0) {
+                    activeChipsBar.style.display = 'flex';
+                    let chipsHtml = '';
+                    const self = this;
+
+                    validGroups.forEach((group, idx) => {
+                        const parts = [];
+                        (group.attributes || []).forEach(rule => {
+                            if (!rule.values || !rule.values[0]) return;
+                            const val = rule.values[0];
+                            const opText = rule.operator === '!=' ? '≠' : '=';
+                            let label = rule.taxonomy;
+
+                            if (rule.taxonomy === 'product_cat') {
+                                const catObj = (self.state.filterData.categories || []).find(c => String(c.id) === String(val));
+                                label = '📁 ' + (catObj ? catObj.name : val);
+                            } else if (rule.taxonomy === 'product_brand') {
+                                const brandObj = (self.state.filterData.brands || []).find(b => String(b.id) === String(val));
+                                label = '🏷️ ' + (brandObj ? brandObj.name : val);
+                            } else {
+                                const cleanTax = rule.taxonomy.replace('pa_', '');
+                                const attrObj = (self.state.filterData.attributes || []).find(a => a.slug === rule.taxonomy || a.slug === cleanTax);
+                                let termName = val;
+                                if (attrObj && attrObj.terms) {
+                                    const termObj = attrObj.terms.find(t => String(t.slug || t.id) === String(val));
+                                    if (termObj) termName = termObj.name;
+                                }
+                                label = (attrObj ? attrObj.label : cleanTax) + ' ' + opText + ' ' + termName;
+                            }
+                            parts.push(label);
+                        });
+
+                        if (group.stock_value !== null && group.stock_value !== undefined && group.stock_value !== '') {
+                            parts.push(`📦 Stok ${group.stock_operator || '='} ${group.stock_value}`);
+                        }
+
+                        if (parts.length > 0) {
+                            chipsHtml += `
+                                <div class="filter-chip">
+                                    <span>🧩 Kart #${idx + 1}: ${parts.join(' VE ')}</span>
+                                    <span class="filter-chip-remove" onclick="HizliKasa.StockTerminal.removeFilterCardGroup(${idx})" title="Bu Kartı Kaldır">✕</span>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    if (validGroups.length > 0) {
+                        chipsHtml += `
+                            <div class="filter-chip filter-chip-clear-all" onclick="HizliKasa.StockTerminal.clearAllFilterCardGroups()">
+                                <span>🧹 Tüm Gelişmiş Filtreleri Temizle</span>
+                            </div>
+                        `;
+                    }
+
+                    activeChipsBar.innerHTML = chipsHtml;
+                } else {
+                    activeChipsBar.style.display = 'none';
+                    activeChipsBar.innerHTML = '';
+                }
             }
         },
 
@@ -1711,6 +1816,59 @@
             } else {
                 summaryBox.style.display = 'none';
             }
+        },
+
+        openAdvancedFilterModal: function() {
+            const modal = document.getElementById('gelismis-filtre-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                this.renderFilterCards();
+            }
+        },
+
+        closeAdvancedFilterModal: function() {
+            const modal = document.getElementById('gelismis-filtre-modal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        },
+
+        applyAdvancedFilters: function() {
+            this.closeAdvancedFilterModal();
+            this.state.currentPage = 1;
+            this.loadProducts();
+            this.renderActiveChips();
+        },
+
+        clearAdvancedFilters: function() {
+            this.state.filters.filterGroups = [
+                { attributes: [], stock_operator: '=', stock_value: null }
+            ];
+            this.renderFilterCards();
+            this.updateHumanSummary();
+        },
+
+        removeFilterCardGroup: function(idx) {
+            if (this.state.filters.filterGroups && this.state.filters.filterGroups[idx]) {
+                this.state.filters.filterGroups.splice(idx, 1);
+                if (this.state.filters.filterGroups.length === 0) {
+                    this.state.filters.filterGroups = [
+                        { attributes: [], stock_operator: '=', stock_value: null }
+                    ];
+                }
+                this.state.currentPage = 1;
+                this.loadProducts();
+                this.renderActiveChips();
+            }
+        },
+
+        clearAllFilterCardGroups: function() {
+            this.state.filters.filterGroups = [
+                { attributes: [], stock_operator: '=', stock_value: null }
+            ];
+            this.state.currentPage = 1;
+            this.loadProducts();
+            this.renderActiveChips();
         }
     };
 
