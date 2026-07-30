@@ -1026,7 +1026,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
         $group_sql_clauses = [];
 
         foreach ($filter_groups as $group) {
-            $group_conds = [];
+            $v_conds = [];
 
             if (!empty($group['attributes']) && is_array($group['attributes'])) {
                 foreach ($group['attributes'] as $rule) {
@@ -1085,38 +1085,32 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
 
                     $meta_match_sql = "(" . implode(" OR ", $meta_val_match) . ")";
 
-                    $attr_sql = $wpdb->prepare("
+                    $single_attr_cond = $wpdb->prepare("
                         (
-                            p.ID IN (
+                            v.ID IN (
                                 SELECT tr.object_id FROM {$wpdb->term_relationships} tr
                                 INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
                                 INNER JOIN {$wpdb->terms} t ON tt.term_id = t.term_id
                                 WHERE tt.taxonomy = %s AND {$term_match_sql}
                             )
-                            OR p.ID IN (
-                                SELECT p_child.ID FROM {$wpdb->posts} p_child
-                                INNER JOIN {$wpdb->term_relationships} tr_c ON p_child.ID = tr_c.object_id
-                                INNER JOIN {$wpdb->term_taxonomy} tt_c ON tr_c.term_taxonomy_id = tt_c.term_taxonomy_id
-                                INNER JOIN {$wpdb->terms} t ON tt_c.term_id = t.term_id
-                                WHERE tt_c.taxonomy = %s AND {$term_match_sql}
+                            OR v.post_parent IN (
+                                SELECT tr2.object_id FROM {$wpdb->term_relationships} tr2
+                                INNER JOIN {$wpdb->term_taxonomy} tt2 ON tr2.term_taxonomy_id = tt2.term_taxonomy_id
+                                INNER JOIN {$wpdb->terms} t ON tt2.term_id = t.term_id
+                                WHERE tt2.taxonomy = %s AND {$term_match_sql}
                             )
-                            OR p.ID IN (
-                                SELECT pm_attr.post_id FROM {$wpdb->postmeta} pm_attr
-                                WHERE pm_attr.meta_key IN ({$pm_key_placeholders}) AND {$meta_match_sql}
-                            )
-                            OR p.ID IN (
-                                SELECT p_c2.post_parent FROM {$wpdb->posts} p_c2
-                                INNER JOIN {$wpdb->postmeta} pm_attr ON p_c2.ID = pm_attr.post_id
-                                WHERE p_c2.post_type = 'product_variation' AND pm_attr.meta_key IN ({$pm_key_placeholders}) AND {$meta_match_sql}
+                            OR EXISTS (
+                                SELECT 1 FROM {$wpdb->postmeta} pm_attr
+                                WHERE pm_attr.post_id = v.ID AND pm_attr.meta_key IN ({$pm_key_placeholders}) AND {$meta_match_sql}
                             )
                         )
-                    ", $tax_name, $tax_name, ...$pm_keys, ...$pm_keys);
+                    ", $tax_name, $tax_name, ...$pm_keys);
 
                     if ($op === '!=') {
-                        $attr_sql = "(NOT {$attr_sql})";
+                        $single_attr_cond = "(NOT {$single_attr_cond})";
                     }
 
-                    $group_conds[] = $attr_sql;
+                    $v_conds[] = $single_attr_cond;
                 }
             }
 
@@ -1125,7 +1119,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                 $val = floatval($group['stock_value']);
 
                 if ($stock_calc_mode === 'parent_total') {
-                    $stock_cond_sql = $wpdb->prepare("
+                    $v_conds[] = $wpdb->prepare("
                         COALESCE(
                             (SELECT SUM(CAST(pm_s.meta_value AS SIGNED))
                              FROM {$wpdb->posts} p_s
@@ -1136,25 +1130,27 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                         ) {$op} %f
                     ", $val);
                 } else {
-                    $stock_cond_sql = $wpdb->prepare("
+                    $v_conds[] = $wpdb->prepare("
                         COALESCE(
                             (SELECT CAST(pm_s.meta_value AS SIGNED)
                              FROM {$wpdb->postmeta} pm_s
-                             WHERE pm_s.post_id = p.ID AND pm_s.meta_key = '_stock'),
-                            (SELECT SUM(CAST(pm_s2.meta_value AS SIGNED))
-                             FROM {$wpdb->posts} p_s2
-                             INNER JOIN {$wpdb->postmeta} pm_s2 ON p_s2.ID = pm_s2.post_id
-                             WHERE p_s2.post_parent = p.ID AND pm_s2.meta_key = '_stock'),
+                             WHERE pm_s.post_id = v.ID AND pm_s.meta_key = '_stock'),
                             0
                         ) {$op} %f
                     ", $val);
                 }
-
-                $group_conds[] = "({$stock_cond_sql})";
             }
 
-            if (!empty($group_conds)) {
-                $group_sql_clauses[] = "(" . implode(" AND ", $group_conds) . ")";
+            if (!empty($v_conds)) {
+                $v_where = implode(" AND ", $v_conds);
+                $group_sql_clauses[] = "
+                    EXISTS (
+                        SELECT 1 FROM {$wpdb->posts} v
+                        WHERE (v.ID = p.ID OR v.post_parent = p.ID)
+                          AND v.post_status = 'publish'
+                          AND {$v_where}
+                    )
+                ";
             }
         }
 
