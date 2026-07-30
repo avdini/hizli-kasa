@@ -58,7 +58,7 @@ if (!defined('ABSPATH')) exit;
     <div id="drawer-backdrop" class="drawer-backdrop" style="display:none;"></div>
 
     <!-- Yandan Kayan Detaylı Filtre Çekmecesi (Drawer) -->
-    <aside id="stock-filter-drawer" class="stock-filter-drawer glass" style="display:none;">
+    <div id="stock-filter-drawer" class="stock-filter-drawer glass" style="display:none;">
         <div class="drawer-header">
             <h3>🎛️ Detaylı Arama ve Filtrele</h3>
             <button id="btn-close-drawer" class="btn-close-drawer" title="Kapat">&times;</button>
@@ -171,7 +171,7 @@ if (!defined('ABSPATH')) exit;
                 <span id="btn-apply-text">Sonuçları Göster</span>
             </button>
         </div>
-    </aside>
+    </div>
 
     <!-- Ana İçerik Çift Sütun Düzeni (Split-View) -->
     <div id="terminal-main-layout" class="terminal-main-layout">
