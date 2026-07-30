@@ -92,6 +92,8 @@
             const clearAllChipsBtn = document.getElementById('btn-clear-all-chips');
 
             const logDiagnostics = function(label) {
+                const liveDrawer = document.getElementById('stock-filter-drawer');
+                const liveBackdrop = document.getElementById('drawer-backdrop');
                 console.group(`%c[Hızlı Kasa StockTerminal] Diagnostics: ${label}`, 'color: #eab308; font-weight: bold;');
                 const getStyles = (el) => {
                     if (!el) return null;
@@ -124,8 +126,8 @@
                 };
 
                 const elsToLog = [
-                    { id: '#stock-filter-drawer', el: drawer },
-                    { id: '#drawer-backdrop', el: backdrop },
+                    { id: '#stock-filter-drawer', el: liveDrawer },
+                    { id: '#drawer-backdrop', el: liveBackdrop },
                     { id: '.stok-terminali', el: document.querySelector('.stok-terminali') || document.getElementById('stok-terminali') },
                     { id: '.tab-content-urunler', el: document.querySelector('.tab-content-urunler') || document.getElementById('tab-content-urunler') },
                     { id: '#app-view-container', el: document.getElementById('app-view-container') },
@@ -137,14 +139,18 @@
             };
 
             const toggleDrawer = function(show) {
-                if (!drawer) {
+                const liveDrawer = document.getElementById('stock-filter-drawer');
+                const liveBackdrop = document.getElementById('drawer-backdrop');
+                const liveToggleBtn = document.getElementById('btn-terminal-filtre-toggle');
+
+                if (!liveDrawer) {
                     console.error('[Hızlı Kasa StockTerminal] ❌ #stock-filter-drawer DOM\'da bulunamadı!');
                     return;
                 }
-                const isVisible = show !== undefined ? show : drawer.style.display === 'none';
-                drawer.style.display = isVisible ? 'flex' : 'none';
-                if (backdrop) backdrop.style.display = isVisible ? 'block' : 'none';
-                if (filterToggleBtn) filterToggleBtn.classList.toggle('active', isVisible);
+                const isVisible = show !== undefined ? show : (liveDrawer.style.display === 'none' || window.getComputedStyle(liveDrawer).display === 'none');
+                liveDrawer.style.display = isVisible ? 'flex' : 'none';
+                if (liveBackdrop) liveBackdrop.style.display = isVisible ? 'block' : 'none';
+                if (liveToggleBtn) liveToggleBtn.classList.toggle('active', isVisible);
 
                 console.log('%c[Hızlı Kasa StockTerminal] Filtre Çekmecesi Durumu:', 'color: #8b5cf6; font-weight: bold;', isVisible ? 'AÇIK' : 'KAPALI');
 
@@ -154,6 +160,12 @@
                     self.loadFilterOptions();
                 }
             };
+
+            const filterToggleBtn = document.getElementById('btn-terminal-filtre-toggle');
+            const closeDrawerBtn = document.getElementById('btn-close-drawer');
+            const applyFiltersBtn = document.getElementById('btn-apply-filters');
+            const clearFiltersBtn = document.getElementById('btn-clear-filters');
+            const clearAllChipsBtn = document.getElementById('btn-clear-all-chips');
 
             if (filterToggleBtn) {
                 filterToggleBtn.addEventListener('click', function() {
@@ -167,11 +179,15 @@
                 });
             }
 
-            if (backdrop) {
-                backdrop.addEventListener('click', function() {
-                    toggleDrawer(false);
-                });
-            }
+            const bindBackdrop = function() {
+                const b = document.getElementById('drawer-backdrop');
+                if (b) {
+                    b.addEventListener('click', function() {
+                        toggleDrawer(false);
+                    });
+                }
+            };
+            bindBackdrop();
 
             const handleFilterChange = function(e) {
                 console.log('%c[Hızlı Kasa StockTerminal] Filtre Değişti / Tetiklendi:', 'color: #10b981; font-weight: bold;', e ? e.target.id : 'Manuel');
