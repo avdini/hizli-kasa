@@ -226,6 +226,18 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                     WHERE p_v.post_type = 'product_variation' AND pm_v.meta_key IN ('_barcode', '_gtin', '_ean') AND pm_v.meta_value LIKE %s
                 )", $s_like, $s_like),
             ];
+
+            if (function_exists('hizli_kasa_get_aws_ranked_product_ids')) {
+                $aws_product_ids = hizli_kasa_get_aws_ranked_product_ids($search, $depo_id);
+                if (!empty($aws_product_ids)) {
+                    $aws_ids_str = implode(',', array_map('absint', $aws_product_ids));
+                    $search_conds[] = "p.ID IN ({$aws_ids_str})";
+                    if (!$exact_sku_match) {
+                        $search_strategy = 'AWS_INDEXED_SEARCH';
+                    }
+                }
+            }
+
             $where[] = "(" . implode(" OR ", $search_conds) . ")";
         }
 
