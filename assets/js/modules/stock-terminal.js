@@ -31,6 +31,8 @@
             },
             filters: {
                 scope: 'all',
+                stockCalcMode: 'variation',
+                filterGroups: [],
                 minStock: '',
                 maxStock: '',
                 stockStatus: 'all',
@@ -521,6 +523,10 @@
 
             const termsWrapper = document.getElementById('attribute-terms-wrapper');
             if (termsWrapper) termsWrapper.style.display = 'none';
+
+            this.state.filters.filterGroups = [{ attributes: [], stock_operator: '=', stock_value: null }];
+            this.renderFilterCards();
+        },
         },
 
         /**
@@ -742,6 +748,7 @@
                     }
                 }
 
+                this.initFilterCardsUI();
                 this._filtersLoaded = true;
             } catch (e) {
                 console.error("V2 Filtreler yüklenemedi", e);
@@ -812,6 +819,18 @@
                 if (f.attribute) queryParams.push('attribute_slug=' + encodeURIComponent(f.attribute));
                 if (f.attributeTerm > 0) queryParams.push('attribute_term_ids=' + f.attributeTerm);
                 if (f.daysUnsold > 0) queryParams.push('days_since_last_sale=' + f.daysUnsold);
+
+                if (f.filterGroups && f.filterGroups.length > 0) {
+                    var validGroups = f.filterGroups.filter(function(g) {
+                        return (g.attributes && g.attributes.length > 0) || (g.stock_value !== null && g.stock_value !== undefined && g.stock_value !== '');
+                    });
+                    if (validGroups.length > 0) {
+                        queryParams.push('filter_groups=' + encodeURIComponent(JSON.stringify(validGroups)));
+                    }
+                }
+                if (f.scope) {
+                    queryParams.push('stock_calc_mode=' + encodeURIComponent(f.scope));
+                }
 
                 var url = kasaAyar.rootApiUrl + 'hizli-kasa/v2/products/stock-search?' + queryParams.join('&');
 
@@ -1430,6 +1449,268 @@
                 input.style.borderColor = '#ef4444';
             } finally {
                 input.disabled = false;
+            }
+        },
+
+        initFilterCardsUI: function() {
+            const btnAddCard = document.getElementById('btn-add-filter-card');
+            if (btnAddCard && !btnAddCard._hasListener) {
+                btnAddCard._hasListener = true;
+                const self = this;
+                btnAddCard.addEventListener('click', function() {
+                    self.addFilterCard();
+                });
+            }
+
+            if (!this.state.filters.filterGroups || this.state.filters.filterGroups.length === 0) {
+                this.state.filters.filterGroups = [
+                    {
+                        attributes: [],
+                        stock_operator: '=',
+                        stock_value: null
+                    }
+                ];
+            }
+            this.renderFilterCards();
+        },
+
+        addFilterCard: function() {
+            if (!this.state.filters.filterGroups) {
+                this.state.filters.filterGroups = [];
+            }
+            this.state.filters.filterGroups.push({
+                attributes: [],
+                stock_operator: '=',
+                stock_value: null
+            });
+            this.renderFilterCards();
+            this.updateHumanSummary();
+        },
+
+        removeFilterCard: function(cardIndex) {
+            if (this.state.filters.filterGroups && this.state.filters.filterGroups.length > cardIndex) {
+                this.state.filters.filterGroups.splice(cardIndex, 1);
+            }
+            if (this.state.filters.filterGroups.length === 0) {
+                this.addFilterCard();
+            } else {
+                this.renderFilterCards();
+                this.updateHumanSummary();
+            }
+        },
+
+        addCardRule: function(cardIndex) {
+            const card = this.state.filters.filterGroups[cardIndex];
+            if (!card) return;
+            if (!card.attributes) card.attributes = [];
+            
+            card.attributes.push({
+                taxonomy: 'product_cat',
+                operator: '=',
+                values: []
+            });
+            this.renderFilterCards();
+            this.updateHumanSummary();
+        },
+
+        removeCardRule: function(cardIndex, ruleIndex) {
+            const card = this.state.filters.filterGroups[cardIndex];
+            if (card && card.attributes && card.attributes[ruleIndex]) {
+                card.attributes.splice(ruleIndex, 1);
+            }
+            this.renderFilterCards();
+            this.updateHumanSummary();
+        },
+
+        renderFilterCards: function() {
+            const container = document.getElementById('filter-cards-container');
+            if (!container) return;
+
+            const self = this;
+            const groups = this.state.filters.filterGroups || [];
+            let html = '';
+
+            const fieldOptions = [];
+            fieldOptions.push({ value: 'product_cat', label: '📁 Kategori' });
+            fieldOptions.push({ value: 'product_brand', label: '🏷️ Marka' });
+            fieldOptions.push({ value: 'product_tag', label: '🏷️ Etiket' });
+
+            (this.state.filterData.attributes || []).forEach(attr => {
+                fieldOptions.push({ value: attr.slug, label: '🎨 Nitelik: ' + attr.label });
+            });
+
+            groups.forEach((group, cIdx) => {
+                if (cIdx > 0) {
+                    html += '<div class="or-divider-badge"><span>⚡ VEYA (OR) ⚡</span></div>';
+                }
+
+                html += `<div class="filter-card-item" data-card-index="${cIdx}">`;
+                html += `  <div class="card-header">`;
+                html += `    <span class="card-title">🟦 ARAMA KARTI #${cIdx + 1}</span>`;
+                if (groups.length > 1) {
+                    html += `    <button type="button" class="btn-remove-card" onclick="HizliKasa.StockTerminal.removeFilterCard(${cIdx})">🗑️ Grubu Sil</button>`;
+                }
+                html += `  </div>`;
+
+                html += `  <div class="card-rules-list">`;
+                (group.attributes || []).forEach((rule, rIdx) => {
+                    html += `<div class="card-rule-row">`;
+                    
+                    html += `<select class="terminal-select rule-field-select" onchange="HizliKasa.StockTerminal.handleRuleChange(${cIdx}, ${rIdx}, 'taxonomy', this.value)">`;
+                    fieldOptions.forEach(opt => {
+                        const sel = (rule.taxonomy === opt.value || rule.taxonomy === 'pa_' + opt.value) ? 'selected' : '';
+                        html += `<option value="${opt.value}" ${sel}>${opt.label}</option>`;
+                    });
+                    html += `</select>`;
+
+                    html += `<select class="terminal-select rule-operator-select" onchange="HizliKasa.StockTerminal.handleRuleChange(${cIdx}, ${rIdx}, 'operator', this.value)">`;
+                    html += `<option value="=" ${rule.operator === '=' ? 'selected' : ''}>Eşittir (=)</option>`;
+                    html += `<option value="!=" ${rule.operator === '!=' ? 'selected' : ''}>Eşit Değil (!=)</option>`;
+                    html += `</select>`;
+
+                    html += self.renderRuleValueControl(cIdx, rIdx, rule);
+
+                    html += `<button type="button" class="btn-remove-rule" onclick="HizliKasa.StockTerminal.removeCardRule(${cIdx}, ${rIdx})" title="Koşulu Sil">✕</button>`;
+                    html += `</div>`;
+                });
+
+                html += `  <button type="button" class="btn-add-rule" onclick="HizliKasa.StockTerminal.addCardRule(${cIdx})">➕ Bu Gruba Koşul Ekle (VE)</button>`;
+                html += `  </div>`;
+
+                const stockVal = (group.stock_value !== null && group.stock_value !== undefined) ? group.stock_value : '';
+                const stockOp = group.stock_operator || '=';
+
+                html += `  <div class="card-stock-cond">`;
+                html += `    <span>📦 Grubun Stok Koşulu:</span>`;
+                html += `    <select class="terminal-select" style="width:70px;" onchange="HizliKasa.StockTerminal.handleCardStockChange(${cIdx}, 'stock_operator', this.value)">`;
+                html += `      <option value="=" ${stockOp === '=' ? 'selected' : ''}>=</option>`;
+                html += `      <option value="!=" ${stockOp === '!=' ? 'selected' : ''}>!=</option>`;
+                html += `      <option value="<" ${stockOp === '<' ? 'selected' : ''}>&lt;</option>`;
+                html += `      <option value="<=" ${stockOp === '<=' ? 'selected' : ''}>&lt;=</option>`;
+                html += `      <option value=">" ${stockOp === '>' ? 'selected' : ''}>&gt;</option>`;
+                html += `      <option value=">=" ${stockOp === '>=' ? 'selected' : ''}>&gt;=</option>`;
+                html += `    </select>`;
+                html += `    <input type="number" class="terminal-input" style="width:70px;" placeholder="Adet" value="${stockVal}" oninput="HizliKasa.StockTerminal.handleCardStockChange(${cIdx}, 'stock_value', this.value)" step="any">`;
+                html += `  </div>`;
+
+                html += `</div>`;
+            });
+
+            container.innerHTML = html;
+            this.updateHumanSummary();
+        },
+
+        renderRuleValueControl: function(cIdx, rIdx, rule) {
+            const tax = rule.taxonomy || 'product_cat';
+            let options = [];
+
+            if (tax === 'product_cat') {
+                options = (this.state.filterData.categories || []).map(c => ({ id: c.id, slug: c.id, name: c.name }));
+            } else if (tax === 'product_brand' || tax === 'pwb-brand' || tax === 'brand') {
+                options = (this.state.filterData.brands || []).map(b => ({ id: b.id, slug: b.id, name: b.name }));
+            } else if (tax === 'product_tag') {
+                options = (this.state.filterData.tags || []).map(t => ({ id: t.id, slug: t.id, name: t.name }));
+            } else {
+                const cleanTax = tax.replace('pa_', '');
+                const attrObj = (this.state.filterData.attributes || []).find(a => a.slug === tax || a.slug === cleanTax);
+                if (attrObj && attrObj.terms) {
+                    options = attrObj.terms.map(t => ({ id: t.id, slug: t.slug || t.id, name: t.name }));
+                }
+            }
+
+            const currentVal = (rule.values && rule.values.length > 0) ? rule.values[0] : '';
+
+            if (options.length > 0) {
+                let selectHtml = `<select class="terminal-select rule-value-select" onchange="HizliKasa.StockTerminal.handleRuleChange(${cIdx}, ${rIdx}, 'values', [this.value])">`;
+                selectHtml += `<option value="">Seçiniz...</option>`;
+                options.forEach(opt => {
+                    const valStr = String(opt.slug || opt.id);
+                    const sel = (String(currentVal) === valStr) ? 'selected' : '';
+                    selectHtml += `<option value="${valStr}" ${sel}>${opt.name}</option>`;
+                });
+                selectHtml += `</select>`;
+                return selectHtml;
+            } else {
+                return `<input type="text" class="terminal-input rule-value-input" placeholder="Değer yazın..." value="${currentVal}" oninput="HizliKasa.StockTerminal.handleRuleChange(${cIdx}, ${rIdx}, 'values', [this.value])">`;
+            }
+        },
+
+        handleRuleChange: function(cIdx, rIdx, field, val) {
+            const card = this.state.filters.filterGroups[cIdx];
+            if (card && card.attributes && card.attributes[rIdx]) {
+                card.attributes[rIdx][field] = val;
+                if (field === 'taxonomy') {
+                    card.attributes[rIdx]['values'] = [];
+                    this.renderFilterCards();
+                }
+            }
+            this.updateHumanSummary();
+        },
+
+        handleCardStockChange: function(cIdx, field, val) {
+            const card = this.state.filters.filterGroups[cIdx];
+            if (card) {
+                if (field === 'stock_value') {
+                    card.stock_value = val !== '' ? parseFloat(val) : null;
+                } else {
+                    card[field] = val;
+                }
+            }
+            this.updateHumanSummary();
+        },
+
+        updateHumanSummary: function() {
+            const summaryBox = document.getElementById('filter-human-summary');
+            const summaryText = document.getElementById('human-summary-text');
+            if (!summaryBox || !summaryText) return;
+
+            const groups = this.state.filters.filterGroups || [];
+            const validGroupSummaries = [];
+
+            const self = this;
+            groups.forEach((group, gIdx) => {
+                const parts = [];
+
+                (group.attributes || []).forEach(rule => {
+                    if (!rule.values || rule.values.length === 0 || !rule.values[0]) return;
+                    const val = rule.values[0];
+                    const opText = rule.operator === '!=' ? 'OLMAYAN' : '=';
+                    let label = rule.taxonomy;
+
+                    if (rule.taxonomy === 'product_cat') {
+                        const catObj = (self.state.filterData.categories || []).find(c => String(c.id) === String(val));
+                        label = 'Kategori: ' + (catObj ? catObj.name : val);
+                    } else if (rule.taxonomy === 'product_brand') {
+                        const brandObj = (self.state.filterData.brands || []).find(b => String(b.id) === String(val));
+                        label = 'Marka: ' + (brandObj ? brandObj.name : val);
+                    } else {
+                        const cleanTax = rule.taxonomy.replace('pa_', '');
+                        const attrObj = (self.state.filterData.attributes || []).find(a => a.slug === rule.taxonomy || a.slug === cleanTax);
+                        let termName = val;
+                        if (attrObj && attrObj.terms) {
+                            const termObj = attrObj.terms.find(t => String(t.slug || t.id) === String(val));
+                            if (termObj) termName = termObj.name;
+                        }
+                        label = (attrObj ? attrObj.label : cleanTax) + ': ' + termName;
+                    }
+
+                    parts.push(`${label} (${opText})`);
+                });
+
+                if (group.stock_value !== null && group.stock_value !== undefined && group.stock_value !== '') {
+                    parts.push(`Stoğu ${group.stock_operator || '='} ${group.stock_value} Adet olan`);
+                }
+
+                if (parts.length > 0) {
+                    validGroupSummaries.push(`(${parts.join(' VE ')})`);
+                }
+            });
+
+            if (validGroupSummaries.length > 0) {
+                summaryBox.style.display = 'flex';
+                summaryText.innerHTML = '<strong>Bulunacak ürünler:</strong> ' + validGroupSummaries.join(' <strong style="color:#f59e0b;">VEYA</strong> ');
+            } else {
+                summaryBox.style.display = 'none';
             }
         }
     };

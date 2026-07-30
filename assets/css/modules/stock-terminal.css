@@ -2049,3 +2049,204 @@ body.dark-mode .other-stock-badge {
     }
 }
 
+/* ==========================================================================
+   🧩 Gelişmiş Kombinasyon Kartları & Evrensel Filtre Builder Stilleri
+   ========================================================================== */
+
+.filter-section-desc {
+    font-size: 11px;
+    color: var(--hk-text-muted, #94a3b8);
+    margin-bottom: 6px;
+}
+
+.filter-cards-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.filter-card-item {
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-card-item:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #60a5fa;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-remove-card {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-remove-card:hover {
+    background: rgba(239, 68, 68, 0.25);
+    color: #ffffff;
+}
+
+.card-rules-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.card-rule-row {
+    display: grid;
+    grid-template-columns: 1.2fr 0.9fr 1.5fr auto;
+    gap: 6px;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.card-rule-row .terminal-select,
+.card-rule-row .terminal-input {
+    font-size: 11px;
+    padding: 5px 6px;
+}
+
+.btn-remove-rule {
+    background: transparent;
+    color: #94a3b8;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+
+.btn-remove-rule:hover {
+    color: #f87171;
+}
+
+.btn-add-rule {
+    align-self: flex-start;
+    background: rgba(59, 130, 246, 0.1);
+    color: #93c5fd;
+    border: 1px dashed rgba(59, 130, 246, 0.3);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 2px;
+}
+
+.btn-add-rule:hover {
+    background: rgba(59, 130, 246, 0.2);
+    color: #ffffff;
+}
+
+.card-stock-cond {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.05);
+    font-size: 11px;
+    color: #cbd5e1;
+}
+
+.card-stock-cond select,
+.card-stock-cond input {
+    font-size: 11px;
+    padding: 4px 6px;
+}
+
+.or-divider-badge {
+    text-align: center;
+    position: relative;
+    margin: 4px 0;
+}
+
+.or-divider-badge span {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.btn-add-filter-card {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.25));
+    border: 1px dashed #3b82f6;
+    color: #60a5fa;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    margin-top: 6px;
+}
+
+.btn-add-filter-card:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.4));
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+}
+
+.human-summary-box {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.15));
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-top: 10px;
+}
+
+.human-summary-box .summary-icon {
+    font-size: 16px;
+    line-height: 1.2;
+}
+
+.human-summary-box .summary-text {
+    font-size: 11px;
+    line-height: 1.45;
+    color: #a7f3d0;
+    font-weight: 500;
+}
+
+

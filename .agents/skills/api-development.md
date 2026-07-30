@@ -348,7 +348,9 @@ Gelişmiş süzme, varyasyon/toplam stok hesaplaması, nitelikler, kategoriler, 
   - `min_stock` & `max_stock`: Stok miktarı süzgeci (Örn: min:1, max:1)
   - `stock_status`: `all` | `instock` | `lowstock` | `outofstock`
   - `category_ids`, `brand_ids`, `tag_ids`: Virgülle ayrılmış ID listesi
-  - `attribute_slug` & `attribute_term_ids`: Nitelik (pa_size vb.) süzgeci
+  - `attribute_slug` & `attribute_term_ids`: Nitelik (pa_size vb.) süzgeci (Legacy)
+  - `stock_calc_mode`: `variation` (tekil varyasyon stoğu) | `parent_total` (alt varyasyonların toplam stoğu)
+  - `filter_groups`: Mantıksal kural dizisi (JSON veya Array). Örn: `[{"attributes": {"pa_renk": ["mavi"], "pa_beden": ["s"]}, "stock_operator": "=", "stock_value": 1}]` (Grup içi `AND`, gruplar arası `OR` birleşir)
   - `search`: Ürün adı, SKU veya Barkod
   - `days_since_last_sale`: Son X gündür satılmayanlar (Örn: 30)
   - `sort_by`: `date_desc`, `title_asc`, `stock_asc`, `price_asc` vb.
