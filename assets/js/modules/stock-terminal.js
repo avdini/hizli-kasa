@@ -72,6 +72,10 @@
             console.log('Arama girdisi ve olay dinleyicileri yüklendi.');
             console.groupEnd();
 
+            setTimeout(() => {
+                if (typeof logDiagnostics === 'function') logDiagnostics('init()');
+            }, 100);
+
             // Depo değişince listeyi yenile
             document.addEventListener('hkViewDepoChanged', function() {
                 self.state.currentPage = 1;
@@ -87,6 +91,51 @@
             const clearFiltersBtn = document.getElementById('btn-clear-filters');
             const clearAllChipsBtn = document.getElementById('btn-clear-all-chips');
 
+            const logDiagnostics = function(label) {
+                console.group(`%c[Hızlı Kasa StockTerminal] Diagnostics: ${label}`, 'color: #eab308; font-weight: bold;');
+                const getStyles = (el) => {
+                    if (!el) return null;
+                    const comp = window.getComputedStyle(el);
+                    return {
+                        display: comp.display,
+                        visibility: comp.visibility,
+                        opacity: comp.opacity,
+                        position: comp.position,
+                        zIndex: comp.zIndex,
+                        width: comp.width,
+                        height: comp.height,
+                        top: comp.top,
+                        left: comp.left,
+                        transform: comp.transform,
+                        clip: comp.clip,
+                        rect: 'check bounding client rect below'
+                    };
+                };
+                
+                const logEl = (id, el) => {
+                    if (!el) {
+                        console.log(`${id} not found in DOM`);
+                        return;
+                    }
+                    console.log(`--- ${id} ---`);
+                    console.table(getStyles(el));
+                    console.log(`Rect (${id}):`, el.getBoundingClientRect());
+                    console.log(`Offsets (${id}): offsetWidth=${el.offsetWidth}, offsetHeight=${el.offsetHeight}, offsetLeft=${el.offsetLeft}, offsetTop=${el.offsetTop}`);
+                };
+
+                const elsToLog = [
+                    { id: '#stock-filter-drawer', el: drawer },
+                    { id: '#drawer-backdrop', el: backdrop },
+                    { id: '.stok-terminali', el: document.querySelector('.stok-terminali') || document.getElementById('stok-terminali') },
+                    { id: '.tab-content-urunler', el: document.querySelector('.tab-content-urunler') || document.getElementById('tab-content-urunler') },
+                    { id: '#app-view-container', el: document.getElementById('app-view-container') },
+                    { id: '#hizli-kasa-app', el: document.getElementById('hizli-kasa-app') }
+                ];
+
+                elsToLog.forEach(item => logEl(item.id, item.el));
+                console.groupEnd();
+            };
+
             const toggleDrawer = function(show) {
                 if (!drawer) {
                     console.error('[Hızlı Kasa StockTerminal] ❌ #stock-filter-drawer DOM\'da bulunamadı!');
@@ -97,60 +146,9 @@
                 if (backdrop) backdrop.style.display = isVisible ? 'block' : 'none';
                 if (filterToggleBtn) filterToggleBtn.classList.toggle('active', isVisible);
 
-                console.group('%c[Hızlı Kasa StockTerminal] 🎛️ Filtre Çekmecesi Teşhis Logu:', 'color: #8b5cf6; font-weight: bold;');
-                console.log('Çekmece Durumu:', isVisible ? 'AÇIK (display: flex)' : 'KAPALI (display: none)');
+                console.log('%c[Hızlı Kasa StockTerminal] Filtre Çekmecesi Durumu:', 'color: #8b5cf6; font-weight: bold;', isVisible ? 'AÇIK' : 'KAPALI');
 
-                if (isVisible) {
-                    const drawerStyle = window.getComputedStyle(drawer);
-                    const backdropStyle = backdrop ? window.getComputedStyle(backdrop) : null;
-                    const drawerRect = drawer.getBoundingClientRect();
-                    const backdropRect = backdrop ? backdrop.getBoundingClientRect() : null;
-
-                    console.log('📐 [Çekmece CSS - Computed Styles]:', {
-                        display: drawerStyle.display,
-                        position: drawerStyle.position,
-                        zIndex: drawerStyle.zIndex,
-                        opacity: drawerStyle.opacity,
-                        visibility: drawerStyle.visibility,
-                        width: drawerStyle.width,
-                        height: drawerStyle.height,
-                        top: drawerStyle.top,
-                        left: drawerStyle.left,
-                        transform: drawerStyle.transform,
-                        backgroundColor: drawerStyle.backgroundColor
-                    });
-
-                    console.log('📍 [Çekmece Bounding Rect]:', {
-                        top: drawerRect.top,
-                        left: drawerRect.left,
-                        width: drawerRect.width,
-                        height: drawerRect.height,
-                        visibleInViewport: (drawerRect.width > 0 && drawerRect.height > 0)
-                    });
-
-                    if (backdropStyle && backdropRect) {
-                        console.log('🖤 [Backdrop CSS & Rect]:', {
-                            display: backdropStyle.display,
-                            position: backdropStyle.position,
-                            zIndex: backdropStyle.zIndex,
-                            width: backdropRect.width,
-                            height: backdropRect.height
-                        });
-                    }
-
-                    const parent = drawer.parentElement;
-                    if (parent) {
-                        const parentStyle = window.getComputedStyle(parent);
-                        console.log('🏠 [Ebeveyn Konteyner - #' + (parent.id || parent.className) + ']:', {
-                            position: parentStyle.position,
-                            overflow: parentStyle.overflow,
-                            zIndex: parentStyle.zIndex,
-                            width: parentStyle.width,
-                            height: parentStyle.height
-                        });
-                    }
-                }
-                console.groupEnd();
+                setTimeout(() => logDiagnostics(`toggleDrawer(isVisible=${isVisible})`), 50);
 
                 if (isVisible && !self._filtersLoaded) {
                     self.loadFilterOptions();
