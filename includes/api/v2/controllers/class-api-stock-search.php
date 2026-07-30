@@ -316,12 +316,27 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
         $join[] = "LEFT JOIN {$wpdb->postmeta} pm_stock_status ON (p.ID = pm_stock_status.post_id AND pm_stock_status.meta_key = '_stock_status')";
 
         $depo_stock_sql = "";
-        if ($has_stok_table) {
+        if ($has_stok_table && $depo_id > 0) {
             $depo_stock_sql = $wpdb->prepare("COALESCE(
                 (SELECT SUM(sk_v.quantity) FROM {$stok_table} sk_v WHERE sk_v.product_id = p.ID AND sk_v.location_id = %d AND sk_v.variation_id > 0),
                 (SELECT sk_s.quantity FROM {$stok_table} sk_s WHERE sk_s.product_id = p.ID AND sk_s.location_id = %d AND sk_s.variation_id = 0 LIMIT 1),
                 0
             )", $depo_id, $depo_id);
+
+            // Depo İzolasyonu: Yalnızca seçili deponun stok konumlarında bulunan ürünleri çek
+            $where[] = $wpdb->prepare("(
+                p.ID IN (
+                    SELECT product_id FROM {$stok_table} WHERE location_id = %d AND variation_id = 0
+                    UNION
+                    SELECT variation_id FROM {$stok_table} WHERE location_id = %d AND variation_id > 0
+                    UNION
+                    SELECT p_v.post_parent FROM {$wpdb->posts} p_v
+                    INNER JOIN {$stok_table} sk_v ON (p_v.ID = sk_v.variation_id)
+                    WHERE p_v.post_type = 'product_variation' AND sk_v.location_id = %d
+                )
+            )", $depo_id, $depo_id, $depo_id);
+        } elseif ($has_stok_table) {
+            $depo_stock_sql = "0";
         }
 
         if ($stock_status !== 'all') {
