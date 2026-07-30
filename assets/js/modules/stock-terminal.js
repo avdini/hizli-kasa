@@ -527,7 +527,6 @@
             this.state.filters.filterGroups = [{ attributes: [], stock_operator: '=', stock_value: null }];
             this.renderFilterCards();
         },
-        },
 
         /**
          * Seçilen nitelik tipine göre değerlerini açılır kutuya doldurur.
