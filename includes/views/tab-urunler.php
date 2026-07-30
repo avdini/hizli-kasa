@@ -54,127 +54,127 @@ if (!defined('ABSPATH')) exit;
         <button id="btn-clear-all-chips" class="btn-clear-all-chips">Tümünü Temizle</button>
     </div>
 
-    <!-- Backdrop Overlay for Mobile Drawer -->
+    <!-- Backdrop Overlay for Mobile & Desktop Drawer -->
     <div id="drawer-backdrop" class="drawer-backdrop" style="display:none;"></div>
+
+    <!-- Yandan Kayan Detaylı Filtre Çekmecesi (Drawer) -->
+    <aside id="stock-filter-drawer" class="stock-filter-drawer glass" style="display:none;">
+        <div class="drawer-header">
+            <h3>🎛️ Detaylı Arama ve Filtrele</h3>
+            <button id="btn-close-drawer" class="btn-close-drawer" title="Kapat">&times;</button>
+        </div>
+        
+        <div class="drawer-body">
+            <!-- 1. Stok Hesaplama Kapsamı & Aralığı -->
+            <div class="filter-section">
+                <label class="filter-section-title">📊 Stok Kapsamı & Miktarı</label>
+                <div class="filter-field">
+                    <label for="filter-scope">Hesaplama Kapsamı:</label>
+                    <select id="filter-scope" class="terminal-select">
+                        <option value="all">Tümü (Varyasyon & Basit Ürünler)</option>
+                        <option value="parent_sum">Toplamsal Ürün Stoğu (Seri Sonu - Toplam = X)</option>
+                        <option value="variation">Tekil Varyasyon Stoğu (Beden/Renk Bazlı)</option>
+                        <option value="simple">Sadece Basit Ürünler</option>
+                    </select>
+                </div>
+                <div class="filter-row-2col">
+                    <div class="filter-field">
+                        <label for="filter-min-stock">Min Stok:</label>
+                        <input type="number" id="filter-min-stock" class="terminal-input" placeholder="Örn: 1" step="any">
+                    </div>
+                    <div class="filter-field">
+                        <label for="filter-max-stock">Max Stok:</label>
+                        <input type="number" id="filter-max-stock" class="terminal-input" placeholder="Örn: 1" step="any">
+                    </div>
+                </div>
+                <div class="filter-field">
+                    <label for="filter-stock-status">Stok Durumu:</label>
+                    <select id="filter-stock-status" class="terminal-select">
+                        <option value="all">Hepsi</option>
+                        <option value="instock">Stokta Var</option>
+                        <option value="lowstock">Kritik Stok (<= 2)</option>
+                        <option value="outofstock">Stokta Yok</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 2. Kategori & Marka -->
+            <div class="filter-section">
+                <label class="filter-section-title">🏷️ Kategori & Marka</label>
+                <div class="filter-field">
+                    <label for="filter-category">Kategori:</label>
+                    <select id="filter-category" class="terminal-select">
+                        <option value="0">Tüm Kategoriler</option>
+                    </select>
+                </div>
+                <div class="filter-field">
+                    <label for="filter-brand">Marka:</label>
+                    <select id="filter-brand" class="terminal-select">
+                        <option value="0">Tüm Markalar</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 3. Nitelikler (Beden / Renk vb.) -->
+            <div class="filter-section">
+                <label class="filter-section-title">🎨 Nitelikler & Bedenler</label>
+                <div class="filter-field">
+                    <label for="filter-attribute">Nitelik Tipi:</label>
+                    <select id="filter-attribute" class="terminal-select">
+                        <option value="">Seçiniz...</option>
+                    </select>
+                </div>
+                <div class="filter-field" id="attribute-terms-wrapper" style="display:none;">
+                    <label for="filter-attribute-term">Nitelik Değeri:</label>
+                    <select id="filter-attribute-term" class="terminal-select">
+                        <option value="0">Tümü</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 4. Zaman & Hareketsiz Stok Analizi -->
+            <div class="filter-section">
+                <label class="filter-section-title">⏱️ Hareketsiz Stok Analizi</label>
+                <div class="filter-field">
+                    <label for="filter-days-unsold">Son Satış Tarihi:</label>
+                    <select id="filter-days-unsold" class="terminal-select">
+                        <option value="0">Tüm Zamanlar (Filtresiz)</option>
+                        <option value="30">Son 30 Gündür Satılmayanlar</option>
+                        <option value="60">Son 60 Gündür Satılmayanlar</option>
+                        <option value="90">Son 90 Gündür Satılmayanlar</option>
+                        <option value="180">Son 6 Aydır Satılmayanlar</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 5. Sıralama Seçenekleri -->
+            <div class="filter-section">
+                <label class="filter-section-title">🔀 Sıralama</label>
+                <div class="filter-field">
+                    <select id="terminal-siralama-select" class="terminal-select">
+                        <option value="date_desc">Yeni Eklenenler</option>
+                        <option value="date_asc">Eski Eklenenler</option>
+                        <option value="title_asc">Ürün Adı (A-Z)</option>
+                        <option value="title_desc">Ürün Adı (Z-A)</option>
+                        <option value="stock_desc">Stok (Azalan)</option>
+                        <option value="stock_asc">Stok (Artan)</option>
+                        <option value="price_asc">Fiyat (Düşükten Yükseğe)</option>
+                        <option value="price_desc">Fiyat (Yüksekten Düşüğe)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="drawer-footer">
+            <button id="btn-clear-filters" class="btn-clear-filters">Temizle</button>
+            <button id="btn-apply-filters" class="btn-apply-filters">
+                <span id="btn-apply-text">Sonuçları Göster</span>
+            </button>
+        </div>
+    </aside>
 
     <!-- Ana İçerik Çift Sütun Düzeni (Split-View) -->
     <div id="terminal-main-layout" class="terminal-main-layout">
-        
-        <!-- Yandan Kayan / Sabitlenebilir Filtre Çekmecesi (Drawer) -->
-        <aside id="stock-filter-drawer" class="stock-filter-drawer glass" style="display:none;">
-            <div class="drawer-header">
-                <h3>🎛️ Detaylı Arama ve Filtrele</h3>
-                <button id="btn-close-drawer" class="btn-close-drawer" title="Kapat">&times;</button>
-            </div>
-            
-            <div class="drawer-body">
-                <!-- 1. Stok Hesaplama Kapsamı & Aralığı -->
-                <div class="filter-section">
-                    <label class="filter-section-title">📊 Stok Kapsamı & Miktarı</label>
-                    <div class="filter-field">
-                        <label for="filter-scope">Hesaplama Kapsamı:</label>
-                        <select id="filter-scope" class="terminal-select">
-                            <option value="all">Tümü (Varyasyon & Basit Ürünler)</option>
-                            <option value="parent_sum">Toplamsal Ürün Stoğu (Seri Sonu - Toplam = X)</option>
-                            <option value="variation">Tekil Varyasyon Stoğu (Beden/Renk Bazlı)</option>
-                            <option value="simple">Sadece Basit Ürünler</option>
-                        </select>
-                    </div>
-                    <div class="filter-row-2col">
-                        <div class="filter-field">
-                            <label for="filter-min-stock">Min Stok:</label>
-                            <input type="number" id="filter-min-stock" class="terminal-input" placeholder="Örn: 1" step="any">
-                        </div>
-                        <div class="filter-field">
-                            <label for="filter-max-stock">Max Stok:</label>
-                            <input type="number" id="filter-max-stock" class="terminal-input" placeholder="Örn: 1" step="any">
-                        </div>
-                    </div>
-                    <div class="filter-field">
-                        <label for="filter-stock-status">Stok Durumu:</label>
-                        <select id="filter-stock-status" class="terminal-select">
-                            <option value="all">Hepsi</option>
-                            <option value="instock">Stokta Var</option>
-                            <option value="lowstock">Kritik Stok (<= 2)</option>
-                            <option value="outofstock">Stokta Yok</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- 2. Kategori & Marka -->
-                <div class="filter-section">
-                    <label class="filter-section-title">🏷️ Kategori & Marka</label>
-                    <div class="filter-field">
-                        <label for="filter-category">Kategori:</label>
-                        <select id="filter-category" class="terminal-select">
-                            <option value="0">Tüm Kategoriler</option>
-                        </select>
-                    </div>
-                    <div class="filter-field">
-                        <label for="filter-brand">Marka:</label>
-                        <select id="filter-brand" class="terminal-select">
-                            <option value="0">Tüm Markalar</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- 3. Nitelikler (Beden / Renk vb.) -->
-                <div class="filter-section">
-                    <label class="filter-section-title">🎨 Nitelikler & Bedenler</label>
-                    <div class="filter-field">
-                        <label for="filter-attribute">Nitelik Tipi:</label>
-                        <select id="filter-attribute" class="terminal-select">
-                            <option value="">Seçiniz...</option>
-                        </select>
-                    </div>
-                    <div class="filter-field" id="attribute-terms-wrapper" style="display:none;">
-                        <label for="filter-attribute-term">Nitelik Değeri:</label>
-                        <select id="filter-attribute-term" class="terminal-select">
-                            <option value="0">Tümü</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- 4. Zaman & Hareketsiz Stok Analizi -->
-                <div class="filter-section">
-                    <label class="filter-section-title">⏱️ Hareketsiz Stok Analizi</label>
-                    <div class="filter-field">
-                        <label for="filter-days-unsold">Son Satış Tarihi:</label>
-                        <select id="filter-days-unsold" class="terminal-select">
-                            <option value="0">Tüm Zamanlar (Filtresiz)</option>
-                            <option value="30">Son 30 Gündür Satılmayanlar</option>
-                            <option value="60">Son 60 Gündür Satılmayanlar</option>
-                            <option value="90">Son 90 Gündür Satılmayanlar</option>
-                            <option value="180">Son 6 Aydır Satılmayanlar</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- 5. Sıralama Seçenekleri -->
-                <div class="filter-section">
-                    <label class="filter-section-title">🔀 Sıralama</label>
-                    <div class="filter-field">
-                        <select id="terminal-siralama-select" class="terminal-select">
-                            <option value="date_desc">Yeni Eklenenler</option>
-                            <option value="date_asc">Eski Eklenenler</option>
-                            <option value="title_asc">Ürün Adı (A-Z)</option>
-                            <option value="title_desc">Ürün Adı (Z-A)</option>
-                            <option value="stock_desc">Stok (Azalan)</option>
-                            <option value="stock_asc">Stok (Artan)</option>
-                            <option value="price_asc">Fiyat (Düşükten Yükseğe)</option>
-                            <option value="price_desc">Fiyat (Yüksekten Düşüğe)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="drawer-footer">
-                <button id="btn-clear-filters" class="btn-clear-filters">Temizle</button>
-                <button id="btn-apply-filters" class="btn-apply-filters">
-                    <span id="btn-apply-text">Sonuçları Göster</span>
-                </button>
-            </div>
-        </aside>
 
         <!-- Sağ Sütun: Ürün Listesi Tablosu -->
         <div id="terminal-liste-paneli" class="terminal-liste-paneli">
