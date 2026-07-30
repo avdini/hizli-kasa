@@ -1096,40 +1096,59 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                     }
                 }
 
-                $term_match_parts = [];
-                if (!empty($term_ids)) {
-                    $ids_str = implode(',', $term_ids);
-                    $term_match_parts[] = "t.term_id IN ({$ids_str})";
-                }
-                if (!empty($term_slugs)) {
-                    $slug_placeholders = implode(',', array_fill(0, count($term_slugs), '%s'));
-                    $term_match_parts[] = $wpdb->prepare("t.slug IN ({$slug_placeholders})", ...$term_slugs);
+                $prep_args = [];
+                $prep_args[] = $tax_name;
+
+                $pm_keys = ['attribute_' . $tax_name, 'attribute_' . $raw_slug];
+                $pm_key_placeholders = implode(',', array_fill(0, count($pm_keys), '%s'));
+                foreach ($pm_keys as $pmk) {
+                    $prep_args[] = $pmk;
                 }
 
-                if (empty($term_match_parts)) {
+                $term_parts = [];
+                if (!empty($term_ids)) {
+                    $ids_placeholders = implode(',', array_fill(0, count($term_ids), '%d'));
+                    $term_parts[] = "t.term_id IN ({$ids_placeholders})";
+                    foreach ($term_ids as $tid) {
+                        $prep_args[] = $tid;
+                    }
+                }
+                if (!empty($term_slugs)) {
+                    $slugs_placeholders = implode(',', array_fill(0, count($term_slugs), '%s'));
+                    $term_parts[] = "t.slug IN ({$slugs_placeholders})";
+                    foreach ($term_slugs as $tslug) {
+                        $prep_args[] = $tslug;
+                    }
+                }
+
+                if (empty($term_parts)) {
                     continue;
                 }
 
-                $term_match_sql = "(" . implode(" OR ", $term_match_parts) . ")";
-                $pm_keys = ['attribute_' . $tax_name, 'attribute_' . $raw_slug];
-                $pm_key_placeholders = implode(',', array_fill(0, count($pm_keys), '%s'));
+                $term_match_sql = "(" . implode(" OR ", $term_parts) . ")";
 
-                $meta_val_match = [];
+                $meta_val_parts = [];
                 if (!empty($term_slugs)) {
-                    $slug_placeholders = implode(',', array_fill(0, count($term_slugs), '%s'));
-                    $meta_val_match[] = $wpdb->prepare("pm_attr.meta_value IN ({$slug_placeholders})", ...$term_slugs);
-                }
-                if (!empty($term_ids)) {
-                    $found_slugs = $wpdb->get_col("SELECT slug FROM {$wpdb->terms} WHERE term_id IN (" . implode(',', $term_ids) . ")");
-                    if (!empty($found_slugs)) {
-                        $slug_placeholders = implode(',', array_fill(0, count($found_slugs), '%s'));
-                        $meta_val_match[] = $wpdb->prepare("pm_attr.meta_value IN ({$slug_placeholders})", ...$found_slugs);
+                    $slugs_placeholders = implode(',', array_fill(0, count($term_slugs), '%s'));
+                    $meta_val_parts[] = "pm_attr.meta_value IN ({$slugs_placeholders})";
+                    foreach ($term_slugs as $tslug) {
+                        $prep_args[] = $tslug;
                     }
                 }
-                $meta_val_match[] = "pm_attr.meta_value = ''";
-                $meta_match_sql = "(" . implode(" OR ", $meta_val_match) . ")";
+                if (!empty($term_ids)) {
+                    $found_slugs = $wpdb->get_col($wpdb->prepare("SELECT slug FROM {$wpdb->terms} WHERE term_id IN (" . implode(',', array_fill(0, count($term_ids), '%d')) . ")", ...$term_ids));
+                    if (!empty($found_slugs)) {
+                        $slugs_placeholders = implode(',', array_fill(0, count($found_slugs), '%s'));
+                        $meta_val_parts[] = "pm_attr.meta_value IN ({$slugs_placeholders})";
+                        foreach ($found_slugs as $fslug) {
+                            $prep_args[] = $fslug;
+                        }
+                    }
+                }
+                $meta_val_parts[] = "pm_attr.meta_value = ''";
+                $meta_match_sql = "(" . implode(" OR ", $meta_val_parts) . ")";
 
-                $rule_v_sql = $wpdb->prepare("
+                $raw_sql_query = "
                     SELECT DISTINCT v.ID
                     FROM {$wpdb->posts} v
                     LEFT JOIN {$wpdb->term_relationships} tr ON (v.ID = tr.object_id OR v.post_parent = tr.object_id)
@@ -1138,22 +1157,23 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                     LEFT JOIN {$wpdb->postmeta} pm_attr ON (v.ID = pm_attr.post_id AND pm_attr.meta_key IN ({$pm_key_placeholders}))
                     WHERE v.post_status = 'publish'
                       AND ( ({$term_match_sql}) OR ({$meta_match_sql}) )
-                ", $tax_name, ...$pm_keys);
+                ";
 
-                $rule_v_ids = array_map('absint', $wpdb->get_col($rule_v_sql));
+                $rule_v_sql = $wpdb->prepare($raw_sql_query, ...$prep_args);
+                $rule_v_ids = array_map('absint', $wpdb->get_col($rule_v_sql) ?: []);
 
                 if ($op === '!=') {
                     if ($candidate_v_ids !== null) {
-                        $candidate_v_ids = array_diff($candidate_v_ids, $rule_v_ids);
+                        $candidate_v_ids = array_values(array_diff($candidate_v_ids, $rule_v_ids));
                     } else {
-                        $all_v_ids = array_map('absint', $wpdb->get_col("SELECT ID FROM {$wpdb->posts} WHERE post_status = 'publish' AND post_type IN ('product', 'product_variation')"));
-                        $candidate_v_ids = array_diff($all_v_ids, $rule_v_ids);
+                        $all_v_ids = array_map('absint', $wpdb->get_col("SELECT ID FROM {$wpdb->posts} WHERE post_status = 'publish' AND post_type IN ('product', 'product_variation')") ?: []);
+                        $candidate_v_ids = array_values(array_diff($all_v_ids, $rule_v_ids));
                     }
                 } else {
                     if ($candidate_v_ids === null) {
                         $candidate_v_ids = $rule_v_ids;
                     } else {
-                        $candidate_v_ids = array_intersect($candidate_v_ids, $rule_v_ids);
+                        $candidate_v_ids = array_values(array_intersect($candidate_v_ids, $rule_v_ids));
                     }
                 }
 
@@ -1163,12 +1183,42 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             }
         }
 
-        // 2. Process stock rules
-        if ($has_stock) {
-            $op  = $group['stock_operator'] ?? '=';
+        // 2. Process stock rules (or solo_stock scope)
+        if ($card_stock_scope === 'solo_stock') {
+            $having_clause = "HAVING COUNT(p.ID) = 1";
+            if ($has_stock) {
+                $op  = in_array($group['stock_operator'] ?? '=', ['=', '!=', '<', '<=', '>', '>='], true) ? $group['stock_operator'] : '=';
+                $val = floatval($group['stock_value']);
+                $having_clause .= $wpdb->prepare(" AND SUM(CAST(pm.meta_value AS SIGNED)) {$op} %f", $val);
+            }
+
+            $solo_parent_ids = array_map('absint', $wpdb->get_col("
+                SELECT (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) AS parent_id
+                FROM {$wpdb->posts} p
+                INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_stock'
+                WHERE p.post_status = 'publish' AND CAST(pm.meta_value AS SIGNED) > 0
+                GROUP BY parent_id
+                {$having_clause}
+            ") ?: []);
+
+            if ($candidate_v_ids !== null) {
+                if (empty($candidate_v_ids)) {
+                    return [];
+                }
+                $cand_v_str = implode(',', array_map('absint', $candidate_v_ids));
+                $cand_parent_ids = array_map('absint', $wpdb->get_col("
+                    SELECT DISTINCT (CASE WHEN post_type = 'product_variation' THEN post_parent ELSE ID END)
+                    FROM {$wpdb->posts} WHERE ID IN ({$cand_v_str})
+                ") ?: []);
+                return array_values(array_intersect($solo_parent_ids, $cand_parent_ids));
+            } else {
+                return $solo_parent_ids;
+            }
+        } elseif ($has_stock) {
+            $op  = in_array($group['stock_operator'] ?? '=', ['=', '!=', '<', '<=', '>', '>='], true) ? $group['stock_operator'] : '=';
             $val = floatval($group['stock_value']);
 
-            if ($card_stock_scope === 'parent_total' || $card_stock_scope === 'solo_stock') {
+            if ($card_stock_scope === 'parent_total') {
                 $stock_parent_ids = array_map('absint', $wpdb->get_col($wpdb->prepare("
                     SELECT (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) AS parent_id
                     FROM {$wpdb->posts} p
@@ -1176,26 +1226,17 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                     WHERE p.post_status = 'publish'
                     GROUP BY parent_id
                     HAVING SUM(CAST(pm.meta_value AS SIGNED)) {$op} %f
-                ", $val)));
+                ", $val)) ?: []);
 
-                if ($card_stock_scope === 'solo_stock') {
-                    $positive_stock_v_ids = array_map('absint', $wpdb->get_col("
-                        SELECT post_id FROM {$wpdb->postmeta}
-                        WHERE meta_key = '_stock' AND CAST(meta_value AS SIGNED) > 0
-                    "));
-                    if ($candidate_v_ids !== null) {
-                        $candidate_v_ids = array_intersect($candidate_v_ids, $positive_stock_v_ids);
-                    } else {
-                        $candidate_v_ids = $positive_stock_v_ids;
+                if ($candidate_v_ids !== null) {
+                    if (empty($candidate_v_ids)) {
+                        return [];
                     }
-                }
-
-                if ($candidate_v_ids !== null && !empty($candidate_v_ids)) {
                     $cand_v_str = implode(',', array_map('absint', $candidate_v_ids));
                     $cand_parent_ids = array_map('absint', $wpdb->get_col("
                         SELECT DISTINCT (CASE WHEN post_type = 'product_variation' THEN post_parent ELSE ID END)
                         FROM {$wpdb->posts} WHERE ID IN ({$cand_v_str})
-                    "));
+                    ") ?: []);
                     return array_values(array_intersect($stock_parent_ids, $cand_parent_ids));
                 } else {
                     return $stock_parent_ids;
@@ -1204,17 +1245,17 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                 $stock_v_ids = array_map('absint', $wpdb->get_col($wpdb->prepare("
                     SELECT post_id FROM {$wpdb->postmeta}
                     WHERE meta_key = '_stock' AND CAST(meta_value AS SIGNED) {$op} %f
-                ", $val)));
+                ", $val)) ?: []);
 
                 if ($candidate_v_ids !== null) {
-                    $candidate_v_ids = array_intersect($candidate_v_ids, $stock_v_ids);
+                    $candidate_v_ids = array_values(array_intersect($candidate_v_ids, $stock_v_ids));
                 } else {
                     $candidate_v_ids = $stock_v_ids;
                 }
             }
         }
 
-        if (empty($candidate_v_ids)) {
+        if ($candidate_v_ids === null || empty($candidate_v_ids)) {
             return [];
         }
 
@@ -1223,7 +1264,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             SELECT DISTINCT (CASE WHEN post_type = 'product_variation' THEN post_parent ELSE ID END)
             FROM {$wpdb->posts}
             WHERE ID IN ({$v_str}) AND post_status = 'publish'
-        "));
+        ") ?: []);
 
         return array_values(array_unique($matched_parent_ids));
     }
