@@ -336,19 +336,31 @@ Kasadan QR Taksitli Ödeme siparişi oluşturur ve Sanal POS eklentilerinin (iyz
 340:   - `scope`: `all` | `parent_sum` | `variation` | `simple`
 341:   - `min_stock` & `max_stock`: Stok miktarı süzgeci (Örn: min:1, max:1)
 342:   - `stock_status`: `all` | `instock` | `lowstock` | `outofstock`
-343:   - `category_ids`, `brand_ids`, `tag_ids`: Virgülle ayrılmış ID listesi
-344:   - `attribute_slug` & `attribute_term_ids`: Nitelik (pa_size vb.) süzgeci
-345:   - `search`: Ürün adı, SKU veya Barkod
-346:   - `days_since_last_sale`: Son X gündür satılmayanlar (Örn: 30)
-347:   - `sort_by`: `date_desc`, `title_asc`, `stock_asc`, `price_asc` vb.
-348:   - `page` & `per_page`: Sayfalandırma
-349: 
-350: #### 3.5.2. Filtre Opsiyonları Endpoint'i
-351: Panel UI kontrollerini doldurmak için kategorileri, markaları, nitelikleri ve etiketleri döner.
-352: - **URL:** `/wp-json/hizli-kasa/v2/products/filter-options`
-353: - **Metot:** `GET`
 
+### 3.5. Detaylı Ürün & Stok Arama API'si (Stock Search)
+Gelişmiş süzme, varyasyon/toplam stok hesaplaması, nitelikler, kategoriler, markalar ve tarih bazlı arama.
 
+#### 3.5.1. Stok Arama Endpoint'i
+- **URL:** `/wp-json/hizli-kasa/v2/products/stock-search`
+- **Metot:** `GET`
+- **Parametreler:**
+  - `scope`: `all` | `parent_sum` | `variation` | `simple`
+  - `min_stock` & `max_stock`: Stok miktarı süzgeci (Örn: min:1, max:1)
+  - `stock_status`: `all` | `instock` | `lowstock` | `outofstock`
+  - `category_ids`, `brand_ids`, `tag_ids`: Virgülle ayrılmış ID listesi
+  - `attribute_slug` & `attribute_term_ids`: Nitelik (pa_size vb.) süzgeci
+  - `search`: Ürün adı, SKU veya Barkod
+  - `days_since_last_sale`: Son X gündür satılmayanlar (Örn: 30)
+  - `sort_by`: `date_desc`, `title_asc`, `stock_asc`, `price_asc` vb.
+  - `page` & `per_page`: Sayfalandırma
 
+- **Yanıt Meta Payload (`data.meta`):**
+  - `search`: Arama terimi
+  - `search_strategy`: `EXACT_SKU_MATCH` | `PARTIAL_LIKE_SEARCH` | `NO_SEARCH`
+  - `exact_sku_match`: `boolean` (Tam SKU / Barkod eşleşmesi bulunup bulunmadığı)
+  - `exact_sku_product_id`: `int` (Varsa tam eşleşen ürün/barkod ID'si)
 
-
+#### 3.5.2. Filtre Opsiyonları Endpoint'i
+Panel UI kontrollerini doldurmak için kategorileri, markaları, nitelikleri ve etiketleri döner.
+- **URL:** `/wp-json/hizli-kasa/v2/products/filter-options`
+- **Metot:** `GET`
