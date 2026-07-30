@@ -780,6 +780,10 @@
             this.state.isLoading = true;
 
             try {
+                if (window.HizliKasa && HizliKasa.DepoManager && HizliKasa.DepoManager.state) {
+                    this.state.warehouses = HizliKasa.DepoManager.state.view || HizliKasa.DepoManager.state.manage || [];
+                }
+
                 var f = this.state.filters;
                 var queryParams = [
                     'page=' + this.state.currentPage,
@@ -790,6 +794,7 @@
                     '_=' + Date.now()
                 ];
 
+                if (depoId) queryParams.push('depo_id=' + encodeURIComponent(depoId));
                 if (s) queryParams.push('search=' + encodeURIComponent(s));
                 if (f.minStock !== '') queryParams.push('min_stock=' + encodeURIComponent(f.minStock));
                 if (f.maxStock !== '') queryParams.push('max_stock=' + encodeURIComponent(f.maxStock));

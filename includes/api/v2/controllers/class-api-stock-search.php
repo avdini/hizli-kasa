@@ -79,6 +79,11 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                         'sanitize_callback' => 'absint',
                         'default'           => 0,
                     ],
+                    'depo_id' => [
+                        'required'          => false,
+                        'sanitize_callback' => 'absint',
+                        'default'           => 0,
+                    ],
                     'sort_by' => [
                         'required'          => false,
                         'sanitize_callback' => 'sanitize_text_field',
@@ -147,9 +152,13 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
         $attribute_term_ids_raw= $request->get_param('attribute_term_ids');
         $search                = sanitize_text_field($request->get_param('search') ?: '');
         $days_since_last_sale  = absint($request->get_param('days_since_last_sale') ?: 0);
+        $depo_id               = absint($request->get_param('depo_id') ?: 0);
         $sort_by               = sanitize_text_field($request->get_param('sort_by') ?: 'date_desc');
         $page                  = max(1, absint($request->get_param('page') ?: 1));
         $per_page              = min(100, max(1, absint($request->get_param('per_page') ?: 20)));
+
+        $stok_table     = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
+        $has_stok_table = ($depo_id > 0 && $wpdb->get_var("SHOW TABLES LIKE '{$stok_table}'") === $stok_table);
 
         $has_min_stock = ($min_stock_raw !== '' && $min_stock_raw !== null);
         $has_max_stock = ($max_stock_raw !== '' && $max_stock_raw !== null);
@@ -258,17 +267,61 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             $where[count($where) - 1] = $wpdb->prepare($where[count($where) - 1], $cutoff_date);
         }
 
-        // Stock quantity filter
+        // Stock quantity & status filter
         $join[] = "LEFT JOIN {$wpdb->postmeta} pm_stock ON (p.ID = pm_stock.post_id AND pm_stock.meta_key = '_stock')";
         $join[] = "LEFT JOIN {$wpdb->postmeta} pm_stock_status ON (p.ID = pm_stock_status.post_id AND pm_stock_status.meta_key = '_stock_status')";
 
+        if ($has_stok_table) {
+            $join[] = $wpdb->prepare("LEFT JOIN {$stok_table} sk_sort ON (p.ID = (CASE WHEN sk_sort.variation_id > 0 THEN sk_sort.variation_id ELSE sk_sort.product_id END) AND sk_sort.location_id = %d)", $depo_id);
+        }
+
         if ($stock_status !== 'all') {
-            if ($stock_status === 'instock') {
-                $where[] = "(pm_stock_status.meta_value = 'instock' OR p.ID IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} p_v INNER JOIN {$wpdb->postmeta} pm_vs ON p_v.ID = pm_vs.post_id WHERE p_v.post_type = 'product_variation' AND pm_vs.meta_key = '_stock_status' AND pm_vs.meta_value = 'instock'))";
-            } elseif ($stock_status === 'outofstock') {
-                $where[] = "(pm_stock_status.meta_value = 'outofstock' OR p.ID IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} p_v INNER JOIN {$wpdb->postmeta} pm_vs ON p_v.ID = pm_vs.post_id WHERE p_v.post_type = 'product_variation' AND pm_vs.meta_key = '_stock_status' AND pm_vs.meta_value = 'outofstock'))";
-            } elseif ($stock_status === 'lowstock') {
-                $where[] = "((CAST(pm_stock.meta_value AS SIGNED) <= 2 AND pm_stock_status.meta_value = 'instock') OR p.ID IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} p_v INNER JOIN {$wpdb->postmeta} pm_vq ON p_v.ID = pm_vq.post_id INNER JOIN {$wpdb->postmeta} pm_vs ON p_v.ID = pm_vs.post_id WHERE p_v.post_type = 'product_variation' AND pm_vq.meta_key = '_stock' AND pm_vs.meta_key = '_stock_status' AND CAST(pm_vq.meta_value AS SIGNED) <= 2 AND pm_vs.meta_value = 'instock'))";
+            if ($has_stok_table) {
+                if ($stock_status === 'instock') {
+                    $where[] = $wpdb->prepare("(
+                        p.ID IN (
+                            SELECT DISTINCT product_id FROM {$stok_table} WHERE location_id = %d AND quantity > 0
+                            UNION
+                            SELECT DISTINCT variation_id FROM {$stok_table} WHERE location_id = %d AND variation_id > 0 AND quantity > 0
+                            UNION
+                            SELECT DISTINCT p_v.post_parent FROM {$wpdb->posts} p_v
+                            INNER JOIN {$stok_table} sk_v ON (p_v.ID = sk_v.variation_id)
+                            WHERE p_v.post_type = 'product_variation' AND sk_v.location_id = %d AND sk_v.quantity > 0
+                        )
+                    )", $depo_id, $depo_id, $depo_id);
+                } elseif ($stock_status === 'outofstock') {
+                    $where[] = $wpdb->prepare("(
+                        p.ID NOT IN (
+                            SELECT DISTINCT product_id FROM {$stok_table} WHERE location_id = %d AND quantity > 0
+                            UNION
+                            SELECT DISTINCT variation_id FROM {$stok_table} WHERE location_id = %d AND variation_id > 0 AND quantity > 0
+                            UNION
+                            SELECT DISTINCT p_v.post_parent FROM {$wpdb->posts} p_v
+                            INNER JOIN {$stok_table} sk_v ON (p_v.ID = sk_v.variation_id)
+                            WHERE p_v.post_type = 'product_variation' AND sk_v.location_id = %d AND sk_v.quantity > 0
+                        )
+                    )", $depo_id, $depo_id, $depo_id);
+                } elseif ($stock_status === 'lowstock') {
+                    $where[] = $wpdb->prepare("(
+                        p.ID IN (
+                            SELECT DISTINCT product_id FROM {$stok_table} WHERE location_id = %d AND quantity > 0 AND quantity <= 2
+                            UNION
+                            SELECT DISTINCT variation_id FROM {$stok_table} WHERE location_id = %d AND variation_id > 0 AND quantity > 0 AND quantity <= 2
+                            UNION
+                            SELECT DISTINCT p_v.post_parent FROM {$wpdb->posts} p_v
+                            INNER JOIN {$stok_table} sk_v ON (p_v.ID = sk_v.variation_id)
+                            WHERE p_v.post_type = 'product_variation' AND sk_v.location_id = %d AND sk_v.quantity > 0 AND sk_v.quantity <= 2
+                        )
+                    )", $depo_id, $depo_id, $depo_id);
+                }
+            } else {
+                if ($stock_status === 'instock') {
+                    $where[] = "(pm_stock_status.meta_value = 'instock' OR p.ID IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} p_v INNER JOIN {$wpdb->postmeta} pm_vs ON p_v.ID = pm_vs.post_id WHERE p_v.post_type = 'product_variation' AND pm_vs.meta_key = '_stock_status' AND pm_vs.meta_value = 'instock'))";
+                } elseif ($stock_status === 'outofstock') {
+                    $where[] = "(pm_stock_status.meta_value = 'outofstock' OR p.ID IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} p_v INNER JOIN {$wpdb->postmeta} pm_vs ON p_v.ID = pm_vs.post_id WHERE p_v.post_type = 'product_variation' AND pm_vs.meta_key = '_stock_status' AND pm_vs.meta_value = 'outofstock'))";
+                } elseif ($stock_status === 'lowstock') {
+                    $where[] = "((CAST(pm_stock.meta_value AS SIGNED) <= 2 AND pm_stock_status.meta_value = 'instock') OR p.ID IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} p_v INNER JOIN {$wpdb->postmeta} pm_vq ON p_v.ID = pm_vq.post_id INNER JOIN {$wpdb->postmeta} pm_vs ON p_v.ID = pm_vs.post_id WHERE p_v.post_type = 'product_variation' AND pm_vq.meta_key = '_stock' AND pm_vs.meta_key = '_stock_status' AND CAST(pm_vq.meta_value AS SIGNED) <= 2 AND pm_vs.meta_value = 'instock'))";
+                }
             }
         }
 
@@ -311,8 +364,8 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             if ($sort_by === 'title_asc') $order_sql = "ORDER BY p.post_title ASC";
             elseif ($sort_by === 'title_desc') $order_sql = "ORDER BY p.post_title DESC";
             elseif ($sort_by === 'date_asc') $order_sql = "ORDER BY p.post_date ASC";
-            elseif ($sort_by === 'stock_asc') $order_sql = "ORDER BY total_calculated_stock ASC";
-            elseif ($sort_by === 'stock_desc') $order_sql = "ORDER BY total_calculated_stock DESC";
+            elseif ($sort_by === 'stock_asc') $order_sql = $has_stok_table ? "ORDER BY COALESCE(sk_sort.quantity, 0) ASC" : "ORDER BY total_calculated_stock ASC";
+            elseif ($sort_by === 'stock_desc') $order_sql = $has_stok_table ? "ORDER BY COALESCE(sk_sort.quantity, 0) DESC" : "ORDER BY total_calculated_stock DESC";
 
             $items_query = "
                 SELECT p.ID, p.post_title, p.post_date,
@@ -333,32 +386,51 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
         } else {
             // Standard variation / simple / all scope
             if ($has_min_stock || $has_max_stock) {
-                $stock_sub_conds = [];
-                $var_sub_conds   = [];
+                if ($has_stok_table) {
+                    $depo_sub_conds = [];
+                    if ($has_min_stock) $depo_sub_conds[] = $wpdb->prepare("sk.quantity >= %f", $min_stock);
+                    if ($has_max_stock) $depo_sub_conds[] = $wpdb->prepare("sk.quantity <= %f", $max_stock);
+                    $depo_sub_sql = implode(' AND ', $depo_sub_conds);
 
-                if ($has_min_stock) {
-                    $stock_sub_conds[] = $wpdb->prepare("CAST(pm_stock.meta_value AS SIGNED) >= %f", $min_stock);
-                    $var_sub_conds[]   = $wpdb->prepare("CAST(pm_v_stock.meta_value AS SIGNED) >= %f", $min_stock);
+                    $where[] = $wpdb->prepare("(
+                        p.ID IN (
+                            SELECT DISTINCT product_id FROM {$stok_table} sk WHERE location_id = %d AND variation_id = 0 AND ({$depo_sub_sql})
+                            UNION
+                            SELECT DISTINCT variation_id FROM {$stok_table} sk WHERE location_id = %d AND variation_id > 0 AND ({$depo_sub_sql})
+                            UNION
+                            SELECT DISTINCT p_v.post_parent FROM {$wpdb->posts} p_v
+                            INNER JOIN {$stok_table} sk ON (p_v.ID = sk.variation_id)
+                            WHERE p_v.post_type = 'product_variation' AND sk.location_id = %d AND ({$depo_sub_sql})
+                        )
+                    )", $depo_id, $depo_id, $depo_id);
+                } else {
+                    $stock_sub_conds = [];
+                    $var_sub_conds   = [];
+
+                    if ($has_min_stock) {
+                        $stock_sub_conds[] = $wpdb->prepare("CAST(pm_stock.meta_value AS SIGNED) >= %f", $min_stock);
+                        $var_sub_conds[]   = $wpdb->prepare("CAST(pm_v_stock.meta_value AS SIGNED) >= %f", $min_stock);
+                    }
+                    if ($has_max_stock) {
+                        $stock_sub_conds[] = $wpdb->prepare("CAST(pm_stock.meta_value AS SIGNED) <= %f", $max_stock);
+                        $var_sub_conds[]   = $wpdb->prepare("CAST(pm_v_stock.meta_value AS SIGNED) <= %f", $max_stock);
+                    }
+
+                    $direct_stock_sql = implode(' AND ', $stock_sub_conds);
+                    $var_stock_sql    = implode(' AND ', $var_sub_conds);
+
+                    $where[] = "(
+                        ({$direct_stock_sql})
+                        OR
+                        p.ID IN (
+                            SELECT DISTINCT p_v.post_parent
+                            FROM {$wpdb->posts} p_v
+                            INNER JOIN {$wpdb->postmeta} pm_v_stock ON (p_v.ID = pm_v_stock.post_id AND pm_v_stock.meta_key = '_stock')
+                            WHERE p_v.post_type = 'product_variation'
+                              AND ({$var_stock_sql})
+                        )
+                    )";
                 }
-                if ($has_max_stock) {
-                    $stock_sub_conds[] = $wpdb->prepare("CAST(pm_stock.meta_value AS SIGNED) <= %f", $max_stock);
-                    $var_sub_conds[]   = $wpdb->prepare("CAST(pm_v_stock.meta_value AS SIGNED) <= %f", $max_stock);
-                }
-
-                $direct_stock_sql = implode(' AND ', $stock_sub_conds);
-                $var_stock_sql    = implode(' AND ', $var_sub_conds);
-
-                $where[] = "(
-                    ({$direct_stock_sql})
-                    OR
-                    p.ID IN (
-                        SELECT DISTINCT p_v.post_parent
-                        FROM {$wpdb->posts} p_v
-                        INNER JOIN {$wpdb->postmeta} pm_v_stock ON (p_v.ID = pm_v_stock.post_id AND pm_v_stock.meta_key = '_stock')
-                        WHERE p_v.post_type = 'product_variation'
-                          AND ({$var_stock_sql})
-                    )
-                )";
             }
 
             $where_sql = implode(' AND ', $where);
@@ -378,8 +450,8 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             if ($sort_by === 'title_asc') $order_sql = "ORDER BY p.post_title ASC";
             elseif ($sort_by === 'title_desc') $order_sql = "ORDER BY p.post_title DESC";
             elseif ($sort_by === 'date_asc') $order_sql = "ORDER BY p.post_date ASC";
-            elseif ($sort_by === 'stock_asc') $order_sql = "ORDER BY CAST(pm_stock.meta_value AS SIGNED) ASC";
-            elseif ($sort_by === 'stock_desc') $order_sql = "ORDER BY CAST(pm_stock.meta_value AS SIGNED) DESC";
+            elseif ($sort_by === 'stock_asc') $order_sql = $has_stok_table ? "ORDER BY COALESCE(sk_sort.quantity, 0) ASC" : "ORDER BY CAST(pm_stock.meta_value AS SIGNED) ASC";
+            elseif ($sort_by === 'stock_desc') $order_sql = $has_stok_table ? "ORDER BY COALESCE(sk_sort.quantity, 0) DESC" : "ORDER BY CAST(pm_stock.meta_value AS SIGNED) DESC";
 
             $items_query = "
                 SELECT DISTINCT p.ID, p.post_title, p.post_type, p.post_parent, p.post_date
@@ -397,7 +469,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
         $items = [];
         if (!empty($rows)) {
             foreach ($rows as $row) {
-                $items[] = $this->format_product_item($row, $scope);
+                $items[] = $this->format_product_item($row, $scope, $depo_id);
             }
         }
 
@@ -419,9 +491,10 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
      *
      * @param object $row
      * @param string $scope
+     * @param int $depo_id
      * @return array
      */
-    protected function format_product_item($row, $scope) {
+    protected function format_product_item($row, $scope, $depo_id = 0) {
         global $wpdb;
 
         $post_id = intval($row->ID);
@@ -569,7 +642,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                         'sku'             => $child_var->get_sku() ?: '',
                         'price'           => floatval($child_var->get_price()),
                         'regular_price'   => floatval($child_var->get_regular_price() ?: $child_var->get_price()),
-                        'warehouse_stock' => floatval($child_var->get_stock_quantity() ?: 0),
+                        'warehouse_stock' => ($depo_id > 0 && isset($c_all_stocks[(string)$depo_id])) ? floatval($c_all_stocks[(string)$depo_id]) : floatval($child_var->get_stock_quantity() ?: 0),
                         'stock_quantity'  => floatval($child_var->get_stock_quantity() ?: 0),
                         'all_stocks'      => (object)$c_all_stocks,
                         'all_codes'       => (object)$c_all_codes,
@@ -584,6 +657,10 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
         $title_name = $product->get_name();
         $regular_price = floatval($product->get_regular_price() ?: $product->get_price());
 
+        $active_warehouse_stock = ($depo_id > 0 && isset($all_stocks[(string)$depo_id])) 
+            ? floatval($all_stocks[(string)$depo_id]) 
+            : $stock_qty;
+
         return [
             'id'                   => $post_id,
             'parent_id'            => $parent_id,
@@ -595,7 +672,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             'price'                => floatval($product->get_price()),
             'regular_price'        => $regular_price,
             'stock_quantity'       => $stock_qty,
-            'warehouse_stock'      => $stock_qty,
+            'warehouse_stock'      => $active_warehouse_stock,
             'stock_status'         => $product->get_stock_status(),
             'categories'           => $categories,
             'brands'               => $brands,
