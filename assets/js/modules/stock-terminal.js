@@ -161,12 +161,6 @@
                 }
             };
 
-            const filterToggleBtn = document.getElementById('btn-terminal-filtre-toggle');
-            const closeDrawerBtn = document.getElementById('btn-close-drawer');
-            const applyFiltersBtn = document.getElementById('btn-apply-filters');
-            const clearFiltersBtn = document.getElementById('btn-clear-filters');
-            const clearAllChipsBtn = document.getElementById('btn-clear-all-chips');
-
             if (filterToggleBtn) {
                 filterToggleBtn.addEventListener('click', function() {
                     toggleDrawer();
