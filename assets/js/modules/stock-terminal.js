@@ -1683,10 +1683,16 @@
 
                 const stockVal = (group.stock_value !== null && group.stock_value !== undefined) ? group.stock_value : '';
                 const stockOp = group.stock_operator || '=';
+                const stockScope = group.stock_scope || 'variation';
 
-                html += `  <div class="card-stock-cond">`;
-                html += `    <span>📦 Grubun Stok Koşulu:</span>`;
-                html += `    <select class="terminal-select" style="width:70px;" onchange="HizliKasa.StockTerminal.handleCardStockChange(${cIdx}, 'stock_operator', this.value)">`;
+                html += `  <div class="card-stock-cond" style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">`;
+                html += `    <span>📦 Stok Koşulu:</span>`;
+                html += `    <select class="terminal-select" style="max-width:200px;" onchange="HizliKasa.StockTerminal.handleCardStockChange(${cIdx}, 'stock_scope', this.value)">`;
+                html += `      <option value="variation" ${stockScope === 'variation' ? 'selected' : ''}>Bu Varyasyonun Stoğu (Diğer bedenler fark etmez)</option>`;
+                html += `      <option value="solo_stock" ${stockScope === 'solo_stock' ? 'selected' : ''}>Stoğu Kalan TEK Varyasyon (Diğer tüm bedenler 0)</option>`;
+                html += `      <option value="parent_total" ${stockScope === 'parent_total' ? 'selected' : ''}>Ürünün Tüm Varyasyonlarının Toplam Stoğu</option>`;
+                html += `    </select>`;
+                html += `    <select class="terminal-select" style="width:65px;" onchange="HizliKasa.StockTerminal.handleCardStockChange(${cIdx}, 'stock_operator', this.value)">`;
                 html += `      <option value="=" ${stockOp === '=' ? 'selected' : ''}>=</option>`;
                 html += `      <option value="!=" ${stockOp === '!=' ? 'selected' : ''}>!=</option>`;
                 html += `      <option value="<" ${stockOp === '<' ? 'selected' : ''}>&lt;</option>`;
@@ -1802,7 +1808,16 @@
                 });
 
                 if (group.stock_value !== null && group.stock_value !== undefined && group.stock_value !== '') {
-                    parts.push(`Stoğu ${group.stock_operator || '='} ${group.stock_value} Adet olan`);
+                    const scope = group.stock_scope || 'variation';
+                    let scopeDesc = '';
+                    if (scope === 'solo_stock') {
+                        scopeDesc = `stoğu kalan TEK varyasyon olup (${group.stock_operator || '='} ${group.stock_value} Adet) diğer tüm bedenlerin stoğu 0 olan`;
+                    } else if (scope === 'parent_total') {
+                        scopeDesc = `tüm alt bedenlerinin TOPLAM stoğu ${group.stock_operator || '='} ${group.stock_value} Adet olan`;
+                    } else {
+                        scopeDesc = `stoğu ${group.stock_operator || '='} ${group.stock_value} Adet olan`;
+                    }
+                    parts.push(scopeDesc);
                 }
 
                 if (parts.length > 0) {

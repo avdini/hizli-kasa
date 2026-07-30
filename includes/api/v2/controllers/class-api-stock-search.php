@@ -948,9 +948,14 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
 
             $clean_group = [
                 'attributes'     => [],
+                'stock_scope'    => 'variation',
                 'stock_operator' => '=',
                 'stock_value'    => null,
             ];
+
+            if (isset($group['stock_scope']) && in_array($group['stock_scope'], ['variation', 'parent_total', 'solo_stock'], true)) {
+                $clean_group['stock_scope'] = $group['stock_scope'];
+            }
 
             if (isset($group['attributes']) && is_array($group['attributes'])) {
                 $known_non_pa = ['product_cat', 'product_brand', 'pwb-brand', 'brand', 'product_tag'];
@@ -1117,8 +1122,9 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             if (isset($group['stock_value']) && $group['stock_value'] !== null) {
                 $op = $group['stock_operator'] ?? '=';
                 $val = floatval($group['stock_value']);
+                $card_stock_scope = $group['stock_scope'] ?? $stock_calc_mode;
 
-                if ($stock_calc_mode === 'parent_total') {
+                if ($card_stock_scope === 'parent_total') {
                     $v_conds[] = $wpdb->prepare("
                         COALESCE(
                             (SELECT SUM(CAST(pm_s.meta_value AS SIGNED))
@@ -1128,6 +1134,26 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                                AND pm_s.meta_key = '_stock'),
                             0
                         ) {$op} %f
+                    ", $val);
+                } elseif ($card_stock_scope === 'solo_stock') {
+                    $v_conds[] = $wpdb->prepare("
+                        (
+                            COALESCE(
+                                (SELECT SUM(CAST(pm_s.meta_value AS SIGNED))
+                                 FROM {$wpdb->posts} p_s
+                                 INNER JOIN {$wpdb->postmeta} pm_s ON p_s.ID = pm_s.post_id
+                                 WHERE (p_s.ID = p.ID OR p_s.post_parent = p.ID)
+                                   AND pm_s.meta_key = '_stock'),
+                                0
+                            ) {$op} %f
+                            AND
+                            COALESCE(
+                                (SELECT CAST(pm_s2.meta_value AS SIGNED)
+                                 FROM {$wpdb->postmeta} pm_s2
+                                 WHERE pm_s2.post_id = v.ID AND pm_s2.meta_key = '_stock'),
+                                0
+                            ) > 0
+                        )
                     ", $val);
                 } else {
                     $v_conds[] = $wpdb->prepare("
