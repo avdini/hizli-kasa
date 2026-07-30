@@ -1085,100 +1085,108 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                 $tax_name = (strpos($tax_name, 'pa_') === 0 || in_array($tax_name, ['product_cat', 'product_brand', 'pwb-brand', 'brand', 'product_tag'], true) || taxonomy_exists($tax_name)) ? $tax_name : 'pa_' . $tax_name;
                 $raw_slug = str_replace('pa_', '', $tax_name);
 
-                $term_ids = [];
-                $term_slugs = [];
+                $matching_term_ids = [];
+                $matching_slugs    = [];
 
                 foreach ($terms as $t) {
                     if (is_numeric($t)) {
-                        $term_ids[] = absint($t);
+                        $matching_term_ids[] = absint($t);
+                        $slug = $wpdb->get_var($wpdb->prepare("SELECT slug FROM {$wpdb->terms} WHERE term_id = %d", absint($t)));
+                        if ($slug) {
+                            $matching_slugs[] = sanitize_title($slug);
+                        }
                     } else {
-                        $term_slugs[] = sanitize_title($t);
-                    }
-                }
-
-                $prep_args = [];
-                $prep_args[] = $tax_name;
-                $prep_args[] = $tax_name;
-
-                $pm_keys = ['attribute_' . $tax_name, 'attribute_' . $raw_slug];
-                $pm_key_placeholders = implode(',', array_fill(0, count($pm_keys), '%s'));
-                foreach ($pm_keys as $pmk) {
-                    $prep_args[] = $pmk;
-                }
-
-                $term_parts_v = [];
-                $term_parts_p = [];
-                if (!empty($term_ids)) {
-                    $ids_placeholders = implode(',', array_fill(0, count($term_ids), '%d'));
-                    $term_parts_v[] = "t_v.term_id IN ({$ids_placeholders})";
-                    $term_parts_p[] = "t_p.term_id IN ({$ids_placeholders})";
-                    foreach ($term_ids as $tid) {
-                        $prep_args[] = $tid;
-                    }
-                }
-                if (!empty($term_slugs)) {
-                    $slugs_placeholders = implode(',', array_fill(0, count($term_slugs), '%s'));
-                    $term_parts_v[] = "t_v.slug IN ({$slugs_placeholders})";
-                    $term_parts_p[] = "t_p.slug IN ({$slugs_placeholders})";
-                    foreach ($term_slugs as $tslug) {
-                        $prep_args[] = $tslug;
-                    }
-                }
-
-                if (empty($term_parts_v)) {
-                    continue;
-                }
-
-                $term_match_sql_v = "(" . implode(" OR ", $term_parts_v) . ")";
-                $term_match_sql_p = "(" . implode(" OR ", $term_parts_p) . ")";
-
-                $meta_val_specific = [];
-                if (!empty($term_slugs)) {
-                    $slugs_placeholders = implode(',', array_fill(0, count($term_slugs), '%s'));
-                    $meta_val_specific[] = "pm_attr.meta_value IN ({$slugs_placeholders})";
-                    foreach ($term_slugs as $tslug) {
-                        $prep_args[] = $tslug;
-                    }
-                }
-                if (!empty($term_ids)) {
-                    $found_slugs = $wpdb->get_col($wpdb->prepare("SELECT slug FROM {$wpdb->terms} WHERE term_id IN (" . implode(',', array_fill(0, count($term_ids), '%d')) . ")", ...$term_ids));
-                    if (!empty($found_slugs)) {
-                        $slugs_placeholders = implode(',', array_fill(0, count($found_slugs), '%s'));
-                        $meta_val_specific[] = "pm_attr.meta_value IN ({$slugs_placeholders})";
-                        foreach ($found_slugs as $fslug) {
-                            $prep_args[] = $fslug;
+                        $tslug = sanitize_title($t);
+                        $matching_slugs[] = $tslug;
+                        $tid = $wpdb->get_var($wpdb->prepare("SELECT term_id FROM {$wpdb->terms} WHERE slug = %s", $tslug));
+                        if ($tid) {
+                            $matching_term_ids[] = absint($tid);
                         }
                     }
                 }
 
-                $meta_match_specific_sql = !empty($meta_val_specific) ? "(" . implode(" OR ", $meta_val_specific) . ")" : "1=0";
+                $matching_term_ids = array_values(array_unique($matching_term_ids));
+                $matching_slugs    = array_values(array_unique($matching_slugs));
 
-                $raw_sql_query = "
-                    SELECT DISTINCT v.ID
-                    FROM {$wpdb->posts} v
-                    LEFT JOIN {$wpdb->postmeta} pm_attr ON (v.ID = pm_attr.post_id AND pm_attr.meta_key IN ({$pm_key_placeholders}))
-                    LEFT JOIN {$wpdb->term_relationships} tr_v ON (v.ID = tr_v.object_id)
-                    LEFT JOIN {$wpdb->term_taxonomy} tt_v ON (tr_v.term_taxonomy_id = tt_v.term_taxonomy_id AND tt_v.taxonomy = %s)
-                    LEFT JOIN {$wpdb->terms} t_v ON (tt_v.term_id = t_v.term_id)
-                    LEFT JOIN {$wpdb->term_relationships} tr_p ON (v.post_parent = tr_p.object_id)
-                    LEFT JOIN {$wpdb->term_taxonomy} tt_p ON (tr_p.term_taxonomy_id = tt_p.term_taxonomy_id AND tt_p.taxonomy = %s)
-                    LEFT JOIN {$wpdb->terms} t_p ON (tt_p.term_id = t_p.term_id)
-                    WHERE v.post_status = 'publish'
-                      AND v.post_type IN ('product', 'product_variation')
-                      AND (
-                          ({$meta_match_specific_sql})
-                          OR
-                          ({$term_match_sql_v})
-                          OR
-                          (
-                              ({$term_match_sql_p})
-                              AND (pm_attr.meta_value IS NULL OR pm_attr.meta_value = '' OR {$meta_match_specific_sql})
-                          )
-                      )
-                ";
+                if (empty($matching_term_ids) && empty($matching_slugs)) {
+                    return [];
+                }
 
-                $rule_v_sql = $wpdb->prepare($raw_sql_query, ...$prep_args);
-                $rule_v_ids = array_map('absint', $wpdb->get_col($rule_v_sql) ?: []);
+                // Step A: Postmeta matches for variations (attribute_pa_beden = 'xl')
+                $v_ids_from_meta = [];
+                if (!empty($matching_slugs)) {
+                    $pm_keys = ['attribute_' . $tax_name, 'attribute_' . $raw_slug];
+                    $pm_placeholders   = implode(',', array_fill(0, count($pm_keys), '%s'));
+                    $slug_placeholders = implode(',', array_fill(0, count($matching_slugs), '%s'));
+
+                    $v_ids_from_meta = array_map('absint', $wpdb->get_col($wpdb->prepare("
+                        SELECT DISTINCT post_id
+                        FROM {$wpdb->postmeta}
+                        WHERE meta_key IN ({$pm_placeholders})
+                          AND (meta_value IN ({$slug_placeholders}) OR meta_value = '')
+                    ", ...$pm_keys, ...$matching_slugs)) ?: []);
+                }
+
+                // Step B: Direct term_relationships matches (simple products or direct term attachments)
+                $v_ids_from_terms = [];
+                $term_conds = [];
+                $term_args = [$tax_name];
+
+                if (!empty($matching_term_ids)) {
+                    $tid_placeholders = implode(',', array_fill(0, count($matching_term_ids), '%d'));
+                    $term_conds[] = "tt.term_id IN ({$tid_placeholders})";
+                    foreach ($matching_term_ids as $tid) {
+                        $term_args[] = $tid;
+                    }
+                }
+                if (!empty($matching_slugs)) {
+                    $tslug_placeholders = implode(',', array_fill(0, count($matching_slugs), '%s'));
+                    $term_conds[] = "t.slug IN ({$tslug_placeholders})";
+                    foreach ($matching_slugs as $ts) {
+                        $term_args[] = $ts;
+                    }
+                }
+
+                if (!empty($term_conds)) {
+                    $term_where = "(" . implode(" OR ", $term_conds) . ")";
+                    $direct_matched_ids = array_map('absint', $wpdb->get_col($wpdb->prepare("
+                        SELECT DISTINCT tr.object_id
+                        FROM {$wpdb->term_relationships} tr
+                        INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id AND tt.taxonomy = %s
+                        INNER JOIN {$wpdb->terms} t ON tt.term_id = t.term_id
+                        WHERE {$term_where}
+                    ", ...$term_args)) ?: []);
+
+                    if (!empty($direct_matched_ids)) {
+                        $parent_str = implode(',', $direct_matched_ids);
+                        $child_var_ids = array_map('absint', $wpdb->get_col("
+                            SELECT ID FROM {$wpdb->posts}
+                            WHERE post_parent IN ({$parent_str}) AND post_type = 'product_variation' AND post_status = 'publish'
+                        ") ?: []);
+
+                        if (!empty($child_var_ids) && !empty($matching_slugs)) {
+                            $pm_keys = ['attribute_' . $tax_name, 'attribute_' . $raw_slug];
+                            $pm_placeholders   = implode(',', array_fill(0, count($pm_keys), '%s'));
+                            $slug_placeholders = implode(',', array_fill(0, count($matching_slugs), '%s'));
+
+                            $conflicting_v_ids = array_map('absint', $wpdb->get_col($wpdb->prepare("
+                                SELECT DISTINCT post_id
+                                FROM {$wpdb->postmeta}
+                                WHERE post_id IN (" . implode(',', $child_var_ids) . ")
+                                  AND meta_key IN ({$pm_placeholders})
+                                  AND meta_value != ''
+                                  AND meta_value NOT IN ({$slug_placeholders})
+                            ", ...$pm_keys, ...$matching_slugs)) ?: []);
+
+                            $valid_child_var_ids = array_values(array_diff($child_var_ids, $conflicting_v_ids));
+                            $v_ids_from_terms = array_merge($direct_matched_ids, $valid_child_var_ids);
+                        } else {
+                            $v_ids_from_terms = $direct_matched_ids;
+                        }
+                    }
+                }
+
+                $rule_v_ids = array_values(array_unique(array_merge($v_ids_from_meta, $v_ids_from_terms)));
 
                 if ($op === '!=') {
                     if ($candidate_v_ids !== null) {
