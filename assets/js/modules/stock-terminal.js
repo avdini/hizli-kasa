@@ -1137,16 +1137,16 @@
                 var isVariable = (p.is_variable || p.type === 'variable') && p.variations && p.variations.length > 0;
                 var pName = p.name || p.title || ('Ürün #' + p.id);
                 
-                // Stok kaynağı: all_stocks[depoId] tercih, yoksa warehouse_stock / stock_quantity fallback
-                var pDepoStock = (p.all_stocks && depoId && p.all_stocks[String(depoId)] != null) 
-                    ? parseFloat(p.all_stocks[String(depoId)]) 
+                // Stok kaynağı: Depo seçiliyse o deponun stoğu (yoksa 0), depo seçili değilse genel stok
+                var pDepoStock = (depoId > 0) 
+                    ? ((p.all_stocks && p.all_stocks[String(depoId)] != null) ? parseFloat(p.all_stocks[String(depoId)]) : (p.warehouse_stock !== undefined ? parseFloat(p.warehouse_stock) : 0)) 
                     : parseFloat(p.warehouse_stock !== undefined ? p.warehouse_stock : (p.stock_quantity || 0));
 
                 // Stok durumunu belirle (Grup toplamı)
                 var totalGroupStock = isVariable 
                     ? p.variations.reduce(function(sum, v) {
-                        var vStock = (v.all_stocks && depoId && v.all_stocks[String(depoId)] != null) 
-                            ? parseFloat(v.all_stocks[String(depoId)]) 
+                        var vStock = (depoId > 0) 
+                            ? ((v.all_stocks && v.all_stocks[String(depoId)] != null) ? parseFloat(v.all_stocks[String(depoId)]) : (v.warehouse_stock !== undefined ? parseFloat(v.warehouse_stock) : 0)) 
                             : parseFloat(v.warehouse_stock !== undefined ? v.warehouse_stock : (v.stock_quantity || 0));
                         return sum + vStock;
                     }, 0)

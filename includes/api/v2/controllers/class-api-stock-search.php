@@ -731,7 +731,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                         'sku'             => $child_var->get_sku() ?: '',
                         'price'           => floatval($child_var->get_price()),
                         'regular_price'   => floatval($child_var->get_regular_price() ?: $child_var->get_price()),
-                        'warehouse_stock' => ($depo_id > 0 && isset($c_all_stocks[(string)$depo_id])) ? floatval($c_all_stocks[(string)$depo_id]) : floatval($child_var->get_stock_quantity() ?: 0),
+                        'warehouse_stock' => ($depo_id > 0) ? (isset($c_all_stocks[(string)$depo_id]) ? floatval($c_all_stocks[(string)$depo_id]) : 0.0) : floatval($child_var->get_stock_quantity() ?: 0),
                         'stock_quantity'  => floatval($child_var->get_stock_quantity() ?: 0),
                         'all_stocks'      => (object)$c_all_stocks,
                         'all_codes'       => (object)$c_all_codes,
@@ -746,8 +746,8 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
         $title_name = $product->get_name();
         $regular_price = floatval($product->get_regular_price() ?: $product->get_price());
 
-        $active_warehouse_stock = ($depo_id > 0 && isset($all_stocks[(string)$depo_id])) 
-            ? floatval($all_stocks[(string)$depo_id]) 
+        $active_warehouse_stock = ($depo_id > 0)
+            ? (isset($all_stocks[(string)$depo_id]) ? floatval($all_stocks[(string)$depo_id]) : 0.0)
             : $stock_qty;
 
         return [
