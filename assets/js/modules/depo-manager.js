@@ -180,8 +180,11 @@
                         self._saveToServer(resolved);
                     }
 
-                    // Aktif depo belirlendiğinde diğer modülleri haberdar et (sepet yüklemesi vb için)
+                    // Aktif ve görüntüleme deposu belirlendiğinde diğer modülleri haberdar et
                     document.dispatchEvent(new CustomEvent('hkActiveDepoChanged', {
+                        detail: { depoId: resolved, prevDepoId: null }
+                    }));
+                    document.dispatchEvent(new CustomEvent('hkViewDepoChanged', {
                         detail: { depoId: resolved, prevDepoId: null }
                     }));
                 }

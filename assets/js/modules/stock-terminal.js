@@ -76,11 +76,13 @@
                 if (typeof logDiagnostics === 'function') logDiagnostics('init()');
             }, 100);
 
-            // Depo değişince listeyi yenile
-            document.addEventListener('hkViewDepoChanged', function() {
+            // Depo değişince (görüntüleme veya aktif kasa deposu) listeyi yenile
+            var handleDepoChange = function() {
                 self.state.currentPage = 1;
                 self.loadProducts();
-            });
+            };
+            document.addEventListener('hkViewDepoChanged', handleDepoChange);
+            document.addEventListener('hkActiveDepoChanged', handleDepoChange);
 
             // --- Filtre Çekmecesi (Drawer) Toggle & Backdrop ---
             const filterToggleBtn = document.getElementById('btn-terminal-filtre-toggle');
