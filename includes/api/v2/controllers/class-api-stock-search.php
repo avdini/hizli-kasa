@@ -1020,170 +1020,211 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
 
     /**
      * Build dynamic SQL condition for complex AND/OR filter groups.
+     * Uses set-based ID pre-filtering to avoid row-by-row correlated subqueries.
      *
      * @param array  $filter_groups Cleaned filter groups.
      * @param string $stock_calc_mode 'variation' or 'parent_total'.
      * @return string SQL clause for WHERE array.
      */
     protected function build_complex_group_sql($filter_groups, $stock_calc_mode = 'variation') {
-        global $wpdb;
-
-        $group_sql_clauses = [];
-
-        foreach ($filter_groups as $group) {
-            $v_conds = [];
-
-            if (!empty($group['attributes']) && is_array($group['attributes'])) {
-                foreach ($group['attributes'] as $rule) {
-                    $tax_name = is_array($rule) && isset($rule['taxonomy']) ? $rule['taxonomy'] : $rule;
-                    $op       = is_array($rule) && isset($rule['operator']) ? $rule['operator'] : '=';
-                    $terms    = is_array($rule) && isset($rule['values']) ? $rule['values'] : (is_array($rule) ? [] : $rule);
-
-                    if (empty($terms)) continue;
-
-                    $tax_name = (strpos($tax_name, 'pa_') === 0 || in_array($tax_name, ['product_cat', 'product_brand', 'pwb-brand', 'brand', 'product_tag'], true) || taxonomy_exists($tax_name)) ? $tax_name : 'pa_' . $tax_name;
-                    $raw_slug = str_replace('pa_', '', $tax_name);
-
-                    $term_ids = [];
-                    $term_slugs = [];
-
-                    foreach ($terms as $t) {
-                        if (is_numeric($t)) {
-                            $term_ids[] = absint($t);
-                        } else {
-                            $term_slugs[] = sanitize_title($t);
-                        }
-                    }
-
-                    $term_match_parts = [];
-                    if (!empty($term_ids)) {
-                        $ids_str = implode(',', $term_ids);
-                        $term_match_parts[] = "t.term_id IN ({$ids_str})";
-                    }
-                    if (!empty($term_slugs)) {
-                        $slug_placeholders = implode(',', array_fill(0, count($term_slugs), '%s'));
-                        $term_match_parts[] = $wpdb->prepare("t.slug IN ({$slug_placeholders})", ...$term_slugs);
-                    }
-
-                    if (empty($term_match_parts)) {
-                        continue;
-                    }
-
-                    $term_match_sql = "(" . implode(" OR ", $term_match_parts) . ")";
-
-                    $pm_keys = ['attribute_' . $tax_name, 'attribute_' . $raw_slug];
-                    $pm_key_placeholders = implode(',', array_fill(0, count($pm_keys), '%s'));
-
-                    $meta_val_match = [];
-                    if (!empty($term_slugs)) {
-                        $slug_placeholders = implode(',', array_fill(0, count($term_slugs), '%s'));
-                        $meta_val_match[] = $wpdb->prepare("pm_attr.meta_value IN ({$slug_placeholders})", ...$term_slugs);
-                    }
-                    if (!empty($term_ids)) {
-                        $found_slugs = $wpdb->get_col("SELECT slug FROM {$wpdb->terms} WHERE term_id IN (" . implode(',', $term_ids) . ")");
-                        if (!empty($found_slugs)) {
-                            $slug_placeholders = implode(',', array_fill(0, count($found_slugs), '%s'));
-                            $meta_val_match[] = $wpdb->prepare("pm_attr.meta_value IN ({$slug_placeholders})", ...$found_slugs);
-                        }
-                    }
-                    $meta_val_match[] = "pm_attr.meta_value = ''";
-
-                    $meta_match_sql = "(" . implode(" OR ", $meta_val_match) . ")";
-
-                    $single_attr_cond = $wpdb->prepare("
-                        (
-                            v.ID IN (
-                                SELECT tr.object_id FROM {$wpdb->term_relationships} tr
-                                INNER JOIN {$wpdb->term_taxonomy} tt ON tr.term_taxonomy_id = tt.term_taxonomy_id
-                                INNER JOIN {$wpdb->terms} t ON tt.term_id = t.term_id
-                                WHERE tt.taxonomy = %s AND {$term_match_sql}
-                            )
-                            OR v.post_parent IN (
-                                SELECT tr2.object_id FROM {$wpdb->term_relationships} tr2
-                                INNER JOIN {$wpdb->term_taxonomy} tt2 ON tr2.term_taxonomy_id = tt2.term_taxonomy_id
-                                INNER JOIN {$wpdb->terms} t ON tt2.term_id = t.term_id
-                                WHERE tt2.taxonomy = %s AND {$term_match_sql}
-                            )
-                            OR EXISTS (
-                                SELECT 1 FROM {$wpdb->postmeta} pm_attr
-                                WHERE pm_attr.post_id = v.ID AND pm_attr.meta_key IN ({$pm_key_placeholders}) AND {$meta_match_sql}
-                            )
-                        )
-                    ", $tax_name, $tax_name, ...$pm_keys);
-
-                    if ($op === '!=') {
-                        $single_attr_cond = "(NOT {$single_attr_cond})";
-                    }
-
-                    $v_conds[] = $single_attr_cond;
-                }
-            }
-
-            if (isset($group['stock_value']) && $group['stock_value'] !== null) {
-                $op = $group['stock_operator'] ?? '=';
-                $val = floatval($group['stock_value']);
-                $card_stock_scope = $group['stock_scope'] ?? $stock_calc_mode;
-
-                if ($card_stock_scope === 'parent_total') {
-                    $v_conds[] = $wpdb->prepare("
-                        COALESCE(
-                            (SELECT SUM(CAST(pm_s.meta_value AS SIGNED))
-                             FROM {$wpdb->posts} p_s
-                             INNER JOIN {$wpdb->postmeta} pm_s ON p_s.ID = pm_s.post_id
-                             WHERE (p_s.ID = p.ID OR p_s.post_parent = p.ID)
-                               AND pm_s.meta_key = '_stock'),
-                            0
-                        ) {$op} %f
-                    ", $val);
-                } elseif ($card_stock_scope === 'solo_stock') {
-                    $v_conds[] = $wpdb->prepare("
-                        (
-                            COALESCE(
-                                (SELECT SUM(CAST(pm_s.meta_value AS SIGNED))
-                                 FROM {$wpdb->posts} p_s
-                                 INNER JOIN {$wpdb->postmeta} pm_s ON p_s.ID = pm_s.post_id
-                                 WHERE (p_s.ID = p.ID OR p_s.post_parent = p.ID)
-                                   AND pm_s.meta_key = '_stock'),
-                                0
-                            ) {$op} %f
-                            AND
-                            COALESCE(
-                                (SELECT CAST(pm_s2.meta_value AS SIGNED)
-                                 FROM {$wpdb->postmeta} pm_s2
-                                 WHERE pm_s2.post_id = v.ID AND pm_s2.meta_key = '_stock'),
-                                0
-                            ) > 0
-                        )
-                    ", $val);
-                } else {
-                    $v_conds[] = $wpdb->prepare("
-                        COALESCE(
-                            (SELECT CAST(pm_s.meta_value AS SIGNED)
-                             FROM {$wpdb->postmeta} pm_s
-                             WHERE pm_s.post_id = v.ID AND pm_s.meta_key = '_stock'),
-                            0
-                        ) {$op} %f
-                    ", $val);
-                }
-            }
-
-            if (!empty($v_conds)) {
-                $v_where = implode(" AND ", $v_conds);
-                $group_sql_clauses[] = "
-                    EXISTS (
-                        SELECT 1 FROM {$wpdb->posts} v
-                        WHERE (v.ID = p.ID OR v.post_parent = p.ID)
-                          AND v.post_status = 'publish'
-                          AND {$v_where}
-                    )
-                ";
-            }
-        }
-
-        if (empty($group_sql_clauses)) {
+        if (empty($filter_groups)) {
             return "1=1";
         }
 
-        return "(" . implode(" OR ", $group_sql_clauses) . ")";
+        $all_matched_parent_ids = [];
+
+        foreach ($filter_groups as $group) {
+            $group_ids = $this->get_card_matching_product_ids($group, $stock_calc_mode);
+            if (empty($group_ids)) {
+                continue;
+            }
+            foreach ($group_ids as $id) {
+                $all_matched_parent_ids[$id] = true;
+            }
+        }
+
+        if (empty($all_matched_parent_ids)) {
+            return "1=0";
+        }
+
+        $final_ids = array_map('absint', array_keys($all_matched_parent_ids));
+        $ids_str = implode(',', $final_ids);
+
+        return "p.ID IN ({$ids_str})";
+    }
+
+    /**
+     * Pre-filters and returns matching parent product IDs for a single filter group using fast set-based queries.
+     *
+     * @param array  $group Card rules and stock scope.
+     * @param string $stock_calc_mode Fallback stock calc mode.
+     * @return array Array of matching parent product IDs.
+     */
+    protected function get_card_matching_product_ids($group, $stock_calc_mode = 'variation') {
+        global $wpdb;
+
+        $has_attrs = !empty($group['attributes']) && is_array($group['attributes']);
+        $has_stock = isset($group['stock_value']) && $group['stock_value'] !== null;
+
+        if (!$has_attrs && !$has_stock) {
+            return [];
+        }
+
+        $card_stock_scope = $group['stock_scope'] ?? $stock_calc_mode;
+        $candidate_v_ids = null;
+
+        // 1. Process attribute rules
+        if ($has_attrs) {
+            foreach ($group['attributes'] as $rule) {
+                $tax_name = is_array($rule) && isset($rule['taxonomy']) ? $rule['taxonomy'] : $rule;
+                $op       = is_array($rule) && isset($rule['operator']) ? $rule['operator'] : '=';
+                $terms    = is_array($rule) && isset($rule['values']) ? $rule['values'] : (is_array($rule) ? [] : $rule);
+
+                if (empty($terms)) continue;
+
+                $tax_name = (strpos($tax_name, 'pa_') === 0 || in_array($tax_name, ['product_cat', 'product_brand', 'pwb-brand', 'brand', 'product_tag'], true) || taxonomy_exists($tax_name)) ? $tax_name : 'pa_' . $tax_name;
+                $raw_slug = str_replace('pa_', '', $tax_name);
+
+                $term_ids = [];
+                $term_slugs = [];
+
+                foreach ($terms as $t) {
+                    if (is_numeric($t)) {
+                        $term_ids[] = absint($t);
+                    } else {
+                        $term_slugs[] = sanitize_title($t);
+                    }
+                }
+
+                $term_match_parts = [];
+                if (!empty($term_ids)) {
+                    $ids_str = implode(',', $term_ids);
+                    $term_match_parts[] = "t.term_id IN ({$ids_str})";
+                }
+                if (!empty($term_slugs)) {
+                    $slug_placeholders = implode(',', array_fill(0, count($term_slugs), '%s'));
+                    $term_match_parts[] = $wpdb->prepare("t.slug IN ({$slug_placeholders})", ...$term_slugs);
+                }
+
+                if (empty($term_match_parts)) {
+                    continue;
+                }
+
+                $term_match_sql = "(" . implode(" OR ", $term_match_parts) . ")";
+                $pm_keys = ['attribute_' . $tax_name, 'attribute_' . $raw_slug];
+                $pm_key_placeholders = implode(',', array_fill(0, count($pm_keys), '%s'));
+
+                $meta_val_match = [];
+                if (!empty($term_slugs)) {
+                    $slug_placeholders = implode(',', array_fill(0, count($term_slugs), '%s'));
+                    $meta_val_match[] = $wpdb->prepare("pm_attr.meta_value IN ({$slug_placeholders})", ...$term_slugs);
+                }
+                if (!empty($term_ids)) {
+                    $found_slugs = $wpdb->get_col("SELECT slug FROM {$wpdb->terms} WHERE term_id IN (" . implode(',', $term_ids) . ")");
+                    if (!empty($found_slugs)) {
+                        $slug_placeholders = implode(',', array_fill(0, count($found_slugs), '%s'));
+                        $meta_val_match[] = $wpdb->prepare("pm_attr.meta_value IN ({$slug_placeholders})", ...$found_slugs);
+                    }
+                }
+                $meta_val_match[] = "pm_attr.meta_value = ''";
+                $meta_match_sql = "(" . implode(" OR ", $meta_val_match) . ")";
+
+                $rule_v_sql = $wpdb->prepare("
+                    SELECT DISTINCT v.ID
+                    FROM {$wpdb->posts} v
+                    LEFT JOIN {$wpdb->term_relationships} tr ON (v.ID = tr.object_id OR v.post_parent = tr.object_id)
+                    LEFT JOIN {$wpdb->term_taxonomy} tt ON (tr.term_taxonomy_id = tt.term_taxonomy_id AND tt.taxonomy = %s)
+                    LEFT JOIN {$wpdb->terms} t ON tt.term_id = t.term_id
+                    LEFT JOIN {$wpdb->postmeta} pm_attr ON (v.ID = pm_attr.post_id AND pm_attr.meta_key IN ({$pm_key_placeholders}))
+                    WHERE v.post_status = 'publish'
+                      AND ( ({$term_match_sql}) OR ({$meta_match_sql}) )
+                ", $tax_name, ...$pm_keys);
+
+                $rule_v_ids = array_map('absint', $wpdb->get_col($rule_v_sql));
+
+                if ($op === '!=') {
+                    if ($candidate_v_ids !== null) {
+                        $candidate_v_ids = array_diff($candidate_v_ids, $rule_v_ids);
+                    } else {
+                        $all_v_ids = array_map('absint', $wpdb->get_col("SELECT ID FROM {$wpdb->posts} WHERE post_status = 'publish' AND post_type IN ('product', 'product_variation')"));
+                        $candidate_v_ids = array_diff($all_v_ids, $rule_v_ids);
+                    }
+                } else {
+                    if ($candidate_v_ids === null) {
+                        $candidate_v_ids = $rule_v_ids;
+                    } else {
+                        $candidate_v_ids = array_intersect($candidate_v_ids, $rule_v_ids);
+                    }
+                }
+
+                if (empty($candidate_v_ids)) {
+                    return [];
+                }
+            }
+        }
+
+        // 2. Process stock rules
+        if ($has_stock) {
+            $op  = $group['stock_operator'] ?? '=';
+            $val = floatval($group['stock_value']);
+
+            if ($card_stock_scope === 'parent_total' || $card_stock_scope === 'solo_stock') {
+                $stock_parent_ids = array_map('absint', $wpdb->get_col($wpdb->prepare("
+                    SELECT (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) AS parent_id
+                    FROM {$wpdb->posts} p
+                    INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_stock'
+                    WHERE p.post_status = 'publish'
+                    GROUP BY parent_id
+                    HAVING SUM(CAST(pm.meta_value AS SIGNED)) {$op} %f
+                ", $val)));
+
+                if ($card_stock_scope === 'solo_stock') {
+                    $positive_stock_v_ids = array_map('absint', $wpdb->get_col("
+                        SELECT post_id FROM {$wpdb->postmeta}
+                        WHERE meta_key = '_stock' AND CAST(meta_value AS SIGNED) > 0
+                    "));
+                    if ($candidate_v_ids !== null) {
+                        $candidate_v_ids = array_intersect($candidate_v_ids, $positive_stock_v_ids);
+                    } else {
+                        $candidate_v_ids = $positive_stock_v_ids;
+                    }
+                }
+
+                if ($candidate_v_ids !== null && !empty($candidate_v_ids)) {
+                    $cand_v_str = implode(',', array_map('absint', $candidate_v_ids));
+                    $cand_parent_ids = array_map('absint', $wpdb->get_col("
+                        SELECT DISTINCT (CASE WHEN post_type = 'product_variation' THEN post_parent ELSE ID END)
+                        FROM {$wpdb->posts} WHERE ID IN ({$cand_v_str})
+                    "));
+                    return array_values(array_intersect($stock_parent_ids, $cand_parent_ids));
+                } else {
+                    return $stock_parent_ids;
+                }
+            } else {
+                $stock_v_ids = array_map('absint', $wpdb->get_col($wpdb->prepare("
+                    SELECT post_id FROM {$wpdb->postmeta}
+                    WHERE meta_key = '_stock' AND CAST(meta_value AS SIGNED) {$op} %f
+                ", $val)));
+
+                if ($candidate_v_ids !== null) {
+                    $candidate_v_ids = array_intersect($candidate_v_ids, $stock_v_ids);
+                } else {
+                    $candidate_v_ids = $stock_v_ids;
+                }
+            }
+        }
+
+        if (empty($candidate_v_ids)) {
+            return [];
+        }
+
+        $v_str = implode(',', array_map('absint', $candidate_v_ids));
+        $matched_parent_ids = array_map('absint', $wpdb->get_col("
+            SELECT DISTINCT (CASE WHEN post_type = 'product_variation' THEN post_parent ELSE ID END)
+            FROM {$wpdb->posts}
+            WHERE ID IN ({$v_str}) AND post_status = 'publish'
+        "));
+
+        return array_values(array_unique($matched_parent_ids));
     }
 }
