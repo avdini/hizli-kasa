@@ -97,14 +97,14 @@ $unmatched_items_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->pref
     <!-- Data Table Container -->
     <div class="hk-stock-table-wrap">
         <table class="hk-stock-table-modern">
-            <thead>
-                <tr>
-                    <th style="width:38px; text-align:center;"><input type="checkbox" id="select-all-rows"></th>
-                    <th style="width:54px; text-align:center;">Görsel</th>
-                    <th>Ürün Bilgisi / SKU</th>
-                    <th style="width:140px; text-align:center;">Site Stoğu (WC)</th>
+            <thead class="hk-stock-table-thead">
+                <tr class="hk-stock-table-header-row">
+                    <th class="hk-th-select" style="width:38px; text-align:center;"><input type="checkbox" id="select-all-rows"></th>
+                    <th class="hk-th-thumb" style="width:54px; text-align:center;">Görsel</th>
+                    <th class="hk-th-info">Ürün Bilgisi / SKU</th>
+                    <th class="hk-th-wc-stock" style="width:140px; text-align:center;">Site Stoğu (WC)</th>
                     <?php foreach($depolar as $d): ?>
-                        <th style="text-align:center; background: #f8fafc; border-left:1px solid var(--hk-border-color);">
+                        <th class="hk-th-depo-stock" style="text-align:center; background: #f8fafc; border-left:1px solid var(--hk-border-color);">
                             <?php echo esc_html($d->name); ?>
                         </th>
                     <?php endforeach; ?>
