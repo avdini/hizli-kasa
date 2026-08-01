@@ -407,10 +407,16 @@ jQuery(document).ready(function($) {
         img.src = fullSrc;
     };
 
+    function updateSelectAllState() {
+        const totalRowCbs = $('.hk-row-cb').length;
+        const checkedRowCbs = $('.hk-row-cb:checked').length;
+        $('#select-all-rows').prop('checked', totalRowCbs > 0 && totalRowCbs === checkedRowCbs);
+    }
+
     // Select All
     $('#select-all-rows').on('change', function() {
         const isChecked = $(this).is(':checked');
-        $('.hk-row-cb, .hk-parent-cb').filter(':visible').prop('checked', isChecked);
+        $('.hk-row-cb, .hk-parent-cb').prop('checked', isChecked);
         updateBulkToolbar();
     });
 
@@ -419,11 +425,21 @@ jQuery(document).ready(function($) {
         const isChecked = $(this).is(':checked');
         const pid = $(this).closest('tr').data('id');
         $(`.child-of-${pid}`).find('.hk-row-cb').prop('checked', isChecked);
+        updateSelectAllState();
         updateBulkToolbar();
     });
 
     $(document).on('change', '.hk-row-cb', function(e) {
-        e.stopPropagation(); // Satır aç/kapatı tetiklemesin
+        e.stopPropagation();
+        const $tr = $(this).closest('tr');
+        if ($tr.hasClass('row-variation')) {
+            const pid = $tr.data('id');
+            const $childCbs = $(`.child-of-${pid}`).find('.hk-row-cb');
+            const totalChildren = $childCbs.length;
+            const checkedChildren = $childCbs.filter(':checked').length;
+            $(`tr.row-variable[data-id="${pid}"]`).find('.hk-parent-cb').prop('checked', totalChildren > 0 && totalChildren === checkedChildren);
+        }
+        updateSelectAllState();
         updateBulkToolbar();
     });
 
@@ -436,7 +452,6 @@ jQuery(document).ready(function($) {
             $('#hk-bulk-toolbar').hide();
         }
         
-        // Update selection styling for all rows based on their respective checkboxes
         $('.hk-row-cb, .hk-parent-cb').each(function() {
             $(this).closest('tr').toggleClass('hk-selected', $(this).is(':checked'));
         });
@@ -653,6 +668,7 @@ jQuery(document).ready(function($) {
     });
 
     function renderTable(products) {
+        clearSelection();
         const $body = $('#admin-stock-list-body');
         $body.empty();
 
