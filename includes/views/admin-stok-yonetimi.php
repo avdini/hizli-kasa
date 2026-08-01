@@ -587,8 +587,8 @@ jQuery(document).ready(function($) {
             return;
         }
 
-        const queryStr = $('#admin-product-search').val().trim();
-        const autoExpand = (products.length === 1 && queryStr !== '');
+        const queryStr = $('#admin-product-search').val().trim().toLowerCase();
+        const autoExpand = (queryStr !== '');
         let mainRowCounter = 0;
 
         products.forEach(p => {
@@ -667,14 +667,23 @@ jQuery(document).ready(function($) {
                     const vDiffVal = (v.total_warehouse_stock !== undefined) ? (v.total_warehouse_stock - v.wc_stock) : 0;
                     const vDiffDisplay = vDiffVal > 0 ? `+${vDiffVal}` : `${vDiffVal}`;
                     const vMismatchBadge = v.has_mismatch ? `<span class="hk-delta-badge delta-error" title="Depo stokları toplamı site stoğu ile uyuşmuyor!">Δ ${vDiffDisplay}</span>` : '';
+                    
+                    const vSkuLow = (v.sku || '').toLowerCase().trim();
+                    const isExactSkuMatch = (queryStr !== '' && vSkuLow === queryStr);
+                    const exactMatchBadge = isExactSkuMatch ? `<span class="hk-stock-badge" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; margin-left:4px;">🎯 Tam Eşleşen SKU</span>` : '';
+                    const highlightStyle = isExactSkuMatch ? 'background-color:#f0fdf4;' : '';
 
-                    vWrapper += `<tr class="row-variation" data-id="${p.id}" data-vid="${v.variation_id}">
+                    vWrapper += `<tr class="row-variation" data-id="${p.id}" data-vid="${v.variation_id}" style="${highlightStyle}">
                         <td style="text-align:center;"><input type="checkbox" class="hk-row-cb" value="${v.variation_id}"></td>
                         <td style="text-align:center;"><img src="${v.thumbnail}" style="width:30px; height:30px; border-radius:6px; object-fit:cover; cursor:pointer;" onclick="openImagePreview('${v.thumbnail}')"></td>
                         <td style="vertical-align:middle;">
                             <div style="display:flex; align-items:center; gap:6px;">
                                 <span style="font-size:13px; color:var(--hk-text-main); font-weight:600;">${v.name}</span>
                                 <span class="hk-stock-badge badge-variation">Varyasyon</span>
+                                ${exactMatchBadge}
+                            </div>
+                            <code style="font-size:10px; color:var(--hk-text-muted); font-weight:600;">SKU: ${v.sku || 'N/A'}</code>
+                        </td>`;n">Varyasyon</span>
                             </div>
                             <code style="font-size:10px; color:var(--hk-text-muted); font-weight:600;">SKU: ${v.sku || 'N/A'}</code>
                         </td>

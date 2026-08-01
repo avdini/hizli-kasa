@@ -218,8 +218,10 @@ public static function get_list() {
                     $a_sku = function_exists('mb_strtolower') ? mb_strtolower((string) $a['sku']) : strtolower((string) $a['sku']);
                     $b_sku = function_exists('mb_strtolower') ? mb_strtolower((string) $b['sku']) : strtolower((string) $b['sku']);
 
-                    $a_score = ((strpos($a_sku, $needle) !== false) ? 20 : 0) + ((strpos($a_name, $needle) !== false) ? 10 : 0);
-                    $b_score = ((strpos($b_sku, $needle) !== false) ? 20 : 0) + ((strpos($b_name, $needle) !== false) ? 10 : 0);
+                    $a_exact = ($a_sku === $needle) ? 100 : 0;
+                    $b_exact = ($b_sku === $needle) ? 100 : 0;
+                    $a_score = $a_exact + ((strpos($a_sku, $needle) !== false) ? 20 : 0) + (($a_name === $needle ? 15 : (strpos($a_name, $needle) !== false ? 10 : 0)));
+                    $b_score = $b_exact + ((strpos($b_sku, $needle) !== false) ? 20 : 0) + (($b_name === $needle ? 15 : (strpos($b_name, $needle) !== false ? 10 : 0)));
 
                     if ($a_score !== $b_score) {
                         return $b_score <=> $a_score;
