@@ -33,16 +33,6 @@ $stats = class_exists('Hizli_Kasa_Ajax_Stock') ? Hizli_Kasa_Ajax_Stock::get_stoc
             </div>
         </div>
 
-        <div class="hk-stat-card" id="card-stat-zero" onclick="filterByStat('zero')" style="--card-accent: #64748b;">
-            <div class="hk-stat-icon" style="background:#f1f5f9; color:#64748b;">
-                <span class="dashicons dashicons-minus"></span>
-            </div>
-            <div class="hk-stat-info">
-                <div class="hk-stat-val" id="stat-val-zero"><?php echo esc_html($stats['zero']); ?></div>
-                <div class="hk-stat-lbl">Stoğu Sıfır Olanlar</div>
-            </div>
-        </div>
-
         <div class="hk-stat-card" id="card-stat-warehouses" style="--card-accent: #f58220; cursor:default;">
             <div class="hk-stat-icon" style="background:#fff7ed; color:#f58220;">
                 <span class="dashicons dashicons-building"></span>
@@ -253,10 +243,6 @@ jQuery(document).ready(function($) {
             $('#card-stat-mismatch').addClass('active');
             $('#filter-mismatch').prop('checked', true);
             $('#filter-zero-stock').prop('checked', false);
-        } else if (statType === 'zero') {
-            $('#card-stat-zero').addClass('active');
-            $('#filter-zero-stock').prop('checked', true);
-            $('#filter-mismatch').prop('checked', false);
         } else {
             $('#card-stat-all').addClass('active');
             $('#filter-mismatch').prop('checked', false);
@@ -544,7 +530,6 @@ jQuery(document).ready(function($) {
                 if (res.data.stats) {
                     $('#stat-val-total').text(res.data.stats.total);
                     $('#stat-val-mismatch').text(res.data.stats.mismatch);
-                    $('#stat-val-zero').text(res.data.stats.zero);
                 }
             } else {
                 let errorMsg = res.data ? res.data.message : 'Bilinmeyen hata';

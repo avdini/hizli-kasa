@@ -350,9 +350,14 @@ public static function get_list() {
 }
 
 /**
- * Canlı Stok Metrik İstatistikleri (Toplam SKU, Uyuşmazlık, Sıfır Stok)
+ * Canlı Stok Metrik İstatistikleri (Toplam SKU, Uyuşmazlık)
  */
 public static function get_stock_stats() {
+    $cached = get_transient('hk_admin_stock_stats');
+    if ($cached !== false && is_array($cached)) {
+        return $cached;
+    }
+
     global $wpdb;
     $stok_table = Hizli_Kasa_Database::get_tables()['stok_konumlari'];
 
@@ -360,14 +365,6 @@ public static function get_stock_stats() {
         "SELECT COUNT(*) FROM {$wpdb->posts} 
          WHERE post_type IN ('product', 'product_variation') 
          AND post_status IN ('publish', 'private')"
-    );
-
-    $zero_stock = (int) $wpdb->get_var(
-        "SELECT COUNT(*) FROM {$wpdb->posts} p
-         LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_stock'
-         WHERE p.post_type IN ('product', 'product_variation')
-         AND p.post_status IN ('publish', 'private')
-         AND (pm.meta_value IS NULL OR CAST(pm.meta_value AS SIGNED) <= 0)"
     );
 
     $mismatch = (int) $wpdb->get_var(
@@ -388,11 +385,13 @@ public static function get_stock_stats() {
         ) AS mismatch_subquery"
     );
 
-    return [
+    $stats = [
         'total'    => $total_sku,
-        'zero'     => $zero_stock,
         'mismatch' => $mismatch
     ];
+
+    set_transient('hk_admin_stock_stats', $stats, 120);
+    return $stats;
 }
 
 /**
@@ -503,6 +502,7 @@ public static function batch_update() {
         }
     }
     
+    delete_transient('hk_admin_stock_stats');
     wp_send_json_success(['updated' => $updated, 'errors' => $errors]);
 }
 }
