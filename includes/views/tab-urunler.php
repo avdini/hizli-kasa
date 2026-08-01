@@ -127,16 +127,7 @@ if (!defined('ABSPATH')) exit;
                 </div>
             </div>
 
-            <!-- 3. Gelişmiş Kombinasyon Kartları (Modal Tetikleyici) -->
-            <div class="filter-section">
-                <label class="filter-section-title">🧩 Gelişmiş Filtreleme</label>
-                <button type="button" id="btn-open-advanced-filter" class="btn-open-advanced-filter">
-                    <span>⚙️ Gelişmiş Arama Kartları</span>
-                    <span id="advanced-filter-badge" class="filter-badge" style="display:none;">0</span>
-                </button>
-            </div>
-
-            <!-- 4. Zaman & Hareketsiz Stok Analizi -->
+            <!-- 3. Zaman & Hareketsiz Stok Analizi -->
             <div class="filter-section">
                 <label class="filter-section-title">⏱️ Hareketsiz Stok Analizi</label>
                 <div class="filter-field">
@@ -149,6 +140,15 @@ if (!defined('ABSPATH')) exit;
                         <option value="180">Son 6 Aydır Satılmayanlar</option>
                     </select>
                 </div>
+            </div>
+
+            <!-- 4. Gelişmiş Kombinasyon Kartları (Modal Tetikleyici) -->
+            <div class="filter-section">
+                <label class="filter-section-title">🧩 Gelişmiş Filtreleme</label>
+                <button type="button" id="btn-open-advanced-filter" class="btn-open-advanced-filter">
+                    <span>⚙️ Gelişmiş Arama Kartları</span>
+                    <span id="advanced-filter-badge" class="filter-badge" style="display:none;">0</span>
+                </button>
             </div>
 
         </div>
