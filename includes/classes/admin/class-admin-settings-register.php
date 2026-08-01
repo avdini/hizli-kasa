@@ -42,7 +42,7 @@ class Hizli_Kasa_Admin_Settings_Register {
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_edit_order_limit', [
         'type' => 'integer',
         'default' => 5,
-        'sanitize_callback' => 'intval'
+        'sanitize_callback' => fn($val) => min(1000, max(1, intval($val)))
     ]);
     register_setting('hizli_kasa_ayar_grubu', 'hizli_kasa_siparis_duzenle_aktif', [
         'sanitize_callback' => fn($val) => $val ? '1' : '0'

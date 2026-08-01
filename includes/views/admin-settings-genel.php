@@ -307,7 +307,7 @@ $tum_roller         = wp_roles()->get_names();
                             <p class="hk-settings-desc">Kasiyerin kasa sayfasında listelenip düzenlenebileceği son sipariş sayısı.</p>
                         </div>
                         <div class="hk-settings-field">
-                            <input type="number" name="hizli_kasa_edit_order_limit" id="hizli_kasa_edit_order_limit" value="<?php echo esc_attr($edit_limit); ?>" min="1" max="50" step="1" class="hk-input hk-input-number">
+                            <input type="number" name="hizli_kasa_edit_order_limit" id="hizli_kasa_edit_order_limit" value="<?php echo esc_attr($edit_limit); ?>" min="1" max="1000" step="1" class="hk-input hk-input-number">
                         </div>
                     </div>
 
