@@ -531,6 +531,9 @@ jQuery(document).ready(function($) {
                     $('#stat-val-total').text(res.data.stats.total);
                     $('#stat-val-mismatch').text(res.data.stats.mismatch);
                 }
+                if (res.data.perf) {
+                    console.log(`%c⚡ [Stok Yükleme Teşhisi] Sunucu İşlem Süresi: ${res.data.perf.execution_time_ms} ms | Ek SQL Sorgusu: ${res.data.perf.db_queries}`, 'color: #2563eb; font-weight: bold;');
+                }
             } else {
                 let errorMsg = res.data ? res.data.message : 'Bilinmeyen hata';
                 $body.html(`<tr><td colspan="100%" style="text-align:center; padding:40px;">

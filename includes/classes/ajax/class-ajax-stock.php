@@ -127,13 +127,24 @@ public static function get_list() {
         }
     }
 
-    // Term isimlerini çöz (Sıralama için)
+    $start_time = microtime(true);
+    $queries_before = get_num_queries();
+
+    // Term isimlerini çöz (Sıralama için) - Toplu Batch Çekim
     $term_names = [];
     foreach ($tax_slug_map as $tax => $slugs) {
-        $slugs = array_unique($slugs);
-        foreach ($slugs as $slug) {
-            $term = get_term_by('slug', $slug, $tax);
-            $term_names[$tax][$slug] = $term ? $term->name : $slug;
+        $slugs = array_values(array_unique($slugs));
+        if (!empty($slugs)) {
+            $terms = get_terms([
+                'taxonomy'   => $tax,
+                'slug'       => $slugs,
+                'hide_empty' => false,
+            ]);
+            if (!is_wp_error($terms)) {
+                foreach ($terms as $t) {
+                    $term_names[$tax][$t->slug] = $t->name;
+                }
+            }
         }
     }
 
@@ -336,12 +347,19 @@ public static function get_list() {
 
     hizli_kasa_admin_log("Final Output Prepared. Count: " . count($output));
 
+    $exec_time = isset($start_time) ? round((microtime(true) - $start_time) * 1000, 2) : 0;
+    $queries_diff = isset($queries_before) ? (get_num_queries() - $queries_before) : 0;
+
     wp_send_json_success([
         'products'    => $output,
         'total_pages' => ceil($total_items / $per_page),
-        'stats'       => self::get_stock_stats()
+        'stats'       => self::get_stock_stats(),
+        'perf'        => [
+            'execution_time_ms' => $exec_time,
+            'db_queries'        => $queries_diff
+        ]
     ]);
-    hizli_kasa_admin_log("Response Sent Successfully");
+    hizli_kasa_admin_log("Response Sent Successfully. Time: {$exec_time}ms");
 
     } catch (Exception $e) {
         hizli_kasa_admin_log("AJAX Hatası: " . $e->getMessage());
