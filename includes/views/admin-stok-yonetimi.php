@@ -683,9 +683,6 @@ jQuery(document).ready(function($) {
                                 ${exactMatchBadge}
                             </div>
                             <code style="font-size:10px; color:var(--hk-text-muted); font-weight:600;">SKU: ${v.sku || 'N/A'}</code>
-                        </td>`;n">Varyasyon</span>
-                            </div>
-                            <code style="font-size:10px; color:var(--hk-text-muted); font-weight:600;">SKU: ${v.sku || 'N/A'}</code>
                         </td>
                         <td style="font-weight:700; color:var(--hk-text-main); vertical-align:middle; text-align:center; ${v.has_mismatch ? 'color:#dc2626;' : ''}">
                             <div class="stock-qty-control" data-pid="${p.id}" data-vid="${v.variation_id}" data-did="0" data-type="wc_stock">
