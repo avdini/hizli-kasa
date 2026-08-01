@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 12.31.13
+ * Version: 12.31.14
  * Author: Seyfullah Kurt
  * Requires Plugins: woocommerce
  * Requires at least: 5.8
@@ -18,7 +18,7 @@ if (!defined('ABSPATH'))
 if (!defined('HIZLI_KASA_BOOT_TIME')) {
     define('HIZLI_KASA_BOOT_TIME', microtime(true));
 }
-define('HIZLI_KASA_VERSION', '12.31.13');
+define('HIZLI_KASA_VERSION', '12.31.14');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -169,19 +169,12 @@ if (!wp_doing_ajax() && (!defined('REST_REQUEST') || !REST_REQUEST)) {
 
     $hizli_kasa_update_checker->setBranch('main');
 
-    // GitHub API zaman aşımını makul bir seviyeye (3 saniye) çekiyoruz
+    // Laragon gibi yerel ortamlarda DNS çözümleme gecikmelerini (cURL error 28) önlemek için zaman aşımını 60s olarak koruyoruz.
     add_filter('http_request_args', function ($args, $url) {
         if (strpos($url, 'api.github.com') !== false || strpos($url, 'github.com') !== false) {
-            $args['timeout'] = 3;
+            $args['timeout'] = 60;
         }
         return $args;
     }, 10, 2);
-
-    // WordPress "Güncellemeleri Kontrol Et" (force-check) butonuna basıldığında önbelleği temizleyip canlı sürümü sorguluyoruz
-    add_action('admin_init', function() use ($hizli_kasa_update_checker) {
-        if (is_admin() && isset($_GET['force-check'])) {
-            $hizli_kasa_update_checker->requestUpdate();
-        }
-    });
 }
 
