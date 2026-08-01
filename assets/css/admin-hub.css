@@ -1403,8 +1403,18 @@ input:checked + .hk-slider:before {
     transition: var(--hk-transition);
 }
 
+.hk-stock-table-modern tbody tr {
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
 .hk-stock-table-modern tbody tr:hover {
-    background-color: #f8fafc !important;
+    background-color: #e0f2fe !important;
+    box-shadow: inset 4px 0 0 var(--hk-primary), inset 0 -1px 0 #bae6fd !important;
+}
+
+.hk-stock-table-modern tbody tr:focus-within {
+    background-color: #dbeafe !important;
+    box-shadow: inset 4px 0 0 var(--hk-primary), inset 0 0 0 2px rgba(245, 130, 32, 0.3) !important;
 }
 
 .hk-stock-table-modern tr.hk-selected {
@@ -1624,7 +1634,13 @@ input:checked + .hk-slider:before {
 }
 
 .row-variation:hover {
-    background-color: #f1f5f9 !important;
+    background-color: #e0f2fe !important;
+    box-shadow: inset 4px 0 0 var(--hk-primary), inset 0 -1px 0 #bae6fd !important;
+}
+
+.row-variation:hover .variation-indent::before {
+    color: var(--hk-primary);
+    font-weight: 900;
 }
 
 .row-variation .variation-indent {
