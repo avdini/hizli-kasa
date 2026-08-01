@@ -638,20 +638,42 @@ jQuery(document).ready(function($) {
             row += `</tr>`;
             $body.append(row);
 
-            // Varyasyonlar
-            if(isVariable && p.variations) {
+            // Varyasyonlar (Nested Dropdown Table Formatında)
+            if(isVariable && p.variations && p.variations.length > 0) {
+                const hiddenClass = autoExpand ? '' : 'hidden-variation';
+                const totalCols = <?php echo count($depolar); ?> + 4;
+
+                let vWrapper = `<tr class="row-variation-wrapper child-of-${p.id} ${hiddenClass}">
+                    <td colspan="${totalCols}" style="padding: 0;">
+                        <div class="hk-variation-dropdown-box">
+                            <div class="hk-variation-dropdown-header">
+                                <span>📂 <strong>${p.name}</strong> — Varyasyon Listesi (${p.variations.length} Varyasyon)</span>
+                            </div>
+                            <table class="hk-variation-nested-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:38px; text-align:center;"></th>
+                                        <th style="width:44px; text-align:center;">Görsel</th>
+                                        <th>Varyasyon / SKU</th>
+                                        <th style="width:130px; text-align:center;">Site Stoğu (WC)</th>
+                                        <?php foreach($depolar as $d): ?>
+                                            <th style="text-align:center;"><?php echo esc_html($d->name); ?></th>
+                                        <?php endforeach; ?>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
                 p.variations.forEach(v => {
-                    const hiddenClass = autoExpand ? '' : 'hidden-variation';
                     const vDiffVal = (v.total_warehouse_stock !== undefined) ? (v.total_warehouse_stock - v.wc_stock) : 0;
                     const vDiffDisplay = vDiffVal > 0 ? `+${vDiffVal}` : `${vDiffVal}`;
                     const vMismatchBadge = v.has_mismatch ? `<span class="hk-delta-badge delta-error" title="Depo stokları toplamı site stoğu ile uyuşmuyor!">Δ ${vDiffDisplay}</span>` : '';
 
-                    let vRow = `<tr class="row-variation child-of-${p.id} ${hiddenClass}" data-id="${p.id}" data-vid="${v.variation_id}">
+                    vWrapper += `<tr class="row-variation" data-id="${p.id}" data-vid="${v.variation_id}">
                         <td style="text-align:center;"><input type="checkbox" class="hk-row-cb" value="${v.variation_id}"></td>
                         <td style="text-align:center;"><img src="${v.thumbnail}" style="width:30px; height:30px; border-radius:6px; object-fit:cover; cursor:pointer;" onclick="openImagePreview('${v.thumbnail}')"></td>
-                        <td class="variation-indent" style="vertical-align:middle;">
+                        <td style="vertical-align:middle;">
                             <div style="display:flex; align-items:center; gap:6px;">
-                                <span style="font-size:13px; color:var(--hk-text-main); font-weight:500;">${v.name}</span>
+                                <span style="font-size:13px; color:var(--hk-text-main); font-weight:600;">${v.name}</span>
                                 <span class="hk-stock-badge badge-variation">Varyasyon</span>
                             </div>
                             <code style="font-size:10px; color:var(--hk-text-muted); font-weight:600;">SKU: ${v.sku || 'N/A'}</code>
@@ -664,7 +686,7 @@ jQuery(document).ready(function($) {
                         </td>`;
 
                     v.warehouse_stocks.forEach(vws => {
-                        vRow += `<td style="text-align:center; border-left:1px solid #f1f5f9; vertical-align:middle;">
+                        vWrapper += `<td style="text-align:center; border-left:1px solid #f1f5f9; vertical-align:middle;">
                             <div class="stock-qty-control" data-pid="${p.id}" data-vid="${v.variation_id}" data-did="${vws.depo_id}" data-type="warehouse">
                                 <button class="btn-qty minus" onclick="updateStock(this, -1)">-</button>
                                 <span class="qty-value">${vws.qty}</span>
@@ -673,9 +695,11 @@ jQuery(document).ready(function($) {
                         </td>`;
                     });
 
-                    vRow += `</tr>`;
-                    $body.append(vRow);
+                    vWrapper += `</tr>`;
                 });
+
+                vWrapper += `</tbody></table></div></td></tr>`;
+                $body.append(vWrapper);
             }
         });
     }

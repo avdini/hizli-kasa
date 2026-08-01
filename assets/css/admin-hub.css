@@ -1581,3 +1581,69 @@ input:checked + .hk-slider:before {
     outline: none;
 }
 
+/* Nested Dropdown Table for Variation Children */
+.hk-variation-dropdown-wrapper {
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 2px solid var(--hk-primary);
+    animation: hkSlideDown 0.2s ease-out;
+}
+
+@keyframes hkSlideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.hk-variation-dropdown-box {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    margin: 8px 12px 14px 44px;
+}
+
+.hk-variation-dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f1f5f9;
+    padding: 10px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--hk-text-main);
+}
+
+.hk-variation-nested-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.hk-variation-nested-table th {
+    background: #fafafa;
+    color: var(--hk-text-muted);
+    font-weight: 700;
+    font-size: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.hk-variation-nested-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.hk-variation-nested-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.hk-variation-nested-table tbody tr:hover {
+    background: #f8fafc;
+}
+
+
