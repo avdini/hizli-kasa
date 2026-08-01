@@ -1183,3 +1183,401 @@ input:checked + .hk-slider:before {
     background: #f8fafc;
     border-top: 1px solid var(--hk-border-color);
 }
+
+/* ==========================================================================
+   STOK YÖNETİMİ MODERN UI & REDESIGN STYLES
+   ========================================================================== */
+
+/* Quick Stats Grid */
+.hk-stock-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.hk-stat-card {
+    background: var(--hk-card-bg);
+    border: 1px solid var(--hk-border-color);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--hk-shadow-sm);
+    transition: var(--hk-transition);
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.hk-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--card-accent, var(--hk-primary));
+}
+
+.hk-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--hk-shadow-md);
+    border-color: #cbd5e1;
+}
+
+.hk-stat-card.active {
+    border-color: var(--card-accent, var(--hk-primary));
+    background: #f8fafc;
+}
+
+.hk-stat-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.hk-stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.hk-stat-val {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--hk-text-main);
+    line-height: 1.2;
+}
+
+.hk-stat-lbl {
+    font-size: 12.5px;
+    color: var(--hk-text-muted);
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+/* Modern Stock Header Toolbar */
+.hizli-kasa-admin-stock-wrap {
+    max-width: 100%;
+    margin-top: 15px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.hk-stock-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: var(--hk-card-bg);
+    padding: 16px 20px;
+    border-radius: 14px;
+    border: 1px solid var(--hk-border-color);
+    box-shadow: var(--hk-shadow-sm);
+    margin-bottom: 16px;
+}
+
+.hk-stock-search-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 280px;
+}
+
+.hk-search-input-wrap {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
+
+.hk-search-input-wrap .dashicons {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--hk-text-muted);
+    font-size: 18px;
+}
+
+.hk-search-input-wrap input {
+    width: 100%;
+    padding: 9px 12px 9px 38px !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--hk-border-color) !important;
+    font-size: 13.5px !important;
+    transition: var(--hk-transition) !important;
+    background: #f8fafc !important;
+}
+
+.hk-search-input-wrap input:focus {
+    background: #fff !important;
+    border-color: var(--hk-primary) !important;
+    box-shadow: 0 0 0 3px rgba(245, 130, 32, 0.15) !important;
+    outline: none !important;
+}
+
+.hk-filter-chips {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.hk-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--hk-border-color);
+    background: #f8fafc;
+    color: var(--hk-text-muted);
+    transition: var(--hk-transition);
+    user-select: none;
+}
+
+.hk-filter-chip:hover {
+    background: #f1f5f9;
+    color: var(--hk-text-main);
+    border-color: #cbd5e1;
+}
+
+.hk-filter-chip.active {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #bfdbfe;
+}
+
+.hk-filter-chip.chip-warning.active {
+    background: #fff7ed;
+    color: #ea580c;
+    border-color: #fed7aa;
+}
+
+.hk-filter-chip input[type="checkbox"] {
+    display: none;
+}
+
+/* Modern Stock Data Table */
+.hk-stock-table-wrap {
+    background: var(--hk-card-bg);
+    border-radius: 14px;
+    border: 1px solid var(--hk-border-color);
+    box-shadow: var(--hk-shadow-sm);
+    overflow: hidden;
+}
+
+.hk-stock-table-modern {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13.5px;
+}
+
+.hk-stock-table-modern th {
+    background: #f8fafc;
+    color: var(--hk-text-main);
+    font-weight: 700;
+    padding: 14px 12px;
+    border-bottom: 1px solid var(--hk-border-color);
+    position: sticky;
+    top: 32px;
+    z-index: 10;
+}
+
+.hk-stock-table-modern td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    transition: var(--hk-transition);
+}
+
+.hk-stock-table-modern tbody tr:hover {
+    background-color: #f8fafc !important;
+}
+
+.hk-stock-table-modern tr.hk-selected {
+    background-color: #eff6ff !important;
+}
+
+.hk-stock-table-modern tr.hk-pending {
+    background-color: #fefce8 !important;
+}
+
+/* Stock Badges & Delta Indicator */
+.hk-stock-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.hk-stock-badge.badge-simple {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.hk-stock-badge.badge-variable {
+    background: #f0fdf4;
+    color: #166534;
+}
+
+.hk-stock-badge.badge-variation {
+    background: #fffef0;
+    color: #854d0e;
+    border: 1px solid #fef08a;
+}
+
+.hk-delta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 4px;
+}
+
+.hk-delta-badge.delta-error {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+/* Cell Quick Edit & Spreadsheet Focus */
+.stock-qty-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: #ffffff;
+    padding: 3px 6px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    transition: var(--hk-transition);
+}
+
+.stock-qty-control:hover {
+    border-color: #cbd5e1;
+}
+
+.btn-qty {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: var(--hk-text-main);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    transition: var(--hk-transition);
+    line-height: 1;
+}
+
+.btn-qty:hover {
+    background: #e2e8f0;
+}
+
+.btn-qty.plus:hover {
+    background: #2271b1;
+    color: #ffffff;
+    border-color: #2271b1;
+}
+
+.btn-qty.minus:hover {
+    background: #dc2626;
+    color: #ffffff;
+    border-color: #dc2626;
+}
+
+.qty-value {
+    min-width: 36px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--hk-text-main);
+    cursor: text;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: var(--hk-transition);
+}
+
+.qty-value:hover {
+    background: #f1f5f9;
+    color: var(--hk-primary);
+}
+
+.qty-input {
+    width: 60px !important;
+    height: 26px !important;
+    text-align: center !important;
+    font-weight: 700 !important;
+    border: 2px solid var(--hk-primary) !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(245, 130, 32, 0.2) !important;
+    outline: none !important;
+    padding: 0 !important;
+    font-size: 13px !important;
+}
+
+/* Floating Action Bar (Bulk Dock) */
+#hk-bulk-toolbar {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    background: #0f172a;
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 10px 20px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: none;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+    animation: hkSlideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes hkSlideUp {
+    from { transform: translate(-50%, 20px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+#hk-bulk-toolbar select,
+#hk-bulk-toolbar input {
+    background: #1e293b;
+    color: #ffffff;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+#hk-bulk-toolbar select:focus,
+#hk-bulk-toolbar input:focus {
+    border-color: var(--hk-primary);
+    outline: none;
+}
+
