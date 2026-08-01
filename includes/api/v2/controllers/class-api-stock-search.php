@@ -305,22 +305,23 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             }
         }
 
-        // Days since last sale
+        // Days since last sale (Hareketsiz Stok Analizi)
         if ($days_since_last_sale > 0) {
             $cutoff_date = date('Y-m-d H:i:s', strtotime("-{$days_since_last_sale} days"));
             $lookup_table = $wpdb->prefix . 'wc_order_product_lookup';
             $has_lookup_table = ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $lookup_table)) === $lookup_table);
             $valid_statuses = array('wc-completed', 'wc-processing', 'wc-on-hold', 'completed', 'processing', 'on-hold');
+            $status_placeholders = implode(',', array_fill(0, count($valid_statuses), '%s'));
 
             if ($has_lookup_table) {
-                $status_placeholders = implode(',', array_fill(0, count($valid_statuses), '%s'));
-                $sql = $wpdb->prepare(
-                    "SELECT variation_id FROM {$lookup_table} WHERE date_created >= %s AND status IN ({$status_placeholders}) AND variation_id > 0
-                     UNION
-                     SELECT product_id FROM {$lookup_table} WHERE date_created >= %s AND status IN ({$status_placeholders})",
-                    array_merge(array($cutoff_date), $valid_statuses, array($cutoff_date), $valid_statuses)
+                $sold_variations_sql = $wpdb->prepare(
+                    "SELECT DISTINCT variation_id FROM {$lookup_table} WHERE date_created >= %s AND status IN ({$status_placeholders}) AND variation_id > 0",
+                    array_merge(array($cutoff_date), $valid_statuses)
                 );
-                $where[] = "p.ID NOT IN ({$sql})";
+                $sold_simples_sql = $wpdb->prepare(
+                    "SELECT DISTINCT product_id FROM {$lookup_table} WHERE date_created >= %s AND status IN ({$status_placeholders}) AND (variation_id = 0 OR variation_id IS NULL)",
+                    array_merge(array($cutoff_date), $valid_statuses)
+                );
             } else {
                 $uses_hpos = false;
                 if (class_exists('\Automattic\WooCommerce\Utilities\OrderUtil') && method_exists('\Automattic\WooCommerce\Utilities\OrderUtil', 'custom_orders_table_usage_is_enabled')) {
@@ -331,21 +332,42 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                 $date_field   = $uses_hpos ? 'date_created_gmt' : 'post_date';
                 $type_clause  = $uses_hpos ? '1=1' : "o.post_type = 'shop_order'";
                 $status_field = $uses_hpos ? 'status' : 'post_status';
-                $status_placeholders = implode(',', array_fill(0, count($valid_statuses), '%s'));
 
-                $sql = $wpdb->prepare(
+                $sold_variations_sql = $wpdb->prepare(
                     "SELECT DISTINCT CAST(oim.meta_value AS UNSIGNED)
                      FROM {$wpdb->prefix}woocommerce_order_itemmeta oim
                      INNER JOIN {$wpdb->prefix}woocommerce_order_items oi ON oim.woocommerce_order_item_id = oi.order_item_id
                      INNER JOIN {$orders_table} o ON oi.order_id = o.ID
-                     WHERE oim.meta_key IN ('_product_id', '_variation_id')
+                     WHERE oim.meta_key = '_variation_id'
                        AND oim.meta_value IS NOT NULL AND oim.meta_value > 0
                        AND {$type_clause}
                        AND o.{$status_field} IN ({$status_placeholders})
                        AND o.{$date_field} >= %s",
                     array_merge($valid_statuses, array($cutoff_date))
                 );
-                $where[] = "p.ID NOT IN ({$sql})";
+
+                $sold_simples_sql = $wpdb->prepare(
+                    "SELECT DISTINCT CAST(oim.meta_value AS UNSIGNED)
+                     FROM {$wpdb->prefix}woocommerce_order_itemmeta oim
+                     INNER JOIN {$wpdb->prefix}woocommerce_order_items oi ON oim.woocommerce_order_item_id = oi.order_item_id
+                     INNER JOIN {$orders_table} o ON oi.order_id = o.ID
+                     WHERE oim.meta_key = '_product_id'
+                       AND oim.meta_value IS NOT NULL AND oim.meta_value > 0
+                       AND {$type_clause}
+                       AND o.{$status_field} IN ({$status_placeholders})
+                       AND o.{$date_field} >= %s",
+                    array_merge($valid_statuses, array($cutoff_date))
+                );
+            }
+
+            if ($scope === 'variation') {
+                $where[] = "p.ID NOT IN ({$sold_variations_sql})";
+            } else {
+                $where[] = "(
+                    (p.ID NOT IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} WHERE post_type = 'product_variation') AND p.ID NOT IN ({$sold_simples_sql}))
+                    OR
+                    (p.ID IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} WHERE post_type = 'product_variation' AND post_status = 'publish' AND ID NOT IN ({$sold_variations_sql})))
+                )";
             }
         }
 
