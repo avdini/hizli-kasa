@@ -15,7 +15,10 @@ if (!defined('ABSPATH'))
     exit;
 
 // Sabitler
-define('HIZLI_KASA_VERSION', '12.31.10');
+if (!defined('HIZLI_KASA_BOOT_TIME')) {
+    define('HIZLI_KASA_BOOT_TIME', microtime(true));
+}
+define('HIZLI_KASA_VERSION', '12.31.11');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -147,30 +150,31 @@ function hizli_kasa_db_activation() {
 }
 
 // Otomatik Güncelleme Sistemi (Plugin Update Checker)
-require_once HIZLI_KASA_PATH . 'includes/plugin-update-checker/plugin-update-checker.php';
+// AJAX ve REST isteklerinde GitHub cURL kilitlenmesini (1.1 dk bekleme) önlemek için devre dışı bırakıyoruz.
+if (!wp_doing_ajax() && (!defined('REST_REQUEST') || !REST_REQUEST)) {
+    require_once HIZLI_KASA_PATH . 'includes/plugin-update-checker/plugin-update-checker.php';
 
-use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+    // PUC'ın sadece branch'i takip etmesi için stratejileri filtreliyoruz
+    add_filter('puc_vcs_update_detection_strategies-hizli-kasa', function ($strategies) {
+        unset($strategies['latest_release']);
+        unset($strategies['latest_tag']);
+        return $strategies;
+    });
 
-// PUC'ın sadece branch'i takip etmesi için stratejileri filtreliyoruz (Release/Tag aranmasını engeller)
-add_filter('puc_vcs_update_detection_strategies-hizli-kasa', function ($strategies) {
-    unset($strategies['latest_release']);
-    unset($strategies['latest_tag']);
-    return $strategies;
-});
+    $hizli_kasa_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+        'https://github.com/Seyfullahkurt9/hizli-kasa/',
+        __FILE__,
+        'hizli-kasa'
+    );
 
-$hizli_kasa_update_checker = PucFactory::buildUpdateChecker(
-    'https://github.com/Seyfullahkurt9/hizli-kasa/',
-    __FILE__,
-    'hizli-kasa'
-);
+    $hizli_kasa_update_checker->setBranch('main');
 
-$hizli_kasa_update_checker->setBranch('main');
-
-// Laragon gibi yerel ortamlarda DNS çözümleme gecikmelerini (cURL error 28) önlemek için zaman aşımını artırıyoruz.
-add_filter('http_request_args', function ($args, $url) {
-    if (strpos($url, 'api.github.com') !== false || strpos($url, 'github.com') !== false) {
-        $args['timeout'] = 60; // 60 saniyeye çıkarıyoruz
-    }
-    return $args;
-}, 10, 2);
+    // GitHub API zaman aşımını makul bir seviyeye (3 saniye) çekiyoruz
+    add_filter('http_request_args', function ($args, $url) {
+        if (strpos($url, 'api.github.com') !== false || strpos($url, 'github.com') !== false) {
+            $args['timeout'] = 3;
+        }
+        return $args;
+    }, 10, 2);
+}
 

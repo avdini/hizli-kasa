@@ -348,6 +348,7 @@ public static function get_list() {
     hizli_kasa_admin_log("Final Output Prepared. Count: " . count($output));
 
     $exec_time = isset($start_time) ? round((microtime(true) - $start_time) * 1000, 2) : 0;
+    $total_time = defined('HIZLI_KASA_BOOT_TIME') ? round((microtime(true) - HIZLI_KASA_BOOT_TIME) * 1000, 2) : $exec_time;
     $queries_diff = isset($queries_before) ? (get_num_queries() - $queries_before) : 0;
 
     wp_send_json_success([
@@ -355,11 +356,12 @@ public static function get_list() {
         'total_pages' => ceil($total_items / $per_page),
         'stats'       => self::get_stock_stats(),
         'perf'        => [
-            'execution_time_ms' => $exec_time,
-            'db_queries'        => $queries_diff
+            'total_request_time_ms' => $total_time,
+            'action_exec_time_ms'   => $exec_time,
+            'db_queries'            => $queries_diff
         ]
     ]);
-    hizli_kasa_admin_log("Response Sent Successfully. Time: {$exec_time}ms");
+    hizli_kasa_admin_log("Response Sent Successfully. Total: {$total_time}ms | Exec: {$exec_time}ms");
 
     } catch (Exception $e) {
         hizli_kasa_admin_log("AJAX Hatası: " . $e->getMessage());

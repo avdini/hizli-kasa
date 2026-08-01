@@ -532,7 +532,7 @@ jQuery(document).ready(function($) {
                     $('#stat-val-mismatch').text(res.data.stats.mismatch);
                 }
                 if (res.data.perf) {
-                    console.log(`%c⚡ [Stok Yükleme Teşhisi] Sunucu İşlem Süresi: ${res.data.perf.execution_time_ms} ms | Ek SQL Sorgusu: ${res.data.perf.db_queries}`, 'color: #2563eb; font-weight: bold;');
+                    console.log(`%c⚡ [Stok Yükleme Teşhisi] Toplam İstek: ${res.data.perf.total_request_time_ms} ms | Stok Fonksiyonu: ${res.data.perf.action_exec_time_ms} ms | SQL Sorgu: ${res.data.perf.db_queries}`, 'color: #2563eb; font-weight: bold;');
                 }
             } else {
                 let errorMsg = res.data ? res.data.message : 'Bilinmeyen hata';
