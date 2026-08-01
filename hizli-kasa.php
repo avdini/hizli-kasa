@@ -18,7 +18,7 @@ if (!defined('ABSPATH'))
 if (!defined('HIZLI_KASA_BOOT_TIME')) {
     define('HIZLI_KASA_BOOT_TIME', microtime(true));
 }
-define('HIZLI_KASA_VERSION', '12.31.11');
+define('HIZLI_KASA_VERSION', '12.31.12');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
@@ -176,5 +176,12 @@ if (!wp_doing_ajax() && (!defined('REST_REQUEST') || !REST_REQUEST)) {
         }
         return $args;
     }, 10, 2);
+
+    // WordPress "Güncellemeleri Kontrol Et" (force-check) butonuna basıldığında önbelleği temizleyip canlı sürümü sorguluyoruz
+    add_action('admin_init', function() use ($hizli_kasa_update_checker) {
+        if (is_admin() && isset($_GET['force-check'])) {
+            $hizli_kasa_update_checker->requestUpdate();
+        }
+    });
 }
 
