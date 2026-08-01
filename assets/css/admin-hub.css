@@ -1398,7 +1398,7 @@ input:checked + .hk-slider:before {
     padding: 14px 12px;
     border-bottom: 2px solid var(--hk-border-color);
     position: sticky;
-    top: 32px;
+    top: 0;
     z-index: 10;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
