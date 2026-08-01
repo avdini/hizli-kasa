@@ -7,8 +7,7 @@ $stok_table = Hizli_Kasa_Database::get_tables()['stok_konumlari'];
 $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priority DESC");
 $depo_count = count($depolar);
 
-$total_sku_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type IN ('product', 'product_variation') AND post_status IN ('publish', 'private')");
-$unmatched_items_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}hizli_kasa_unmatched_items");
+$stats = class_exists('Hizli_Kasa_Ajax_Stock') ? Hizli_Kasa_Ajax_Stock::get_stock_stats() : ['total' => 0, 'mismatch' => 0, 'zero' => 0];
 ?>
 
 <div class="hizli-kasa-admin-stock-wrap">
@@ -19,7 +18,7 @@ $unmatched_items_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->pref
                 <span class="dashicons dashicons-archive"></span>
             </div>
             <div class="hk-stat-info">
-                <div class="hk-stat-val" id="stat-val-total"><?php echo esc_html($total_sku_count); ?></div>
+                <div class="hk-stat-val" id="stat-val-total"><?php echo esc_html($stats['total']); ?></div>
                 <div class="hk-stat-lbl">Toplam SKU / Ürün</div>
             </div>
         </div>
@@ -29,7 +28,7 @@ $unmatched_items_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->pref
                 <span class="dashicons dashicons-warning"></span>
             </div>
             <div class="hk-stat-info">
-                <div class="hk-stat-val" id="stat-val-mismatch"><?php echo esc_html($unmatched_items_count); ?></div>
+                <div class="hk-stat-val" id="stat-val-mismatch"><?php echo esc_html($stats['mismatch']); ?></div>
                 <div class="hk-stat-lbl">Stok Uyuşmazlığı</div>
             </div>
         </div>
@@ -39,7 +38,7 @@ $unmatched_items_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->pref
                 <span class="dashicons dashicons-minus"></span>
             </div>
             <div class="hk-stat-info">
-                <div class="hk-stat-val" id="stat-val-zero">0</div>
+                <div class="hk-stat-val" id="stat-val-zero"><?php echo esc_html($stats['zero']); ?></div>
                 <div class="hk-stat-lbl">Stoğu Sıfır Olanlar</div>
             </div>
         </div>
@@ -542,6 +541,11 @@ jQuery(document).ready(function($) {
             if(res.success) {
                 renderTable(res.data.products);
                 renderPagination(res.data.total_pages, page);
+                if (res.data.stats) {
+                    $('#stat-val-total').text(res.data.stats.total);
+                    $('#stat-val-mismatch').text(res.data.stats.mismatch);
+                    $('#stat-val-zero').text(res.data.stats.zero);
+                }
             } else {
                 let errorMsg = res.data ? res.data.message : 'Bilinmeyen hata';
                 $body.html(`<tr><td colspan="100%" style="text-align:center; padding:40px;">

@@ -338,7 +338,8 @@ public static function get_list() {
 
     wp_send_json_success([
         'products'    => $output,
-        'total_pages' => ceil($total_items / $per_page)
+        'total_pages' => ceil($total_items / $per_page),
+        'stats'       => self::get_stock_stats()
     ]);
     hizli_kasa_admin_log("Response Sent Successfully");
 
@@ -346,6 +347,52 @@ public static function get_list() {
         hizli_kasa_admin_log("AJAX Hatası: " . $e->getMessage());
         wp_send_json_error(['message' => 'İstisnai bir hata oluştu: ' . $e->getMessage()]);
     }
+}
+
+/**
+ * Canlı Stok Metrik İstatistikleri (Toplam SKU, Uyuşmazlık, Sıfır Stok)
+ */
+public static function get_stock_stats() {
+    global $wpdb;
+    $stok_table = Hizli_Kasa_Database::get_tables()['stok_konumlari'];
+
+    $total_sku = (int) $wpdb->get_var(
+        "SELECT COUNT(*) FROM {$wpdb->posts} 
+         WHERE post_type IN ('product', 'product_variation') 
+         AND post_status IN ('publish', 'private')"
+    );
+
+    $zero_stock = (int) $wpdb->get_var(
+        "SELECT COUNT(*) FROM {$wpdb->posts} p
+         LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_stock'
+         WHERE p.post_type IN ('product', 'product_variation')
+         AND p.post_status IN ('publish', 'private')
+         AND (pm.meta_value IS NULL OR CAST(pm.meta_value AS SIGNED) <= 0)"
+    );
+
+    $mismatch = (int) $wpdb->get_var(
+        "SELECT COUNT(*) FROM (
+            SELECT p.ID,
+                   CAST(COALESCE(pm.meta_value, 0) AS SIGNED) AS wc_stock,
+                   COALESCE(SUM(sk.quantity), 0) AS total_wh_stock
+            FROM {$wpdb->posts} p
+            LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_stock'
+            LEFT JOIN {$stok_table} sk ON (
+                (p.post_type = 'product_variation' AND sk.variation_id = p.ID) OR
+                (p.post_type = 'product' AND sk.product_id = p.ID AND (sk.variation_id = 0 OR sk.variation_id IS NULL))
+            )
+            WHERE p.post_type IN ('product', 'product_variation')
+            AND p.post_status IN ('publish', 'private')
+            GROUP BY p.ID
+            HAVING wc_stock != total_wh_stock
+        ) AS mismatch_subquery"
+    );
+
+    return [
+        'total'    => $total_sku,
+        'zero'     => $zero_stock,
+        'mismatch' => $mismatch
+    ];
 }
 
 /**
