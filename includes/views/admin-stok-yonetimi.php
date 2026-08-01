@@ -532,7 +532,16 @@ jQuery(document).ready(function($) {
                     $('#stat-val-mismatch').text(res.data.stats.mismatch);
                 }
                 if (res.data.perf) {
-                    console.log(`%c⚡ [Stok Yükleme Teşhisi] Toplam İstek: ${res.data.perf.total_request_time_ms} ms | Stok Fonksiyonu: ${res.data.perf.action_exec_time_ms} ms | SQL Sorgu: ${res.data.perf.db_queries}`, 'color: #2563eb; font-weight: bold;');
+                    const p = res.data.perf;
+                    console.groupCollapsed(`%c⚡ [Hızlı Kasa Vakit Kaybı Analizi] Toplam Süre: ${p.total_server_time_ms} ms (${p.db_queries} SQL Sorgusu)`, 'color:#2563eb; font-weight:bold; font-size:12px;');
+                    console.table([
+                        { 'İşlem Adımı': '1. 🌐 WordPress Boot & Eklentiler (Açılış)', 'Süre (ms)': p.wp_bootup_ms, 'Pay (%)': Math.round((p.wp_bootup_ms / p.total_server_time_ms) * 100) + '%' },
+                        { 'İşlem Adımı': '2. 🗄️ SQL Ürün ID Filtreleme (Sorgu 1)', 'Süre (ms)': p.db_product_ids_ms, 'Pay (%)': Math.round((p.db_product_ids_ms / p.total_server_time_ms) * 100) + '%' },
+                        { 'İşlem Adımı': '3. 📋 Postmeta & Nitelik Çekimi (Sorgu 2)', 'Süre (ms)': p.db_postmeta_ms, 'Pay (%)': Math.round((p.db_postmeta_ms / p.total_server_time_ms) * 100) + '%' },
+                        { 'İşlem Adımı': '4. 🏢 Depo Stokları & Term Çözümleme (Sorgu 3-4)', 'Süre (ms)': p.db_stocks_terms_ms, 'Pay (%)': Math.round((p.db_stocks_terms_ms / p.total_server_time_ms) * 100) + '%' },
+                        { 'İşlem Adımı': '5. 🌳 Varyasyon Ağacı & Şablon Hazırlığı', 'Süre (ms)': p.php_tree_assembly_ms, 'Pay (%)': Math.round((p.php_tree_assembly_ms / p.total_server_time_ms) * 100) + '%' }
+                    ]);
+                    console.groupEnd();
                 }
             } else {
                 let errorMsg = res.data ? res.data.message : 'Bilinmeyen hata';

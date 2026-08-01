@@ -16,6 +16,9 @@ public static function get_list() {
     }
     nocache_headers(); // Cache engelle
     try {
+        $start_time = microtime(true);
+        $queries_before = get_num_queries();
+
         hizli_kasa_admin_log("ADMIN_STOCK_LIST START");
         if (!current_user_can('manage_options')) {
             hizli_kasa_admin_log("Access denied for current user");
@@ -97,72 +100,73 @@ public static function get_list() {
             wp_send_json_error(['message' => 'Veritabanı hatası: ' . $wpdb->last_error]);
         }
 
-    if (empty($main_ids)) {
-        wp_send_json_success(['products' => [], 'total_pages' => 0]);
-    }
+        $t_ids_fetched = microtime(true);
 
-    // ADIM 2: Detayları Topla (Ana ürünler + Onların tüm varyasyonları)
-    $main_placeholders = implode(',', array_fill(0, count($main_ids), '%d'));
-    
-    // Varyasyonları bul
-    $variation_ids = $wpdb->get_col($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_type = 'product_variation' AND post_parent IN ($main_placeholders)", $main_ids));
-    
-    $all_target_ids = array_unique(array_merge($main_ids, $variation_ids));
-    $all_placeholders = implode(',', array_fill(0, count($all_target_ids), '%d'));
-
-    // Metataları çek (Nitelikler dahil)
-    $meta_results = $wpdb->get_results($wpdb->prepare("
-        SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta} 
-        WHERE post_id IN ($all_placeholders) 
-        AND (meta_key IN ('_sku', '_stock', '_thumbnail_id', '_product_attributes') OR meta_key LIKE 'attribute_%%')
-    ", $all_target_ids));
-    
-    $metas_by_id = [];
-    $tax_slug_map = [];
-    foreach ($meta_results as $m) { 
-        $metas_by_id[$m->post_id][$m->meta_key] = $m->meta_value; 
-        if (strpos($m->meta_key, 'attribute_') === 0 && $m->meta_value) {
-            $tax = str_replace('attribute_', '', $m->meta_key);
-            $tax_slug_map[$tax][] = $m->meta_value;
+        if (empty($main_ids)) {
+            wp_send_json_success(['products' => [], 'total_pages' => 0]);
         }
-    }
 
-    $start_time = microtime(true);
-    $queries_before = get_num_queries();
+        // ADIM 2: Detayları Topla (Ana ürünler + Onların tüm varyasyonları)
+        $main_placeholders = implode(',', array_fill(0, count($main_ids), '%d'));
+        
+        // Varyasyonları bul
+        $variation_ids = $wpdb->get_col($wpdb->prepare("SELECT ID FROM {$wpdb->posts} WHERE post_type = 'product_variation' AND post_parent IN ($main_placeholders)", $main_ids));
+        
+        $all_target_ids = array_unique(array_merge($main_ids, $variation_ids));
+        $all_placeholders = implode(',', array_fill(0, count($all_target_ids), '%d'));
 
-    // Term isimlerini çöz (Sıralama için) - Toplu Batch Çekim
-    $term_names = [];
-    foreach ($tax_slug_map as $tax => $slugs) {
-        $slugs = array_values(array_unique($slugs));
-        if (!empty($slugs)) {
-            $terms = get_terms([
-                'taxonomy'   => $tax,
-                'slug'       => $slugs,
-                'hide_empty' => false,
-            ]);
-            if (!is_wp_error($terms)) {
-                foreach ($terms as $t) {
-                    $term_names[$tax][$t->slug] = $t->name;
+        // Metataları çek (Nitelikler dahil)
+        $meta_results = $wpdb->get_results($wpdb->prepare("
+            SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta} 
+            WHERE post_id IN ($all_placeholders) 
+            AND (meta_key IN ('_sku', '_stock', '_thumbnail_id', '_product_attributes') OR meta_key LIKE 'attribute_%%')
+        ", $all_target_ids));
+        
+        $metas_by_id = [];
+        $tax_slug_map = [];
+        foreach ($meta_results as $m) { 
+            $metas_by_id[$m->post_id][$m->meta_key] = $m->meta_value; 
+            if (strpos($m->meta_key, 'attribute_') === 0 && $m->meta_value) {
+                $tax = str_replace('attribute_', '', $m->meta_key);
+                $tax_slug_map[$tax][] = $m->meta_value;
+            }
+        }
+
+        $t_meta_fetched = microtime(true);
+
+        // Term isimlerini çöz (Sıralama için) - Toplu Batch Çekim
+        $term_names = [];
+        foreach ($tax_slug_map as $tax => $slugs) {
+            $slugs = array_values(array_unique($slugs));
+            if (!empty($slugs)) {
+                $terms = get_terms([
+                    'taxonomy'   => $tax,
+                    'slug'       => $slugs,
+                    'hide_empty' => false,
+                ]);
+                if (!is_wp_error($terms)) {
+                    foreach ($terms as $t) {
+                        $term_names[$tax][$t->slug] = $t->name;
+                    }
                 }
             }
         }
-    }
 
-    // Post detaylarını çek
-    $p_details = $wpdb->get_results($wpdb->prepare("SELECT ID, post_title, post_type, post_parent FROM {$wpdb->posts} WHERE ID IN ($all_placeholders)", $all_target_ids));
-    $details_by_id = [];
-    foreach ($p_details as $pd) { $details_by_id[$pd->ID] = $pd; }
+        // Post detaylarını çek
+        $p_details = $wpdb->get_results($wpdb->prepare("SELECT ID, post_title, post_type, post_parent FROM {$wpdb->posts} WHERE ID IN ($all_placeholders)", $all_target_ids));
+        $details_by_id = [];
+        foreach ($p_details as $pd) { $details_by_id[$pd->ID] = $pd; }
 
-    // ADIM 3: Depo Stoklarını Topla
-    $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priority DESC");
-    $stock_results = $wpdb->get_results($wpdb->prepare("SELECT location_id, product_id, variation_id, quantity FROM $stok_table WHERE (product_id IN ($all_placeholders) OR variation_id IN ($all_placeholders))", array_merge($all_target_ids, $all_target_ids)));
+        // ADIM 3: Depo Stoklarını Topla
+        $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priority DESC");
+        $stock_results = $wpdb->get_results($wpdb->prepare("SELECT location_id, product_id, variation_id, quantity FROM $stok_table WHERE (product_id IN ($all_placeholders) OR variation_id IN ($all_placeholders))", array_merge($all_target_ids, $all_target_ids)));
 
-    $stocks_by_loc = [];
-    foreach ($stock_results as $sr) {
-        $key = ($sr->variation_id > 0) ? "v_{$sr->variation_id}" : "p_{$sr->product_id}";
-        $stocks_by_loc[$sr->location_id][$key] = $sr->quantity;
-    }
-    hizli_kasa_admin_log("Step 3 Complete (Stocks Fetched)");
+        $stocks_by_loc = [];
+        foreach ($stock_results as $sr) {
+            $key = ($sr->variation_id > 0) ? "v_{$sr->variation_id}" : "p_{$sr->product_id}";
+            $stocks_by_loc[$sr->location_id][$key] = $sr->quantity;
+        }
+        $t_stocks_fetched = microtime(true);
 
     $output = [];
     foreach ($main_ids as $m_id) {
@@ -345,21 +349,26 @@ public static function get_list() {
         $output[] = $item;
     }
 
-    hizli_kasa_admin_log("Final Output Prepared. Count: " . count($output));
+    $t_tree_assembled = microtime(true);
+    $boot_time = defined('HIZLI_KASA_BOOT_TIME') ? HIZLI_KASA_BOOT_TIME : $start_time;
 
-    $exec_time = isset($start_time) ? round((microtime(true) - $start_time) * 1000, 2) : 0;
-    $total_time = defined('HIZLI_KASA_BOOT_TIME') ? round((microtime(true) - HIZLI_KASA_BOOT_TIME) * 1000, 2) : $exec_time;
-    $queries_diff = isset($queries_before) ? (get_num_queries() - $queries_before) : 0;
+    $perf_breakdown = [
+        'wp_bootup_ms'         => round(($start_time - $boot_time) * 1000, 2),
+        'db_product_ids_ms'    => round(($t_ids_fetched - $start_time) * 1000, 2),
+        'db_postmeta_ms'       => round(($t_meta_fetched - $t_ids_fetched) * 1000, 2),
+        'db_stocks_terms_ms'   => round(($t_stocks_fetched - $t_meta_fetched) * 1000, 2),
+        'php_tree_assembly_ms' => round(($t_tree_assembled - $t_stocks_fetched) * 1000, 2),
+        'total_server_time_ms' => round(($t_tree_assembled - $boot_time) * 1000, 2),
+        'db_queries'           => get_num_queries() - $queries_before
+    ];
+
+    hizli_kasa_admin_log("Final Output Prepared. Count: " . count($output));
 
     wp_send_json_success([
         'products'    => $output,
         'total_pages' => ceil($total_items / $per_page),
         'stats'       => self::get_stock_stats(),
-        'perf'        => [
-            'total_request_time_ms' => $total_time,
-            'action_exec_time_ms'   => $exec_time,
-            'db_queries'            => $queries_diff
-        ]
+        'perf'        => $perf_breakdown
     ]);
     hizli_kasa_admin_log("Response Sent Successfully. Total: {$total_time}ms | Exec: {$exec_time}ms");
 
