@@ -269,36 +269,41 @@
          * Yazdır/Kapat butonları ve klavye kısayollarını bağla
          */
         _bindEvents: function() {
-            var els = this.els;
             var self = this;
 
             var triggerPrint = function() {
                 if (HK.PrintCore && self.currentOrderId) {
                     HK.PrintCore.print({ type: 'order', id: self.currentOrderId });
-                } else {
+                } else if (HK.PrintManager) {
                     HK.PrintManager.print('receipt');
                 }
             };
 
-            if (els.fisYazdirTetik) {
-                els.fisYazdirTetik.addEventListener("click", function() {
+            document.addEventListener("click", function(e) {
+                if (e.target && (e.target.id === "fis-yazdir-tetik" || e.target.closest("#fis-yazdir-tetik"))) {
                     triggerPrint();
-                });
-            }
-
-            if (els.fisYazdirKapat) {
-                els.fisYazdirKapat.addEventListener("click", function() {
-                    if (els.fisOnayModal) els.fisOnayModal.style.display = "none";
-                });
-            }
+                } else if (e.target && (e.target.id === "fis-yazdir-kapat" || e.target.closest("#fis-yazdir-kapat"))) {
+                    var modal = document.getElementById("fis-onay-modal");
+                    if (modal) modal.style.display = "none";
+                }
+            });
 
             document.addEventListener("keydown", function(e) {
-                if (els.fisOnayModal && els.fisOnayModal.style.display === "flex") {
-                    if (e.key === "Enter") {
-                        triggerPrint();
-                    } else if (e.key === "Escape") {
-                        els.fisOnayModal.style.display = "none";
-                    }
+                var modal = document.getElementById("fis-onay-modal");
+                if (!modal) return;
+
+                var isVisible = modal.style.display !== "none" && modal.style.display !== "" && window.getComputedStyle(modal).display !== "none";
+                if (!isVisible) return;
+
+                var isEnter = e.key === "Enter" || e.keyCode === 13;
+                var isEsc = e.key === "Escape" || e.key === "Esc" || e.keyCode === 27;
+
+                if (isEnter) {
+                    e.preventDefault();
+                    triggerPrint();
+                } else if (isEsc) {
+                    e.preventDefault();
+                    modal.style.display = "none";
                 }
             });
         }

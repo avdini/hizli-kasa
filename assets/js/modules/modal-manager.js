@@ -845,6 +845,8 @@
                 if (event.target == els.bolModal) els.bolModal.style.display = "none";
                 if (event.target == els.siparisNotuModal) els.siparisNotuModal.style.display = "none";
                 if (els.kuponDogrulamaModal && event.target == els.kuponDogrulamaModal) els.kuponDogrulamaModal.style.display = "none";
+                var fisModal = document.getElementById("fis-onay-modal");
+                if (fisModal && event.target == fisModal) fisModal.style.display = "none";
             });
         },
 
