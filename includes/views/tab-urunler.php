@@ -40,6 +40,18 @@ if (!defined('ABSPATH')) exit;
                 <span class="ikon">🎛️</span> Detaylı Filtreler <span id="active-filter-badge" class="filter-count-badge" style="display:none;">0</span>
             </button>
 
+            <!-- Sıralama Seçenekleri -->
+            <select id="terminal-siralama-select" class="terminal-select">
+                <option value="date_desc">Yeni Eklenenler</option>
+                <option value="date_asc">Eski Eklenenler</option>
+                <option value="title_asc">Ürün Adı (A-Z)</option>
+                <option value="title_desc">Ürün Adı (Z-A)</option>
+                <option value="stock_desc">Stok (Azalan)</option>
+                <option value="stock_asc">Stok (Artan)</option>
+                <option value="price_asc">Fiyat (Düşükten Yükseğe)</option>
+                <option value="price_desc">Fiyat (Yüksekten Düşüğe)</option>
+            </select>
+
             <div class="arama-kutusu">
                 <input type="text" id="terminal-arama-input" placeholder="Ürün adı, SKU veya barkod okutun..." autocomplete="off">
                 <span class="arama-ikon">🔍</span>
@@ -139,22 +151,6 @@ if (!defined('ABSPATH')) exit;
                 </div>
             </div>
 
-            <!-- 5. Sıralama Seçenekleri -->
-            <div class="filter-section">
-                <label class="filter-section-title">🔀 Sıralama</label>
-                <div class="filter-field">
-                    <select id="terminal-siralama-select" class="terminal-select">
-                        <option value="date_desc">Yeni Eklenenler</option>
-                        <option value="date_asc">Eski Eklenenler</option>
-                        <option value="title_asc">Ürün Adı (A-Z)</option>
-                        <option value="title_desc">Ürün Adı (Z-A)</option>
-                        <option value="stock_desc">Stok (Azalan)</option>
-                        <option value="stock_asc">Stok (Artan)</option>
-                        <option value="price_asc">Fiyat (Düşükten Yükseğe)</option>
-                        <option value="price_desc">Fiyat (Yüksekten Düşüğe)</option>
-                    </select>
-                </div>
-            </div>
         </div>
 
         <div class="drawer-footer">
