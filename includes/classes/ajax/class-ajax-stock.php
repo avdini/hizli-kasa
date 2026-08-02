@@ -82,7 +82,7 @@ public static function get_list() {
             if ($filter_reserved) {
                 $having_clauses[] = "total_reserved_stock > 0";
             }
-            if ($filter_depo_status === 'in_stock') {
+            if ($filter_depo_status === 'in_stock' || ($filter_depo_id > 0 && $filter_depo_status === 'all')) {
                 $having_clauses[] = "total_wh_stock > 0";
             } elseif ($filter_depo_status === 'out_of_stock') {
                 $having_clauses[] = "total_wh_stock <= 0";

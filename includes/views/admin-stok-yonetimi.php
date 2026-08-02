@@ -274,8 +274,8 @@ $stats = class_exists('Hizli_Kasa_Ajax_Stock') ? Hizli_Kasa_Ajax_Stock::get_stoc
             <div style="margin-bottom:18px;">
                 <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13px; color:var(--hk-text-main);">📊 Depo Stok Durumu</label>
                 <select id="modal-filter-depo-status" class="hk-modal-input" style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--hk-border-color); background:#f8fafc; font-size:13.5px;">
-                    <option value="all">Tümü (Sınırlama Yok)</option>
-                    <option value="in_stock">Stoğu Var (> 0)</option>
+                    <option value="in_stock" selected>Stoğu Var (> 0)</option>
+                    <option value="all">Tüm Durumlar (0 Dahil)</option>
                     <option value="out_of_stock">Stoğu Tükenmiş (≤ 0)</option>
                     <option value="negative">Eksi Stoğa Düşmüş (< 0)</option>
                 </select>
