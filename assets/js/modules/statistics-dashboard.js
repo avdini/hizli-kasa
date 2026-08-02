@@ -105,10 +105,10 @@
             html += '<div class="stat-kpi-grid">';
             html += self._kpiCard('💰', 'TOPLAM CİRO',    self._currency(kpi.toplam_ciro),  kpi.siparis_sayisi + ' sipariş', 'kpi-ciro stat-kpi-clickable', 'Siparişleri Gör ➔');
             html += self._kpiCard('🏦', 'NET CİRO',       self._currency(kpi.net_ciro),      'İade ve masraf düşüldü', 'kpi-net stat-kpi-clickable', 'Siparişleri Gör ➔');
+            html += self._kpiCard('🧾', 'SİPARİŞ SAYISI', kpi.siparis_sayisi + ' adet',      'Brüt satış adedi', 'kpi-siparis stat-kpi-clickable', 'Siparişleri Gör ➔');
             html += self._kpiCard('📦', 'SATILAN ÜRÜN',   (kpi.toplam_urun_adedi || 0) + ' adet', 'Satılan toplam ürün adedi', 'kpi-urun stat-kpi-clickable', 'Trendi Gör ➔');
             html += self._kpiCard('↩️', 'TOPLAM İADE',    self._currency(kpi.toplam_iade),   kpi.iade_sayisi + ' iade', 'kpi-iade stat-kpi-clickable', 'İadeleri Gör ➔');
             html += self._kpiCard('✂️', 'TOPLAM İSKONTO', self._currency(kpi.toplam_iskonto || 0), (kpi.iskonto_siparis_sayisi || 0) + ' siparişte', 'kpi-iskonto stat-kpi-clickable', 'Siparişleri Gör ➔');
-            html += self._kpiCard('🧾', 'SİPARİŞ SAYISI', kpi.siparis_sayisi + ' adet',      'Brüt satış adedi', 'kpi-siparis stat-kpi-clickable', 'Siparişleri Gör ➔');
             html += '</div>';
 
             // Veri yoksa mesaj göster
