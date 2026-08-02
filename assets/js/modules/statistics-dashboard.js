@@ -105,7 +105,7 @@
             html += '<div class="stat-kpi-grid">';
             html += self._kpiCard('💰', 'TOPLAM CİRO',    self._currency(kpi.toplam_ciro),  kpi.siparis_sayisi + ' sipariş', 'kpi-ciro');
             html += self._kpiCard('🏦', 'NET CİRO',       self._currency(kpi.net_ciro),      'İade ve masraf düşüldü', 'kpi-net');
-            html += self._kpiCard('↩️', 'TOPLAM İADE',    self._currency(kpi.toplam_iade),   kpi.iade_sayisi + ' iade', 'kpi-iade');
+            html += self._kpiCard('↩️', 'TOPLAM İADE',    self._currency(kpi.toplam_iade),   kpi.iade_sayisi + ' iade', 'kpi-iade stat-kpi-clickable', 'İadeleri Gör ➔');
             html += self._kpiCard('✂️', 'TOPLAM İSKONTO', self._currency(kpi.toplam_iskonto || 0), (kpi.iskonto_siparis_sayisi || 0) + ' siparişte', 'kpi-iskonto');
             html += self._kpiCard('🧾', 'SİPARİŞ SAYISI', kpi.siparis_sayisi + ' adet',      'Brüt satış adedi', 'kpi-siparis');
             html += '</div>';
@@ -198,6 +198,21 @@
 
             if (urunler.length > 0) {
                 self._bindTopTableEvents(panel, urunler);
+            }
+
+            var iadeCard = panel.querySelector('.stat-kpi-card.kpi-iade');
+            if (iadeCard) {
+                iadeCard.addEventListener('click', function () {
+                    if (!HK.ReportHub) return;
+                    if (HK.ReportHub.history) {
+                        HK.ReportHub.history.push({
+                            view: 'report',
+                            catId: 'istatistik',
+                            repId: 'ozet-istatistik'
+                        });
+                    }
+                    HK.ReportHub.kategoriAc('iade', 'iade-listesi');
+                });
             }
 
             // Chart.js mevcut mu?
@@ -603,12 +618,16 @@
         /* -------------------------------------------------
            KPI KART HTML
         ------------------------------------------------- */
-        _kpiCard: function (icon, label, value, sub, cls) {
+        _kpiCard: function (icon, label, value, sub, cls, actionText) {
+            var actionHtml = actionText ? '<span class="stat-kpi-action-link">' + actionText + '</span>' : '';
             return '<div class="stat-kpi-card ' + (cls || '') + '">'
                 + '<span class="stat-kpi-icon">' + icon + '</span>'
                 + '<span class="stat-kpi-label">' + label + '</span>'
                 + '<span class="stat-kpi-value">' + value + '</span>'
+                + '<div class="stat-kpi-sub-row">'
                 + '<span class="stat-kpi-sub">' + (sub || '') + '</span>'
+                + actionHtml
+                + '</div>'
                 + '</div>';
         },
 

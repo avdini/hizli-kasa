@@ -509,6 +509,26 @@
             var hubView = document.getElementById('rhub-anasayfa-view');
             var catView = document.getElementById('rhub-kategori-view');
 
+            // Eğer zaten kategori görünümündeysek animasyonsuz doğrudan geç
+            if (hubView && hubView.style.display === 'none') {
+                catView.style.display = 'block';
+                catView.style.transform = 'translateY(0)';
+                catView.style.opacity = '1';
+                self.renderSidebarMenu();
+
+                var activeRepId = repId;
+                if (!activeRepId) {
+                    var catReports = self.getReportsByCategory(catId);
+                    if (catReports.length > 0) {
+                        activeRepId = catReports[0].id;
+                    }
+                }
+                if (activeRepId) {
+                    self.raporAc(activeRepId);
+                }
+                return;
+            }
+
             // Hızlı ve şık animasyon (slide & fade)
             hubView.style.transform = 'translateY(-10px)';
             hubView.style.opacity = '0';
