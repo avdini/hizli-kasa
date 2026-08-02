@@ -8,6 +8,7 @@ class Hizli_Kasa_Ajax_Stock {
         add_action('wp_ajax_hizli_kasa_get_admin_stock_list', [self::class, 'get_list']);
         add_action('wp_ajax_hizli_kasa_admin_update_stock', [self::class, 'update']);
         add_action('wp_ajax_hizli_kasa_batch_update_stock', [self::class, 'batch_update']);
+        add_action('wp_ajax_hizli_kasa_clear_stock_reservation', [self::class, 'clear_reservation']);
     }
 
 public static function get_list() {
@@ -31,6 +32,7 @@ public static function get_list() {
         $s = sanitize_text_field($_POST['s'] ?? '');
         $filter_mismatch = (isset($_POST['filter_mismatch']) && $_POST['filter_mismatch'] === 'true');
         $filter_zero_stock = (isset($_POST['filter_zero_stock']) && $_POST['filter_zero_stock'] === 'true');
+        $filter_reserved = (isset($_POST['filter_reserved']) && $_POST['filter_reserved'] === 'true');
         $paged = max(1, intval($_POST['paged'] ?? 1));
         $per_page = 24;
         $offset = ($paged - 1) * $per_page;
@@ -44,7 +46,7 @@ public static function get_list() {
             $params[] = $like; $params[] = $like;
         }
 
-        if ($filter_mismatch || $filter_zero_stock) {
+        if ($filter_mismatch || $filter_zero_stock || $filter_reserved) {
             $where_sql .= " AND (p.post_type = 'product_variation' OR (p.post_type = 'product' AND NOT EXISTS (SELECT 1 FROM {$wpdb->posts} as p_child WHERE p_child.post_parent = p.ID AND p_child.post_type = 'product_variation')))";
             
             if ($filter_zero_stock) {
@@ -61,6 +63,9 @@ public static function get_list() {
             if ($filter_mismatch) {
                 $having_clauses[] = "(total_wh_stock != wc_stock OR min_wh_stock < 0)";
             }
+            if ($filter_reserved) {
+                $having_clauses[] = "total_reserved_stock > 0";
+            }
             $having_sql = $having_clauses === [] ? "" : "HAVING " . implode(" AND ", $having_clauses);
             
             $base_sql = "
@@ -68,7 +73,8 @@ public static function get_list() {
                     (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id,
                     COALESCE(CAST(pm_stock.meta_value AS DECIMAL(15,4)), 0) as wc_stock,
                     COALESCE(SUM(sk.quantity - sk.reserved), 0) as total_wh_stock,
-                    COALESCE(MIN(sk.quantity - sk.reserved), 0) as min_wh_stock
+                    COALESCE(MIN(sk.quantity - sk.reserved), 0) as min_wh_stock,
+                    COALESCE(SUM(sk.reserved), 0) as total_reserved_stock
                 FROM {$wpdb->posts} p
                 LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
                 LEFT JOIN {$wpdb->postmeta} pm_stock ON (p.ID = pm_stock.post_id AND pm_stock.meta_key = '_stock')
@@ -558,5 +564,46 @@ public static function batch_update() {
     
     delete_transient('hk_admin_stock_stats');
     wp_send_json_success(['updated' => $updated, 'errors' => $errors]);
+}
+
+/**
+ * Askıda Kalan Stok Rezervasyonunu Manuel Sıfırla
+ */
+public static function clear_reservation() {
+    if (!current_user_can('manage_options')) {
+        wp_send_json_error(['message' => 'Yetkisiz erişim!']);
+    }
+
+    global $wpdb;
+    $stok_table = Hizli_Kasa_Database::get_tables()['stok_konumlari'];
+
+    $product_id   = intval($_POST['product_id'] ?? 0);
+    $variation_id = intval($_POST['variation_id'] ?? 0);
+    $location_id  = intval($_POST['location_id'] ?? 0);
+
+    if (!$product_id) {
+        wp_send_json_error(['message' => 'Geçersiz ürün ID']);
+    }
+
+    $where = [
+        'product_id'   => $product_id,
+        'variation_id' => $variation_id
+    ];
+    if ($location_id > 0) {
+        $where['location_id'] = $location_id;
+    }
+
+    $updated = $wpdb->update($stok_table, ['reserved' => 0], $where);
+
+    if ($updated !== false) {
+        hizli_kasa_log("Manuel Rezervasyon Sıfırlandı: P:$product_id, V:$variation_id, L:$location_id (User: " . get_current_user_id() . ")");
+        if (class_exists('Hizli_Kasa_Mismatch_Notifier')) {
+            Hizli_Kasa_Mismatch_Notifier::reset_status();
+        }
+        delete_transient('hk_admin_stock_stats');
+        wp_send_json_success(['message' => 'Stok rezervasyonu başarıyla temizlendi.']);
+    } else {
+        wp_send_json_error(['message' => 'Veritabanı güncelleme hatası.']);
+    }
 }
 }

@@ -72,6 +72,11 @@ $stats = class_exists('Hizli_Kasa_Ajax_Stock') ? Hizli_Kasa_Ajax_Stock::get_stoc
                     <span class="dashicons dashicons-minus" style="font-size:16px; width:16px; height:16px;"></span>
                     Sıfır Stoklular
                 </label>
+                <label class="hk-filter-chip" id="chip-reserved-label" style="--chip-accent:#ea580c;">
+                    <input type="checkbox" id="filter-reserved" onchange="onFilterChipChange()">
+                    <span class="dashicons dashicons-lock" style="font-size:16px; width:16px; height:16px; color:#ea580c;"></span>
+                    Rezerve Edilmiş Olanlar
+                </label>
             </div>
         </div>
         <div class="actions" style="display:flex; gap:10px; align-items:center;">
@@ -210,10 +215,34 @@ $stats = class_exists('Hizli_Kasa_Ajax_Stock') ? Hizli_Kasa_Ajax_Stock::get_stoc
                 </div>
             </div>
         </div>
+        </div>
         <div class="hk-modal-footer">
             <button type="button" class="button" onclick="closeExportModal()">İptal</button>
             <button type="button" class="button button-primary" onclick="startExport()">
                 <span class="dashicons dashicons-download" style="font-size:16px; margin-top:2px;"></span> İndir
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Rezervasyon Temizleme Modalı -->
+<div id="hk-clear-res-modal" class="hk-modal-overlay">
+    <div class="hk-modal-box" style="max-width:460px;">
+        <div class="hk-modal-header">
+            <h3><span class="dashicons dashicons-lock" style="color:#ea580c;"></span> Rezervasyonu Temizle</h3>
+            <button type="button" class="hk-modal-close" onclick="$('#hk-clear-res-modal').hide()">✕</button>
+        </div>
+        <div class="hk-modal-body">
+            <p style="color:var(--hk-text-main); font-size:13.5px; margin-top:0;" id="clear-res-modal-text">Bu ürünün kilitli stok rezervasyonunu temizlemek istediğinize emin misiniz?</p>
+            <div style="background:#fff7ed; border:1px solid #ffedd5; border-radius:8px; padding:10px 12px; margin-top:12px; font-size:12px; color:#c2410c;">
+                <strong>⚠️ Dikkat:</strong> Bu işlem kilitli stoğu 0 yapar ve net kullanılabilir stoğu artırır. Siparişi iptal olmuş veya askıda kalmış durumlar hariç dikkatle uygulanmalıdır.
+            </div>
+            <div id="hk-clear-res-message" style="display:none; margin-top:12px; padding:10px; border-radius:8px; font-weight:600; font-size:12.5px;"></div>
+        </div>
+        <div class="hk-modal-footer">
+            <button type="button" class="button" onclick="$('#hk-clear-res-modal').hide()">İptal</button>
+            <button type="button" class="button button-primary" id="confirm-clear-res-btn" style="background:#dc2626; border-color:#dc2626;">
+                <span class="dashicons dashicons-trash" style="font-size:16px; margin-top:3px;"></span> Evet, Temizle
             </button>
         </div>
     </div>
@@ -243,10 +272,12 @@ jQuery(document).ready(function($) {
             $('#card-stat-mismatch').addClass('active');
             $('#filter-mismatch').prop('checked', true);
             $('#filter-zero-stock').prop('checked', false);
+            $('#filter-reserved').prop('checked', false);
         } else {
             $('#card-stat-all').addClass('active');
             $('#filter-mismatch').prop('checked', false);
             $('#filter-zero-stock').prop('checked', false);
+            $('#filter-reserved').prop('checked', false);
         }
         updateFilterChipStyles();
         currentPage = 1;
@@ -262,6 +293,7 @@ jQuery(document).ready(function($) {
     function updateFilterChipStyles() {
         $('#chip-mismatch-label').toggleClass('active', $('#filter-mismatch').is(':checked'));
         $('#chip-zero-label').toggleClass('active', $('#filter-zero-stock').is(':checked'));
+        $('#chip-reserved-label').toggleClass('active', $('#filter-reserved').is(':checked'));
     }
 
     window.openImagePreview = function(src) {
@@ -392,6 +424,42 @@ jQuery(document).ready(function($) {
         $('#hk-export-modal').hide();
     };
 
+    let pendingClearResData = null;
+
+    window.openClearReservationModal = function(e, pid, vid, did, name) {
+        if (e) e.stopPropagation();
+        pendingClearResData = { pid: pid, vid: vid, did: did };
+        $('#clear-res-modal-text').html(`<strong>${name}</strong> ürünü için bu depodaki kilitli stok rezervasyonunu sıfırlamak istediğinize emin misiniz?`);
+        $('#hk-clear-res-message').hide().text('');
+        $('#confirm-clear-res-btn').prop('disabled', false).html('<span class="dashicons dashicons-trash" style="font-size:16px; margin-top:3px;"></span> Evet, Temizle');
+        $('#hk-clear-res-modal').css('display', 'flex');
+    };
+
+    $('#confirm-clear-res-btn').on('click', function() {
+        if (!pendingClearResData) return;
+        const $btn = $(this);
+        $btn.prop('disabled', true).text('İşleniyor...');
+
+        const ajax_url = (typeof ajaxurl !== 'undefined') ? ajaxurl : '/wp-admin/admin-ajax.php';
+        $.post(ajax_url, {
+            action: 'hizli_kasa_clear_stock_reservation',
+            product_id: pendingClearResData.pid,
+            variation_id: pendingClearResData.vid,
+            location_id: pendingClearResData.did
+        }, function(res) {
+            if (res.success) {
+                $('#hk-clear-res-modal').hide();
+                loadStockList(currentPage);
+            } else {
+                $btn.prop('disabled', false).html('<span class="dashicons dashicons-trash" style="font-size:16px; margin-top:3px;"></span> Evet, Temizle');
+                $('#hk-clear-res-message').css({ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }).text(res.data ? res.data.message : 'Hata oluştu').show();
+            }
+        }).fail(function() {
+            $btn.prop('disabled', false).html('<span class="dashicons dashicons-trash" style="font-size:16px; margin-top:3px;"></span> Evet, Temizle');
+            $('#hk-clear-res-message').css({ background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca' }).text('Bağlantı hatası oluştu').show();
+        });
+    });
+
     window.startExport = function() {
         const depoId = $('#export-depo-select').val();
         const format = $('input[name="export_format"]:checked').val();
@@ -513,6 +581,7 @@ jQuery(document).ready(function($) {
         const query = $('#admin-product-search').val();
         const filterMismatch = $('#filter-mismatch').is(':checked');
         const filterZeroStock = $('#filter-zero-stock').is(':checked');
+        const filterReserved = $('#filter-reserved').is(':checked');
         const $body = $('#admin-stock-list-body');
         const ajax_url = (typeof ajaxurl !== 'undefined') ? ajaxurl : '/wp-admin/admin-ajax.php';
 
@@ -521,7 +590,8 @@ jQuery(document).ready(function($) {
             s: query,
             paged: page,
             filter_mismatch: filterMismatch,
-            filter_zero_stock: filterZeroStock
+            filter_zero_stock: filterZeroStock,
+            filter_reserved: filterReserved
         }, function(res) {
             $body.css('opacity', '1');
             if(res.success) {
@@ -631,7 +701,8 @@ jQuery(document).ready(function($) {
                 </td>`;
             
             p.warehouse_stocks.forEach(ws => {
-                const reservedInfo = (ws.reserved && ws.reserved > 0) ? `<div style="font-size:10px; color:#d97706; font-weight:700; margin-top:3px; background:#fffbe8; border:1px solid #fef3c7; border-radius:4px; padding:1px 4px; display:inline-block;" title="Online Sipariş Kilitli Stok: ${ws.reserved} Adet (Net Stok: ${ws.qty - ws.reserved})">🔒 ${ws.reserved} Rezerve</div>` : '';
+                const safeName = (p.name || '').replace(/'/g, "\\'");
+                const reservedInfo = (ws.reserved && ws.reserved > 0) ? `<div style="font-size:10px; color:#d97706; font-weight:700; margin-top:3px; background:#fffbe8; border:1px solid #fef3c7; border-radius:4px; padding:2px 6px; display:inline-flex; align-items:center; gap:4px;" title="Online Sipariş Kilitli Stok: ${ws.reserved} Adet (Net Stok: ${ws.qty - ws.reserved})">🔒 ${ws.reserved} Rezerve <button type="button" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:bold; font-size:11px; padding:0; line-height:1;" title="Rezervasyonu Temizle" onclick="openClearReservationModal(event, ${p.id}, 0, ${ws.depo_id}, '${safeName}')">✕</button></div>` : '';
                 row += `<td style="text-align:center; border-left:1px solid #f1f5f9; vertical-align:middle;">
                     ${isVariable ? '<span style="color:#cbd5e1">—</span>' : `
                     <div class="stock-qty-control" data-pid="${p.id}" data-vid="${p.variation_id}" data-did="${ws.depo_id}" data-type="warehouse">
@@ -679,7 +750,8 @@ jQuery(document).ready(function($) {
                         </td>`;
 
                     v.warehouse_stocks.forEach(vws => {
-                        const vReservedInfo = (vws.reserved && vws.reserved > 0) ? `<div style="font-size:10px; color:#d97706; font-weight:700; margin-top:3px; background:#fffbe8; border:1px solid #fef3c7; border-radius:4px; padding:1px 4px; display:inline-block;" title="Online Sipariş Kilitli Stok: ${vws.reserved} Adet (Net Stok: ${vws.qty - vws.reserved})">🔒 ${vws.reserved} Rezerve</div>` : '';
+                        const safeVName = (v.name || '').replace(/'/g, "\\'");
+                        const vReservedInfo = (vws.reserved && vws.reserved > 0) ? `<div style="font-size:10px; color:#d97706; font-weight:700; margin-top:3px; background:#fffbe8; border:1px solid #fef3c7; border-radius:4px; padding:2px 6px; display:inline-flex; align-items:center; gap:4px;" title="Online Sipariş Kilitli Stok: ${vws.reserved} Adet (Net Stok: ${vws.qty - vws.reserved})">🔒 ${vws.reserved} Rezerve <button type="button" style="background:none; border:none; color:#dc2626; cursor:pointer; font-weight:bold; font-size:11px; padding:0; line-height:1;" title="Rezervasyonu Temizle" onclick="openClearReservationModal(event, ${p.id}, ${v.variation_id}, ${vws.depo_id}, '${safeVName}')">✕</button></div>` : '';
                         vRow += `<td style="text-align:center; border-left:1px solid #f1f5f9; vertical-align:middle;">
                             <div class="stock-qty-control" data-pid="${p.id}" data-vid="${v.variation_id}" data-did="${vws.depo_id}" data-type="warehouse">
                                 <button class="btn-qty minus" onclick="updateStock(this, -1)">-</button>
