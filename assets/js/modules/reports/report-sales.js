@@ -52,6 +52,7 @@
                     }
                 }
             });
+        },
         filterHasDiscount: false,
 
         loadOrders: async function(page) {

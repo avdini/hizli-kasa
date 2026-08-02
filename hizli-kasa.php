@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 12.33.2
+ * Version: 12.33.3
  * Author: Seyfullah Kurt
  * Requires Plugins: woocommerce
  * Requires at least: 5.8
@@ -18,7 +18,7 @@ if (!defined('ABSPATH'))
 if (!defined('HIZLI_KASA_BOOT_TIME')) {
     define('HIZLI_KASA_BOOT_TIME', microtime(true));
 }
-define('HIZLI_KASA_VERSION', '12.33.2');
+define('HIZLI_KASA_VERSION', '12.33.3');
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
