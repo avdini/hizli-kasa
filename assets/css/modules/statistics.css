@@ -141,7 +141,7 @@
 
 .stat-kpi-card.stat-kpi-clickable:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
     border-color: var(--kpi-color, var(--hk-accent));
 }
 
@@ -149,18 +149,20 @@
     font-size: 11px;
     font-weight: 700;
     color: var(--kpi-color, var(--hk-accent));
-    background: rgba(239, 68, 68, 0.08);
+    background: var(--hk-bg-body, rgba(0, 0, 0, 0.04));
     padding: 3px 8px;
     border-radius: 6px;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    border: 1px solid var(--hk-border, rgba(0, 0, 0, 0.08));
 }
 
 .stat-kpi-card.stat-kpi-clickable:hover .stat-kpi-action-link {
     background: var(--kpi-color, var(--hk-accent));
     color: #ffffff;
+    border-color: var(--kpi-color, var(--hk-accent));
 }
 
 /* Renk varyantları */
