@@ -100,7 +100,7 @@ public static function get_list() {
             
             $depo_join_sql = "";
             if ($filter_depo_id > 0) {
-                $depo_join_sql = $wpdb->prepare(" AND sk.depo_id = %d", $filter_depo_id);
+                $depo_join_sql = $wpdb->prepare(" AND sk.location_id = %d", $filter_depo_id);
             }
 
             $base_sql = "
