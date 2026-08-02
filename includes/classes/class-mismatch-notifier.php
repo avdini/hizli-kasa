@@ -92,12 +92,12 @@ class Hizli_Kasa_Mismatch_Notifier {
                     p.ID as item_id,
                     p.post_title,
                     p.post_type,
-                    (SELECT COALESCE(SUM(sk.quantity), 0) 
+                    (SELECT COALESCE(SUM(sk.quantity - sk.reserved), 0) 
                      FROM $stok_table sk 
                      WHERE (p.post_type = 'product_variation' AND sk.variation_id = p.ID) 
                         OR (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0)
                     ) as total_wh,
-                    (SELECT COALESCE(MIN(sk.quantity), 0) 
+                    (SELECT COALESCE(MIN(sk.quantity - sk.reserved), 0) 
                      FROM $stok_table sk 
                      WHERE (p.post_type = 'product_variation' AND sk.variation_id = p.ID) 
                         OR (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0)

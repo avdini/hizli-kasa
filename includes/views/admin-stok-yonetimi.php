@@ -603,9 +603,10 @@ jQuery(document).ready(function($) {
             const badgeText = isVariable ? 'Varyantlı' : 'Basit';
             const stripeClass = (mainRowCounter % 2 === 0) ? 'stripe-even' : 'stripe-odd';
             
-            const diffVal = (p.total_warehouse_stock !== undefined) ? (p.total_warehouse_stock - p.wc_stock) : 0;
+            const netWhStock = (p.total_warehouse_stock !== undefined) ? (p.total_warehouse_stock - (p.total_reserved_stock || 0)) : 0;
+            const diffVal = netWhStock - p.wc_stock;
             const diffDisplay = diffVal > 0 ? `+${diffVal}` : `${diffVal}`;
-            const mismatchBadge = p.has_mismatch ? `<span class="hk-delta-badge delta-error" title="Depo stokları toplamı site stoğu ile uyuşmuyor!">Δ ${diffDisplay}</span>` : '';
+            const mismatchBadge = p.has_mismatch ? `<span class="hk-delta-badge delta-error" title="Depo net stokları toplamı site stoğu ile uyuşmuyor!">Δ ${diffDisplay}</span>` : '';
             
             const isExpanded = isVariable && autoExpand ? 'expanded' : '';
 
@@ -630,13 +631,15 @@ jQuery(document).ready(function($) {
                 </td>`;
             
             p.warehouse_stocks.forEach(ws => {
+                const reservedInfo = (ws.reserved && ws.reserved > 0) ? `<div style="font-size:10px; color:#d97706; font-weight:700; margin-top:3px; background:#fffbe8; border:1px solid #fef3c7; border-radius:4px; padding:1px 4px; display:inline-block;" title="Online Sipariş Kilitli Stok: ${ws.reserved} Adet (Net Stok: ${ws.qty - ws.reserved})">🔒 ${ws.reserved} Rezerve</div>` : '';
                 row += `<td style="text-align:center; border-left:1px solid #f1f5f9; vertical-align:middle;">
                     ${isVariable ? '<span style="color:#cbd5e1">—</span>' : `
                     <div class="stock-qty-control" data-pid="${p.id}" data-vid="${p.variation_id}" data-did="${ws.depo_id}" data-type="warehouse">
                         <button class="btn-qty minus" onclick="updateStock(this, -1)">-</button>
                         <span class="qty-value">${ws.qty}</span>
                         <button class="btn-qty plus" onclick="updateStock(this, 1)">+</button>
-                    </div>`}
+                    </div>
+                    ${reservedInfo}`}
                 </td>`;
             });
 
@@ -647,9 +650,10 @@ jQuery(document).ready(function($) {
             if(isVariable && p.variations && p.variations.length > 0) {
                 p.variations.forEach(v => {
                     const hiddenClass = autoExpand ? '' : 'hidden-variation';
-                    const vDiffVal = (v.total_warehouse_stock !== undefined) ? (v.total_warehouse_stock - v.wc_stock) : 0;
+                    const vNetWhStock = (v.total_warehouse_stock !== undefined) ? (v.total_warehouse_stock - (v.total_reserved_stock || 0)) : 0;
+                    const vDiffVal = vNetWhStock - v.wc_stock;
                     const vDiffDisplay = vDiffVal > 0 ? `+${vDiffVal}` : `${vDiffVal}`;
-                    const vMismatchBadge = v.has_mismatch ? `<span class="hk-delta-badge delta-error" title="Depo stokları toplamı site stoğu ile uyuşmuyor!">Δ ${vDiffDisplay}</span>` : '';
+                    const vMismatchBadge = v.has_mismatch ? `<span class="hk-delta-badge delta-error" title="Depo net stokları toplamı site stoğu ile uyuşmuyor!">Δ ${vDiffDisplay}</span>` : '';
                     
                     const vSkuLow = (v.sku || '').toLowerCase().trim();
                     const isExactSkuMatch = (queryStr !== '' && vSkuLow === queryStr);
@@ -675,12 +679,14 @@ jQuery(document).ready(function($) {
                         </td>`;
 
                     v.warehouse_stocks.forEach(vws => {
+                        const vReservedInfo = (vws.reserved && vws.reserved > 0) ? `<div style="font-size:10px; color:#d97706; font-weight:700; margin-top:3px; background:#fffbe8; border:1px solid #fef3c7; border-radius:4px; padding:1px 4px; display:inline-block;" title="Online Sipariş Kilitli Stok: ${vws.reserved} Adet (Net Stok: ${vws.qty - vws.reserved})">🔒 ${vws.reserved} Rezerve</div>` : '';
                         vRow += `<td style="text-align:center; border-left:1px solid #f1f5f9; vertical-align:middle;">
                             <div class="stock-qty-control" data-pid="${p.id}" data-vid="${v.variation_id}" data-did="${vws.depo_id}" data-type="warehouse">
                                 <button class="btn-qty minus" onclick="updateStock(this, -1)">-</button>
                                 <span class="qty-value">${vws.qty}</span>
                                 <button class="btn-qty plus" onclick="updateStock(this, 1)">+</button>
                             </div>
+                            ${vReservedInfo}
                         </td>`;
                     });
 

@@ -67,8 +67,8 @@ public static function get_list() {
                 SELECT 
                     (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id,
                     COALESCE(CAST(pm_stock.meta_value AS DECIMAL(15,4)), 0) as wc_stock,
-                    COALESCE(SUM(sk.quantity), 0) as total_wh_stock,
-                    COALESCE(MIN(sk.quantity), 0) as min_wh_stock
+                    COALESCE(SUM(sk.quantity - sk.reserved), 0) as total_wh_stock,
+                    COALESCE(MIN(sk.quantity - sk.reserved), 0) as min_wh_stock
                 FROM {$wpdb->posts} p
                 LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
                 LEFT JOIN {$wpdb->postmeta} pm_stock ON (p.ID = pm_stock.post_id AND pm_stock.meta_key = '_stock')
@@ -159,12 +159,14 @@ public static function get_list() {
 
         // ADIM 3: Depo Stoklarını Topla
         $depolar = $wpdb->get_results("SELECT id, name FROM $depo_table ORDER BY priority DESC");
-        $stock_results = $wpdb->get_results($wpdb->prepare("SELECT location_id, product_id, variation_id, quantity FROM $stok_table WHERE (product_id IN ($all_placeholders) OR variation_id IN ($all_placeholders))", array_merge($all_target_ids, $all_target_ids)));
+        $stock_results = $wpdb->get_results($wpdb->prepare("SELECT location_id, product_id, variation_id, quantity, reserved FROM $stok_table WHERE (product_id IN ($all_placeholders) OR variation_id IN ($all_placeholders))", array_merge($all_target_ids, $all_target_ids)));
 
         $stocks_by_loc = [];
+        $reserved_by_loc = [];
         foreach ($stock_results as $sr) {
             $key = ($sr->variation_id > 0) ? "v_{$sr->variation_id}" : "p_{$sr->product_id}";
-            $stocks_by_loc[$sr->location_id][$key] = $sr->quantity;
+            $stocks_by_loc[$sr->location_id][$key] = (float)$sr->quantity;
+            $reserved_by_loc[$sr->location_id][$key] = (float)$sr->reserved;
         }
         $t_stocks_fetched = microtime(true);
 
@@ -212,13 +214,21 @@ public static function get_list() {
             ];
             foreach ($depolar as $d) {
                 $qty = $stocks_by_loc[$d->id]["v_{$v_id}"] ?? 0;
-                $v_item['warehouse_stocks'][] = ['depo_id' => $d->id, 'qty' => (float)$qty];
+                $res = $reserved_by_loc[$d->id]["v_{$v_id}"] ?? 0;
+                $v_item['warehouse_stocks'][] = [
+                    'depo_id' => $d->id,
+                    'qty' => (float)$qty,
+                    'reserved' => (float)$res
+                ];
             }
             
-            // Mismatch kontrolü
+            // Mismatch kontrolü (Net stok = Toplam fiziksel - Toplam rezerve)
             $v_total_wh = array_sum(array_column($v_item['warehouse_stocks'], 'qty'));
+            $v_total_reserved = array_sum(array_column($v_item['warehouse_stocks'], 'reserved'));
+            $v_net_wh = $v_total_wh - $v_total_reserved;
             $v_item['total_warehouse_stock'] = $v_total_wh;
-            $v_item['has_mismatch'] = (round((float)$v_total_wh, 4) !== round($v_item['wc_stock'], 4));
+            $v_item['total_reserved_stock'] = $v_total_reserved;
+            $v_item['has_mismatch'] = (round((float)$v_net_wh, 4) !== round($v_item['wc_stock'], 4));
 
             $children[] = $v_item;
         }
@@ -326,15 +336,23 @@ public static function get_list() {
 
         foreach ($depolar as $d) {
             $qty = $stocks_by_loc[$d->id]["p_{$m_id}"] ?? 0;
-            $item['warehouse_stocks'][] = ['depo_id' => $d->id, 'qty' => (float)$qty];
+            $res = $reserved_by_loc[$d->id]["p_{$m_id}"] ?? 0;
+            $item['warehouse_stocks'][] = [
+                'depo_id' => $d->id,
+                'qty' => (float)$qty,
+                'reserved' => (float)$res
+            ];
         }
 
         // Mismatch kontrolü (Basit ürün için veya değişken ürünün genel durumu için)
         $total_wh = array_sum(array_column($item['warehouse_stocks'], 'qty'));
+        $total_reserved = array_sum(array_column($item['warehouse_stocks'], 'reserved'));
+        $net_wh = $total_wh - $total_reserved;
         $item['total_warehouse_stock'] = $total_wh;
+        $item['total_reserved_stock'] = $total_reserved;
         
         if ($item['type'] === 'simple') {
-            $item['has_mismatch'] = (round((float)$total_wh, 4) !== round($item['wc_stock'], 4));
+            $item['has_mismatch'] = (round((float)$net_wh, 4) !== round($item['wc_stock'], 4));
         } else {
             // Değişken üründe herhangi bir varyasyonda uyuşmazlık varsa true dön
             $item['has_mismatch'] = false;
@@ -410,7 +428,7 @@ public static function get_stock_stats() {
             LEFT JOIN (
                 SELECT 
                     (CASE WHEN variation_id > 0 THEN variation_id ELSE product_id END) AS item_id,
-                    COALESCE(SUM(quantity), 0) AS total_wh_stock
+                    COALESCE(SUM(quantity - reserved), 0) AS total_wh_stock
                 FROM {$stok_table}
                 GROUP BY item_id
             ) wh ON p.ID = wh.item_id
