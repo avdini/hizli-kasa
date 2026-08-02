@@ -445,9 +445,19 @@ public static function get_stock_stats() {
         ) AS mismatch_subquery"
     );
 
+    $reserved_data = $wpdb->get_row(
+        "SELECT 
+            COUNT(DISTINCT (CASE WHEN variation_id > 0 THEN variation_id ELSE product_id END)) as reserved_sku,
+            COALESCE(SUM(reserved), 0) as reserved_qty
+         FROM {$stok_table}
+         WHERE reserved > 0"
+    );
+
     $stats = [
-        'total'    => $total_sku,
-        'mismatch' => $mismatch
+        'total'        => $total_sku,
+        'mismatch'     => $mismatch,
+        'reserved_sku' => $reserved_data ? (int) $reserved_data->reserved_sku : 0,
+        'reserved_qty' => $reserved_data ? (float) $reserved_data->reserved_qty : 0,
     ];
 
     set_transient('hk_admin_stock_stats', $stats, 120);

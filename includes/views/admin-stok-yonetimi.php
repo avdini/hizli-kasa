@@ -33,6 +33,16 @@ $stats = class_exists('Hizli_Kasa_Ajax_Stock') ? Hizli_Kasa_Ajax_Stock::get_stoc
             </div>
         </div>
 
+        <div class="hk-stat-card" id="card-stat-reserved" onclick="filterByStat('reserved')" style="--card-accent: #d97706;">
+            <div class="hk-stat-icon" style="background:#fffbe8; color:#d97706;">
+                <span class="dashicons dashicons-lock"></span>
+            </div>
+            <div class="hk-stat-info">
+                <div class="hk-stat-val"><span id="stat-val-reserved-sku"><?php echo esc_html($stats['reserved_sku'] ?? 0); ?></span> <span style="font-size:12px; font-weight:600; opacity:0.75;">SKU</span></div>
+                <div class="hk-stat-lbl">Rezerve Stok (<span id="stat-val-reserved-qty"><?php echo esc_html($stats['reserved_qty'] ?? 0); ?></span> Adet)</div>
+            </div>
+        </div>
+
         <div class="hk-stat-card" id="card-stat-warehouses" style="--card-accent: #f58220; cursor:default;">
             <div class="hk-stat-icon" style="background:#fff7ed; color:#f58220;">
                 <span class="dashicons dashicons-building"></span>
@@ -273,6 +283,11 @@ jQuery(document).ready(function($) {
             $('#filter-mismatch').prop('checked', true);
             $('#filter-zero-stock').prop('checked', false);
             $('#filter-reserved').prop('checked', false);
+        } else if (statType === 'reserved') {
+            $('#card-stat-reserved').addClass('active');
+            $('#filter-mismatch').prop('checked', false);
+            $('#filter-zero-stock').prop('checked', false);
+            $('#filter-reserved').prop('checked', true);
         } else {
             $('#card-stat-all').addClass('active');
             $('#filter-mismatch').prop('checked', false);
@@ -604,6 +619,8 @@ jQuery(document).ready(function($) {
                 if (res.data.stats) {
                     $('#stat-val-total').text(res.data.stats.total);
                     $('#stat-val-mismatch').text(res.data.stats.mismatch);
+                    $('#stat-val-reserved-sku').text(res.data.stats.reserved_sku || 0);
+                    $('#stat-val-reserved-qty').text(res.data.stats.reserved_qty || 0);
                 }
                 if (res.data.perf) {
                     const p = res.data.perf;
