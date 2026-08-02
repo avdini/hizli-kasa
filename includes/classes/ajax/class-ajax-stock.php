@@ -352,13 +352,17 @@ public static function get_list() {
     $t_tree_assembled = microtime(true);
     $boot_time = defined('HIZLI_KASA_BOOT_TIME') ? HIZLI_KASA_BOOT_TIME : $start_time;
 
+    $stats = self::get_stock_stats();
+    $t_stats_fetched = microtime(true);
+
     $perf_breakdown = [
         'wp_bootup_ms'         => round(($start_time - $boot_time) * 1000, 2),
         'db_product_ids_ms'    => round(($t_ids_fetched - $start_time) * 1000, 2),
         'db_postmeta_ms'       => round(($t_meta_fetched - $t_ids_fetched) * 1000, 2),
         'db_stocks_terms_ms'   => round(($t_stocks_fetched - $t_meta_fetched) * 1000, 2),
         'php_tree_assembly_ms' => round(($t_tree_assembled - $t_stocks_fetched) * 1000, 2),
-        'total_server_time_ms' => round(($t_tree_assembled - $boot_time) * 1000, 2),
+        'db_stats_ms'          => round(($t_stats_fetched - $t_tree_assembled) * 1000, 2),
+        'total_server_time_ms' => round(($t_stats_fetched - $boot_time) * 1000, 2),
         'db_queries'           => get_num_queries() - $queries_before
     ];
 
@@ -367,7 +371,7 @@ public static function get_list() {
     wp_send_json_success([
         'products'    => $output,
         'total_pages' => ceil($total_items / $per_page),
-        'stats'       => self::get_stock_stats(),
+        'stats'       => $stats,
         'perf'        => $perf_breakdown
     ]);
     hizli_kasa_admin_log("Response Sent Successfully. Total: {$total_time}ms | Exec: {$exec_time}ms");
@@ -400,16 +404,19 @@ public static function get_stock_stats() {
         "SELECT COUNT(*) FROM (
             SELECT p.ID,
                    CAST(COALESCE(pm.meta_value, 0) AS SIGNED) AS wc_stock,
-                   COALESCE(SUM(sk.quantity), 0) AS total_wh_stock
+                   COALESCE(wh.total_wh_stock, 0) AS total_wh_stock
             FROM {$wpdb->posts} p
-            LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_stock'
-            LEFT JOIN {$stok_table} sk ON (
-                (p.post_type = 'product_variation' AND sk.variation_id = p.ID) OR
-                (p.post_type = 'product' AND sk.product_id = p.ID AND (sk.variation_id = 0 OR sk.variation_id IS NULL))
-            )
+            LEFT JOIN {$wpdb->postmeta} pm ON (p.ID = pm.post_id AND pm.meta_key = '_stock')
+            LEFT JOIN (
+                SELECT 
+                    (CASE WHEN variation_id > 0 THEN variation_id ELSE product_id END) AS item_id,
+                    COALESCE(SUM(quantity), 0) AS total_wh_stock
+                FROM {$stok_table}
+                GROUP BY item_id
+            ) wh ON p.ID = wh.item_id
             WHERE p.post_type IN ('product', 'product_variation')
             AND p.post_status IN ('publish', 'private')
-            GROUP BY p.ID
+            AND (p.post_type = 'product_variation' OR (p.post_type = 'product' AND NOT EXISTS (SELECT 1 FROM {$wpdb->posts} p_child WHERE p_child.post_parent = p.ID AND p_child.post_type = 'product_variation')))
             HAVING wc_stock != total_wh_stock
         ) AS mismatch_subquery"
     );
