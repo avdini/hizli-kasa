@@ -230,7 +230,7 @@ $stats = class_exists('Hizli_Kasa_Ajax_Stock') ? Hizli_Kasa_Ajax_Stock::get_stoc
     <div class="hk-modal-box" style="max-width:460px;">
         <div class="hk-modal-header">
             <h3><span class="dashicons dashicons-lock" style="color:#ea580c;"></span> Rezervasyonu Temizle</h3>
-            <button type="button" class="hk-modal-close" onclick="$('#hk-clear-res-modal').hide()">✕</button>
+            <button type="button" class="hk-modal-close" onclick="closeClearReservationModal()">✕</button>
         </div>
         <div class="hk-modal-body">
             <p style="color:var(--hk-text-main); font-size:13.5px; margin-top:0;" id="clear-res-modal-text">Bu ürünün kilitli stok rezervasyonunu temizlemek istediğinize emin misiniz?</p>
@@ -240,7 +240,7 @@ $stats = class_exists('Hizli_Kasa_Ajax_Stock') ? Hizli_Kasa_Ajax_Stock::get_stoc
             <div id="hk-clear-res-message" style="display:none; margin-top:12px; padding:10px; border-radius:8px; font-weight:600; font-size:12.5px;"></div>
         </div>
         <div class="hk-modal-footer">
-            <button type="button" class="button" onclick="$('#hk-clear-res-modal').hide()">İptal</button>
+            <button type="button" class="button" onclick="closeClearReservationModal()">İptal</button>
             <button type="button" class="button button-primary" id="confirm-clear-res-btn" style="background:#dc2626; border-color:#dc2626;">
                 <span class="dashicons dashicons-trash" style="font-size:16px; margin-top:3px;"></span> Evet, Temizle
             </button>
@@ -426,13 +426,17 @@ jQuery(document).ready(function($) {
 
     let pendingClearResData = null;
 
+    window.closeClearReservationModal = function() {
+        jQuery('#hk-clear-res-modal').hide();
+    };
+
     window.openClearReservationModal = function(e, pid, vid, did, name) {
         if (e) e.stopPropagation();
         pendingClearResData = { pid: pid, vid: vid, did: did };
-        $('#clear-res-modal-text').html(`<strong>${name}</strong> ürünü için bu depodaki kilitli stok rezervasyonunu sıfırlamak istediğinize emin misiniz?`);
-        $('#hk-clear-res-message').hide().text('');
-        $('#confirm-clear-res-btn').prop('disabled', false).html('<span class="dashicons dashicons-trash" style="font-size:16px; margin-top:3px;"></span> Evet, Temizle');
-        $('#hk-clear-res-modal').css('display', 'flex');
+        jQuery('#clear-res-modal-text').html(`<strong>${name}</strong> ürünü için bu depodaki kilitli stok rezervasyonunu sıfırlamak istediğinize emin misiniz?`);
+        jQuery('#hk-clear-res-message').hide().text('');
+        jQuery('#confirm-clear-res-btn').prop('disabled', false).html('<span class="dashicons dashicons-trash" style="font-size:16px; margin-top:3px;"></span> Evet, Temizle');
+        jQuery('#hk-clear-res-modal').css('display', 'flex');
     };
 
     $('#confirm-clear-res-btn').on('click', function() {
@@ -448,7 +452,7 @@ jQuery(document).ready(function($) {
             location_id: pendingClearResData.did
         }, function(res) {
             if (res.success) {
-                $('#hk-clear-res-modal').hide();
+                closeClearReservationModal();
                 loadStockList(currentPage);
             } else {
                 $btn.prop('disabled', false).html('<span class="dashicons dashicons-trash" style="font-size:16px; margin-top:3px;"></span> Evet, Temizle');
