@@ -7,6 +7,18 @@ class Hizli_Kasa_Admin_Menu {
     public static function init() {
         add_action('admin_menu', [self::class, 'register']);
         add_action('admin_enqueue_scripts', [self::class, 'enqueue_assets']);
+        add_filter('submenu_file', [self::class, 'fix_active_submenu']);
+    }
+
+    public static function fix_active_submenu($submenu_file) {
+        if (isset($_GET['page']) && $_GET['page'] === 'hizli-kasa') {
+            $tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : '';
+            if (!empty($tab) && $tab !== 'hub') {
+                return 'hizli-kasa&tab=' . $tab;
+            }
+            return 'hizli-kasa';
+        }
+        return $submenu_file;
     }
 
     public static function enqueue_assets($hook) {
