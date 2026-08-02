@@ -332,6 +332,9 @@ function hizli_kasa_statistics_summary($request) {
     }
     unset($u);
 
+    $sepet_ortalamasi      = $siparis_sayisi > 0 ? round($toplam_ciro / $siparis_sayisi, 2) : 0;
+    $sepet_urun_ortalamasi = $siparis_sayisi > 0 ? round($toplam_urun_adedi / $siparis_sayisi, 1) : 0;
+
     $response_data = [
         'kpi' => [
             'toplam_ciro'            => round($toplam_ciro, 2),
@@ -339,6 +342,8 @@ function hizli_kasa_statistics_summary($request) {
             'toplam_masraf'          => round($toplam_masraf, 2),
             'toplam_iskonto'         => round($toplam_iskonto, 2),
             'toplam_urun_adedi'      => $toplam_urun_adedi,
+            'sepet_ortalamasi'       => $sepet_ortalamasi,
+            'sepet_urun_ortalamasi'  => $sepet_urun_ortalamasi,
             'iskonto_siparis_sayisi' => $iskonto_siparis_sayisi,
             'net_ciro'               => round($toplam_ciro - $toplam_iade - $toplam_masraf, 2),
             'siparis_sayisi'         => $siparis_sayisi,
