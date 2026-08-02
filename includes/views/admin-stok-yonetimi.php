@@ -1045,7 +1045,33 @@ jQuery(document).ready(function($) {
 
         items.push(`<a class="hk-page-link hk-page-nav ${activePage === totalPages ? 'disabled' : ''}" href="#" onclick="loadStockList(${activePage + 1}); return false;">»</a>`);
 
-        $pag.append(`<div class="hk-pagination">${items.join('')}</div>`);
+        const gotoHtml = `<div class="hk-page-goto-wrap" style="display:inline-flex; align-items:center; gap:6px; margin-left:12px; background:#ffffff; border:1px solid var(--hk-border-color, #cbd5e1); padding:3px 8px; border-radius:8px; box-shadow:0 1px 2px rgba(0,0,0,0.05);">
+            <span style="font-size:12px; font-weight:600; color:var(--hk-text-muted, #64748b);">Sayfaya Git:</span>
+            <input type="number" id="hk-page-goto-input" min="1" max="${totalPages}" value="${activePage}" style="width:48px; height:28px; text-align:center; padding:2px 4px; border-radius:6px; border:1px solid #cbd5e1; font-size:12.5px; font-weight:600;">
+            <span style="font-size:12px; color:var(--hk-text-muted, #64748b); font-weight:600;">/ ${totalPages}</span>
+            <button type="button" class="button button-small" id="hk-btn-page-goto" style="height:28px; line-height:26px; padding:0 10px; border-radius:6px; font-size:12px; font-weight:600;">Git</button>
+        </div>`;
+
+        $pag.append(`<div class="hk-pagination" style="display:inline-flex; align-items:center; flex-wrap:wrap; gap:8px;">${items.join('')} ${gotoHtml}</div>`);
+    }
+
+    $(document).on('click', '#hk-btn-page-goto', function() {
+        submitGotoPage();
+    });
+
+    $(document).on('keydown', '#hk-page-goto-input', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            submitGotoPage();
+        }
+    });
+
+    function submitGotoPage() {
+        const totalPages = parseInt($('#hk-page-goto-input').attr('max')) || 1;
+        let page = parseInt($('#hk-page-goto-input').val());
+        if (isNaN(page) || page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+        loadStockList(page);
     }
 });
 </script>
