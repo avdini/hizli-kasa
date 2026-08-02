@@ -1338,11 +1338,26 @@ input:checked + .hk-slider:before {
     outline: none !important;
 }
 
-.hk-filter-chips {
+.hk-filter-btn-wrap {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+.hk-filter-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    line-height: 1;
+    border-radius: 999px;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 4px;
 }
 
 .hk-filter-chip {

@@ -71,22 +71,15 @@ $stats = class_exists('Hizli_Kasa_Ajax_Stock') ? Hizli_Kasa_Ajax_Stock::get_stoc
                 <span class="dashicons dashicons-search"></span>
                 <input type="text" id="admin-product-search" placeholder="Ürün adı veya SKU ile arayın...">
             </div>
-            <div class="hk-filter-chips">
-                <label class="hk-filter-chip chip-warning" id="chip-mismatch-label">
-                    <input type="checkbox" id="filter-mismatch" onchange="onFilterChipChange()">
-                    <span class="dashicons dashicons-warning" style="font-size:16px; width:16px; height:16px;"></span>
-                    Uyuşmazlığı Olanlar
-                </label>
-                <label class="hk-filter-chip" id="chip-zero-label">
-                    <input type="checkbox" id="filter-zero-stock" onchange="onFilterChipChange()">
-                    <span class="dashicons dashicons-minus" style="font-size:16px; width:16px; height:16px;"></span>
-                    Sıfır Stoklular
-                </label>
-                <label class="hk-filter-chip" id="chip-reserved-label" style="--chip-accent:#ea580c;">
-                    <input type="checkbox" id="filter-reserved" onchange="onFilterChipChange()">
-                    <span class="dashicons dashicons-lock" style="font-size:16px; width:16px; height:16px; color:#ea580c;"></span>
-                    Rezerve Edilmiş Olanlar
-                </label>
+            <div class="hk-filter-btn-wrap" style="display:flex; align-items:center; gap:8px;">
+                <button type="button" class="button button-secondary" id="btn-open-stock-filter" onclick="openStockFilterModal()" style="display:flex; align-items:center; gap:6px; font-weight:600; height:36px; padding:0 14px; border-radius:8px;">
+                    <span class="dashicons dashicons-filter" style="font-size:16px; margin-top:2px;"></span> Filtrele
+                    <span id="hk-active-filter-badge" class="hk-filter-badge" style="display:none; background:#2563eb; color:#ffffff; font-size:11px; font-weight:700; padding:1px 7px; border-radius:10px; margin-left:2px;">0</span>
+                </button>
+                <div id="hk-active-filters-summary" style="display:none; align-items:center; gap:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:600;">
+                    <span id="hk-active-filters-text"></span>
+                    <button type="button" onclick="resetStockFilters(true)" style="background:none; border:none; color:#ef4444; font-size:12px; cursor:pointer; padding:0 2px; line-height:1; font-weight:700;" title="Filtreleri Temizle">✕</button>
+                </div>
             </div>
         </div>
         <div class="actions" style="display:flex; gap:10px; align-items:center;">
@@ -258,6 +251,92 @@ $stats = class_exists('Hizli_Kasa_Ajax_Stock') ? Hizli_Kasa_Ajax_Stock::get_stoc
     </div>
 </div>
 
+<!-- Stok Filtreleme Modalı -->
+<div id="hk-stock-filter-modal" class="hk-modal-overlay">
+    <div class="hk-modal-box" style="max-width:540px;">
+        <div class="hk-modal-header">
+            <h3><span class="dashicons dashicons-filter" style="color:var(--hk-primary);"></span> Stok Filtreleme Seçenekleri</h3>
+            <button type="button" class="hk-modal-close" onclick="closeStockFilterModal()">✕</button>
+        </div>
+        <div class="hk-modal-body" style="padding:20px 24px;">
+            <!-- Depo Seçimi -->
+            <div style="margin-bottom:18px;">
+                <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13px; color:var(--hk-text-main);">🏢 Depo Seçimi</label>
+                <select id="modal-filter-depo-id" class="hk-modal-input" style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--hk-border-color); background:#f8fafc; font-size:13.5px;">
+                    <option value="0">Tüm Depolar (Genel Toplam)</option>
+                    <?php foreach($depolar as $d): ?>
+                        <option value="<?php echo $d->id; ?>"><?php echo esc_html($d->name); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <!-- Depodaki Stok Durumu -->
+            <div style="margin-bottom:18px;">
+                <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13px; color:var(--hk-text-main);">📊 Depo Stok Durumu</label>
+                <select id="modal-filter-depo-status" class="hk-modal-input" style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--hk-border-color); background:#f8fafc; font-size:13.5px;">
+                    <option value="all">Tümü (Sınırlama Yok)</option>
+                    <option value="in_stock">Stoğu Var (> 0)</option>
+                    <option value="out_of_stock">Stoğu Tükenmiş (≤ 0)</option>
+                    <option value="negative">Eksi Stoğa Düşmüş (< 0)</option>
+                </select>
+            </div>
+
+            <!-- Özel Durum Filtreleri -->
+            <div style="margin-bottom:18px;">
+                <label style="display:block; margin-bottom:8px; font-weight:600; font-size:13px; color:var(--hk-text-main);">⚡ Özel Durum Filtreleri</label>
+                <div style="display:flex; flex-direction:column; gap:10px; background:#f8fafc; border:1px solid var(--hk-border-color); border-radius:10px; padding:12px 14px;">
+                    <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; font-weight:500;">
+                        <input type="checkbox" id="filter-mismatch">
+                        <span class="dashicons dashicons-warning" style="color:#ea580c; font-size:16px;"></span>
+                        <strong>Uyuşmazlığı Olanlar</strong> (Site Stoğu ile Depo Stoğu Farklı / Eksi)
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; font-weight:500;">
+                        <input type="checkbox" id="filter-zero-stock">
+                        <span class="dashicons dashicons-minus" style="color:#64748b; font-size:16px;"></span>
+                        <strong>Sıfır Stoklular</strong> (Site Stok Miktarı ≤ 0 Olanlar)
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; font-size:13px; cursor:pointer; font-weight:500;">
+                        <input type="checkbox" id="filter-reserved">
+                        <span class="dashicons dashicons-lock" style="color:#ea580c; font-size:16px;"></span>
+                        <strong>Rezerve Edilmiş Olanlar</strong> (Kilitli Sipariş Stoğu > 0 Olanlar)
+                    </label>
+                </div>
+            </div>
+
+            <!-- Stok Miktar Aralığı -->
+            <div style="margin-bottom:18px;">
+                <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13px; color:var(--hk-text-main);">🔢 Stok Miktar Aralığı</label>
+                <div style="display:flex; gap:12px; align-items:center;">
+                    <input type="number" id="modal-filter-min-stock" placeholder="Min Stok" style="flex:1; padding:8px 12px; border-radius:8px; border:1px solid var(--hk-border-color); font-size:13px; background:#f8fafc;">
+                    <span style="color:var(--hk-text-muted); font-weight:600;">-</span>
+                    <input type="number" id="modal-filter-max-stock" placeholder="Max Stok" style="flex:1; padding:8px 12px; border-radius:8px; border:1px solid var(--hk-border-color); font-size:13px; background:#f8fafc;">
+                </div>
+            </div>
+
+            <!-- Ürün Türü Filtresi -->
+            <div style="margin-bottom:6px;">
+                <label style="display:block; margin-bottom:6px; font-weight:600; font-size:13px; color:var(--hk-text-main);">📦 Ürün Türü</label>
+                <select id="modal-filter-product-type" class="hk-modal-input" style="width:100%; padding:9px 12px; border-radius:8px; border:1px solid var(--hk-border-color); background:#f8fafc; font-size:13.5px;">
+                    <option value="all">Tüm Ürünler ve Varyasyonlar</option>
+                    <option value="simple">Sadece Ana / Basit Ürünler</option>
+                    <option value="variation">Sadece Varyasyonlar</option>
+                </select>
+            </div>
+        </div>
+        <div class="hk-modal-footer" style="display:flex; justify-content:space-between; align-items:center;">
+            <button type="button" class="button" onclick="resetStockFilters()" style="color:#ef4444; border-color:#fca5a5;">
+                <span class="dashicons dashicons-trash" style="font-size:15px; margin-top:3px;"></span> Sıfırla
+            </button>
+            <div style="display:flex; gap:10px;">
+                <button type="button" class="button" onclick="closeStockFilterModal()">İptal</button>
+                <button type="button" class="button button-primary" onclick="applyStockFilters()">
+                    <span class="dashicons dashicons-filter" style="font-size:15px; margin-top:3px;"></span> Filtreleri Uygula
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 jQuery(document).ready(function($) {
     let currentPage = 1;
@@ -273,6 +352,90 @@ jQuery(document).ready(function($) {
         } else {
             $('#hk-pending-bar').hide();
             $('#btn-save-changes').prop('disabled', true);
+        }
+    }
+
+    window.openStockFilterModal = function() {
+        $('#hk-stock-filter-modal').css('display', 'flex');
+    };
+
+    window.closeStockFilterModal = function() {
+        $('#hk-stock-filter-modal').hide();
+    };
+
+    window.resetStockFilters = function(triggerLoad = false) {
+        $('#filter-mismatch').prop('checked', false);
+        $('#filter-zero-stock').prop('checked', false);
+        $('#filter-reserved').prop('checked', false);
+        $('#modal-filter-depo-id').val('0');
+        $('#modal-filter-depo-status').val('all');
+        $('#modal-filter-min-stock').val('');
+        $('#modal-filter-max-stock').val('');
+        $('#modal-filter-product-type').val('all');
+
+        $('.hk-stat-card').removeClass('active');
+        $('#card-stat-all').addClass('active');
+
+        updateFilterBadge();
+
+        if (triggerLoad) {
+            currentPage = 1;
+            loadStockList();
+        }
+    };
+
+    window.applyStockFilters = function() {
+        closeStockFilterModal();
+        updateFilterBadge();
+        currentPage = 1;
+        loadStockList();
+    };
+
+    function updateFilterBadge() {
+        let count = 0;
+        let labels = [];
+
+        if ($('#filter-mismatch').is(':checked')) { count++; labels.push('Uyuşmazlık'); }
+        if ($('#filter-zero-stock').is(':checked')) { count++; labels.push('Sıfır Stok'); }
+        if ($('#filter-reserved').is(':checked')) { count++; labels.push('Rezerve Stok'); }
+
+        const depoId = $('#modal-filter-depo-id').val();
+        if (depoId && depoId !== '0') {
+            count++;
+            const depoName = $('#modal-filter-depo-id option:selected').text();
+            labels.push(depoName);
+        }
+
+        const depoStatus = $('#modal-filter-depo-status').val();
+        if (depoStatus && depoStatus !== 'all') {
+            count++;
+            labels.push($('#modal-filter-depo-status option:selected').text());
+        }
+
+        const minStock = $('#modal-filter-min-stock').val();
+        const maxStock = $('#modal-filter-max-stock').val();
+        if (minStock !== '' || maxStock !== '') {
+            count++;
+            if (minStock !== '' && maxStock !== '') labels.push(`Stok: ${minStock}-${maxStock}`);
+            else if (minStock !== '') labels.push(`Stok ≥ ${minStock}`);
+            else if (maxStock !== '') labels.push(`Stok ≤ ${maxStock}`);
+        }
+
+        const pType = $('#modal-filter-product-type').val();
+        if (pType && pType !== 'all') {
+            count++;
+            labels.push(pType === 'simple' ? 'Ana Ürünler' : 'Varyasyonlar');
+        }
+
+        if (count > 0) {
+            $('#hk-active-filter-badge').text(count).show();
+            $('#btn-open-stock-filter').addClass('button-primary').removeClass('button-secondary');
+            $('#hk-active-filters-text').text('Aktif: ' + labels.join(', '));
+            $('#hk-active-filters-summary').css('display', 'inline-flex');
+        } else {
+            $('#hk-active-filter-badge').hide();
+            $('#btn-open-stock-filter').removeClass('button-primary').addClass('button-secondary');
+            $('#hk-active-filters-summary').hide();
         }
     }
 
@@ -294,22 +457,10 @@ jQuery(document).ready(function($) {
             $('#filter-zero-stock').prop('checked', false);
             $('#filter-reserved').prop('checked', false);
         }
-        updateFilterChipStyles();
+        updateFilterBadge();
         currentPage = 1;
         loadStockList();
     };
-
-    window.onFilterChipChange = function() {
-        updateFilterChipStyles();
-        currentPage = 1;
-        loadStockList();
-    };
-
-    function updateFilterChipStyles() {
-        $('#chip-mismatch-label').toggleClass('active', $('#filter-mismatch').is(':checked'));
-        $('#chip-zero-label').toggleClass('active', $('#filter-zero-stock').is(':checked'));
-        $('#chip-reserved-label').toggleClass('active', $('#filter-reserved').is(':checked'));
-    }
 
     window.openImagePreview = function(src) {
         if (!src || src.includes('placeholder')) return;
@@ -601,6 +752,11 @@ jQuery(document).ready(function($) {
         const filterMismatch = $('#filter-mismatch').is(':checked');
         const filterZeroStock = $('#filter-zero-stock').is(':checked');
         const filterReserved = $('#filter-reserved').is(':checked');
+        const filterDepoId = $('#modal-filter-depo-id').val();
+        const filterDepoStatus = $('#modal-filter-depo-status').val();
+        const filterMinStock = $('#modal-filter-min-stock').val();
+        const filterMaxStock = $('#modal-filter-max-stock').val();
+        const filterProductType = $('#modal-filter-product-type').val();
         const $body = $('#admin-stock-list-body');
         const ajax_url = (typeof ajaxurl !== 'undefined') ? ajaxurl : '/wp-admin/admin-ajax.php';
 
@@ -610,7 +766,12 @@ jQuery(document).ready(function($) {
             paged: page,
             filter_mismatch: filterMismatch,
             filter_zero_stock: filterZeroStock,
-            filter_reserved: filterReserved
+            filter_reserved: filterReserved,
+            depo_id: filterDepoId,
+            depo_stock_status: filterDepoStatus,
+            min_stock: filterMinStock,
+            max_stock: filterMaxStock,
+            product_type: filterProductType
         }, function(res) {
             $body.css('opacity', '1');
             if(res.success) {

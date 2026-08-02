@@ -33,6 +33,11 @@ public static function get_list() {
         $filter_mismatch = (isset($_POST['filter_mismatch']) && $_POST['filter_mismatch'] === 'true');
         $filter_zero_stock = (isset($_POST['filter_zero_stock']) && $_POST['filter_zero_stock'] === 'true');
         $filter_reserved = (isset($_POST['filter_reserved']) && $_POST['filter_reserved'] === 'true');
+        $filter_depo_id = intval($_POST['depo_id'] ?? 0);
+        $filter_depo_status = sanitize_text_field($_POST['depo_stock_status'] ?? 'all');
+        $filter_min_stock = (isset($_POST['min_stock']) && $_POST['min_stock'] !== '') ? floatval($_POST['min_stock']) : null;
+        $filter_max_stock = (isset($_POST['max_stock']) && $_POST['max_stock'] !== '') ? floatval($_POST['max_stock']) : null;
+        $filter_product_type = sanitize_text_field($_POST['product_type'] ?? 'all');
         $paged = max(1, intval($_POST['paged'] ?? 1));
         $per_page = 24;
         $offset = ($paged - 1) * $per_page;
@@ -46,7 +51,18 @@ public static function get_list() {
             $params[] = $like; $params[] = $like;
         }
 
-        if ($filter_mismatch || $filter_zero_stock || $filter_reserved) {
+        if ($filter_product_type === 'simple') {
+            $where_sql .= " AND (p.post_type = 'product' AND NOT EXISTS (SELECT 1 FROM {$wpdb->posts} as p_child WHERE p_child.post_parent = p.ID AND p_child.post_type = 'product_variation'))";
+        } elseif ($filter_product_type === 'variation') {
+            $where_sql .= " AND p.post_type = 'product_variation'";
+        }
+
+        $has_complex_filters = $filter_mismatch || $filter_zero_stock || $filter_reserved ||
+                               ($filter_depo_id > 0) || ($filter_depo_status !== 'all') ||
+                               ($filter_min_stock !== null) || ($filter_max_stock !== null) ||
+                               ($filter_product_type !== 'all');
+
+        if ($has_complex_filters) {
             $where_sql .= " AND (p.post_type = 'product_variation' OR (p.post_type = 'product' AND NOT EXISTS (SELECT 1 FROM {$wpdb->posts} as p_child WHERE p_child.post_parent = p.ID AND p_child.post_type = 'product_variation')))";
             
             if ($filter_zero_stock) {
@@ -66,8 +82,27 @@ public static function get_list() {
             if ($filter_reserved) {
                 $having_clauses[] = "total_reserved_stock > 0";
             }
+            if ($filter_depo_status === 'in_stock') {
+                $having_clauses[] = "total_wh_stock > 0";
+            } elseif ($filter_depo_status === 'out_of_stock') {
+                $having_clauses[] = "total_wh_stock <= 0";
+            } elseif ($filter_depo_status === 'negative') {
+                $having_clauses[] = "total_wh_stock < 0";
+            }
+            if ($filter_min_stock !== null) {
+                $having_clauses[] = "total_wh_stock >= " . floatval($filter_min_stock);
+            }
+            if ($filter_max_stock !== null) {
+                $having_clauses[] = "total_wh_stock <= " . floatval($filter_max_stock);
+            }
+
             $having_sql = $having_clauses === [] ? "" : "HAVING " . implode(" AND ", $having_clauses);
             
+            $depo_join_sql = "";
+            if ($filter_depo_id > 0) {
+                $depo_join_sql = $wpdb->prepare(" AND sk.depo_id = %d", $filter_depo_id);
+            }
+
             $base_sql = "
                 SELECT 
                     (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) as main_id,
@@ -78,7 +113,7 @@ public static function get_list() {
                 FROM {$wpdb->posts} p
                 LEFT JOIN {$wpdb->postmeta} pm_sku ON (p.ID = pm_sku.post_id AND pm_sku.meta_key = '_sku')
                 LEFT JOIN {$wpdb->postmeta} pm_stock ON (p.ID = pm_stock.post_id AND pm_stock.meta_key = '_stock')
-                LEFT JOIN $stok_table sk ON sk.variation_id = IF(p.post_type = 'product_variation', p.ID, 0) AND sk.product_id = IF(p.post_type = 'product_variation', p.post_parent, p.ID)
+                LEFT JOIN $stok_table sk ON sk.variation_id = IF(p.post_type = 'product_variation', p.ID, 0) AND sk.product_id = IF(p.post_type = 'product_variation', p.post_parent, p.ID) {$depo_join_sql}
                 WHERE $where_sql
                 GROUP BY p.ID
                 $having_sql";
