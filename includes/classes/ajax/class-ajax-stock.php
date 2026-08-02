@@ -410,8 +410,8 @@ public static function get_list() {
  * Canlı Stok Metrik İstatistikleri (Toplam SKU, Uyuşmazlık)
  */
 public static function get_stock_stats() {
-    $cached = get_transient('hk_admin_stock_stats');
-    if ($cached !== false && is_array($cached)) {
+    $cached = get_transient('hk_admin_stock_stats_v2');
+    if ($cached !== false && is_array($cached) && isset($cached['reserved_sku'])) {
         return $cached;
     }
 
@@ -460,7 +460,7 @@ public static function get_stock_stats() {
         'reserved_qty' => $reserved_data ? (float) $reserved_data->reserved_qty : 0,
     ];
 
-    set_transient('hk_admin_stock_stats', $stats, 120);
+    set_transient('hk_admin_stock_stats_v2', $stats, 120);
     return $stats;
 }
 
@@ -572,7 +572,7 @@ public static function batch_update() {
         }
     }
     
-    delete_transient('hk_admin_stock_stats');
+    delete_transient('hk_admin_stock_stats_v2');
     wp_send_json_success(['updated' => $updated, 'errors' => $errors]);
 }
 
@@ -610,7 +610,7 @@ public static function clear_reservation() {
         if (class_exists('Hizli_Kasa_Mismatch_Notifier')) {
             Hizli_Kasa_Mismatch_Notifier::reset_status();
         }
-        delete_transient('hk_admin_stock_stats');
+        delete_transient('hk_admin_stock_stats_v2');
         wp_send_json_success(['message' => 'Stok rezervasyonu başarıyla temizlendi.']);
     } else {
         wp_send_json_error(['message' => 'Veritabanı güncelleme hatası.']);
