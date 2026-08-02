@@ -188,7 +188,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
         } else {
             $where[] = "p.post_type = 'product'";
         }
-        $where[] = "p.post_status = 'publish'";
+        $where[] = "p.post_status IN ('publish', 'private')";
 
         // Text Search (Name, SKU, Barcode)
         $exact_sku_match      = false;
@@ -366,7 +366,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                 $where[] = "(
                     (p.ID NOT IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} WHERE post_type = 'product_variation') AND p.ID NOT IN ({$sold_simples_sql}))
                     OR
-                    (p.ID IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} WHERE post_type = 'product_variation' AND post_status = 'publish' AND ID NOT IN ({$sold_variations_sql})))
+                    (p.ID IN (SELECT DISTINCT post_parent FROM {$wpdb->posts} WHERE post_type = 'product_variation' AND post_status IN ('publish', 'private') AND ID NOT IN ({$sold_variations_sql})))
                 )";
             }
         }
@@ -447,7 +447,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                            {$calculated_stock_expr} AS total_calculated_stock
                     FROM {$wpdb->posts} p
                     {$join_sql}
-                    LEFT JOIN {$wpdb->posts} p_child ON (p.ID = p_child.post_parent AND p_child.post_type = 'product_variation' AND p_child.post_status = 'publish')
+                    LEFT JOIN {$wpdb->posts} p_child ON (p.ID = p_child.post_parent AND p_child.post_type = 'product_variation' AND p_child.post_status IN ('publish', 'private'))
                     LEFT JOIN {$wpdb->postmeta} pm_child_stock ON (p_child.ID = pm_child_stock.post_id AND pm_child_stock.meta_key = '_stock')
                     WHERE {$where_sql}
                     GROUP BY p.ID
@@ -486,7 +486,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                        {$calculated_stock_expr} AS total_calculated_stock
                 FROM {$wpdb->posts} p
                 {$join_sql}
-                LEFT JOIN {$wpdb->posts} p_child ON (p.ID = p_child.post_parent AND p_child.post_type = 'product_variation' AND p_child.post_status = 'publish')
+                LEFT JOIN {$wpdb->posts} p_child ON (p.ID = p_child.post_parent AND p_child.post_type = 'product_variation' AND p_child.post_status IN ('publish', 'private'))
                 LEFT JOIN {$wpdb->postmeta} pm_child_stock ON (p_child.ID = pm_child_stock.post_id AND pm_child_stock.meta_key = '_stock')
                 WHERE {$where_sql}
                 GROUP BY p.ID
@@ -1212,7 +1212,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                         $parent_str = implode(',', $direct_matched_ids);
                         $child_var_ids = array_map('absint', $wpdb->get_col("
                             SELECT ID FROM {$wpdb->posts}
-                            WHERE post_parent IN ({$parent_str}) AND post_type = 'product_variation' AND post_status = 'publish'
+                            WHERE post_parent IN ({$parent_str}) AND post_type = 'product_variation' AND post_status IN ('publish', 'private')
                         ") ?: []);
 
                         if (!empty($child_var_ids) && !empty($matching_slugs)) {
@@ -1243,7 +1243,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                     if ($candidate_v_ids !== null) {
                         $candidate_v_ids = array_values(array_diff($candidate_v_ids, $rule_v_ids));
                     } else {
-                        $all_v_ids = array_map('absint', $wpdb->get_col("SELECT ID FROM {$wpdb->posts} WHERE post_status = 'publish' AND post_type IN ('product', 'product_variation')") ?: []);
+                        $all_v_ids = array_map('absint', $wpdb->get_col("SELECT ID FROM {$wpdb->posts} WHERE post_status IN ('publish', 'private') AND post_type IN ('product', 'product_variation')") ?: []);
                         $candidate_v_ids = array_values(array_diff($all_v_ids, $rule_v_ids));
                     }
                 } else {
@@ -1273,14 +1273,14 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                 SELECT v.ID
                 FROM {$wpdb->posts} v
                 INNER JOIN {$wpdb->postmeta} pm_s ON v.ID = pm_s.post_id AND pm_s.meta_key = '_stock'
-                WHERE v.post_status = 'publish'
+                WHERE v.post_status IN ('publish', 'private')
                   AND v.post_type IN ('product', 'product_variation')
                   AND CAST(pm_s.meta_value AS SIGNED) > 0
                   AND (CASE WHEN v.post_type = 'product_variation' THEN v.post_parent ELSE v.ID END) IN (
                       SELECT (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) AS parent_id
                       FROM {$wpdb->posts} p
                       INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_stock'
-                      WHERE p.post_status = 'publish' AND CAST(pm.meta_value AS SIGNED) > 0
+                      WHERE p.post_status IN ('publish', 'private') AND CAST(pm.meta_value AS SIGNED) > 0
                       GROUP BY parent_id
                       {$having_clause}
                   )
@@ -1300,7 +1300,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                     SELECT (CASE WHEN p.post_type = 'product_variation' THEN p.post_parent ELSE p.ID END) AS parent_id
                     FROM {$wpdb->posts} p
                     INNER JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = '_stock'
-                    WHERE p.post_status = 'publish'
+                    WHERE p.post_status IN ('publish', 'private')
                     GROUP BY parent_id
                     HAVING SUM(CAST(pm.meta_value AS SIGNED)) {$op} %f
                 ", $val)) ?: []);
@@ -1340,7 +1340,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
         $matched_parent_ids = array_map('absint', $wpdb->get_col("
             SELECT DISTINCT (CASE WHEN post_type = 'product_variation' THEN post_parent ELSE ID END)
             FROM {$wpdb->posts}
-            WHERE ID IN ({$v_str}) AND post_status = 'publish'
+            WHERE ID IN ({$v_str}) AND post_status IN ('publish', 'private')
         ") ?: []);
 
         return array_values(array_unique($matched_parent_ids));
