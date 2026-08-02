@@ -52,13 +52,37 @@
                     }
                 }
             });
-        },
+        filterHasDiscount: false,
 
         loadOrders: async function(page) {
+            var self = this;
             this.currentPageOrders = page || 1;
             var tbody = document.getElementById("all-orders-body");
             var pagin = document.getElementById("all-orders-pagination");
             if (!tbody) return;
+
+            // Filtre rozeti yönetimi
+            var cardHeader = document.querySelector('#rapor-tum-siparisler .rapor-kart-header');
+            var existingNotice = document.getElementById('hk-discount-filter-notice');
+            if (this.filterHasDiscount) {
+                if (!existingNotice && cardHeader) {
+                    var notice = document.createElement('div');
+                    notice.id = 'hk-discount-filter-notice';
+                    notice.style.cssText = 'font-size:12px; font-weight:600; color:#f59e0b; background:rgba(245,158,11,0.1); padding:4px 10px; border-radius:6px; margin-top:5px; display:inline-flex; align-items:center; gap:8px;';
+                    notice.innerHTML = '✂️ Sadece İskontolu Siparişler Filtrelendi <button id="hk-clear-discount-filter" style="background:none; border:none; color:#f59e0b; text-decoration:underline; cursor:pointer; font-size:11px; padding:0;">(Tümünü Göster)</button>';
+                    cardHeader.appendChild(notice);
+                    var clearBtn = document.getElementById('hk-clear-discount-filter');
+                    if (clearBtn) {
+                        clearBtn.addEventListener('click', function() {
+                            self.filterHasDiscount = false;
+                            if (notice) notice.remove();
+                            self.loadOrders(1);
+                        });
+                    }
+                }
+            } else if (existingNotice) {
+                existingNotice.remove();
+            }
 
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:40px;">Yükleniyor...</td></tr>';
             
@@ -66,9 +90,10 @@
             var dateEnd = document.getElementById("rhub-tarih-bit").value;
             var search = document.getElementById("rhub-arama-input").value;
             var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
+            var discountParam = this.filterHasDiscount ? '&has_discount=1' : '';
 
             try {
-                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/orders?page=${this.currentPageOrders}&per_page=${this.perPage}&date_start=${dateStart}&date_end=${dateEnd}&search=${encodeURIComponent(search)}&depo_id=${depoId}`;
+                var url = `${kasaAyar.rootApiUrl}hizli-kasa/v1/reports/orders?page=${this.currentPageOrders}&per_page=${this.perPage}&date_start=${dateStart}&date_end=${dateEnd}&search=${encodeURIComponent(search)}&depo_id=${depoId}${discountParam}`;
                 var response = await fetch(url, { headers: { 'X-WP-Nonce': kasaAyar.nonce } });
                 var res = await response.json();
 

@@ -631,6 +631,24 @@ function hizli_kasa_get_reports_data($request, $report_type = 'pos_orders')
         ];
     }
 
+    if ($request->get_param('has_discount') === '1') {
+        $meta_query[] = [
+            'relation' => 'OR',
+            [
+                'key' => '_hk_toplam_iskonto',
+                'value' => 0,
+                'compare' => '>',
+                'type' => 'NUMERIC',
+            ],
+            [
+                'key' => '_cart_discount',
+                'value' => 0,
+                'compare' => '>',
+                'type' => 'NUMERIC',
+            ],
+        ];
+    }
+
     if ($meta_query !== []) {
         $meta_query['relation'] = 'AND';
         $args['meta_query'] = $meta_query;

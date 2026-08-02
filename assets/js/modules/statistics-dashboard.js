@@ -213,7 +213,15 @@
                     }
                     if (card.classList.contains('kpi-iade')) {
                         HK.ReportHub.kategoriAc('iade', 'iade-listesi');
+                    } else if (card.classList.contains('kpi-iskonto')) {
+                        if (HK.ReportSales) {
+                            HK.ReportSales.filterHasDiscount = true;
+                        }
+                        HK.ReportHub.kategoriAc('satis', 'tum-siparisler');
                     } else {
+                        if (HK.ReportSales) {
+                            HK.ReportSales.filterHasDiscount = false;
+                        }
                         HK.ReportHub.kategoriAc('satis', 'tum-siparisler');
                     }
                 });
