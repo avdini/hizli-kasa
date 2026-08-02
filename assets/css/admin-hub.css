@@ -1267,6 +1267,8 @@ input:checked + .hk-slider:before {
 .hizli-kasa-admin-stock-wrap {
     max-width: 100%;
     margin-top: 15px;
+    margin-bottom: 60px;
+    clear: both;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -1665,6 +1667,72 @@ input:checked + .hk-slider:before {
     font-weight: 700;
     font-size: 12px;
 }
+
+/* Stock Management Modern Pagination */
+.hk-pagination {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    user-select: none;
+}
+
+.hk-page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--hk-text-main, #334155);
+    background: #ffffff;
+    border: 1px solid var(--hk-border-color, #cbd5e1);
+    border-radius: 8px;
+    text-decoration: none !important;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.hk-page-link:hover:not(.disabled):not(.active) {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: var(--hk-primary, #3b82f6);
+}
+
+.hk-page-link.active {
+    background: var(--hk-primary, #3b82f6);
+    border-color: var(--hk-primary, #3b82f6);
+    color: #ffffff !important;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+.hk-page-link.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+    background: #f8fafc;
+    border-color: #e2e8f0;
+}
+
+.hk-page-nav {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.hk-page-dots {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 34px;
+    color: #94a3b8;
+    font-weight: 700;
+}
+
 
 
 
