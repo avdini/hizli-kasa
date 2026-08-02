@@ -168,6 +168,7 @@
 /* Renk varyantları */
 .stat-kpi-card.kpi-ciro    { --kpi-color: #10b981; }
 .stat-kpi-card.kpi-net     { --kpi-color: #3b82f6; }
+.stat-kpi-card.kpi-urun    { --kpi-color: #06b6d4; }
 .stat-kpi-card.kpi-iade    { --kpi-color: #ef4444; }
 .stat-kpi-card.kpi-iskonto { --kpi-color: #f59e0b; }
 .stat-kpi-card.kpi-siparis { --kpi-color: #8b5cf6; }

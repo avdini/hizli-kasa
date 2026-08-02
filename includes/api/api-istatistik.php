@@ -59,6 +59,7 @@ function hizli_kasa_statistics_summary($request) {
     $toplam_ciro   = 0;
     $toplam_iade   = 0;
     $toplam_iskonto = 0;
+    $toplam_urun_adedi = 0;
     $iskonto_siparis_sayisi = 0;
     $nakit_toplam  = 0;
     $kart_toplam   = 0;
@@ -101,14 +102,18 @@ function hizli_kasa_statistics_summary($request) {
 
         $order_discount = (float) $order->get_meta('_hk_toplam_iskonto');
         $order_subtotal = 0;
+        $order_item_qty = 0;
         foreach ($order->get_items() as $item) {
             if ($item instanceof WC_Order_Item_Product) {
                 $order_subtotal += (float) $item->get_subtotal();
+                $order_item_qty += (int) $item->get_quantity();
             }
         }
         if ($order_subtotal <= 0) {
             $order_subtotal = $order_total + $order_discount;
         }
+
+        $toplam_urun_adedi += $order_item_qty;
 
         if ($order_discount > 0) {
             $toplam_iskonto += $order_discount;
@@ -118,10 +123,11 @@ function hizli_kasa_statistics_summary($request) {
         // Saatlik dağılım
         $saat_key = $created_dt->date('H:00');
         if (!isset($saat_map[$saat_key])) {
-            $saat_map[$saat_key] = ['count' => 0, 'total' => 0];
+            $saat_map[$saat_key] = ['count' => 0, 'total' => 0, 'items' => 0];
         }
         $saat_map[$saat_key]['count']++;
         $saat_map[$saat_key]['total'] += $order_total;
+        $saat_map[$saat_key]['items'] += $order_item_qty;
 
         if (!isset($iskonto_saat_map[$saat_key])) {
             $iskonto_saat_map[$saat_key] = ['etiket' => 0, 'gercek' => 0, 'iskonto' => 0];
@@ -133,10 +139,11 @@ function hizli_kasa_statistics_summary($request) {
         // Günlük trend
         $gun_key = $created_dt->date('Y-m-d');
         if (!isset($gun_map[$gun_key])) {
-            $gun_map[$gun_key] = ['count' => 0, 'total' => 0];
+            $gun_map[$gun_key] = ['count' => 0, 'total' => 0, 'items' => 0];
         }
         $gun_map[$gun_key]['count']++;
         $gun_map[$gun_key]['total'] += $order_total;
+        $gun_map[$gun_key]['items'] += $order_item_qty;
 
         if (!isset($iskonto_gun_map[$gun_key])) {
             $iskonto_gun_map[$gun_key] = ['etiket' => 0, 'gercek' => 0, 'iskonto' => 0];
@@ -244,6 +251,7 @@ function hizli_kasa_statistics_summary($request) {
         $saatlik[] = [
             'saat'  => $k,
             'count' => $saat_map[$k]['count'] ?? 0,
+            'items' => $saat_map[$k]['items'] ?? 0,
             'total' => round($saat_map[$k]['total'] ?? 0, 2),
         ];
     }
@@ -256,6 +264,7 @@ function hizli_kasa_statistics_summary($request) {
             'tarih'          => $tarih,
             'tarih_kisa'     => date_i18n('d.m', strtotime($tarih)),
             'siparis_sayisi' => $v['count'],
+            'urun_adedi'     => $v['items'] ?? 0,
             'toplam'         => round($v['total'], 2),
         ];
     }
@@ -329,6 +338,7 @@ function hizli_kasa_statistics_summary($request) {
             'toplam_iade'            => round($toplam_iade, 2),
             'toplam_masraf'          => round($toplam_masraf, 2),
             'toplam_iskonto'         => round($toplam_iskonto, 2),
+            'toplam_urun_adedi'      => $toplam_urun_adedi,
             'iskonto_siparis_sayisi' => $iskonto_siparis_sayisi,
             'net_ciro'               => round($toplam_ciro - $toplam_iade - $toplam_masraf, 2),
             'siparis_sayisi'         => $siparis_sayisi,

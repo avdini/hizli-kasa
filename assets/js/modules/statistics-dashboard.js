@@ -105,6 +105,7 @@
             html += '<div class="stat-kpi-grid">';
             html += self._kpiCard('💰', 'TOPLAM CİRO',    self._currency(kpi.toplam_ciro),  kpi.siparis_sayisi + ' sipariş', 'kpi-ciro stat-kpi-clickable', 'Siparişleri Gör ➔');
             html += self._kpiCard('🏦', 'NET CİRO',       self._currency(kpi.net_ciro),      'İade ve masraf düşüldü', 'kpi-net stat-kpi-clickable', 'Siparişleri Gör ➔');
+            html += self._kpiCard('📦', 'SATILAN ÜRÜN',   (kpi.toplam_urun_adedi || 0) + ' adet', 'Satılan toplam ürün adedi', 'kpi-urun stat-kpi-clickable', 'Trendi Gör ➔');
             html += self._kpiCard('↩️', 'TOPLAM İADE',    self._currency(kpi.toplam_iade),   kpi.iade_sayisi + ' iade', 'kpi-iade stat-kpi-clickable', 'İadeleri Gör ➔');
             html += self._kpiCard('✂️', 'TOPLAM İSKONTO', self._currency(kpi.toplam_iskonto || 0), (kpi.iskonto_siparis_sayisi || 0) + ' siparişte', 'kpi-iskonto stat-kpi-clickable', 'Siparişleri Gör ➔');
             html += self._kpiCard('🧾', 'SİPARİŞ SAYISI', kpi.siparis_sayisi + ' adet',      'Brüt satış adedi', 'kpi-siparis stat-kpi-clickable', 'Siparişleri Gör ➔');
@@ -136,6 +137,7 @@
                 html += '</div>';
                 html += '<div class="stat-trend-toggle-wrap">';
                 html += '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'satis' ? ' active' : '') + '" data-mode="satis">📈 Satış Trendi</button>';
+                html += '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'urun' ? ' active' : '') + '" data-mode="urun">📦 Ürün Satış Trendi</button>';
                 html += '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'iskonto' ? ' active' : '') + '" data-mode="iskonto">✂️ İskonto Analizi</button>';
                 html += '</div>';
                 html += '</div>';
@@ -218,6 +220,13 @@
                             HK.ReportSales.filterHasDiscount = true;
                         }
                         HK.ReportHub.kategoriAc('satis', 'tum-siparisler');
+                    } else if (card.classList.contains('kpi-urun')) {
+                        var mainCard = document.getElementById('stat-chart-main');
+                        if (mainCard) {
+                            mainCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                        var btn = panel.querySelector('.stat-trend-toggle-btn[data-mode="urun"]');
+                        if (btn) btn.click();
                     } else {
                         if (HK.ReportSales) {
                             HK.ReportSales.filterHasDiscount = false;
@@ -787,6 +796,96 @@
                         label: function (ctx) {
                             if (ctx.dataset.yAxisID === 'yCiro') {
                                 return ' Net Ciro: ₺ ' + self._num(ctx.parsed.y);
+                            }
+                            return ' Sipariş Sayısı: ' + ctx.parsed.y + ' adet';
+                        }
+                    }
+                });
+
+                chart.options.onClick = function (evt, elements) {
+                    if (!isSingleDay && elements && elements.length > 0) {
+                        var index = elements[0].index;
+                        var item = gunluk[index];
+                        if (item && item.tarih) {
+                            self._showDayDetails(item.tarih);
+                        }
+                    }
+                };
+
+            } else if (mode === 'urun') {
+                if (titleEl) titleEl.innerText = '📦 Ürün Satış Trendi';
+
+                var isSingleDay = (gunluk.length <= 1);
+                var labels = [];
+                var urunData = [];
+                var siparisData = [];
+
+                if (!isSingleDay) {
+                    labels   = gunluk.map(function (g) { return g.tarih_kisa; });
+                    urunData = gunluk.map(function (g) { return g.urun_adedi || 0; });
+                    siparisData = gunluk.map(function (g) { return g.siparis_sayisi || 0; });
+                    if (badgeEl) badgeEl.innerText = gunluk.length + ' gün • Günlük Satılan Toplam Ürün Adetleri';
+                } else {
+                    labels   = saatlik.map(function (s) { return s.saat; });
+                    urunData = saatlik.map(function (s) { return s.items || 0; });
+                    siparisData = saatlik.map(function (s) { return s.count || 0; });
+                    if (badgeEl) badgeEl.innerText = 'Saatlik Yoğunluk • Satılan Ürün Adetleri';
+                }
+
+                chart.data.labels = labels;
+                chart.data.datasets = [
+                    {
+                        label: 'Satılan Ürün Adedi',
+                        data: urunData,
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6,182,212,0.15)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#06b6d4',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        borderWidth: 2.5,
+                        yAxisID: 'yUrun',
+                    },
+                    {
+                        label: 'Sipariş Sayısı',
+                        data: siparisData,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139,92,246,0.10)',
+                        fill: false,
+                        tension: 0.4,
+                        borderDash: [4, 4],
+                        pointBackgroundColor: '#8b5cf6',
+                        pointRadius: 3,
+                        borderWidth: 1.5,
+                        yAxisID: 'ySiparis',
+                    }
+                ];
+
+                chart.options.scales = {
+                    x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+                    yUrun: {
+                        type: 'linear',
+                        position: 'left',
+                        grid: { color: gridColor },
+                        ticks: { color: tickColor, stepSize: 1 },
+                        beginAtZero: true,
+                    },
+                    ySiparis: {
+                        type: 'linear',
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: { color: tickColor, stepSize: 1 },
+                        beginAtZero: true,
+                    }
+                };
+
+                chart.options.plugins.legend = { display: true, position: 'top', labels: { color: tickColor, font: { size: 12 } } };
+                chart.options.plugins.tooltip = Object.assign({}, commonTooltip, {
+                    callbacks: {
+                        label: function (ctx) {
+                            if (ctx.dataset.yAxisID === 'yUrun') {
+                                return ' Satılan Ürün: ' + ctx.parsed.y + ' adet';
                             }
                             return ' Sipariş Sayısı: ' + ctx.parsed.y + ' adet';
                         }
