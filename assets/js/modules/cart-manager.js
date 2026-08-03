@@ -313,12 +313,13 @@ window.HizliKasa = window.HizliKasa || {};
          * Diğer kasalardaki aynı ürünün bilgisini getir
          * @param {number} productId Ürün ID
          * @param {number} variationId Varyant ID
-         * @returns {Object} { adet: number, kasalar: number[] }
+         * @returns {Object} { adet: number, kasalar: number[], detay: Array<{kasa: number, adet: number}> }
          */
         digerKasalardakiBilgi: function(productId, variationId) {
             var state = HK.State;
             var toplam = 0;
             var hangiKasalar = [];
+            var detayListesi = [];
 
             for (var i = 1; i <= state.MAX_KASA; i++) {
                 if (i === state.aktifKasaId) continue;
@@ -331,9 +332,11 @@ window.HizliKasa = window.HizliKasa || {};
                             return parseInt(item.product_id) === parseInt(productId) &&
                                    parseInt(item.variation_id || 0) === parseInt(variationId || 0);
                         });
-                        if (urun) {
-                            toplam += urun.quantity;
+                        if (urun && parseInt(urun.quantity) > 0) {
+                            var q = parseInt(urun.quantity);
+                            toplam += q;
                             hangiKasalar.push(i);
+                            detayListesi.push({ kasa: i, adet: q });
                         }
                     } catch (e) {
                         console.error("Slot okuma hatası", e);
@@ -341,7 +344,7 @@ window.HizliKasa = window.HizliKasa || {};
                 }
             }
 
-            return { adet: toplam, kasalar: hangiKasalar };
+            return { adet: toplam, kasalar: hangiKasalar, detay: detayListesi };
         },
 
         /**
@@ -397,7 +400,10 @@ window.HizliKasa = window.HizliKasa || {};
                 if (toplamBekleyenAdet > urunStok) {
                     var mesaj = "";
                     if (digerKasalardakiAdet > 0) {
-                        mesaj = "DİKKAT: Ürün Kasa " + digerBilgi.kasalar.join(", ") + " üzerinde işlemde! Stok yetersiz.";
+                        var detayMetni = (digerBilgi.detay || []).map(function(d) {
+                            return "Kasa " + d.kasa + ": " + d.adet + " adet";
+                        }).join(", ");
+                        mesaj = "DİKKAT: Ürün " + (detayMetni ? "(" + detayMetni + ") " : "") + "üzerinde işlemde! Stok yetersiz.";
                     } else {
                         mesaj = "HATA: Yetersiz Stok! (Maksimum: " + urun.stock_quantity + ")";
                     }
@@ -406,7 +412,7 @@ window.HizliKasa = window.HizliKasa || {};
                     durumMetni.style.color = "#e74c3c";
 
                     if (HK.UIRenderer) {
-                        HK.UIRenderer.showToast("Stok Yetersiz: " + urun.name, 'error', true);
+                        HK.UIRenderer.showToast(mesaj, 'error', true);
                     }
                     return;
                 }

@@ -374,6 +374,18 @@
             var isVariableParent = !!urun.is_variable;
             var outOfStock = !isVariableParent && (urun.stock_status === 'outofstock' || (urun.manage_stock && urun.stock_quantity !== null && urun.stock_quantity <= 0));
 
+            var isVariation = urun.type === 'variation' || (urun.parent_id && urun.parent_id !== 0);
+            var targetProductId = isVariation ? urun.parent_id : urun.id;
+            var targetVariationId = isVariation ? urun.id : 0;
+            var digerBilgi = (!isVariableParent && HK.CartManager && typeof HK.CartManager.digerKasalardakiBilgi === 'function')
+                ? HK.CartManager.digerKasalardakiBilgi(targetProductId, targetVariationId)
+                : { adet: 0, kasalar: [], detay: [] };
+
+            var isOtherKasaLocked = digerBilgi.adet > 0;
+            var digerKasaDetayMetni = (digerBilgi.detay || []).map(function(d) {
+                return "Kasa " + d.kasa + ": " + d.adet + " adet";
+            }).join(", ");
+
             var li = document.createElement("li");
             
             // Kolon Yapısı HTML
@@ -385,6 +397,7 @@
                 '<span style="font-weight:bold; font-size:14px; color: ' + (outOfStock ? '#c0392b' : 'inherit') + '">' +
                     urun.name +
                     (outOfStock ? ' <small style="color:#e74c3c; font-weight:bold;">(SİTE STOK YOK)</small>' : '') +
+                    (isOtherKasaLocked ? ' <small style="color:#d35400; font-weight:bold; background:#fef5e7; padding:1px 5px; border-radius:3px; border:1px solid #f39c12; margin-left:4px;">⚠️ (' + digerKasaDetayMetni + ' İŞLEMDE)</small>' : '') +
                 '</span>' +
                 '<span class="sonuc-sku">' + (urun.sku || 'SKU yok') + '</span>';
 
@@ -438,7 +451,12 @@
                 }
                 
                 if (outOfStock) {
-                    HK.UIRenderer.showToast("Bu ürün stokta yok!", "error");
+                    if (isOtherKasaLocked) {
+                        var kilitMesaj = "DİKKAT: Ürün " + (digerKasaDetayMetni ? "(" + digerKasaDetayMetni + ") " : "") + "üzerinde işlemde! Stok yetersiz.";
+                        HK.UIRenderer.showToast(kilitMesaj, "error", true);
+                    } else {
+                        HK.UIRenderer.showToast("Bu ürün stokta yok!", "error");
+                    }
                     return;
                 }
 
