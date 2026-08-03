@@ -1194,7 +1194,7 @@
     flex-wrap: wrap;
     background: var(--hk-bg-card);
     border: 1px solid var(--hk-border);
-    border-radius: 16px;
+    border-radius: 14px;
     padding: 20px 24px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
 }
@@ -1634,7 +1634,7 @@
 .psr-dashboard {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
     animation: hk-fade-in 0.3s ease;
 }
 
@@ -1683,7 +1683,7 @@
 .psr-relation-section {
     background: var(--hk-bg-card);
     border: 1px solid var(--hk-border);
-    border-radius: 16px;
+    border-radius: 14px;
     padding: 24px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
     display: flex;
