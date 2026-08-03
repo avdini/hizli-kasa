@@ -60,12 +60,12 @@
 }
 
 /* =============================================
-   KPI KARTLARI — HERO STRIP (Ana Metrikler)
+   KPI KARTLARI — HERO STRIP (2 Hero Kart)
    ============================================= */
 
 .stat-kpi-hero-strip {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
 }
 
@@ -74,20 +74,16 @@
 }
 
 /* =============================================
-   KPI KARTLARI — COMPACT GRID (Detay Metrikler)
+   KPI KARTLARI — COMPACT GRID (4 Compact Kart)
    ============================================= */
 
 .stat-kpi-compact-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
 }
 
-@media (max-width: 1200px) {
-    .stat-kpi-compact-grid { grid-template-columns: repeat(3, 1fr); }
-}
-
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
     .stat-kpi-compact-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -197,7 +193,7 @@
    ============================================= */
 
 .stat-kpi-card.stat-kpi-hero {
-    padding: 24px 28px;
+    padding: 20px 24px;
     gap: 6px;
 }
 
@@ -219,20 +215,65 @@
     opacity: 0.07;
 }
 
-.stat-kpi-card.stat-kpi-hero .stat-kpi-icon {
-    font-size: 26px;
-    margin-bottom: 6px;
+.stat-kpi-hero-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2px;
 }
 
-.stat-kpi-card.stat-kpi-hero .stat-kpi-label {
+.stat-kpi-hero-header .stat-kpi-icon {
+    font-size: 20px;
+    margin-bottom: 0;
+}
+
+.stat-kpi-hero-header .stat-kpi-label {
     font-size: 11px;
+    font-weight: 700;
     letter-spacing: 0.8px;
+    color: var(--hk-text-muted);
 }
 
-.stat-kpi-card.stat-kpi-hero .stat-kpi-value {
-    font-size: 28px;
+.stat-kpi-hero-dual-grid {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 4px;
+}
+
+.stat-kpi-hero-dual-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.stat-kpi-dual-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--hk-text-muted);
+    text-transform: uppercase;
+}
+
+.stat-kpi-hero-dual-item .stat-kpi-value {
+    font-size: 22px;
     font-weight: 800;
     letter-spacing: -0.5px;
+}
+
+.stat-kpi-hero-dual-item .stat-kpi-value.stat-kpi-sub-val {
+    font-size: 20px;
+    opacity: 0.9;
+}
+
+.stat-kpi-hero-dual-divider {
+    width: 1px;
+    height: 38px;
+    background: var(--hk-border, #e2e8f0);
+    flex-shrink: 0;
 }
 
 .stat-kpi-card.stat-kpi-hero .stat-kpi-sub-row {
