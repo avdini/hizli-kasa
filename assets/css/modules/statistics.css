@@ -580,6 +580,22 @@
     flex-direction: column;
     gap: 6px;
     min-width: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.stat-odeme-legend-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.stat-odeme-legend-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.stat-odeme-legend-list::-webkit-scrollbar-thumb {
+    background: var(--hk-border, rgba(0, 0, 0, 0.15));
+    border-radius: 4px;
 }
 
 .stat-odeme-legend-item {
@@ -615,6 +631,7 @@
     align-items: center;
     gap: 6px;
     min-width: 0;
+    overflow: hidden;
 }
 
 .stat-odeme-dot {
@@ -631,6 +648,19 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: inline-block;
+}
+
+.stat-odeme-item-name.is-marquee {
+    text-overflow: clip;
+    animation: psr-name-marquee 3s ease-in-out infinite alternate;
+}
+
+@keyframes psr-name-marquee {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(0); }
+    80% { transform: translateX(var(--scroll-dist, -20px)); }
+    100% { transform: translateX(var(--scroll-dist, -20px)); }
 }
 
 #hizli-kasa-app.theme-dark .stat-odeme-item-name {

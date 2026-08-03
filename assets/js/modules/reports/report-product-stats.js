@@ -579,7 +579,7 @@
                         var color = varColors[idx % varColors.length];
                         var vAdet = parseInt(v.satis_adet, 10) || 0;
                         var pct = totalVarsAdet > 0 ? ((vAdet / totalVarsAdet) * 100).toFixed(1) : '0';
-                        legendHtml += '<div class="stat-odeme-legend-item" data-idx="' + idx + '">';
+                        legendHtml += '<div class="stat-odeme-legend-item" data-idx="' + idx + '" title="' + self._esc(v.name) + '">';
                         legendHtml +=   '<div class="stat-odeme-item-left">';
                         legendHtml +=     '<span class="stat-odeme-dot" style="background-color:' + color + '"></span>';
                         legendHtml +=     '<span class="stat-odeme-item-name">' + self._esc(v.name) + '</span>';
@@ -592,7 +592,7 @@
                     });
                     legendListEl.innerHTML = legendHtml;
 
-                    // Hover interaction (highlight doughnut segment on legend hover)
+                    // Hover interaction (highlight doughnut segment & marquee long text on legend hover)
                     legendListEl.querySelectorAll('.stat-odeme-legend-item').forEach(function (el) {
                         el.addEventListener('mouseenter', function () {
                             var idx = parseInt(this.dataset.idx, 10);
@@ -601,12 +601,23 @@
                                 self.charts.vars.tooltip.setActiveElements([{ datasetIndex: 0, index: idx }]);
                                 self.charts.vars.update();
                             }
+                            var nameEl = this.querySelector('.stat-odeme-item-name');
+                            if (nameEl && nameEl.scrollWidth > nameEl.clientWidth) {
+                                var diff = nameEl.scrollWidth - nameEl.clientWidth;
+                                nameEl.style.setProperty('--scroll-dist', '-' + (diff + 4) + 'px');
+                                nameEl.classList.add('is-marquee');
+                            }
                         });
                         el.addEventListener('mouseleave', function () {
                             if (self.charts.vars) {
                                 self.charts.vars.setActiveElements([]);
                                 self.charts.vars.tooltip.setActiveElements([]);
                                 self.charts.vars.update();
+                            }
+                            var nameEl = this.querySelector('.stat-odeme-item-name');
+                            if (nameEl) {
+                                nameEl.classList.remove('is-marquee');
+                                nameEl.style.removeProperty('--scroll-dist');
                             }
                         });
                     });
