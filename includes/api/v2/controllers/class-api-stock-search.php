@@ -589,7 +589,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
         $items = [];
         if (!empty($rows)) {
             foreach ($rows as $row) {
-                $items[] = $this->format_product_item($row, $scope, $depo_id);
+                $items[] = $this->format_product_item($row, $scope, $depo_id, $search);
             }
         }
 
@@ -618,9 +618,10 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
      * @param object $row
      * @param string $scope
      * @param int $depo_id
+     * @param string $search
      * @return array
      */
-    protected function format_product_item($row, $scope, $depo_id = 0) {
+    protected function format_product_item($row, $scope, $depo_id = 0, $search = '') {
         global $wpdb;
 
         $post_id = intval($row->ID);
@@ -791,6 +792,10 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                         'attributes'      => $c_attrs,
                     ];
                 }
+            }
+
+            if (!empty($formatted_variations) && function_exists('hizli_kasa_sort_variations')) {
+                hizli_kasa_sort_variations($formatted_variations, $search);
             }
         }
 

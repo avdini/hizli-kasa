@@ -278,6 +278,123 @@ function hizli_kasa_format_urun_row($row, $depo_id = null, $variations_by_parent
 }
 
 /**
+ * Varyasyonları Renk/Desen (Gruplama), Kapsamlı Beden/Numara/Ölçü ağırlığı ve Exact SKU Matching kurallarına göre sıralar.
+ */
+function hizli_kasa_sort_variations(array &$variations, string $search = '')
+{
+    if (empty($variations)) {
+        return;
+    }
+
+    $needle = function_exists('mb_strtolower') ? mb_strtolower(trim($search)) : strtolower(trim($search));
+
+    $size_map = [
+        'xxs' => 0.5,
+        'xs'  => 1,
+        's'   => 2,
+        'm'   => 3,
+        'l'   => 4,
+        'xl'  => 5,
+        'xxl' => 6, '2xl' => 6,
+        '3xl' => 7,
+        '4xl' => 8,
+        '5xl' => 9,
+        '6xl' => 10,
+        '7xl' => 11,
+        '8xl' => 12,
+        '9xl' => 13,
+    ];
+
+    $get_size_weight = function($val) use ($size_map) {
+        $v = strtolower(trim((string) $val));
+        if ($v === '') {
+            return 999;
+        }
+        if (is_numeric($v)) {
+            return (float) $v;
+        }
+        if (isset($size_map[$v])) {
+            return (float) $size_map[$v];
+        }
+        if (preg_match('/^(\d+(?:\.\d+)?)/', $v, $matches)) {
+            return (float) $matches[1];
+        }
+        return 999;
+    };
+
+    usort($variations, function ($a, $b) use ($needle, $get_size_weight) {
+        // 1. SADECE %100 Tam Eşleşen SKU / Barkod (Exact Match Hoisting)
+        if ($needle !== '') {
+            $a_sku = is_array($a) ? (string) ($a['sku'] ?? '') : (string) ($a->sku ?? '');
+            $b_sku = is_array($b) ? (string) ($b['sku'] ?? '') : (string) ($b->sku ?? '');
+
+            $a_sku_low = function_exists('mb_strtolower') ? mb_strtolower($a_sku) : strtolower($a_sku);
+            $b_sku_low = function_exists('mb_strtolower') ? mb_strtolower($b_sku) : strtolower($b_sku);
+
+            $a_exact = ($a_sku_low !== '' && $a_sku_low === $needle) ? 1 : 0;
+            $b_exact = ($b_sku_low !== '' && $b_sku_low === $needle) ? 1 : 0;
+
+            if ($a_exact !== $b_exact) {
+                return $b_exact <=> $a_exact;
+            }
+        }
+
+        // 2. Renk / Pattern / Kumaş / Materyal (1. Derece Gruplama)
+        $attrs_a = is_array($a) ? ($a['attributes'] ?? []) : ($a->attributes ?? []);
+        $attrs_b = is_array($b) ? ($b['attributes'] ?? []) : ($b->attributes ?? []);
+
+        if (is_object($attrs_a)) $attrs_a = (array) $attrs_a;
+        if (is_object($attrs_b)) $attrs_b = (array) $attrs_b;
+
+        $color_a = ''; $size_a = '';
+        $color_b = ''; $size_b = '';
+
+        foreach ($attrs_a as $k => $val) {
+            $k_low = strtolower((string) $k);
+            if (strpos($k_low, 'renk') !== false || strpos($k_low, 'color') !== false || strpos($k_low, 'desen') !== false || strpos($k_low, 'pattern') !== false) {
+                $color_a = (string) $val;
+            }
+            if (strpos($k_low, 'beden') !== false || strpos($k_low, 'size') !== false || strpos($k_low, 'numara') !== false || strpos($k_low, 'olcu') !== false || strpos($k_low, 'ölçü') !== false) {
+                $size_a = (string) $val;
+            }
+        }
+
+        foreach ($attrs_b as $k => $val) {
+            $k_low = strtolower((string) $k);
+            if (strpos($k_low, 'renk') !== false || strpos($k_low, 'color') !== false || strpos($k_low, 'desen') !== false || strpos($k_low, 'pattern') !== false) {
+                $color_b = (string) $val;
+            }
+            if (strpos($k_low, 'beden') !== false || strpos($k_low, 'size') !== false || strpos($k_low, 'numara') !== false || strpos($k_low, 'olcu') !== false || strpos($k_low, 'ölçü') !== false) {
+                $size_b = (string) $val;
+            }
+        }
+
+        // Önce Renk / Gruplama
+        if ($color_a !== $color_b) {
+            return strnatcasecmp($color_a, $color_b);
+        }
+
+        // Sonra Beden / Numara / Ölçü Sıralaması
+        if ($size_a !== $size_b) {
+            $weight_a = $get_size_weight($size_a);
+            $weight_b = $get_size_weight($size_b);
+
+            if ($weight_a !== $weight_b) {
+                return $weight_a <=> $weight_b;
+            }
+
+            return strnatcasecmp((string) $size_a, (string) $size_b);
+        }
+
+        // Fallback: Başlık / Ad
+        $name_a = is_array($a) ? ($a['name'] ?? $a['title'] ?? '') : ($a->post_title ?? $a->name ?? '');
+        $name_b = is_array($b) ? ($b['name'] ?? $b['title'] ?? '') : ($b->post_title ?? $b->name ?? '');
+
+        return strnatcasecmp((string) $name_a, (string) $name_b);
+    });
+}
+
+/**
  * Arama metnini kelimelere ayırır.
  */
 function hizli_kasa_prepare_search_terms($search)
