@@ -234,7 +234,7 @@ function hizli_kasa_uygulamasi()
     wp_enqueue_script('kasa-report-sales', $js_base . 'modules/reports/report-sales.js', ['kasa-reports-common'], $pos_version, true);
     wp_enqueue_script('kasa-report-refunds', $js_base . 'modules/reports/report-refunds.js', ['kasa-reports-common'], $pos_version, true);
     wp_enqueue_script('kasa-report-archive', $js_base . 'modules/reports/report-archive.js', ['kasa-reports-common'], $pos_version, true);
-    wp_enqueue_script('kasa-statistics-dashboard', $js_base . 'modules/statistics-dashboard.js', ['kasa-ui-renderer', 'kasa-depo-manager', 'chartjs'], $pos_version, true);
+    wp_enqueue_script('kasa-statistics-dashboard', $js_base . 'modules/statistics-dashboard.js', ['kasa-reports-common', 'kasa-ui-renderer', 'kasa-depo-manager', 'chartjs'], $pos_version, true);
     wp_enqueue_script('kasa-report-product-stats', $js_base . 'modules/reports/report-product-stats.js', ['kasa-reports-common', 'chartjs', 'kasa-depo-manager'], $pos_version, true);
     wp_enqueue_script('kasa-report-expenses', $js_base . 'modules/reports/report-expenses.js', ['kasa-reports-common', 'chartjs', 'kasa-depo-manager'], $pos_version, true);
     wp_enqueue_script('kasa-report-receipt-printer', $js_base . 'modules/report-receipt-printer.js', ['kasa-reports-common', 'kasa-print-manager', 'jsbarcode'], $pos_version, true);

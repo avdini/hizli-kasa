@@ -23,19 +23,23 @@
             var self = this;
 
             // Raporu Hub'a Kaydet
-            if (HK.ReportHub) {
-                HK.ReportHub.registerReport({
-                    id: 'ozet-istatistik',
-                    categoryId: 'istatistik',
-                    title: 'İstatistik Dashboardu',
-                    icon: '📈',
-                    panelId: 'rapor-ozet-istatistik',
-                    onActivate: function() { self.load(); },
-                    hasDateFilter: true,
-                    hasSearch: false,
-                    order: 1
-                });
-            }
+            var register = function () {
+                if (HK.ReportHub) {
+                    HK.ReportHub.registerReport({
+                        id: 'ozet-istatistik',
+                        categoryId: 'istatistik',
+                        title: 'İstatistik Dashboardu',
+                        icon: '📈',
+                        panelId: 'rapor-ozet-istatistik',
+                        onActivate: function () { self.load(); },
+                        hasDateFilter: true,
+                        hasSearch: false,
+                        order: 1
+                    });
+                }
+            };
+            register();
+            document.addEventListener('hkReportHubReady', register);
 
             // Depo değişince ve rapor sekmesi açıksa yenile
             document.addEventListener('hkActiveDepoChanged', function () {
