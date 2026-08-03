@@ -200,7 +200,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                 "SELECT (CASE WHEN p_m.post_type = 'product_variation' THEN p_m.post_parent ELSE pm.post_id END) 
                  FROM {$wpdb->postmeta} pm
                  INNER JOIN {$wpdb->posts} p_m ON pm.post_id = p_m.ID
-                 WHERE pm.meta_key IN ('_sku', '_barcode', '_gtin', '_ean') AND pm.meta_value = %s LIMIT 1",
+                 WHERE pm.meta_key IN ('_sku', '_barcode', '_gtin', '_ean') AND pm.meta_value = %s AND p_m.post_status IN ('publish', 'private') LIMIT 1",
                 $search
             ));
 
@@ -386,7 +386,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             // Depo İzolasyonu: Yalnızca seçili deponun stok konumlarında bulunan ürünleri çek
             $where[] = $wpdb->prepare("(
                 p.ID IN (
-                    SELECT product_id FROM {$stok_table} WHERE location_id = %d AND variation_id = 0
+                    SELECT product_id FROM {$stok_table} WHERE location_id = %d
                     UNION
                     SELECT variation_id FROM {$stok_table} WHERE location_id = %d AND variation_id > 0
                     UNION

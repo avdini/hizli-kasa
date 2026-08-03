@@ -47,7 +47,12 @@ public static function get_list() {
 
         if ($s) {
             $like = '%' . $wpdb->esc_like($s) . '%';
-            $where_sql .= " AND (p.post_title LIKE %s OR pm_sku.meta_value LIKE %s)";
+            $where_sql .= " AND (p.post_title LIKE %s OR EXISTS (
+                SELECT 1 FROM {$wpdb->postmeta} pm_bc 
+                WHERE pm_bc.post_id = p.ID 
+                AND pm_bc.meta_key IN ('_sku', '_barcode', '_gtin', '_ean') 
+                AND pm_bc.meta_value LIKE %s
+            ))";
             $params[] = $like; $params[] = $like;
         }
 

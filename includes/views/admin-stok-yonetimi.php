@@ -342,6 +342,8 @@ jQuery(document).ready(function($) {
     let currentPage = 1;
     let searchTimeout = null;
     let pendingChanges = {};
+    let currentStockXHR = null;
+    let lastStockRequestToken = 0;
 
     function updateSaveButtonState() {
         const count = Object.keys(pendingChanges).length;
@@ -748,6 +750,11 @@ jQuery(document).ready(function($) {
     });
 
     window.loadStockList = function(page = 1) {
+        if (currentStockXHR && typeof currentStockXHR.abort === 'function') {
+            currentStockXHR.abort();
+        }
+        const requestToken = ++lastStockRequestToken;
+
         const query = $('#admin-product-search').val();
         const filterMismatch = $('#filter-mismatch').is(':checked');
         const filterZeroStock = $('#filter-zero-stock').is(':checked');
@@ -758,9 +765,10 @@ jQuery(document).ready(function($) {
         const filterMaxStock = $('#modal-filter-max-stock').val();
         const filterProductType = $('#modal-filter-product-type').val();
         const $body = $('#admin-stock-list-body');
+        $body.css('opacity', '0.5');
         const ajax_url = (typeof ajaxurl !== 'undefined') ? ajaxurl : '/wp-admin/admin-ajax.php';
 
-        $.post(ajax_url, {
+        currentStockXHR = $.post(ajax_url, {
             action: 'hizli_kasa_get_admin_stock_list',
             s: query,
             paged: page,
@@ -773,6 +781,7 @@ jQuery(document).ready(function($) {
             max_stock: filterMaxStock,
             product_type: filterProductType
         }, function(res) {
+            if (requestToken !== lastStockRequestToken) return;
             $body.css('opacity', '1');
             if(res.success) {
                 renderTable(res.data.products);
@@ -807,7 +816,8 @@ jQuery(document).ready(function($) {
                     <button class="button" onclick="loadStockList(${page})">Tekrar Dene</button>
                 </td></tr>`);
             }
-        }).fail(function(xhr) {
+        }).fail(function(xhr, statusText) {
+            if (statusText === 'abort' || requestToken !== lastStockRequestToken) return;
             $body.css('opacity', '1');
             let detail = (xhr.status === 504) ? 'Sunucu yanıt süresi aşıldı (Timeout). Lütfen sayfayı yenileyip tekrar deneyin.' : 'Bağlantı hatası oluştu.';
             $body.html(`<tr><td colspan="100%" style="text-align:center; padding:40px;">

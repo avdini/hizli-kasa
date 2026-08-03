@@ -232,6 +232,10 @@
 
             els.urunAramaInput.addEventListener("input", function() {
                 clearTimeout(self._aramaTimeout);
+                if (self._searchAbortController) {
+                    self._searchAbortController.abort();
+                    self._searchAbortController = null;
+                }
                 var query = els.urunAramaInput.value.trim();
                 self._lastSearchQuery = query; // Takip için son sorguyu kaydet
 
@@ -242,11 +246,17 @@
 
                 self._aramaTimeout = setTimeout(async function() {
                     try {
+                        var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+                        self._searchAbortController = controller;
+
                         var depoId = HK.DepoManager ? HK.DepoManager.getActiveDepo() : 0;
                         var apiBase = kasaAyar.rootApiUrl || (window.location.origin + '/wp-json/');
-                        var response = await fetch(apiBase + 'hizli-kasa/v1/search?s=' + encodeURIComponent(query) + '&depo_id=' + depoId, {
-                            headers: { 'X-WP-Nonce': kasaAyar.nonce }
-                        });
+                        var fetchOptions = { headers: { 'X-WP-Nonce': kasaAyar.nonce } };
+                        if (controller) {
+                            fetchOptions.signal = controller.signal;
+                        }
+
+                        var response = await fetch(apiBase + 'hizli-kasa/v1/search?s=' + encodeURIComponent(query) + '&depo_id=' + depoId, fetchOptions);
                         var data = await response.json();
                         
                         // ÖNEMLİ: Yarış durumunu (race condition) engelle.
@@ -257,7 +267,10 @@
 
                         self._sonuclariGoster(data);
                     } catch (error) {
+                        if (error && error.name === 'AbortError') return;
                         console.error("Arama hatası:", error);
+                    } finally {
+                        self._searchAbortController = null;
                     }
                 }, 400);
             });
