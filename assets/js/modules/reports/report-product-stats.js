@@ -326,91 +326,45 @@
                 html += '<div class="psr-cost-source-note">📌 Maliyet kaynağı: <strong>' + kaynakLabel + '</strong></div>';
             }
 
-            if (kpi.odeme_dagilimi) {
-                var od = kpi.odeme_dagilimi;
-                var nakitVal = parseFloat(od.nakit) || 0;
-                var kartVal  = parseFloat(od.kart) || 0;
-                var ibanVal  = parseFloat(od.iban) || 0;
-                var qrVal    = parseFloat(od.qr_taksit) || 0;
-                var totalOd  = nakitVal + kartVal + ibanVal + qrVal;
-
-                var pNakit = totalOd > 0 ? ((nakitVal / totalOd) * 100).toFixed(1) : '0';
-                var pKart  = totalOd > 0 ? ((kartVal / totalOd) * 100).toFixed(1) : '0';
-                var pIban  = totalOd > 0 ? ((ibanVal / totalOd) * 100).toFixed(1) : '0';
-                var pQr    = totalOd > 0 ? ((qrVal / totalOd) * 100).toFixed(1) : '0';
-
-                html += '<div class="psr-payment-breakdown-card">';
-                html +=   '<div class="psr-payment-breakdown-header">';
-                html +=     '<h4 class="psr-payment-title">💳 Ödeme Tipi Dağılımı</h4>';
-                html +=     '<span class="psr-payment-sub">Toplam Dağılım: ' + self._currency(totalOd) + '</span>';
-                html +=   '</div>';
-
-                html +=   '<div class="psr-payment-progress-bar">';
-                if (nakitVal > 0) html += '<div class="psr-pay-segment segment-nakit" style="width:' + pNakit + '%" title="Nakit: ' + self._currency(nakitVal) + ' (%' + pNakit + ')"></div>';
-                if (kartVal > 0)  html += '<div class="psr-pay-segment segment-kart" style="width:' + pKart + '%" title="Kart: ' + self._currency(kartVal) + ' (%' + pKart + ')"></div>';
-                if (ibanVal > 0)  html += '<div class="psr-pay-segment segment-iban" style="width:' + pIban + '%" title="IBAN: ' + self._currency(ibanVal) + ' (%' + pIban + ')"></div>';
-                if (qrVal > 0)    html += '<div class="psr-pay-segment segment-qr" style="width:' + pQr + '%" title="QR Taksit: ' + self._currency(qrVal) + ' (%' + pQr + ')"></div>';
-                html +=   '</div>';
-
-                html +=   '<div class="psr-payment-pills">';
-                html +=     '<div class="psr-pay-pill pill-nakit"><div class="pill-left"><span class="pill-dot"></span>💵 Nakit</div><div class="pill-right"><strong>' + self._currency(nakitVal) + '</strong><span class="pill-pct">%' + pNakit + '</span></div></div>';
-                html +=     '<div class="psr-pay-pill pill-kart"><div class="pill-left"><span class="pill-dot"></span>💳 Kart</div><div class="pill-right"><strong>' + self._currency(kartVal) + '</strong><span class="pill-pct">%' + pKart + '</span></div></div>';
-                html +=     '<div class="psr-pay-pill pill-iban"><div class="pill-left"><span class="pill-dot"></span>🏦 IBAN</div><div class="pill-right"><strong>' + self._currency(ibanVal) + '</strong><span class="pill-pct">%' + pIban + '</span></div></div>';
-                html +=     '<div class="psr-pay-pill pill-qr"><div class="pill-left"><span class="pill-dot"></span>📱 QR Taksit</div><div class="pill-right"><strong>' + self._currency(qrVal) + '</strong><span class="pill-pct">%' + pQr + '</span></div></div>';
-                html +=   '</div>';
-                html += '</div>';
-            }
-
-            // Birleşik Trend & İskonto Grafiği
-            if (!self.activeTrendMode) {
-                self.activeTrendMode = 'satis';
-            }
-
-            var trend   = data.gunluk_trend  || [];
-            var saatlik = data.saatlik_trend || [];
-            var isSingleDay = (trend.length <= 1 && saatlik.length > 0);
-
+            // Satış vs İade Bar Chart & Dağılım Doughnut Kartı (Varyasyon / Ödeme Dönüşümlü)
             if (trend.length > 0) {
-                html += '<div class="psr-chart-wrap psr-chart-full">';
-                html +=   '<div class="psr-chart-header stat-main-trend-header">';
-                html +=     '<div>';
-                html +=       '<h4 class="stat-chart-title" id="psr-main-trend-title">' + (isSingleDay ? '📈 Saatlik Satış Trendi' : '📈 Günlük Satış Trendi') + '</h4>';
-                html +=       '<span class="stat-chart-badge" id="psr-main-trend-badge">' + (isSingleDay ? 'Saatlik Yoğunluk • 24 Saat' : trend.length + ' gün') + '</span>';
-                html +=     '</div>';
-                html +=     '<div class="stat-trend-toggle-wrap">';
-                html +=       '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'satis' ? ' active' : '') + '" data-mode="satis">📈 Satış Trendi</button>';
-                html +=       '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'iskonto' ? ' active' : '') + '" data-mode="iskonto">✂️ İskonto Analizi</button>';
-                html +=     '</div>';
-                html +=   '</div>';
-                html +=   '<div class="psr-chart-hint" id="psr-main-trend-hint">💡 Grafikteki bir noktaya tıklayarak o günün satışlarını inceleyin</div>';
-                html +=   '<div class="psr-chart-body psr-chart-body-main"><canvas id="psr-chart-main"></canvas></div>';
-                html +=   '<div id="psr-day-accordion" class="psr-day-accordion" style="display:none;"></div>';
-                html += '</div>';
-            }
+                if (!self.activeDistMode) {
+                    self.activeDistMode = vars.length > 1 ? 'vars' : 'odeme';
+                }
 
-            // Satış vs İade Bar Chart
-            if (trend.length > 0) {
                 html += '<div class="psr-charts-row">';
                 html +=   '<div class="psr-chart-wrap">';
                 html +=     '<div class="psr-chart-header"><h4 class="stat-chart-title">📊 Satış vs İade (Adet)</h4></div>';
                 html +=     '<div class="psr-chart-body"><canvas id="psr-chart-compare"></canvas></div>';
                 html +=   '</div>';
 
+                html +=   '<div class="psr-chart-wrap stat-odeme-card" id="psr-dist-card">';
+                html +=     '<div class="psr-chart-header stat-main-trend-header">';
+                html +=       '<div>';
+                html +=         '<h4 class="stat-chart-title" id="psr-dist-title">' + (self.activeDistMode === 'vars' ? '🎨 Varyasyon Dağılımı' : '💳 Ödeme Tipi Dağılımı') + '</h4>';
+                html +=         '<span class="stat-chart-badge" id="psr-dist-badge"></span>';
+                html +=       '</div>';
+
                 if (vars.length > 1) {
-                    html += '<div class="psr-chart-wrap stat-odeme-card">';
-                    html +=   '<div class="psr-chart-header"><h4 class="stat-chart-title">🎨 Varyasyon Dağılımı</h4><span class="stat-chart-badge">' + vars.length + ' varyasyon</span></div>';
-                    html +=   '<div class="psr-chart-body stat-odeme-body">';
-                    html +=     '<div class="stat-odeme-chart-wrap">';
-                    html +=       '<canvas id="psr-chart-vars"></canvas>';
-                    html +=       '<div class="stat-odeme-center-text">';
-                    html +=         '<span class="stat-odeme-center-label">TOPLAM</span>';
-                    html +=         '<span class="stat-odeme-center-val" id="psr-vars-center-total">0 Adet</span>';
-                    html +=       '</div>';
-                    html +=     '</div>';
-                    html +=     '<div class="stat-odeme-legend-list" id="psr-vars-legend-list"></div>';
+                    html +=   '<div class="stat-trend-toggle-wrap">';
+                    html +=     '<button class="stat-trend-toggle-btn' + (self.activeDistMode === 'vars' ? ' active' : '') + '" data-dist-mode="vars">🎨 Varyasyon</button>';
+                    html +=     '<button class="stat-trend-toggle-btn' + (self.activeDistMode === 'odeme' ? ' active' : '') + '" data-dist-mode="odeme">💳 Ödeme</button>';
                     html +=   '</div>';
-                    html += '</div>';
                 }
+
+                html +=     '</div>';
+                html +=     '<div class="psr-chart-body stat-odeme-body">';
+                html +=       '<div class="stat-odeme-chart-wrap">';
+                html +=         '<canvas id="psr-chart-dist"></canvas>';
+                html +=         '<div class="stat-odeme-center-text">';
+                html +=           '<span class="stat-odeme-center-label">TOPLAM</span>';
+                html +=           '<span class="stat-odeme-center-val" id="psr-dist-center-total">0</span>';
+                html +=         '</div>';
+                html +=       '</div>';
+                html +=       '<div class="stat-odeme-legend-list" id="psr-dist-legend-list"></div>';
+                html +=     '</div>';
+                html +=   '</div>';
+
                 html += '</div>';
             }
 
@@ -586,17 +540,85 @@
                 });
             }
 
-            // Variation Doughnut (Side-by-side Layout with Custom Legend matching stat-odeme-card)
-            if (vars.length > 1 && document.getElementById('psr-chart-vars')) {
+            // Distribution Doughnut Chart (Varyasyon & Ödeme Dağılımı Dönüşümlü)
+            if (document.getElementById('psr-chart-dist')) {
+                self._initDistChart(data, commonTooltip);
+
+                var distCardEl = document.getElementById('psr-dist-card');
+                if (distCardEl) {
+                    distCardEl.querySelectorAll('.stat-trend-toggle-btn').forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            var mode = this.dataset.distMode;
+                            if (mode === self.activeDistMode) return;
+                            self.activeDistMode = mode;
+
+                            distCardEl.querySelectorAll('.stat-trend-toggle-btn').forEach(function (b) {
+                                b.classList.toggle('active', b.dataset.distMode === mode);
+                            });
+
+                            self._updateDistChart(data, commonTooltip);
+                        });
+                    });
+                }
+            }
+        },
+
+        /* -------------------------------------------------
+           DAĞILIM GRAFİĞİ (VARYASYON & ÖDEME DÖNÜŞÜMLÜ)
+        ------------------------------------------------- */
+        _initDistChart: function (data, commonTooltip) {
+            var self = this;
+            var canvas = document.getElementById('psr-chart-dist');
+            if (!canvas) return;
+
+            self.charts.dist = new Chart(canvas, {
+                type: 'doughnut',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '74%',
+                    layout: { padding: 4 },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: Object.assign({}, commonTooltip, {
+                            callbacks: {
+                                label: function (ctx) { return ' ' + ctx.label + ': ' + ctx.parsed; }
+                            }
+                        })
+                    }
+                }
+            });
+
+            self._updateDistChart(data, commonTooltip);
+        },
+
+        _updateDistChart: function (data, commonTooltip) {
+            var self = this;
+            var chart = self.charts.dist;
+            if (!chart) return;
+
+            var vars = data.variations || [];
+            var kpi  = data.kpi || {};
+            var od   = kpi.odeme_dagilimi || {};
+
+            var mode = self.activeDistMode || (vars.length > 1 ? 'vars' : 'odeme');
+            self.activeDistMode = mode;
+
+            var titleEl       = document.getElementById('psr-dist-title');
+            var badgeEl       = document.getElementById('psr-dist-badge');
+            var centerTotalEl = document.getElementById('psr-dist-center-total');
+            var legendListEl  = document.getElementById('psr-dist-legend-list');
+
+            if (mode === 'vars' && vars.length > 1) {
+                if (titleEl) titleEl.innerText = '🎨 Varyasyon Dağılımı';
+                if (badgeEl) badgeEl.innerText = vars.length + ' varyasyon';
+
                 var varColors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#ec4899','#84cc16'];
                 var totalVarsAdet = vars.reduce(function (acc, v) { return acc + (parseInt(v.satis_adet, 10) || 0); }, 0);
 
-                var centerTotalEl = document.getElementById('psr-vars-center-total');
-                if (centerTotalEl) {
-                    centerTotalEl.innerText = totalVarsAdet + ' Adet';
-                }
+                if (centerTotalEl) centerTotalEl.innerText = totalVarsAdet + ' Adet';
 
-                var legendListEl = document.getElementById('psr-vars-legend-list');
                 if (legendListEl) {
                     var legendHtml = '';
                     vars.forEach(function (v, idx) {
@@ -616,71 +638,120 @@
                     });
                     legendListEl.innerHTML = legendHtml;
 
-                    // Hover interaction (highlight doughnut segment & marquee long text on legend hover)
-                    legendListEl.querySelectorAll('.stat-odeme-legend-item').forEach(function (el) {
-                        el.addEventListener('mouseenter', function () {
-                            var idx = parseInt(this.dataset.idx, 10);
-                            if (self.charts.vars) {
-                                self.charts.vars.setActiveElements([{ datasetIndex: 0, index: idx }]);
-                                self.charts.vars.tooltip.setActiveElements([{ datasetIndex: 0, index: idx }]);
-                                self.charts.vars.update();
-                            }
-                            var nameEl = this.querySelector('.stat-odeme-item-name');
-                            if (nameEl && nameEl.scrollWidth > nameEl.clientWidth) {
-                                var diff = nameEl.scrollWidth - nameEl.clientWidth;
-                                nameEl.style.setProperty('--scroll-dist', '-' + (diff + 4) + 'px');
-                                nameEl.classList.add('is-marquee');
-                            }
-                        });
-                        el.addEventListener('mouseleave', function () {
-                            if (self.charts.vars) {
-                                self.charts.vars.setActiveElements([]);
-                                self.charts.vars.tooltip.setActiveElements([]);
-                                self.charts.vars.update();
-                            }
-                            var nameEl = this.querySelector('.stat-odeme-item-name');
-                            if (nameEl) {
-                                nameEl.classList.remove('is-marquee');
-                                nameEl.style.removeProperty('--scroll-dist');
-                            }
-                        });
-                    });
+                    self._bindDistLegendEvents(legendListEl);
                 }
 
-                self.charts.vars = new Chart(document.getElementById('psr-chart-vars'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: vars.map(function (v) { return v.name; }),
-                        datasets: [{
-                            data: vars.map(function (v) { return v.satis_adet; }),
-                            backgroundColor: vars.map(function (_, i) { return varColors[i % varColors.length]; }),
-                            borderWidth: 0,
-                            hoverOffset: 10,
-                            clip: false,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '74%',
-                        layout: {
-                            padding: 4
-                        },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: Object.assign({}, commonTooltip, {
-                                callbacks: {
-                                    label: function (ctx) {
-                                        var val = ctx.parsed;
-                                        var pct = totalVarsAdet > 0 ? ((val / totalVarsAdet) * 100).toFixed(1) : '0';
-                                        return ' ' + ctx.label + ': ' + val + ' adet (%' + pct + ')';
-                                    }
-                                }
-                            })
+                chart.data.labels = vars.map(function (v) { return v.name; });
+                chart.data.datasets = [{
+                    data: vars.map(function (v) { return v.satis_adet; }),
+                    backgroundColor: vars.map(function (_, i) { return varColors[i % varColors.length]; }),
+                    borderWidth: 0,
+                    hoverOffset: 10,
+                    clip: false,
+                }];
+
+                chart.options.plugins.tooltip = Object.assign({}, commonTooltip, {
+                    callbacks: {
+                        label: function (ctx) {
+                            var val = ctx.parsed;
+                            var pct = totalVarsAdet > 0 ? ((val / totalVarsAdet) * 100).toFixed(1) : '0';
+                            return ' ' + ctx.label + ': ' + val + ' adet (%' + pct + ')';
+                        }
+                    }
+                });
+
+            } else {
+                if (titleEl) titleEl.innerText = '💳 Ödeme Tipi Dağılımı';
+                if (badgeEl) badgeEl.innerText = 'Net Dağılım';
+
+                var nakitVal = parseFloat(od.nakit) || 0;
+                var kartVal  = parseFloat(od.kart) || 0;
+                var ibanVal  = parseFloat(od.iban) || 0;
+                var qrVal    = parseFloat(od.qr_taksit) || 0;
+                var totalOd  = nakitVal + kartVal + ibanVal + qrVal;
+
+                if (centerTotalEl) centerTotalEl.innerText = self._currency(totalOd);
+
+                var items = [
+                    { label: 'Nakit',     icon: '💵', val: nakitVal, color: '#10b981' },
+                    { label: 'Kart',      icon: '💳', val: kartVal,  color: '#3b82f6' },
+                    { label: 'IBAN',      icon: '🏦', val: ibanVal,  color: '#8b5cf6' },
+                    { label: 'QR/Taksit', icon: '📱', val: qrVal,    color: '#f59e0b' }
+                ];
+
+                if (legendListEl) {
+                    var legendHtml = '';
+                    items.forEach(function (item, idx) {
+                        var pct = totalOd > 0 ? ((item.val / totalOd) * 100).toFixed(1) : '0';
+                        legendHtml += '<div class="stat-odeme-legend-item" data-idx="' + idx + '" title="' + item.label + ': ' + self._currency(item.val) + '">';
+                        legendHtml +=   '<div class="stat-odeme-item-left">';
+                        legendHtml +=     '<span class="stat-odeme-dot" style="background-color:' + item.color + '"></span>';
+                        legendHtml +=     '<span class="stat-odeme-item-name">' + item.icon + ' ' + item.label + '</span>';
+                        legendHtml +=   '</div>';
+                        legendHtml +=   '<div class="stat-odeme-item-right">';
+                        legendHtml +=     '<span class="stat-odeme-item-val">' + self._currency(item.val) + '</span>';
+                        legendHtml +=     '<span class="stat-odeme-item-pct">%' + pct + '</span>';
+                        legendHtml +=   '</div>';
+                        legendHtml += '</div>';
+                    });
+                    legendListEl.innerHTML = legendHtml;
+
+                    self._bindDistLegendEvents(legendListEl);
+                }
+
+                chart.data.labels = items.map(function (i) { return i.icon + ' ' + i.label; });
+                chart.data.datasets = [{
+                    data: items.map(function (i) { return i.val; }),
+                    backgroundColor: items.map(function (i) { return i.color; }),
+                    borderWidth: 0,
+                    hoverOffset: 10,
+                    clip: false,
+                }];
+
+                chart.options.plugins.tooltip = Object.assign({}, commonTooltip, {
+                    callbacks: {
+                        label: function (ctx) {
+                            var val = ctx.parsed;
+                            var pct = totalOd > 0 ? ((val / totalOd) * 100).toFixed(1) : '0';
+                            return ' Tutar: ' + self._currency(val) + ' (%' + pct + ')';
                         }
                     }
                 });
             }
+
+            chart.update();
+        },
+
+        _bindDistLegendEvents: function (legendListEl) {
+            var self = this;
+            legendListEl.querySelectorAll('.stat-odeme-legend-item').forEach(function (el) {
+                el.addEventListener('mouseenter', function () {
+                    var idx = parseInt(this.dataset.idx, 10);
+                    if (self.charts.dist) {
+                        self.charts.dist.setActiveElements([{ datasetIndex: 0, index: idx }]);
+                        self.charts.dist.tooltip.setActiveElements([{ datasetIndex: 0, index: idx }]);
+                        self.charts.dist.update();
+                    }
+                    var nameEl = this.querySelector('.stat-odeme-item-name');
+                    if (nameEl && nameEl.scrollWidth > nameEl.clientWidth) {
+                        var diff = nameEl.scrollWidth - nameEl.clientWidth;
+                        nameEl.style.setProperty('--scroll-dist', '-' + (diff + 4) + 'px');
+                        nameEl.classList.add('is-marquee');
+                    }
+                });
+                el.addEventListener('mouseleave', function () {
+                    if (self.charts.dist) {
+                        self.charts.dist.setActiveElements([]);
+                        self.charts.dist.tooltip.setActiveElements([]);
+                        self.charts.dist.update();
+                    }
+                    var nameEl = this.querySelector('.stat-odeme-item-name');
+                    if (nameEl) {
+                        nameEl.classList.remove('is-marquee');
+                        nameEl.style.removeProperty('--scroll-dist');
+                    }
+                });
+            });
         },
 
         _showDayAccordion: function (dayData) {
