@@ -171,7 +171,16 @@
             // Kasiyer performansı (sadece birden fazla varsa)
             if (kasiy.length > 0) {
                 html += '<div class="stat-chart-card">';
-                html += '<div class="stat-chart-header"><h4 class="stat-chart-title">👤 Kasiyer Performansı</h4><span class="stat-chart-badge">' + kasiy.length + ' kasiyer</span></div>';
+                html += '<div class="stat-chart-header stat-main-trend-header">';
+                html += '<div>';
+                html += '<h4 class="stat-chart-title">👤 Kasiyer Performansı</h4>';
+                html += '<span class="stat-chart-badge">' + kasiy.length + ' kasiyer</span>';
+                html += '</div>';
+                html += '<div class="stat-kasiyer-legend-wrap">';
+                html += '<span class="stat-kasiyer-legend-item"><i class="dot" style="background:#8b5cf6"></i> Sipariş</span>';
+                html += '<span class="stat-kasiyer-legend-item"><i class="dot" style="background:#3b82f6"></i> Ciro (₺)</span>';
+                html += '</div>';
+                html += '</div>';
                 html += '<div class="stat-chart-body"><canvas id="stat-chart-kasiyer"></canvas></div>';
                 html += '</div>';
             }
@@ -505,21 +514,14 @@
                         interaction: { mode: 'index', intersect: false },
                         layout: {
                             padding: {
-                                top: 4,
+                                top: 6,
                                 bottom: 0,
-                                left: 2,
-                                right: 2
+                                left: 0,
+                                right: 0
                             }
                         },
                         plugins: {
-                            legend: {
-                                labels: {
-                                    color: tickColor,
-                                    padding: 8,
-                                    boxWidth: 12,
-                                    font: { size: 11 }
-                                }
-                            },
+                            legend: { display: false },
                             tooltip: Object.assign({}, commonTooltip, {
                                 callbacks: {
                                     label: function (ctx) {
@@ -534,7 +536,7 @@
                         scales: {
                             x: {
                                 grid: { display: false },
-                                ticks: { color: tickColor, padding: 2 }
+                                ticks: { color: tickColor, padding: 4 }
                             },
                             ySiparis: {
                                 type: 'linear',
