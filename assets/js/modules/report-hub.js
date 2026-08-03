@@ -164,6 +164,7 @@
                                         <input type="date" id="rhub-tarih-bas" class="hk-input">
                                         <input type="date" id="rhub-tarih-bit" class="hk-input">
                                         <button id="rhub-sorgula" class="hk-btn-primary">Sorgula</button>
+                                        <button id="stat-print-summary-btn" class="stat-print-summary-btn" style="display:none;" title="Özet raporu termal fişe yazdır">🖨️ Fiş Yazdır</button>
                                     </div>
                                     <div class="rhub-arama-filtre" id="rhub-arama-container">
                                         <input type="text" id="rhub-arama-input" class="hk-input" placeholder="Ara...">
@@ -638,6 +639,11 @@
                     }
                 } else {
                     filtreContainer.style.display = 'none';
+                }
+
+                var printSummaryBtn = document.getElementById('stat-print-summary-btn');
+                if (printSummaryBtn) {
+                    printSummaryBtn.style.display = (rep.id === 'ozet-istatistik') ? 'inline-flex' : 'none';
                 }
             }
 

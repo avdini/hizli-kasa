@@ -48,6 +48,14 @@
                 }
             });
 
+            // Özet Fişi Yazdır Buton Tıklama Dinleyicisi
+            document.addEventListener('click', function (e) {
+                if (e.target && e.target.closest('#stat-print-summary-btn')) {
+                    e.preventDefault();
+                    self._printSummaryReceipt();
+                }
+            });
+
             // Tema değişiminde grafikleri yeniden çiz
             document.addEventListener('hkThemeChanged', function () {
                 if (self.lastData) {
@@ -104,11 +112,6 @@
             var urunler = data.top_urunler    || [];
 
             var html = '<div class="stat-dashboard-wrap">';
-
-            // Toolbar — Yazdır Butonu
-            html += '<div class="stat-dashboard-toolbar">';
-            html += '<button class="stat-print-summary-btn" id="stat-print-summary-btn" title="Seçili tarih aralığının özet raporunu termal fişe yazdır">🖨️ Özet Fişi Yazdır</button>';
-            html += '</div>';
 
             // KPI Kartları — Hero Strip (2 Ana Metrik Kartı)
             html += '<div class="stat-kpi-hero-strip">';
@@ -299,14 +302,6 @@
                     }
                 });
             });
-
-            // Yazdır Butonu Eventi
-            var printBtn = document.getElementById('stat-print-summary-btn');
-            if (printBtn) {
-                printBtn.addEventListener('click', function () {
-                    self._printSummaryReceipt();
-                });
-            }
 
             // Chart.js mevcut mu?
             if (typeof Chart === 'undefined') {

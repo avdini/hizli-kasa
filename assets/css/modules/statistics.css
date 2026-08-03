@@ -27,40 +27,32 @@
     gap: 20px;
 }
 
-.stat-dashboard-toolbar {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: -5px;
-}
-
 .stat-print-summary-btn {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: var(--hk-card-bg, #ffffff);
+    justify-content: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 14px;
+    background: var(--hk-bg-secondary, #f8fafc);
     color: var(--hk-text-primary, #1e293b);
-    border: 1px solid var(--hk-border, #e2e8f0);
-    border-radius: 8px;
+    border: 1px solid var(--hk-border, #cbd5e1);
+    border-radius: 6px;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+    transition: all 0.15s ease;
 }
 
 .stat-print-summary-btn:hover {
-    background: var(--hk-accent-light, #f1f5f9);
+    background: var(--hk-accent-light, #eff6ff);
     border-color: var(--hk-accent, #3b82f6);
     color: var(--hk-accent, #3b82f6);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .stat-print-summary-btn:active {
-    transform: translateY(0);
+    transform: scale(0.98);
 }
 
 /* =============================================
