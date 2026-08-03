@@ -452,8 +452,11 @@
                 
                 if (outOfStock) {
                     if (isOtherKasaLocked) {
-                        var kilitMesaj = "DİKKAT: Ürün " + (digerKasaDetayMetni ? "(" + digerKasaDetayMetni + ") " : "") + "üzerinde işlemde! Stok yetersiz.";
-                        HK.UIRenderer.showToast(kilitMesaj, "error", true);
+                        var kilitBadges = (digerBilgi.detay || []).map(function(d) {
+                            return '<span class="hk-kasa-badge">Kasa ' + d.kasa + ': ' + d.adet + ' adet</span>';
+                        }).join(" ");
+                        var kilitToastHtml = "<strong>⚠️ Ürün Başka Kasada İşlemde!</strong>Stok yetersiz. Bulunduğu kasalar:<br>" + kilitBadges;
+                        HK.UIRenderer.showToast(kilitToastHtml, "error", true);
                     } else {
                         HK.UIRenderer.showToast("Bu ürün stokta yok!", "error");
                     }

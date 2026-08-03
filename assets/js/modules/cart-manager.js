@@ -399,20 +399,26 @@ window.HizliKasa = window.HizliKasa || {};
             if (urun.manage_stock && urun.stock_quantity !== null) {
                 if (toplamBekleyenAdet > urunStok) {
                     var mesaj = "";
+                    var toastHtml = "";
                     if (digerKasalardakiAdet > 0) {
                         var detayMetni = (digerBilgi.detay || []).map(function(d) {
                             return "Kasa " + d.kasa + ": " + d.adet + " adet";
                         }).join(", ");
-                        mesaj = "DİKKAT: Ürün " + (detayMetni ? "(" + detayMetni + ") " : "") + "üzerinde işlemde! Stok yetersiz.";
+                        var badgeHtml = (digerBilgi.detay || []).map(function(d) {
+                            return '<span class="hk-kasa-badge">Kasa ' + d.kasa + ': ' + d.adet + ' adet</span>';
+                        }).join(" ");
+                        mesaj = "DİKKAT: Ürün (" + detayMetni + ") üzerinde işlemde! Stok yetersiz.";
+                        toastHtml = "<strong>⚠️ Ürün Başka Kasada İşlemde!</strong>Stok yetersiz. Bulunduğu kasalar:<br>" + badgeHtml;
                     } else {
                         mesaj = "HATA: Yetersiz Stok! (Maksimum: " + urun.stock_quantity + ")";
+                        toastHtml = "<strong>HATA: Yetersiz Stok!</strong>Maksimum stok: " + urun.stock_quantity;
                     }
                     
                     durumMetni.innerText = mesaj;
                     durumMetni.style.color = "#e74c3c";
 
                     if (HK.UIRenderer) {
-                        HK.UIRenderer.showToast(mesaj, 'error', true);
+                        HK.UIRenderer.showToast(toastHtml, 'error', true);
                     }
                     return;
                 }

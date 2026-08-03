@@ -13,34 +13,79 @@
     pointer-events: none;
     max-height: 80vh;
     overflow: visible;
+    max-width: 420px;
+    width: calc(100vw - 40px);
 }
 
 .hk-toast {
     min-width: 280px;
-    max-width: 350px;
+    max-width: 420px;
     background: #ffffff !important;
-    background: var(--hk-bg-card) !important;
-    color: #1e293b !important;
-    color: var(--hk-text-main) !important;
-    padding: 15px 20px !important;
-    border-radius: 10px !important;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+    color: #0f172a !important;
+    padding: 14px 18px !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.04) !important;
     display: flex !important;
-    align-items: center !important;
+    align-items: flex-start !important;
     gap: 12px !important;
     pointer-events: auto !important;
-    animation: hk-toast-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards !important;
-    border-left: 6px solid #27ae60 !important; /* Başarı için yeşil varsayılan */
-    font-weight: 600 !important;
-    font-family: inherit;
+    animation: hk-toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    border: 1px solid #e2e8f0 !important;
+    border-left: 5px solid #10b981 !important; /* Başarı varsayılan yeşil */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 
-.hk-toast.warning { border-left-color: #f39c12 !important; }
-.hk-toast.error   { border-left-color: #e74c3c !important; }
-.hk-toast.info    { border-left-color: #3498db !important; }
+.hk-toast.warning {
+    border-left-color: #f59e0b !important;
+    background: #fffbeb !important;
+}
 
-.hk-toast .toast-icon { font-size: 20px; }
-.hk-toast .toast-msg { flex: 1; color: var(--hk-text-main); font-size: 14px; }
+.hk-toast.error {
+    border-left-color: #ef4444 !important;
+    background: #fef2f2 !important;
+}
+
+.hk-toast.info {
+    border-left-color: #3b82f6 !important;
+    background: #eff6ff !important;
+}
+
+.hk-toast .toast-icon {
+    font-size: 20px;
+    line-height: 1.2;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
+.hk-toast .toast-msg {
+    flex: 1;
+    color: #0f172a;
+    font-size: 13.5px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.hk-toast .toast-msg strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 3px;
+    color: #1e293b;
+}
+
+.hk-kasa-badge {
+    display: inline-block;
+    background: #fee2e2;
+    color: #991b1b;
+    font-weight: 700;
+    font-size: 11.5px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin: 3px 4px 2px 0;
+    border: 1px solid #fca5a5;
+    letter-spacing: 0.2px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
 
 .hk-toast.fade-out {
     animation: hk-toast-out 0.5s ease forwards;
