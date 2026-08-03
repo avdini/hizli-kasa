@@ -44,31 +44,54 @@
             }
         },
 
+        /**
+         * Ürünler sekmesine geçildiğinde arama alanına odaklanır.
+         * Var olan metni silmez, imleci metnin en sonuna taşır.
+         */
+        focusSearchInput: function() {
+            var input = document.getElementById('terminal-arama-input');
+            if (!input) return;
+
+            setTimeout(function() {
+                input.focus();
+                if (input.value && typeof input.setSelectionRange === 'function') {
+                    var len = input.value.length;
+                    input.setSelectionRange(len, len);
+                }
+            }, 50);
+        },
+
         init: function() {
             var self = this;
             
+            // Sekme değişim dinleyicisini her durumda 1 kez kaydet
+            if (!this._tabListenerAdded) {
+                this._tabListenerAdded = true;
+                document.addEventListener('hkTabLoaded', function(e) {
+                    if (e.detail.tab === 'urunler') {
+                        if (!self.initialized) {
+                            self.init();
+                        } else {
+                            self.loadProducts();
+                        }
+                        self.focusSearchInput();
+                    }
+                });
+            }
+
             // Çift başlatmayı önle
             if (this.initialized) return;
 
             var input = document.getElementById('terminal-arama-input');
             
             if (!input) {
-                if (!this._tabListenerAdded) {
-                    this._tabListenerAdded = true;
-                    document.addEventListener('hkTabLoaded', function(e) {
-                        if (e.detail.tab === 'urunler') {
-                            if (!self.initialized) {
-                                self.init();
-                            } else {
-                                self.loadProducts();
-                            }
-                        }
-                    });
-                }
                 return;
             }
 
             this.initialized = true;
+
+            // İlk yüklenmede arama kutusuna odaklan
+            this.focusSearchInput();
 
             console.group('%c[Hızlı Kasa StockTerminal] Modül Başlatılıyor (init)', 'color: #3b82f6; font-weight: bold;');
             console.log('Arama girdisi ve olay dinleyicileri yüklendi.');
