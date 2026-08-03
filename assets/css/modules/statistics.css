@@ -218,8 +218,15 @@
 .stat-kpi-hero-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     margin-bottom: 2px;
+}
+
+.stat-kpi-hero-title-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .stat-kpi-hero-header .stat-kpi-icon {

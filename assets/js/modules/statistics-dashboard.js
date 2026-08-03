@@ -808,8 +808,11 @@
             var actionHtml = actionText ? '<span class="stat-kpi-action-link">' + actionText + '</span>' : '';
             return '<div class="stat-kpi-card stat-kpi-hero stat-kpi-hero-dual ' + (cls || '') + '">'
                 + '<div class="stat-kpi-hero-header">'
+                + '<div class="stat-kpi-hero-title-group">'
                 + '<span class="stat-kpi-icon">' + icon + '</span>'
                 + '<span class="stat-kpi-label">' + title + '</span>'
+                + '</div>'
+                + actionHtml
                 + '</div>'
                 + '<div class="stat-kpi-hero-dual-grid">'
                 + '<div class="stat-kpi-hero-dual-item">'
@@ -822,10 +825,6 @@
                 + '<span class="stat-kpi-value stat-kpi-sub-val">' + val2Val + '</span>'
                 + '</div>'
                 + '</div>'
-                + '<div class="stat-kpi-sub-row">'
-                + '<span class="stat-kpi-sub">' + (sub || '') + '</span>'
-                + actionHtml
-                + '</div>'
                 + '</div>';
         },
 
@@ -835,13 +834,14 @@
         _kpiCardHero: function (icon, label, value, sub, cls, actionText) {
             var actionHtml = actionText ? '<span class="stat-kpi-action-link">' + actionText + '</span>' : '';
             return '<div class="stat-kpi-card stat-kpi-hero ' + (cls || '') + '">'
+                + '<div class="stat-kpi-hero-header">'
+                + '<div class="stat-kpi-hero-title-group">'
                 + '<span class="stat-kpi-icon">' + icon + '</span>'
                 + '<span class="stat-kpi-label">' + label + '</span>'
-                + '<span class="stat-kpi-value">' + value + '</span>'
-                + '<div class="stat-kpi-sub-row">'
-                + '<span class="stat-kpi-sub">' + (sub || '') + '</span>'
+                + '</div>'
                 + actionHtml
                 + '</div>'
+                + '<span class="stat-kpi-value">' + value + '</span>'
                 + '</div>';
         },
 

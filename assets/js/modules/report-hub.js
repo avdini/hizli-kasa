@@ -163,14 +163,6 @@
                                     <div class="rhub-tarih-filtre" id="rhub-tarih-container">
                                         <input type="date" id="rhub-tarih-bas" class="hk-input">
                                         <input type="date" id="rhub-tarih-bit" class="hk-input">
-                                        <select id="rhub-odeme-filtre" class="hk-select" style="padding:6px 10px; border-radius:6px; border:1px solid var(--hk-border); margin-right:6px;">
-                                            <option value="all">Tüm Ödemeler</option>
-                                            <option value="cash">💵 Nakit</option>
-                                            <option value="card">💳 Kredi Kartı</option>
-                                            <option value="iban">🏦 IBAN</option>
-                                            <option value="qr_taksit">📱 QR Taksit</option>
-                                            <option value="split">🔀 Bölünmüş</option>
-                                        </select>
                                         <button id="rhub-sorgula" class="hk-btn-primary">Sorgula</button>
                                     </div>
                                     <div class="rhub-arama-filtre" id="rhub-arama-container">
