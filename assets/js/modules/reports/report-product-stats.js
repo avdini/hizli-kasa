@@ -326,24 +326,53 @@
                 html += '<div class="psr-cost-source-note">📌 Maliyet kaynağı: <strong>' + kaynakLabel + '</strong></div>';
             }
 
-            // Satış vs İade Bar Chart & Dağılım Doughnut Kartı (Varyasyon / Ödeme Dönüşümlü)
+            // Main Trend Line Chart & Distribution Charts Grid
+            html += '<div class="stat-charts-grid">';
+
+            if (!self.activeTrendMode) {
+                self.activeTrendMode = 'satis';
+            }
+
+            var trend   = data.gunluk_trend  || [];
+            var saatlik = data.saatlik_trend || [];
+            var isSingleDay = (trend.length <= 1 && saatlik.length > 0);
+
+            // 1. Ana Trend Line Chart (Full Width)
+            if (trend.length > 0) {
+                html += '<div class="stat-chart-card stat-chart-full">';
+                html +=   '<div class="stat-chart-header stat-main-trend-header">';
+                html +=     '<div>';
+                html +=       '<h4 class="stat-chart-title" id="psr-main-trend-title">' + (isSingleDay ? '📈 Saatlik Satış Trendi' : '📈 Günlük Satış Trendi') + '</h4>';
+                html +=       '<span class="stat-chart-badge" id="psr-main-trend-badge">' + (isSingleDay ? 'Saatlik Yoğunluk • 24 Saat' : trend.length + ' gün') + '</span>';
+                html +=     '</div>';
+                html +=     '<div class="stat-trend-toggle-wrap">';
+                html +=       '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'satis' ? ' active' : '') + '" data-mode="satis">📈 Satış Trendi</button>';
+                html +=       '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'iskonto' ? ' active' : '') + '" data-mode="iskonto">✂️ İskonto Analizi</button>';
+                html +=     '</div>';
+                html +=   '</div>';
+                html +=   '<div class="psr-chart-hint" id="psr-main-trend-hint">💡 Grafikteki bir noktaya tıklayarak o günün satışlarını inceleyin</div>';
+                html +=   '<div class="stat-chart-body psr-chart-body-main"><canvas id="psr-chart-main"></canvas></div>';
+                html +=   '<div id="psr-day-accordion" class="psr-day-accordion" style="display:none;"></div>';
+                html += '</div>';
+            }
+
+            // 2. Satış vs İade Bar Chart (Half Width) & 3. Dağılım Doughnut Kartı (Half Width)
             if (trend.length > 0) {
                 if (!self.activeDistMode) {
                     self.activeDistMode = vars.length > 1 ? 'vars' : 'odeme';
                 }
 
-                html += '<div class="psr-charts-row">';
-                html +=   '<div class="psr-chart-wrap">';
-                html +=     '<div class="psr-chart-header"><h4 class="stat-chart-title">📊 Satış vs İade (Adet)</h4></div>';
-                html +=     '<div class="psr-chart-body"><canvas id="psr-chart-compare"></canvas></div>';
-                html +=   '</div>';
+                html += '<div class="stat-chart-card">';
+                html +=   '<div class="stat-chart-header"><h4 class="stat-chart-title">📊 Satış vs İade (Adet)</h4></div>';
+                html +=   '<div class="stat-chart-body"><canvas id="psr-chart-compare"></canvas></div>';
+                html += '</div>';
 
-                html +=   '<div class="psr-chart-wrap stat-odeme-card" id="psr-dist-card">';
-                html +=     '<div class="psr-chart-header stat-main-trend-header">';
-                html +=       '<div>';
-                html +=         '<h4 class="stat-chart-title" id="psr-dist-title">' + (self.activeDistMode === 'vars' ? '🎨 Varyasyon Dağılımı' : '💳 Ödeme Tipi Dağılımı') + '</h4>';
-                html +=         '<span class="stat-chart-badge" id="psr-dist-badge"></span>';
-                html +=       '</div>';
+                html += '<div class="stat-chart-card stat-odeme-card" id="psr-dist-card">';
+                html +=   '<div class="stat-chart-header stat-main-trend-header">';
+                html +=     '<div>';
+                html +=       '<h4 class="stat-chart-title" id="psr-dist-title">' + (self.activeDistMode === 'vars' ? '🎨 Varyasyon Dağılımı' : '💳 Ödeme Tipi Dağılımı') + '</h4>';
+                html +=       '<span class="stat-chart-badge" id="psr-dist-badge"></span>';
+                html +=     '</div>';
 
                 if (vars.length > 1) {
                     html +=   '<div class="stat-trend-toggle-wrap">';
@@ -352,37 +381,37 @@
                     html +=   '</div>';
                 }
 
-                html +=     '</div>';
-                html +=     '<div class="psr-chart-body stat-odeme-body">';
-                html +=       '<div class="stat-odeme-chart-wrap">';
-                html +=         '<canvas id="psr-chart-dist"></canvas>';
-                html +=         '<div class="stat-odeme-center-text">';
-                html +=           '<span class="stat-odeme-center-label">TOPLAM</span>';
-                html +=           '<span class="stat-odeme-center-val" id="psr-dist-center-total">0</span>';
-                html +=         '</div>';
-                html +=       '</div>';
-                html +=       '<div class="stat-odeme-legend-list" id="psr-dist-legend-list"></div>';
-                html +=     '</div>';
                 html +=   '</div>';
-
+                html +=   '<div class="stat-chart-body stat-odeme-body">';
+                html +=     '<div class="stat-odeme-chart-wrap">';
+                html +=       '<canvas id="psr-chart-dist"></canvas>';
+                html +=       '<div class="stat-odeme-center-text">';
+                html +=         '<span class="stat-odeme-center-label">TOPLAM</span>';
+                html +=         '<span class="stat-odeme-center-val" id="psr-dist-center-total">0</span>';
+                html +=       '</div>';
+                html +=     '</div>';
+                html +=     '<div class="stat-odeme-legend-list" id="psr-dist-legend-list"></div>';
+                html +=   '</div>';
                 html += '</div>';
             }
 
-            // Varyasyon tablosu (parent ürünse)
+            // 4. Varyasyon tablosu (Full Width)
             if (vars.length > 1) {
-                html += '<div class="stat-chart-card">';
+                html += '<div class="stat-chart-card stat-chart-full">';
                 html +=   '<div class="psr-chart-header"><h4 class="stat-chart-title">📋 Varyasyon Detay Tablosu</h4></div>';
                 html +=   self._renderVarTable(vars);
                 html += '</div>';
             }
 
-            // Satış Listesi
+            // 5. Satış Kayıtları Tablosu (Full Width)
             if (satis.length > 0) {
-                html += '<div class="stat-chart-card psr-satis-listesi-wrap">';
+                html += '<div class="stat-chart-card stat-chart-full psr-satis-listesi-wrap">';
                 html +=   '<div class="psr-chart-header"><h4 class="stat-chart-title">🧾 Satış Kayıtları</h4><span class="stat-chart-badge">' + satis.length + ' kayıt</span></div>';
                 html +=   self._renderSatisTable(satis);
                 html += '</div>';
             }
+
+            html += '</div>'; // End stat-charts-grid
 
             dashboard.innerHTML = html;
             self._bindDashboardEvents(data);
