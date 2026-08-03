@@ -1355,6 +1355,18 @@
 .psr-chart-body {
     position: relative;
     width: 100%;
+    min-height: 220px;
+    height: 220px;
+}
+
+.psr-chart-body canvas {
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+.psr-chart-body-main {
+    min-height: 280px;
+    height: 280px;
 }
 
 /* --- Gün Accordion --- */

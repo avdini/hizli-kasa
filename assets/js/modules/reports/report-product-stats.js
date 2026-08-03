@@ -355,7 +355,7 @@
                 html +=     '</div>';
                 html +=   '</div>';
                 html +=   '<div class="psr-chart-hint" id="psr-main-trend-hint">💡 Grafikteki bir noktaya tıklayarak o günün satışlarını inceleyin</div>';
-                html +=   '<div class="psr-chart-body"><canvas id="psr-chart-main" height="90"></canvas></div>';
+                html +=   '<div class="psr-chart-body psr-chart-body-main"><canvas id="psr-chart-main"></canvas></div>';
                 html +=   '<div id="psr-day-accordion" class="psr-day-accordion" style="display:none;"></div>';
                 html += '</div>';
             }
@@ -365,13 +365,13 @@
                 html += '<div class="psr-charts-row">';
                 html +=   '<div class="psr-chart-wrap">';
                 html +=     '<div class="psr-chart-header"><h4 class="stat-chart-title">📊 Satış vs İade (Adet)</h4></div>';
-                html +=     '<div class="psr-chart-body"><canvas id="psr-chart-compare" height="160"></canvas></div>';
+                html +=     '<div class="psr-chart-body"><canvas id="psr-chart-compare"></canvas></div>';
                 html +=   '</div>';
 
                 if (vars.length > 1) {
                     html += '<div class="psr-chart-wrap">';
                     html +=   '<div class="psr-chart-header"><h4 class="stat-chart-title">🎨 Varyasyon Dağılımı</h4><span class="stat-chart-badge">' + vars.length + ' varyasyon</span></div>';
-                    html +=   '<div class="psr-chart-body stat-doughnut-wrap"><canvas id="psr-chart-vars" height="220"></canvas></div>';
+                    html +=   '<div class="psr-chart-body stat-doughnut-wrap"><canvas id="psr-chart-vars"></canvas></div>';
                     html += '</div>';
                 }
                 html += '</div>';
@@ -525,6 +525,7 @@
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         interaction: { mode: 'index', intersect: false },
                         plugins: {
                             legend: { labels: { color: tickColor } },
@@ -558,6 +559,7 @@
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         cutout: '65%',
                         plugins: {
                             legend: { position: 'bottom', labels: { color: tickColor, padding: 12, font: { size: 11 } } },
@@ -922,6 +924,7 @@
                 data: { labels: [], datasets: [] },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     scales: {
                         x: { grid: { color: gridColor }, ticks: { color: tickColor } }
