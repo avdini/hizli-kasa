@@ -328,12 +328,36 @@
 
             if (kpi.odeme_dagilimi) {
                 var od = kpi.odeme_dagilimi;
-                html += '<div class="psr-payment-breakdown-bar" style="display:flex; gap:12px; flex-wrap:wrap; background:var(--hk-bg-subtle, #f8f9fa); padding:10px 15px; border-radius:8px; margin-bottom:15px; border:1px solid var(--hk-border, #e2e8f0); font-size:12px; align-items:center;">';
-                html += '<strong style="color:var(--hk-text-main);">💳 Ödeme Dağılımı:</strong>';
-                html += '<span style="color:#10b981; font-weight:600;">💵 Nakit: ' + self._currency(od.nakit || 0) + '</span>';
-                html += '<span style="color:#3b82f6; font-weight:600;">💳 Kart: ' + self._currency(od.kart || 0) + '</span>';
-                html += '<span style="color:#8b5cf6; font-weight:600;">🏦 IBAN: ' + self._currency(od.iban || 0) + '</span>';
-                html += '<span style="color:#d97706; font-weight:600;">📱 QR Taksit: ' + self._currency(od.qr_taksit || 0) + '</span>';
+                var nakitVal = parseFloat(od.nakit) || 0;
+                var kartVal  = parseFloat(od.kart) || 0;
+                var ibanVal  = parseFloat(od.iban) || 0;
+                var qrVal    = parseFloat(od.qr_taksit) || 0;
+                var totalOd  = nakitVal + kartVal + ibanVal + qrVal;
+
+                var pNakit = totalOd > 0 ? ((nakitVal / totalOd) * 100).toFixed(1) : '0';
+                var pKart  = totalOd > 0 ? ((kartVal / totalOd) * 100).toFixed(1) : '0';
+                var pIban  = totalOd > 0 ? ((ibanVal / totalOd) * 100).toFixed(1) : '0';
+                var pQr    = totalOd > 0 ? ((qrVal / totalOd) * 100).toFixed(1) : '0';
+
+                html += '<div class="psr-payment-breakdown-card">';
+                html +=   '<div class="psr-payment-breakdown-header">';
+                html +=     '<h4 class="psr-payment-title">💳 Ödeme Tipi Dağılımı</h4>';
+                html +=     '<span class="psr-payment-sub">Toplam Dağılım: ' + self._currency(totalOd) + '</span>';
+                html +=   '</div>';
+
+                html +=   '<div class="psr-payment-progress-bar">';
+                if (nakitVal > 0) html += '<div class="psr-pay-segment segment-nakit" style="width:' + pNakit + '%" title="Nakit: ' + self._currency(nakitVal) + ' (%' + pNakit + ')"></div>';
+                if (kartVal > 0)  html += '<div class="psr-pay-segment segment-kart" style="width:' + pKart + '%" title="Kart: ' + self._currency(kartVal) + ' (%' + pKart + ')"></div>';
+                if (ibanVal > 0)  html += '<div class="psr-pay-segment segment-iban" style="width:' + pIban + '%" title="IBAN: ' + self._currency(ibanVal) + ' (%' + pIban + ')"></div>';
+                if (qrVal > 0)    html += '<div class="psr-pay-segment segment-qr" style="width:' + pQr + '%" title="QR Taksit: ' + self._currency(qrVal) + ' (%' + pQr + ')"></div>';
+                html +=   '</div>';
+
+                html +=   '<div class="psr-payment-pills">';
+                html +=     '<div class="psr-pay-pill pill-nakit"><div class="pill-left"><span class="pill-dot"></span>💵 Nakit</div><div class="pill-right"><strong>' + self._currency(nakitVal) + '</strong><span class="pill-pct">%' + pNakit + '</span></div></div>';
+                html +=     '<div class="psr-pay-pill pill-kart"><div class="pill-left"><span class="pill-dot"></span>💳 Kart</div><div class="pill-right"><strong>' + self._currency(kartVal) + '</strong><span class="pill-pct">%' + pKart + '</span></div></div>';
+                html +=     '<div class="psr-pay-pill pill-iban"><div class="pill-left"><span class="pill-dot"></span>🏦 IBAN</div><div class="pill-right"><strong>' + self._currency(ibanVal) + '</strong><span class="pill-pct">%' + pIban + '</span></div></div>';
+                html +=     '<div class="psr-pay-pill pill-qr"><div class="pill-left"><span class="pill-dot"></span>📱 QR Taksit</div><div class="pill-right"><strong>' + self._currency(qrVal) + '</strong><span class="pill-pct">%' + pQr + '</span></div></div>';
+                html +=   '</div>';
                 html += '</div>';
             }
 

@@ -1352,6 +1352,125 @@
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
 }
 
+/* --- Ürün İstatistikleri Ödeme Dağılım Kartı --- */
+.psr-payment-breakdown-card {
+    background: var(--hk-bg-card);
+    border: 1px solid var(--hk-border);
+    border-radius: 16px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+
+.psr-payment-breakdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.psr-payment-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--hk-text-main);
+    margin: 0;
+}
+
+.psr-payment-sub {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--hk-text-muted);
+}
+
+.psr-payment-progress-bar {
+    display: flex;
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--hk-bg-subtle, rgba(0, 0, 0, 0.05));
+    margin-bottom: 14px;
+    gap: 3px;
+}
+
+.psr-pay-segment {
+    height: 100%;
+    transition: width 0.4s ease;
+    border-radius: 2px;
+}
+
+.segment-nakit { background: #10b981; }
+.segment-kart { background: #3b82f6; }
+.segment-iban { background: #8b5cf6; }
+.segment-qr { background: #f59e0b; }
+
+.psr-payment-pills {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+@media (max-width: 900px) {
+    .psr-payment-pills {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.psr-pay-pill {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--hk-bg-subtle, rgba(0, 0, 0, 0.03));
+    border: 1px solid var(--hk-border, rgba(0, 0, 0, 0.06));
+    border-radius: 10px;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+
+.psr-pay-pill:hover {
+    background: var(--hk-bg-hover, rgba(0, 0, 0, 0.06));
+    transform: translateY(-1px);
+}
+
+.pill-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--hk-text-main);
+}
+
+.pill-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pill-pct {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--hk-text-muted);
+    background: rgba(0, 0, 0, 0.04);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+
+#hizli-kasa-app.theme-dark .psr-pay-pill .pill-pct {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.pill-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.pill-nakit .pill-dot { background: #10b981; }
+.pill-kart .pill-dot { background: #3b82f6; }
+.pill-iban .pill-dot { background: #8b5cf6; }
+.pill-qr .pill-dot { background: #f59e0b; }
+
 .psr-chart-full {
     width: 100%;
 }
