@@ -105,16 +105,20 @@
 
             var html = '<div class="stat-dashboard-wrap">';
 
-            // KPI Kartları
-            html += '<div class="stat-kpi-grid">';
-            html += self._kpiCard('💰', 'TOPLAM CİRO',        self._currency(kpi.toplam_ciro),        kpi.siparis_sayisi + ' sipariş', 'kpi-ciro stat-kpi-clickable', 'Siparişleri Gör ➔');
-            html += self._kpiCard('🏦', 'NET CİRO',           self._currency(kpi.net_ciro),            'İade ve masraf düşüldü', 'kpi-net stat-kpi-clickable', 'Siparişleri Gör ➔');
-            html += self._kpiCard('🧾', 'SİPARİŞ SAYISI',     kpi.siparis_sayisi + ' adet',            'Brüt satış adedi', 'kpi-siparis stat-kpi-clickable', 'Siparişleri Gör ➔');
-            html += self._kpiCard('📦', 'SATILAN ÜRÜN',       (kpi.toplam_urun_adedi || 0) + ' adet',  'Satılan toplam ürün adedi', 'kpi-urun stat-kpi-clickable', 'Trendi Gör ➔');
-            html += self._kpiCard('🛒', 'SEPET ORTALAMASI',   self._currency(kpi.sepet_ortalamasi),   'Sepet başı ortalama tutar', 'kpi-sepet-tutar stat-kpi-clickable', 'Siparişleri Gör ➔');
-            html += self._kpiCard('🛍️', 'SEPET ÜRÜN ADEDİ',   (kpi.sepet_urun_ortalamasi || 0) + ' adet/sepet', 'Sepet başı ortalama ürün', 'kpi-sepet-adet stat-kpi-clickable', 'Trendi Gör ➔');
-            html += self._kpiCard('↩️', 'TOPLAM İADE',        self._currency(kpi.toplam_iade),         kpi.iade_sayisi + ' iade', 'kpi-iade stat-kpi-clickable', 'İadeleri Gör ➔');
-            html += self._kpiCard('✂️', 'TOPLAM İSKONTO',     self._currency(kpi.toplam_iskonto || 0), (kpi.iskonto_siparis_sayisi || 0) + ' siparişte', 'kpi-iskonto stat-kpi-clickable', 'İskontolu Siparişler ➔');
+            // KPI Kartları — Hero Strip (Ana Metrikler)
+            html += '<div class="stat-kpi-hero-strip">';
+            html += self._kpiCardHero('💰', 'TOPLAM CİRO', self._currency(kpi.toplam_ciro), kpi.siparis_sayisi + ' sipariş', 'kpi-ciro stat-kpi-clickable', 'Siparişleri Gör ➔');
+            html += self._kpiCardHero('🏦', 'NET CİRO', self._currency(kpi.net_ciro), 'İade ve masraf düşüldü', 'kpi-net stat-kpi-clickable', 'Siparişleri Gör ➔');
+            html += self._kpiCardHero('🧾', 'SİPARİŞ SAYISI', kpi.siparis_sayisi + ' adet', 'Brüt satış adedi', 'kpi-siparis stat-kpi-clickable', 'Siparişleri Gör ➔');
+            html += '</div>';
+
+            // KPI Kartları — Compact Grid (Detay Metrikler)
+            html += '<div class="stat-kpi-compact-grid">';
+            html += self._kpiCardCompact('📦', 'SATILAN ÜRÜN', (kpi.toplam_urun_adedi || 0) + ' adet', 'Satılan toplam ürün', 'kpi-urun stat-kpi-clickable', 'Trendi Gör ➔');
+            html += self._kpiCardCompact('🛒', 'SEPET ORT.', self._currency(kpi.sepet_ortalamasi), 'Sepet başı ortalama', 'kpi-sepet-tutar stat-kpi-clickable', 'Dağılımı Gör ➔');
+            html += self._kpiCardCompact('🛍️', 'SEPET ÜRÜN', (kpi.sepet_urun_ortalamasi || 0) + ' adet/sepet', 'Sepet başı ortalama', 'kpi-sepet-adet stat-kpi-clickable', 'Dağılımı Gör ➔');
+            html += self._kpiCardCompact('↩️', 'İADE', self._currency(kpi.toplam_iade), kpi.iade_sayisi + ' iade', 'kpi-iade stat-kpi-clickable', 'İadeleri Gör ➔');
+            html += self._kpiCardCompact('✂️', 'İSKONTO', self._currency(kpi.toplam_iskonto || 0), (kpi.iskonto_siparis_sayisi || 0) + ' siparişte', 'kpi-iskonto stat-kpi-clickable', 'İskontolu Siparişler ➔');
             html += '</div>';
 
             // Veri yoksa mesaj göster
@@ -786,7 +790,43 @@
         },
 
         /* -------------------------------------------------
-           KPI KART HTML
+           KPI KART HTML — Hero (büyük ana metrikler)
+        ------------------------------------------------- */
+        _kpiCardHero: function (icon, label, value, sub, cls, actionText) {
+            var actionHtml = actionText ? '<span class="stat-kpi-action-link">' + actionText + '</span>' : '';
+            return '<div class="stat-kpi-card stat-kpi-hero ' + (cls || '') + '">'
+                + '<span class="stat-kpi-icon">' + icon + '</span>'
+                + '<span class="stat-kpi-label">' + label + '</span>'
+                + '<span class="stat-kpi-value">' + value + '</span>'
+                + '<div class="stat-kpi-sub-row">'
+                + '<span class="stat-kpi-sub">' + (sub || '') + '</span>'
+                + actionHtml
+                + '</div>'
+                + '</div>';
+        },
+
+        /* -------------------------------------------------
+           KPI KART HTML — Compact (küçük detay metrikler)
+        ------------------------------------------------- */
+        _kpiCardCompact: function (icon, label, value, sub, cls, actionText) {
+            var actionHtml = actionText ? '<span class="stat-kpi-action-link">' + actionText + '</span>' : '';
+            return '<div class="stat-kpi-card stat-kpi-compact ' + (cls || '') + '">'
+                + '<div class="stat-kpi-compact-top">'
+                + '<span class="stat-kpi-icon">' + icon + '</span>'
+                + '<div class="stat-kpi-compact-info">'
+                + '<span class="stat-kpi-label">' + label + '</span>'
+                + '<span class="stat-kpi-value">' + value + '</span>'
+                + '</div>'
+                + '</div>'
+                + '<div class="stat-kpi-sub-row">'
+                + '<span class="stat-kpi-sub">' + (sub || '') + '</span>'
+                + actionHtml
+                + '</div>'
+                + '</div>';
+        },
+
+        /* -------------------------------------------------
+           KPI KART HTML — Eski (uyumluluk için korundu)
         ------------------------------------------------- */
         _kpiCard: function (icon, label, value, sub, cls, actionText) {
             var actionHtml = actionText ? '<span class="stat-kpi-action-link">' + actionText + '</span>' : '';

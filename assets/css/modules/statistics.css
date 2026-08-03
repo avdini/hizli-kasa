@@ -60,18 +60,44 @@
 }
 
 /* =============================================
-   KPI KARTLARI
+   KPI KARTLARI — HERO STRIP (Ana Metrikler)
    ============================================= */
 
-.stat-kpi-grid {
+.stat-kpi-hero-strip {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
 }
 
 @media (max-width: 900px) {
-    .stat-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .stat-kpi-hero-strip { grid-template-columns: 1fr; }
 }
+
+/* =============================================
+   KPI KARTLARI — COMPACT GRID (Detay Metrikler)
+   ============================================= */
+
+.stat-kpi-compact-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+
+@media (max-width: 1200px) {
+    .stat-kpi-compact-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 900px) {
+    .stat-kpi-compact-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 500px) {
+    .stat-kpi-compact-grid { grid-template-columns: 1fr; }
+}
+
+/* =============================================
+   KPI KART ORTAK STILLER
+   ============================================= */
 
 .stat-kpi-card {
     position: relative;
@@ -157,6 +183,7 @@
     align-items: center;
     gap: 4px;
     border: 1px solid var(--hk-border, rgba(0, 0, 0, 0.08));
+    white-space: nowrap;
 }
 
 .stat-kpi-card.stat-kpi-clickable:hover .stat-kpi-action-link {
@@ -165,7 +192,125 @@
     border-color: var(--kpi-color, var(--hk-accent));
 }
 
-/* Renk varyantları */
+/* =============================================
+   HERO KART ÖZEL STİLLERİ
+   ============================================= */
+
+.stat-kpi-card.stat-kpi-hero {
+    padding: 24px 28px;
+    gap: 6px;
+}
+
+.stat-kpi-card.stat-kpi-hero::before {
+    width: 5px;
+}
+
+.stat-kpi-card.stat-kpi-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--kpi-color, var(--hk-accent)) 0%, transparent 60%);
+    opacity: 0.04;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.stat-kpi-card.stat-kpi-hero:hover::after {
+    opacity: 0.07;
+}
+
+.stat-kpi-card.stat-kpi-hero .stat-kpi-icon {
+    font-size: 26px;
+    margin-bottom: 6px;
+}
+
+.stat-kpi-card.stat-kpi-hero .stat-kpi-label {
+    font-size: 11px;
+    letter-spacing: 0.8px;
+}
+
+.stat-kpi-card.stat-kpi-hero .stat-kpi-value {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.stat-kpi-card.stat-kpi-hero .stat-kpi-sub-row {
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--hk-border, #e2e8f0);
+}
+
+.stat-kpi-card.stat-kpi-hero .stat-kpi-sub {
+    font-size: 13px;
+}
+
+.stat-kpi-card.stat-kpi-hero .stat-kpi-action-link {
+    font-size: 12px;
+    padding: 4px 10px;
+}
+
+/* =============================================
+   COMPACT KART ÖZEL STİLLERİ
+   ============================================= */
+
+.stat-kpi-card.stat-kpi-compact {
+    padding: 14px 16px;
+    gap: 0;
+}
+
+.stat-kpi-card.stat-kpi-compact::before {
+    width: 3px;
+}
+
+.stat-kpi-compact-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.stat-kpi-card.stat-kpi-compact .stat-kpi-icon {
+    font-size: 18px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.stat-kpi-compact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.stat-kpi-card.stat-kpi-compact .stat-kpi-label {
+    font-size: 10px;
+    letter-spacing: 0.4px;
+}
+
+.stat-kpi-card.stat-kpi-compact .stat-kpi-value {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.stat-kpi-card.stat-kpi-compact .stat-kpi-sub-row {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--hk-border, rgba(0, 0, 0, 0.06));
+}
+
+.stat-kpi-card.stat-kpi-compact .stat-kpi-sub {
+    font-size: 11px;
+}
+
+.stat-kpi-card.stat-kpi-compact .stat-kpi-action-link {
+    font-size: 10px;
+    padding: 2px 6px;
+}
+
+/* =============================================
+   RENK VARYANTLARI
+   ============================================= */
+
 .stat-kpi-card.kpi-ciro        { --kpi-color: #10b981; }
 .stat-kpi-card.kpi-net         { --kpi-color: #3b82f6; }
 .stat-kpi-card.kpi-siparis     { --kpi-color: #8b5cf6; }
