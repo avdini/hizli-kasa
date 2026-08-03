@@ -146,6 +146,12 @@
                 html += '</div>';
             }
 
+            // Sepet & Ürün Ortalamaları Grafiği
+            html += '<div class="stat-chart-card">';
+            html += '<div class="stat-chart-header"><h4 class="stat-chart-title">📊 Sepet & Ürün Ortalamaları</h4><span class="stat-chart-badge">Ortalama Tutar & Adet</span></div>';
+            html += '<div class="stat-chart-body"><canvas id="stat-chart-ortalamalar"></canvas></div>';
+            html += '</div>';
+
             // Saatlik yoğunluk
             html += '<div class="stat-chart-card">';
             html += '<div class="stat-chart-header"><h4 class="stat-chart-title">🕐 Saatlik Yoğunluk</h4><span class="stat-chart-badge">0–23 saat</span></div>';
@@ -282,6 +288,103 @@
 
                         self._updateMainTrendChart(data, gridColor, tickColor, commonTooltip);
                     });
+                });
+            // --- Sepet & Ürün Ortalamaları Chart ---
+            if (document.getElementById('stat-chart-ortalamalar')) {
+                var isSingleDay = (gunluk.length <= 1);
+                var ortLabels = [];
+                var ortTutarData = [];
+                var ortAdetData = [];
+
+                if (!isSingleDay) {
+                    ortLabels    = gunluk.map(function (g) { return g.tarih_kisa; });
+                    ortTutarData = gunluk.map(function (g) {
+                        var count = g.siparis_sayisi || 0;
+                        return count > 0 ? parseFloat((g.toplam / count).toFixed(2)) : 0;
+                    });
+                    ortAdetData = gunluk.map(function (g) {
+                        var count = g.siparis_sayisi || 0;
+                        return count > 0 ? parseFloat(((g.urun_adedi || 0) / count).toFixed(1)) : 0;
+                    });
+                } else {
+                    ortLabels    = saatlik.map(function (s) { return s.saat; });
+                    ortTutarData = saatlik.map(function (s) {
+                        var count = s.count || 0;
+                        return count > 0 ? parseFloat((s.total / count).toFixed(2)) : 0;
+                    });
+                    ortAdetData = saatlik.map(function (s) {
+                        var count = s.count || 0;
+                        return count > 0 ? parseFloat(((s.items || 0) / count).toFixed(1)) : 0;
+                    });
+                }
+
+                self.charts.ortalamalar = new Chart(document.getElementById('stat-chart-ortalamalar'), {
+                    type: 'line',
+                    data: {
+                        labels: ortLabels,
+                        datasets: [
+                            {
+                                label: 'Ort. Sepet Tutarı (₺)',
+                                data: ortTutarData,
+                                borderColor: '#6366f1',
+                                backgroundColor: 'rgba(99,102,241,0.12)',
+                                fill: true,
+                                tension: 0.4,
+                                borderWidth: 2,
+                                pointRadius: 3,
+                                yAxisID: 'yTutar',
+                            },
+                            {
+                                label: 'Sepet Başı Ürün',
+                                data: ortAdetData,
+                                borderColor: '#ec4899',
+                                backgroundColor: 'rgba(236,72,153,0.10)',
+                                fill: false,
+                                tension: 0.4,
+                                borderWidth: 2,
+                                pointRadius: 3,
+                                yAxisID: 'yAdet',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { labels: { color: tickColor, font: { size: 12 } } },
+                            tooltip: Object.assign({}, commonTooltip, {
+                                callbacks: {
+                                    label: function (ctx) {
+                                        if (ctx.dataset.yAxisID === 'yTutar') {
+                                            return ' Ort. Sepet: ₺ ' + self._num(ctx.parsed.y);
+                                        }
+                                        return ' Ort. Ürün: ' + ctx.parsed.y + ' adet/sepet';
+                                    }
+                                }
+                            })
+                        },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { color: tickColor } },
+                            yAdet: {
+                                type: 'linear',
+                                position: 'left',
+                                grid: { color: gridColor },
+                                ticks: { color: tickColor, stepSize: 0.5 },
+                                beginAtZero: true,
+                            },
+                            yTutar: {
+                                type: 'linear',
+                                position: 'right',
+                                grid: { drawOnChartArea: false },
+                                ticks: {
+                                    color: tickColor,
+                                    callback: function (v) { return '₺' + self._num(v); }
+                                },
+                                beginAtZero: true,
+                            }
+                        }
+                    }
                 });
             }
 
