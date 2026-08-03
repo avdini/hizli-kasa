@@ -75,14 +75,7 @@ function hizli_kasa_statistics_summary($request) {
     $iskonto_saat_map = [];
     $iskonto_gun_map  = [];
 
-    // Sepet Dağılım Map'leri
-    $sepet_tutar_map = [
-        '0_100'     => ['label' => '0-100 ₺',     'count' => 0, 'total' => 0],
-        '100_250'   => ['label' => '100-250 ₺',   'count' => 0, 'total' => 0],
-        '250_500'   => ['label' => '250-500 ₺',   'count' => 0, 'total' => 0],
-        '500_1000'  => ['label' => '500-1.000 ₺', 'count' => 0, 'total' => 0],
-        '1000_plus' => ['label' => '1.000 ₺+',    'count' => 0, 'total' => 0],
-    ];
+    $valid_order_totals = [];
 
     $sepet_adet_map = [
         '1'      => ['label' => '1 Ürün',   'count' => 0],
@@ -104,6 +97,7 @@ function hizli_kasa_statistics_summary($request) {
 
         $siparis_sayisi++;
         $toplam_ciro  += $order_total;
+        $valid_order_totals[] = $order_total;
         $nakit_toplam += (float) $order->get_meta('_odeme_nakit');
         $kart_toplam  += (float) $order->get_meta('_odeme_kart');
         $iban_toplam  += (float) $order->get_meta('_odeme_iban');
@@ -134,24 +128,6 @@ function hizli_kasa_statistics_summary($request) {
         if ($order_discount > 0) {
             $toplam_iskonto += $order_discount;
             $iskonto_siparis_sayisi++;
-        }
-
-        // Sepet Tutar Aralığı Dağılımı
-        if ($order_total < 100) {
-            $sepet_tutar_map['0_100']['count']++;
-            $sepet_tutar_map['0_100']['total'] += $order_total;
-        } elseif ($order_total < 250) {
-            $sepet_tutar_map['100_250']['count']++;
-            $sepet_tutar_map['100_250']['total'] += $order_total;
-        } elseif ($order_total < 500) {
-            $sepet_tutar_map['250_500']['count']++;
-            $sepet_tutar_map['250_500']['total'] += $order_total;
-        } elseif ($order_total < 1000) {
-            $sepet_tutar_map['500_1000']['count']++;
-            $sepet_tutar_map['500_1000']['total'] += $order_total;
-        } else {
-            $sepet_tutar_map['1000_plus']['count']++;
-            $sepet_tutar_map['1000_plus']['total'] += $order_total;
         }
 
         // Sepet Ürün Adet Aralığı Dağılımı
@@ -380,6 +356,55 @@ function hizli_kasa_statistics_summary($request) {
     $sepet_ortalamasi      = $siparis_sayisi > 0 ? round($toplam_ciro / $siparis_sayisi, 2) : 0;
     $sepet_urun_ortalamasi = $siparis_sayisi > 0 ? round($toplam_urun_adedi / $siparis_sayisi, 1) : 0;
 
+    // Dinamik AOV bazlı Sepet Tutar Aralığı Dağılımı
+    $b1 = 100;
+    $b2 = 250;
+    $b3 = 500;
+    $b4 = 1000;
+
+    if ($sepet_ortalamasi > 0) {
+        $b1 = hizli_kasa_round_bracket_limit(0.5 * $sepet_ortalamasi);
+        $b2 = hizli_kasa_round_bracket_limit(1.0 * $sepet_ortalamasi);
+        $b3 = hizli_kasa_round_bracket_limit(1.5 * $sepet_ortalamasi);
+        $b4 = hizli_kasa_round_bracket_limit(2.5 * $sepet_ortalamasi);
+
+        if ($b1 < 5) $b1 = 5;
+        if ($b2 <= $b1) $b2 = $b1 + 10;
+        if ($b3 <= $b2) $b3 = $b2 + 10;
+        if ($b4 <= $b3) $b4 = $b3 + 20;
+    }
+
+    $fmt = function ($num) {
+        return number_format($num, 0, ',', '.');
+    };
+
+    $sepet_tutar_map = [
+        'b1' => ['label' => '0-' . $fmt($b1) . ' ₺', 'count' => 0, 'total' => 0],
+        'b2' => ['label' => $fmt($b1) . '-' . $fmt($b2) . ' ₺', 'count' => 0, 'total' => 0],
+        'b3' => ['label' => $fmt($b2) . '-' . $fmt($b3) . ' ₺', 'count' => 0, 'total' => 0],
+        'b4' => ['label' => $fmt($b3) . '-' . $fmt($b4) . ' ₺', 'count' => 0, 'total' => 0],
+        'b5' => ['label' => $fmt($b4) . ' ₺+', 'count' => 0, 'total' => 0],
+    ];
+
+    foreach ($valid_order_totals as $o_total) {
+        if ($o_total < $b1) {
+            $sepet_tutar_map['b1']['count']++;
+            $sepet_tutar_map['b1']['total'] += $o_total;
+        } elseif ($o_total < $b2) {
+            $sepet_tutar_map['b2']['count']++;
+            $sepet_tutar_map['b2']['total'] += $o_total;
+        } elseif ($o_total < $b3) {
+            $sepet_tutar_map['b3']['count']++;
+            $sepet_tutar_map['b3']['total'] += $o_total;
+        } elseif ($o_total < $b4) {
+            $sepet_tutar_map['b4']['count']++;
+            $sepet_tutar_map['b4']['total'] += $o_total;
+        } else {
+            $sepet_tutar_map['b5']['count']++;
+            $sepet_tutar_map['b5']['total'] += $o_total;
+        }
+    }
+
     $response_data = [
         'kpi' => [
             'toplam_ciro'            => round($toplam_ciro, 2),
@@ -420,5 +445,24 @@ function hizli_kasa_statistics_summary($request) {
     }
 
     return $response_data;
+}
+
+if (!function_exists('hizli_kasa_round_bracket_limit')) {
+    function hizli_kasa_round_bracket_limit($val) {
+        if ($val <= 0) return 0;
+        if ($val < 50) {
+            return (float) ceil($val / 5) * 5;
+        } elseif ($val < 250) {
+            return (float) ceil($val / 25) * 25;
+        } elseif ($val < 1000) {
+            return (float) ceil($val / 50) * 50;
+        } elseif ($val < 5000) {
+            return (float) ceil($val / 250) * 250;
+        } elseif ($val < 20000) {
+            return (float) ceil($val / 500) * 500;
+        } else {
+            return (float) ceil($val / 1000) * 1000;
+        }
+    }
 }
 

@@ -1223,7 +1223,7 @@
             var counts = list.map(function (item) { return item.count || 0; });
 
             if (mode === 'tutar') {
-                if (badgeEl) badgeEl.innerText = 'Sepet Harcama Dilimleri';
+                if (badgeEl) badgeEl.innerText = 'Dinamik Sepet Dilimleri (AOV Bazlı)';
                 chart.data.labels = labels;
                 chart.data.datasets = [{
                     label: 'Sipariş Sayısı',
