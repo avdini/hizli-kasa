@@ -274,7 +274,7 @@
 
             var typeLabel = { simple: 'Basit Ürün', variable: 'Varyasyonlu Ürün', variation: 'Varyasyon' };
 
-            var html = '';
+            var html = '<div class="stat-dashboard-wrap">';
 
             html += '<div class="psr-product-header">';
             html +=   '<div class="psr-product-header-left">';
@@ -299,6 +299,7 @@
 
             if (!kpi.toplam_satis_adet && !kpi.toplam_iade_adet) {
                 html += '<div class="psr-empty"><span>📦</span><p>Seçili tarih aralığında bu ürün için kayıt bulunamadı.</p></div>';
+                html += '</div>';
                 dashboard.innerHTML = html;
                 self._bindRelationEvents();
                 return;
@@ -412,6 +413,7 @@
             }
 
             html += '</div>'; // End stat-charts-grid
+            html += '</div>'; // End stat-dashboard-wrap
 
             dashboard.innerHTML = html;
             self._bindDashboardEvents(data);
