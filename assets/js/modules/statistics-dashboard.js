@@ -299,6 +299,8 @@
                         self._updateMainTrendChart(data, gridColor, tickColor, commonTooltip);
                     });
                 });
+            }
+
             // --- Sepet & Ürün Ortalamaları Chart ---
             if (document.getElementById('stat-chart-ortalamalar')) {
                 var isSingleDay = (gunluk.length <= 1);
