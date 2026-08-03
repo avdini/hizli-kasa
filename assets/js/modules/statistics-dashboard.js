@@ -150,24 +150,6 @@
                 html += '</div>';
             }
 
-            // Sepet Dağılım Analizi Grafiği (Eski Sepet & Ürün Ortalamaları)
-            if (!self.activeDagilimMode) {
-                self.activeDagilimMode = 'tutar';
-            }
-            html += '<div class="stat-chart-card">';
-            html += '<div class="stat-chart-header stat-main-trend-header">';
-            html += '<div>';
-            html += '<h4 class="stat-chart-title">📊 Sepet Dağılım Analizi</h4>';
-            html += '<span class="stat-chart-badge" id="stat-dagilim-badge">Sepet Harcama Dilimleri</span>';
-            html += '</div>';
-            html += '<div class="stat-trend-toggle-wrap">';
-            html += '<button class="stat-dagilim-toggle-btn' + (self.activeDagilimMode === 'tutar' ? ' active' : '') + '" data-mode="tutar">💰 Tutar Aralığı</button>';
-            html += '<button class="stat-dagilim-toggle-btn' + (self.activeDagilimMode === 'adet' ? ' active' : '') + '" data-mode="adet">📦 Ürün Adedi</button>';
-            html += '</div>';
-            html += '</div>';
-            html += '<div class="stat-chart-body"><canvas id="stat-chart-ortalamalar"></canvas></div>';
-            html += '</div>';
-
             // Saatlik yoğunluk
             html += '<div class="stat-chart-card">';
             html += '<div class="stat-chart-header"><h4 class="stat-chart-title">🕐 Saatlik Yoğunluk</h4><span class="stat-chart-badge">0–23 saat</span></div>';
@@ -187,6 +169,24 @@
                 html += '<div class="stat-chart-body"><canvas id="stat-chart-kasiyer"></canvas></div>';
                 html += '</div>';
             }
+
+            // Sepet Dağılım Analizi Grafiği (En son sırada)
+            if (!self.activeDagilimMode) {
+                self.activeDagilimMode = 'tutar';
+            }
+            html += '<div class="stat-chart-card">';
+            html += '<div class="stat-chart-header stat-main-trend-header">';
+            html += '<div>';
+            html += '<h4 class="stat-chart-title">📊 Sepet Dağılım Analizi</h4>';
+            html += '<span class="stat-chart-badge" id="stat-dagilim-badge">Sepet Harcama Dilimleri</span>';
+            html += '</div>';
+            html += '<div class="stat-trend-toggle-wrap">';
+            html += '<button class="stat-dagilim-toggle-btn' + (self.activeDagilimMode === 'tutar' ? ' active' : '') + '" data-mode="tutar">💰 Tutar Aralığı</button>';
+            html += '<button class="stat-dagilim-toggle-btn' + (self.activeDagilimMode === 'adet' ? ' active' : '') + '" data-mode="adet">📦 Ürün Adedi</button>';
+            html += '</div>';
+            html += '</div>';
+            html += '<div class="stat-chart-body"><canvas id="stat-chart-ortalamalar"></canvas></div>';
+            html += '</div>';
 
             html += '</div>'; // .stat-charts-grid
 
