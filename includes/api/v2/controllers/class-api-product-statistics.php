@@ -165,12 +165,53 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
                     ];
                 }
 
-                $var_name = $item_product->get_name();
-                $var_sku  = $item_product->get_sku();
-                $var_key  = $item_pid;
+                $var_full_name = $item_product->get_name();
+                $var_sku       = $item_product->get_sku();
+                $var_key       = $item_pid;
+
+                $var_short_name = '';
+                if ($item_product->is_type('variation')) {
+                    if (function_exists('wc_get_formatted_variation')) {
+                        $var_short_name = wc_get_formatted_variation($item_product, true, false, true);
+                    }
+                    if (empty($var_short_name) && method_exists($item_product, 'get_variation_attributes')) {
+                        $attrs = array_filter((array) $item_product->get_variation_attributes());
+                        if (!empty($attrs)) {
+                            $formatted_attrs = [];
+                            foreach ($attrs as $attr_name => $attr_val) {
+                                $taxonomy = str_replace('attribute_', '', $attr_name);
+                                $term = get_term_by('slug', $attr_val, $taxonomy);
+                                $formatted_attrs[] = $term ? $term->name : wc_attribute_label($taxonomy) . ': ' . ucfirst($attr_val);
+                            }
+                            $var_short_name = implode(', ', $formatted_attrs);
+                        }
+                    }
+                }
+
+                if (empty($var_short_name)) {
+                    $main_pname = $product_data['name'];
+                    if (mb_strpos($var_full_name, ' - ') !== false) {
+                        $parts = explode(' - ', $var_full_name);
+                        array_shift($parts);
+                        $var_short_name = implode(' - ', $parts);
+                    } elseif (mb_strpos($var_full_name, ' – ') !== false) {
+                        $parts = explode(' – ', $var_full_name);
+                        array_shift($parts);
+                        $var_short_name = implode(' – ', $parts);
+                    } else {
+                        $var_short_name = $var_full_name;
+                    }
+                }
 
                 if (!isset($variation_map[$var_key])) {
-                    $variation_map[$var_key] = ['name' => $var_name, 'sku' => $var_sku, 'satis_adet' => 0, 'satis_ciro' => 0.0, 'iade_adet' => 0];
+                    $variation_map[$var_key] = [
+                        'name'       => $var_short_name,
+                        'full_name'  => $var_full_name,
+                        'sku'        => $var_sku,
+                        'satis_adet' => 0,
+                        'satis_ciro' => 0.0,
+                        'iade_adet'  => 0
+                    ];
                 }
 
                 if ($is_refund) {
@@ -223,7 +264,7 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
                         'adet'        => $item_qty,
                         'birim_fiyat' => $birim_fiyat,
                         'toplam'      => round($item_total, 2),
-                        'variation'   => $var_name !== $product_data['name'] ? $var_name : '',
+                        'variation'   => $var_short_name !== $product_data['name'] ? $var_short_name : '',
                     ];
                 }
             }
@@ -272,6 +313,7 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
             $variations_out[] = [
                 'product_id'  => $vid,
                 'name'        => $vdata['name'],
+                'full_name'   => $vdata['full_name'],
                 'sku'         => $vdata['sku'],
                 'satis_adet'  => $vdata['satis_adet'],
                 'satis_ciro'  => round($vdata['satis_ciro'], 2),

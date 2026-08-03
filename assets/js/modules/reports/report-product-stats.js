@@ -579,7 +579,7 @@
                         var color = varColors[idx % varColors.length];
                         var vAdet = parseInt(v.satis_adet, 10) || 0;
                         var pct = totalVarsAdet > 0 ? ((vAdet / totalVarsAdet) * 100).toFixed(1) : '0';
-                        legendHtml += '<div class="stat-odeme-legend-item" data-idx="' + idx + '" title="' + self._esc(v.name) + '">';
+                        legendHtml += '<div class="stat-odeme-legend-item" data-idx="' + idx + '" title="' + self._esc(v.full_name || v.name) + '">';
                         legendHtml +=   '<div class="stat-odeme-item-left">';
                         legendHtml +=     '<span class="stat-odeme-dot" style="background-color:' + color + '"></span>';
                         legendHtml +=     '<span class="stat-odeme-item-name">' + self._esc(v.name) + '</span>';
