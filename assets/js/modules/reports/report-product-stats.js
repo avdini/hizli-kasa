@@ -342,12 +342,16 @@
                 self.activeTrendMode = 'satis';
             }
 
+            var trend   = data.gunluk_trend  || [];
+            var saatlik = data.saatlik_trend || [];
+            var isSingleDay = (trend.length <= 1 && saatlik.length > 0);
+
             if (trend.length > 0) {
                 html += '<div class="psr-chart-wrap psr-chart-full">';
                 html +=   '<div class="psr-chart-header stat-main-trend-header">';
                 html +=     '<div>';
-                html +=       '<h4 class="stat-chart-title" id="psr-main-trend-title">📈 Günlük Satış Trendi</h4>';
-                html +=       '<span class="stat-chart-badge" id="psr-main-trend-badge">' + trend.length + ' gün</span>';
+                html +=       '<h4 class="stat-chart-title" id="psr-main-trend-title">' + (isSingleDay ? '📈 Saatlik Satış Trendi' : '📈 Günlük Satış Trendi') + '</h4>';
+                html +=       '<span class="stat-chart-badge" id="psr-main-trend-badge">' + (isSingleDay ? 'Saatlik Yoğunluk • 24 Saat' : trend.length + ' gün') + '</span>';
                 html +=     '</div>';
                 html +=     '<div class="stat-trend-toggle-wrap">';
                 html +=       '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'satis' ? ' active' : '') + '" data-mode="satis">📈 Satış Trendi</button>';
@@ -504,20 +508,26 @@
 
             // Compare Chart
             if (trend.length > 0 && document.getElementById('psr-chart-compare')) {
+                var isSingleDayCompare = (trend.length <= 1 && (data.saatlik_trend || []).length > 0);
+                var saatlikCompare = data.saatlik_trend || [];
+                var compareLabels = isSingleDayCompare ? saatlikCompare.map(function (s) { return s.saat; }) : trend.map(function (g) { return g.tarih_kisa; });
+                var compareSatis  = isSingleDayCompare ? saatlikCompare.map(function (s) { return s.satis_adet; }) : trend.map(function (g) { return g.satis_adet; });
+                var compareIade   = isSingleDayCompare ? saatlikCompare.map(function (s) { return s.iade_adet; }) : trend.map(function (g) { return g.iade_adet; });
+
                 self.charts.compare = new Chart(document.getElementById('psr-chart-compare'), {
                     type: 'bar',
                     data: {
-                        labels: trend.map(function (g) { return g.tarih_kisa; }),
+                        labels: compareLabels,
                         datasets: [
                             {
                                 label: 'Satış',
-                                data: trend.map(function (g) { return g.satis_adet; }),
+                                data: compareSatis,
                                 backgroundColor: 'rgba(16,185,129,0.75)',
                                 borderRadius: 5,
                             },
                             {
                                 label: 'İade',
-                                data: trend.map(function (g) { return g.iade_adet; }),
+                                data: compareIade,
                                 backgroundColor: 'rgba(239,68,68,0.75)',
                                 borderRadius: 5,
                             }
@@ -945,46 +955,85 @@
             var badgeEl = document.getElementById('psr-main-trend-badge');
             var hintEl  = document.getElementById('psr-main-trend-hint');
 
-            var trend = data.gunluk_trend || [];
+            var trend   = data.gunluk_trend  || [];
+            var saatlik = data.saatlik_trend || [];
+            var isSingleDay = (trend.length <= 1 && saatlik.length > 0);
 
             if (mode === 'satis') {
-                if (titleEl) titleEl.innerText = '📈 Günlük Satış Trendi';
-                if (badgeEl) badgeEl.innerText = trend.length + ' gün';
-                if (hintEl) {
-                    hintEl.style.display = 'block';
-                    hintEl.innerText = '💡 Grafikteki bir noktaya tıklayarak o günün satışlarını inceleyin';
-                }
+                if (isSingleDay) {
+                    if (titleEl) titleEl.innerText = '📈 Saatlik Satış Trendi';
+                    if (badgeEl) badgeEl.innerText = 'Saatlik Yoğunluk • 24 Saat';
+                    if (hintEl)  hintEl.style.display = 'none';
 
-                chart.data.labels = trend.map(function (g) { return g.tarih_kisa; });
-                chart.data.datasets = [
-                    {
-                        label: 'Satış Adeti',
-                        data: trend.map(function (g) { return g.satis_adet; }),
-                        borderColor: '#8b5cf6',
-                        backgroundColor: 'rgba(139,92,246,0.12)',
-                        fill: false,
-                        tension: 0.4,
-                        pointBackgroundColor: '#8b5cf6',
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        borderWidth: 2,
-                        yAxisID: 'yAdet',
-                        hidden: true,
-                    },
-                    {
-                        label: 'Ciro (₺)',
-                        data: trend.map(function (g) { return g.satis_ciro; }),
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59,130,246,0.10)',
-                        fill: true,
-                        tension: 0.4,
-                        pointBackgroundColor: '#3b82f6',
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        borderWidth: 2.5,
-                        yAxisID: 'yCiro',
+                    chart.data.labels = saatlik.map(function (s) { return s.saat; });
+                    chart.data.datasets = [
+                        {
+                            label: 'Satış Adeti',
+                            data: saatlik.map(function (s) { return s.satis_adet; }),
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139,92,246,0.12)',
+                            fill: false,
+                            tension: 0.4,
+                            pointBackgroundColor: '#8b5cf6',
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            borderWidth: 2,
+                            yAxisID: 'yAdet',
+                            hidden: true,
+                        },
+                        {
+                            label: 'Ciro (₺)',
+                            data: saatlik.map(function (s) { return s.satis_ciro; }),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59,130,246,0.10)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#3b82f6',
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            borderWidth: 2.5,
+                            yAxisID: 'yCiro',
+                        }
+                    ];
+                } else {
+                    if (titleEl) titleEl.innerText = '📈 Günlük Satış Trendi';
+                    if (badgeEl) badgeEl.innerText = trend.length + ' gün';
+                    if (hintEl) {
+                        hintEl.style.display = 'block';
+                        hintEl.innerText = '💡 Grafikteki bir noktaya tıklayarak o günün satışlarını inceleyin';
                     }
-                ];
+
+                    chart.data.labels = trend.map(function (g) { return g.tarih_kisa; });
+                    chart.data.datasets = [
+                        {
+                            label: 'Satış Adeti',
+                            data: trend.map(function (g) { return g.satis_adet; }),
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139,92,246,0.12)',
+                            fill: false,
+                            tension: 0.4,
+                            pointBackgroundColor: '#8b5cf6',
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            borderWidth: 2,
+                            yAxisID: 'yAdet',
+                            hidden: true,
+                        },
+                        {
+                            label: 'Ciro (₺)',
+                            data: trend.map(function (g) { return g.satis_ciro; }),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59,130,246,0.10)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#3b82f6',
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            borderWidth: 2.5,
+                            yAxisID: 'yCiro',
+                        }
+                    ];
+                }
 
                 chart.options.scales = {
                     x: { grid: { color: gridColor }, ticks: { color: tickColor } },
@@ -1021,48 +1070,83 @@
                 });
 
                 chart.options.onClick = function (evt, elements) {
-                    if (elements && elements.length > 0) {
+                    if (!isSingleDay && elements && elements.length > 0) {
                         var idx = elements[0].index;
                         self._showDayAccordion(trend[idx]);
                     }
                 };
 
                 var canvasEl = document.getElementById('psr-chart-main');
-                if (canvasEl) canvasEl.style.cursor = 'pointer';
+                if (canvasEl) canvasEl.style.cursor = isSingleDay ? 'default' : 'pointer';
 
             } else {
-                if (titleEl) titleEl.innerText = '✂️ İskonto Analizi';
-                if (badgeEl) badgeEl.innerText = trend.length + ' gün • Etiket vs. Gerçek Satış';
-                if (hintEl) {
-                    hintEl.style.display = 'block';
-                    hintEl.innerText = '💡 Bu ürün için uygulanan liste/etiket fiyatı ve fiili satış tutarı karşılaştırması';
-                }
-
-                chart.data.labels = trend.map(function (g) { return g.tarih_kisa; });
-                chart.data.datasets = [
-                    {
-                        label: 'Etiket Toplamı (₺)',
-                        data: trend.map(function (g) { return g.etiket_ciro; }),
-                        borderColor: '#94a3b8',
-                        backgroundColor: 'rgba(148,163,184,0.15)',
-                        fill: false,
-                        tension: 0.4,
-                        borderWidth: 2,
-                        borderDash: [5, 3],
-                        pointRadius: 4,
-                    },
-                    {
-                        label: 'Gerçek Satış (₺)',
-                        data: trend.map(function (g) { return g.satis_ciro; }),
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16,185,129,0.18)',
-                        fill: '-1',
-                        tension: 0.4,
-                        borderWidth: 2.5,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
+                if (isSingleDay) {
+                    if (titleEl) titleEl.innerText = '✂️ İskonto Analizi (Saatlik)';
+                    if (badgeEl) badgeEl.innerText = 'Saatlik Yoğunluk • Etiket vs. Gerçek Satış';
+                    if (hintEl) {
+                        hintEl.style.display = 'block';
+                        hintEl.innerText = '💡 Bu ürün için uygulanan liste/etiket fiyatı ve fiili satış tutarı saatlik karşılaştırması';
                     }
-                ];
+
+                    chart.data.labels = saatlik.map(function (s) { return s.saat; });
+                    chart.data.datasets = [
+                        {
+                            label: 'Etiket Toplamı (₺)',
+                            data: saatlik.map(function (s) { return s.etiket_ciro; }),
+                            borderColor: '#94a3b8',
+                            backgroundColor: 'rgba(148,163,184,0.15)',
+                            fill: false,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            borderDash: [5, 3],
+                            pointRadius: 4,
+                        },
+                        {
+                            label: 'Gerçek Satış (₺)',
+                            data: saatlik.map(function (s) { return s.satis_ciro; }),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16,185,129,0.18)',
+                            fill: '-1',
+                            tension: 0.4,
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                        }
+                    ];
+                } else {
+                    if (titleEl) titleEl.innerText = '✂️ İskonto Analizi';
+                    if (badgeEl) badgeEl.innerText = trend.length + ' gün • Etiket vs. Gerçek Satış';
+                    if (hintEl) {
+                        hintEl.style.display = 'block';
+                        hintEl.innerText = '💡 Bu ürün için uygulanan liste/etiket fiyatı ve fiili satış tutarı karşılaştırması';
+                    }
+
+                    chart.data.labels = trend.map(function (g) { return g.tarih_kisa; });
+                    chart.data.datasets = [
+                        {
+                            label: 'Etiket Toplamı (₺)',
+                            data: trend.map(function (g) { return g.etiket_ciro; }),
+                            borderColor: '#94a3b8',
+                            backgroundColor: 'rgba(148,163,184,0.15)',
+                            fill: false,
+                            tension: 0.4,
+                            borderWidth: 2,
+                            borderDash: [5, 3],
+                            pointRadius: 4,
+                        },
+                        {
+                            label: 'Gerçek Satış (₺)',
+                            data: trend.map(function (g) { return g.satis_ciro; }),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16,185,129,0.18)',
+                            fill: '-1',
+                            tension: 0.4,
+                            borderWidth: 2.5,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                        }
+                    ];
+                }
 
                 chart.options.scales = {
                     x: { grid: { color: gridColor }, ticks: { color: tickColor } },
@@ -1091,7 +1175,7 @@
                         afterBody: function (items) {
                             if (!items || !items.length) return [];
                             var idx = items[0].dataIndex;
-                            var point = trend[idx];
+                            var point = isSingleDay ? saatlik[idx] : trend[idx];
                             if (!point) return [];
                             var diff = point.iskonto_tutar || 0;
                             var pct = point.etiket_ciro > 0 ? ((diff / point.etiket_ciro) * 100).toFixed(1) : '0';

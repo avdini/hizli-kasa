@@ -104,6 +104,7 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
         $iade_adet            = 0;
         $iade_tutar           = 0.0;
         $gun_map              = [];
+        $saat_map             = [];
         $satis_listesi        = [];
         $variation_map        = [];
         $odeme_map = [
@@ -140,7 +141,8 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
                 }
                 $item_iskonto  = max(0, $item_subtotal - $item_total);
 
-                $gun_key = $created_dt->date('Y-m-d');
+                $gun_key  = $created_dt->date('Y-m-d');
+                $saat_key = sprintf('%02d:00', (int) $created_dt->date('H'));
 
                 if (!isset($gun_map[$gun_key])) {
                     $gun_map[$gun_key] = [
@@ -150,6 +152,16 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
                         'iskonto_tutar' => 0.0,
                         'iade_adet'     => 0,
                         'order_ids'     => []
+                    ];
+                }
+
+                if (!isset($saat_map[$saat_key])) {
+                    $saat_map[$saat_key] = [
+                        'satis_adet'    => 0,
+                        'satis_ciro'    => 0.0,
+                        'etiket_ciro'   => 0.0,
+                        'iskonto_tutar' => 0.0,
+                        'iade_adet'     => 0,
                     ];
                 }
 
@@ -166,6 +178,7 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
                     $iade_tutar += abs($item_total);
                     $gun_map[$gun_key]['iade_adet'] += $item_qty;
                     $variation_map[$var_key]['iade_adet'] += $item_qty;
+                    $saat_map[$saat_key]['iade_adet'] += $item_qty;
                 } else {
                     $satis_adet += $item_qty;
                     $satis_ciro += $item_total;
@@ -186,6 +199,11 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
                     $gun_map[$gun_key]['satis_ciro']    += $item_total;
                     $gun_map[$gun_key]['etiket_ciro']   += $item_subtotal;
                     $gun_map[$gun_key]['iskonto_tutar'] += $item_iskonto;
+
+                    $saat_map[$saat_key]['satis_adet']    += $item_qty;
+                    $saat_map[$saat_key]['satis_ciro']    += $item_total;
+                    $saat_map[$saat_key]['etiket_ciro']   += $item_subtotal;
+                    $saat_map[$saat_key]['iskonto_tutar'] += $item_iskonto;
 
                     $variation_map[$var_key]['satis_adet'] += $item_qty;
                     $variation_map[$var_key]['satis_ciro'] += $item_total;
@@ -225,6 +243,21 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
                 'iskonto_tutar' => round($v['iskonto_tutar'], 2),
                 'iade_adet'     => $v['iade_adet'],
                 'order_ids'     => $v['order_ids'],
+            ];
+        }
+
+        $saatlik_trend = [];
+        for ($i = 0; $i < 24; $i++) {
+            $h = ($i + 6) % 24;
+            $k = sprintf('%02d:00', $h);
+            $sm = $saat_map[$k] ?? [];
+            $saatlik_trend[] = [
+                'saat'          => $k,
+                'satis_adet'    => $sm['satis_adet'] ?? 0,
+                'satis_ciro'    => round($sm['satis_ciro'] ?? 0.0, 2),
+                'etiket_ciro'   => round($sm['etiket_ciro'] ?? 0.0, 2),
+                'iskonto_tutar' => round($sm['iskonto_tutar'] ?? 0.0, 2),
+                'iade_adet'     => $sm['iade_adet'] ?? 0,
             ];
         }
 
@@ -269,6 +302,7 @@ class Hizli_Kasa_API_Product_Statistics extends Hizli_Kasa_API_Controller_Base {
                 ],
             ],
             'gunluk_trend'    => $gunluk_trend,
+            'saatlik_trend'   => $saatlik_trend,
             'satis_listesi'   => $satis_listesi,
             'variations'      => $variations_out,
         ];
