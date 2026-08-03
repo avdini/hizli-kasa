@@ -503,26 +503,44 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         interaction: { mode: 'index', intersect: false },
+                        layout: {
+                            padding: {
+                                top: 4,
+                                bottom: 0,
+                                left: 2,
+                                right: 2
+                            }
+                        },
                         plugins: {
-                            legend: { labels: { color: tickColor } },
+                            legend: {
+                                labels: {
+                                    color: tickColor,
+                                    padding: 8,
+                                    boxWidth: 12,
+                                    font: { size: 11 }
+                                }
+                            },
                             tooltip: Object.assign({}, commonTooltip, {
                                 callbacks: {
                                     label: function (ctx) {
                                         if (ctx.dataset.yAxisID === 'yCiro') {
-                                            return ' ₺ ' + self._num(ctx.parsed.y);
+                                            return ' Ciro: ₺ ' + self._num(ctx.parsed.y);
                                         }
-                                        return ' ' + ctx.parsed.y + ' sipariş';
+                                        return ' Sipariş: ' + ctx.parsed.y + ' adet';
                                     }
                                 }
                             })
                         },
                         scales: {
-                            x: { grid: { display: false }, ticks: { color: tickColor } },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: tickColor, padding: 2 }
+                            },
                             ySiparis: {
                                 type: 'linear',
                                 position: 'left',
                                 grid: { color: gridColor },
-                                ticks: { color: tickColor, stepSize: 1 },
+                                ticks: { color: tickColor, stepSize: 1, padding: 4 },
                                 beginAtZero: true,
                             },
                             yCiro: {
@@ -531,6 +549,7 @@
                                 grid: { drawOnChartArea: false },
                                 ticks: {
                                     color: tickColor,
+                                    padding: 4,
                                     callback: function (v) { return '₺' + self._num(v); }
                                 },
                                 beginAtZero: true,
