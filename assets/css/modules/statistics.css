@@ -300,6 +300,147 @@
     height: 280px;
 }
 
+/* =============================================
+   ÖDEME DAĞILIMI (YAN YANA SOL/SAĞ DÜZEN)
+   ============================================= */
+.stat-odeme-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    height: 100%;
+    min-height: 220px;
+}
+
+.stat-odeme-chart-wrap {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    flex-shrink: 0;
+}
+
+.stat-odeme-center-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-odeme-center-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--hk-text-muted, #64748b);
+    text-transform: uppercase;
+}
+
+.stat-odeme-center-val {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--hk-text-main, #0f172a);
+    margin-top: 1px;
+    white-space: nowrap;
+}
+
+#hizli-kasa-app.theme-dark .stat-odeme-center-val {
+    color: #f8fafc;
+}
+
+.stat-odeme-legend-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.stat-odeme-legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: var(--hk-bg-subtle, rgba(0, 0, 0, 0.03));
+    border: 1px solid var(--hk-border, rgba(0, 0, 0, 0.06));
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.stat-odeme-legend-item:hover {
+    background: var(--hk-bg-hover, rgba(0, 0, 0, 0.06));
+    border-color: rgba(0, 0, 0, 0.12);
+    transform: translateX(3px);
+}
+
+#hizli-kasa-app.theme-dark .stat-odeme-legend-item {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+#hizli-kasa-app.theme-dark .stat-odeme-legend-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.stat-odeme-item-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.stat-odeme-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.stat-odeme-item-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--hk-text-main, #1e293b);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#hizli-kasa-app.theme-dark .stat-odeme-item-name {
+    color: #e2e8f0;
+}
+
+.stat-odeme-item-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.stat-odeme-item-val {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--hk-text-main, #0f172a);
+}
+
+#hizli-kasa-app.theme-dark .stat-odeme-item-val {
+    color: #f1f5f9;
+}
+
+.stat-odeme-item-pct {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--hk-primary, #3b82f6);
+    background: rgba(59, 130, 246, 0.1);
+    padding: 1px 5px;
+    border-radius: 5px;
+}
+
 /* Doughnut chart için wrapper */
 .stat-doughnut-wrap {
     max-width: 260px;

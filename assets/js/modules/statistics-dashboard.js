@@ -156,10 +156,16 @@
             html += '<div class="stat-chart-body"><canvas id="stat-chart-saatlik"></canvas></div>';
             html += '</div>';
 
-            // Ödeme dağılımı doughnut
-            html += '<div class="stat-chart-card">';
-            html += '<div class="stat-chart-header"><h4 class="stat-chart-title">💳 Ödeme Dağılımı</h4></div>';
-            html += '<div class="stat-chart-body stat-doughnut-wrap"><canvas id="stat-chart-odeme"></canvas></div>';
+            // Ödeme dağılımı doughnut (Yan Yana Sol/Sağ Düzen)
+            html += '<div class="stat-chart-card stat-odeme-card">';
+            html += '<div class="stat-chart-header"><h4 class="stat-chart-title">💳 Ödeme Dağılımı</h4><span class="stat-chart-badge" id="stat-odeme-total-badge">Net Dağılım</span></div>';
+            html += '<div class="stat-chart-body stat-odeme-body">';
+            html += '<div class="stat-odeme-chart-wrap">';
+            html += '<canvas id="stat-chart-odeme"></canvas>';
+            html += '<div class="stat-odeme-center-text"><span class="stat-odeme-center-label">TOPLAM</span><span class="stat-odeme-center-val" id="stat-odeme-center-total">₺ 0</span></div>';
+            html += '</div>';
+            html += '<div class="stat-odeme-legend-list" id="stat-odeme-legend-list"></div>';
+            html += '</div>';
             html += '</div>';
 
             // Kasiyer performansı (sadece birden fazla varsa)
@@ -375,35 +381,90 @@
                 });
             }
 
-            // --- Ödeme dağılımı doughnut ---
+            // --- Ödeme dağılımı doughnut (Yan Yana Sol/Sağ Düzen) ---
             if (document.getElementById('stat-chart-odeme')) {
-                var odemeLabels = ['💵 Nakit', '💳 Kart', '🏦 IBAN', '📱 QR Taksit'];
-                var odemeData   = [odeme.nakit || 0, odeme.kart || 0, odeme.iban || 0, odeme.qr_taksit || 0];
-                var odemeColors = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b'];
+                var nakitVal = parseFloat(odeme.nakit) || 0;
+                var kartVal  = parseFloat(odeme.kart) || 0;
+                var ibanVal  = parseFloat(odeme.iban) || 0;
+                var qrVal    = parseFloat(odeme.qr_taksit) || 0;
+
+                var totalOdeme = nakitVal + kartVal + ibanVal + qrVal;
+
+                var centerTotalEl = document.getElementById('stat-odeme-center-total');
+                if (centerTotalEl) {
+                    centerTotalEl.innerText = self._currency(totalOdeme);
+                }
+
+                var items = [
+                    { label: 'Nakit',     icon: '💵', val: nakitVal, color: '#10b981' },
+                    { label: 'Kart',      icon: '💳', val: kartVal,  color: '#3b82f6' },
+                    { label: 'IBAN',      icon: '🏦', val: ibanVal,  color: '#8b5cf6' },
+                    { label: 'QR/Taksit', icon: '📱', val: qrVal,    color: '#f59e0b' }
+                ];
+
+                // Özel Yan Legend Listesini Oluştur
+                var legendListEl = document.getElementById('stat-odeme-legend-list');
+                if (legendListEl) {
+                    var legendHtml = '';
+                    items.forEach(function (item, idx) {
+                        var pct = totalOdeme > 0 ? ((item.val / totalOdeme) * 100).toFixed(1) : '0';
+                        legendHtml += '<div class="stat-odeme-legend-item" data-idx="' + idx + '">';
+                        legendHtml += '<div class="stat-odeme-item-left">';
+                        legendHtml += '<span class="stat-odeme-dot" style="background-color:' + item.color + '"></span>';
+                        legendHtml += '<span class="stat-odeme-item-name">' + item.icon + ' ' + item.label + '</span>';
+                        legendHtml += '</div>';
+                        legendHtml += '<div class="stat-odeme-item-right">';
+                        legendHtml += '<span class="stat-odeme-item-val">' + self._currency(item.val) + '</span>';
+                        legendHtml += '<span class="stat-odeme-item-pct">%' + pct + '</span>';
+                        legendHtml += '</div>';
+                        legendHtml += '</div>';
+                    });
+                    legendListEl.innerHTML = legendHtml;
+
+                    // Hover Etkileşimi (Liste elemanına gelindiğinde grafiğin ilgili dilimi öne çıkar)
+                    legendListEl.querySelectorAll('.stat-odeme-legend-item').forEach(function (el) {
+                        el.addEventListener('mouseenter', function () {
+                            var idx = parseInt(this.dataset.idx, 10);
+                            if (self.charts.odeme) {
+                                self.charts.odeme.setActiveElements([{ datasetIndex: 0, index: idx }]);
+                                self.charts.odeme.tooltip.setActiveElements([{ datasetIndex: 0, index: idx }]);
+                                self.charts.odeme.update();
+                            }
+                        });
+                        el.addEventListener('mouseleave', function () {
+                            if (self.charts.odeme) {
+                                self.charts.odeme.setActiveElements([]);
+                                self.charts.odeme.tooltip.setActiveElements([]);
+                                self.charts.odeme.update();
+                            }
+                        });
+                    });
+                }
 
                 self.charts.odeme = new Chart(document.getElementById('stat-chart-odeme'), {
                     type: 'doughnut',
                     data: {
-                        labels: odemeLabels,
+                        labels: items.map(function (i) { return i.icon + ' ' + i.label; }),
                         datasets: [{
-                            data: odemeData,
-                            backgroundColor: odemeColors,
+                            data: items.map(function (i) { return i.val; }),
+                            backgroundColor: items.map(function (i) { return i.color; }),
                             borderWidth: 0,
-                            hoverOffset: 10,
+                            hoverOffset: 8,
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '65%',
+                        cutout: '72%',
                         plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: { color: tickColor, padding: 16, font: { size: 12 } }
-                            },
+                            legend: { display: false },
                             tooltip: Object.assign({}, commonTooltip, {
                                 callbacks: {
-                                    label: function (ctx) { return ' ₺ ' + self._num(ctx.parsed); }
+                                    label: function (ctx) {
+                                        var val = ctx.parsed;
+                                        var pct = totalOdeme > 0 ? ((val / totalOdeme) * 100).toFixed(1) : '0';
+                                        return ' Tutar: ₺ ' + self._num(val) + ' (%' + pct + ')';
+                                    }
                                 }
                             })
                         }
