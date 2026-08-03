@@ -449,15 +449,16 @@
                             data: items.map(function (i) { return i.val; }),
                             backgroundColor: items.map(function (i) { return i.color; }),
                             borderWidth: 0,
-                            hoverOffset: 8,
+                            hoverOffset: 10,
+                            clip: false,
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '70%',
+                        cutout: '74%',
                         layout: {
-                            padding: 14
+                            padding: 4
                         },
                         plugins: {
                             legend: { display: false },
