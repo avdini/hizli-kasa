@@ -133,10 +133,11 @@
             );
             html += '</div>';
 
-            // KPI Kartları — Compact Grid (4 Detay Metrik Kartı)
+            // KPI Kartları — Compact Grid (5 Detay Metrik Kartı)
             html += '<div class="stat-kpi-compact-grid">';
             html += self._kpiCardCompact('🛒', 'SEPET ORT.', self._currency(kpi.sepet_ortalamasi), 'Sepet başı ortalama', 'kpi-sepet-tutar stat-kpi-clickable', 'Dağılımı Gör ➔');
             html += self._kpiCardCompact('🛍️', 'SEPET ÜRÜN', (kpi.sepet_urun_ortalamasi || 0) + ' adet/sepet', 'Sepet başı ortalama', 'kpi-sepet-adet stat-kpi-clickable', 'Dağılımı Gör ➔');
+            html += self._kpiCardCompact('💸', 'MASRAF', self._currency(kpi.toplam_masraf || 0), (kpi.masraf_sayisi || 0) + ' masraf kaydı', 'kpi-masraf stat-kpi-clickable', 'Masraflara Git ➔');
             html += self._kpiCardCompact('↩️', 'İADE', self._currency(kpi.toplam_iade), kpi.iade_sayisi + ' iade', 'kpi-iade stat-kpi-clickable', 'İadeleri Gör ➔');
             html += self._kpiCardCompact('✂️', 'İSKONTO', self._currency(kpi.toplam_iskonto || 0), (kpi.iskonto_siparis_sayisi || 0) + ' siparişte', 'kpi-iskonto stat-kpi-clickable', 'İskontolu Siparişler ➔');
             html += '</div>';
@@ -275,7 +276,12 @@
                             repId: 'ozet-istatistik'
                         });
                     }
-                    if (card.classList.contains('kpi-iade')) {
+                    if (card.classList.contains('kpi-masraf')) {
+                        var masrafTab = document.querySelector('.ust-sekme[data-tab="masraf"]');
+                        if (masrafTab) {
+                            masrafTab.click();
+                        }
+                    } else if (card.classList.contains('kpi-iade')) {
                         HK.ReportHub.kategoriAc('iade', 'iade-listesi');
                     } else if (card.classList.contains('kpi-iskonto')) {
                         if (HK.ReportSales) {

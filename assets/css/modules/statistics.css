@@ -102,16 +102,20 @@
 }
 
 /* =============================================
-   KPI KARTLARI — COMPACT GRID (4 Compact Kart)
+   KPI KARTLARI — COMPACT GRID (5 Compact Kart)
    ============================================= */
 
 .stat-kpi-compact-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 12px;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
+    .stat-kpi-compact-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
     .stat-kpi-compact-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -395,6 +399,7 @@
 .stat-kpi-card.kpi-sepet-adet  { --kpi-color: #ec4899; }
 .stat-kpi-card.kpi-iade        { --kpi-color: #ef4444; }
 .stat-kpi-card.kpi-iskonto     { --kpi-color: #f59e0b; }
+.stat-kpi-card.kpi-masraf      { --kpi-color: #f97316; }
 
 /* =============================================
    GRAFİK GRID

@@ -253,16 +253,17 @@ function hizli_kasa_statistics_summary($request) {
     $m_table = $tables['masraflar'];
     if ($depo_id > 0) {
         $masraf_rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT SUM(amount) as total FROM $m_table WHERE created_at BETWEEN %s AND %s AND location_id = %d",
+            "SELECT SUM(amount) as total, COUNT(id) as count FROM $m_table WHERE created_at BETWEEN %s AND %s AND location_id = %d",
             $ts_start, $ts_end, $depo_id
         ));
     } else {
         $masraf_rows = $wpdb->get_results($wpdb->prepare(
-            "SELECT SUM(amount) as total FROM $m_table WHERE created_at BETWEEN %s AND %s",
+            "SELECT SUM(amount) as total, COUNT(id) as count FROM $m_table WHERE created_at BETWEEN %s AND %s",
             $ts_start, $ts_end
         ));
     }
     $toplam_masraf = (float) ($masraf_rows[0]->total ?? 0);
+    $masraf_sayisi = (int) ($masraf_rows[0]->count ?? 0);
 
     // Saatlik diziyi mağaza çalışma vardiyasına uygun sırala (06:00 – 05:00)
     $saatlik = [];
@@ -410,6 +411,7 @@ function hizli_kasa_statistics_summary($request) {
             'toplam_ciro'            => round($toplam_ciro, 2),
             'toplam_iade'            => round($toplam_iade, 2),
             'toplam_masraf'          => round($toplam_masraf, 2),
+            'masraf_sayisi'          => $masraf_sayisi,
             'toplam_iskonto'         => round($toplam_iskonto, 2),
             'toplam_urun_adedi'      => $toplam_urun_adedi,
             'sepet_ortalamasi'       => $sepet_ortalamasi,
