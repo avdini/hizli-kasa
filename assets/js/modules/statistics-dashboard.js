@@ -455,7 +455,10 @@
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '72%',
+                        cutout: '70%',
+                        layout: {
+                            padding: 14
+                        },
                         plugins: {
                             legend: { display: false },
                             tooltip: Object.assign({}, commonTooltip, {
