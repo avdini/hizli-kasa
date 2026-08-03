@@ -183,6 +183,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
+    min-width: 0;
 }
 
 .stat-charts-grid .stat-chart-full {
@@ -202,6 +203,8 @@
     display: flex;
     flex-direction: column;
     gap: 14px;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .stat-chart-header {
@@ -279,11 +282,25 @@
 .stat-chart-body {
     position: relative;
     width: 100%;
+    min-height: 220px;
+    height: 220px;
+}
+
+.stat-chart-body canvas {
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+.stat-chart-body-main {
+    min-height: 280px;
+    height: 280px;
 }
 
 /* Doughnut chart için wrapper */
 .stat-doughnut-wrap {
     max-width: 260px;
+    min-height: 240px;
+    height: 240px;
     margin: 0 auto;
 }
 

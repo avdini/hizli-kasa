@@ -143,27 +143,27 @@
                 html += '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'iskonto' ? ' active' : '') + '" data-mode="iskonto">✂️ İskonto Analizi</button>';
                 html += '</div>';
                 html += '</div>';
-                html += '<div class="stat-chart-body"><canvas id="stat-chart-main" height="80"></canvas></div>';
+                html += '<div class="stat-chart-body stat-chart-body-main"><canvas id="stat-chart-main"></canvas></div>';
                 html += '</div>';
             }
 
             // Saatlik yoğunluk
             html += '<div class="stat-chart-card">';
             html += '<div class="stat-chart-header"><h4 class="stat-chart-title">🕐 Saatlik Yoğunluk</h4><span class="stat-chart-badge">0–23 saat</span></div>';
-            html += '<div class="stat-chart-body"><canvas id="stat-chart-saatlik" height="160"></canvas></div>';
+            html += '<div class="stat-chart-body"><canvas id="stat-chart-saatlik"></canvas></div>';
             html += '</div>';
 
             // Ödeme dağılımı doughnut
             html += '<div class="stat-chart-card">';
             html += '<div class="stat-chart-header"><h4 class="stat-chart-title">💳 Ödeme Dağılımı</h4></div>';
-            html += '<div class="stat-chart-body stat-doughnut-wrap"><canvas id="stat-chart-odeme" height="220"></canvas></div>';
+            html += '<div class="stat-chart-body stat-doughnut-wrap"><canvas id="stat-chart-odeme"></canvas></div>';
             html += '</div>';
 
             // Kasiyer performansı (sadece birden fazla varsa)
             if (kasiy.length > 0) {
                 html += '<div class="stat-chart-card">';
                 html += '<div class="stat-chart-header"><h4 class="stat-chart-title">👤 Kasiyer Performansı</h4><span class="stat-chart-badge">' + kasiy.length + ' kasiyer</span></div>';
-                html += '<div class="stat-chart-body"><canvas id="stat-chart-kasiyer" height="180"></canvas></div>';
+                html += '<div class="stat-chart-body"><canvas id="stat-chart-kasiyer"></canvas></div>';
                 html += '</div>';
             }
 
@@ -309,6 +309,7 @@
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: { display: false },
                             tooltip: Object.assign({}, commonTooltip, {
@@ -348,6 +349,7 @@
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         cutout: '65%',
                         plugins: {
                             legend: {
@@ -389,6 +391,7 @@
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         interaction: { mode: 'index', intersect: false },
                         plugins: {
                             legend: { labels: { color: tickColor } },
@@ -425,6 +428,19 @@
                         }
                     }
                 });
+            }
+
+            // --- ResizeObserver & Sekme Dinleyicisi ---
+            var panel = document.getElementById('rapor-ozet-istatistik');
+            var gridEl = panel ? panel.querySelector('.stat-charts-grid') : null;
+            if (gridEl && window.ResizeObserver) {
+                if (self._resizeObserver) {
+                    self._resizeObserver.disconnect();
+                }
+                self._resizeObserver = new ResizeObserver(function () {
+                    self.resizeCharts();
+                });
+                self._resizeObserver.observe(gridEl);
             }
         },
 
@@ -662,10 +678,25 @@
         },
 
         /* -------------------------------------------------
-           CHART'LARI TEMİZLE
+           CHART'LARI TEMİZLE & RESIZE
         ------------------------------------------------- */
+        resizeCharts: function () {
+            var self = this;
+            Object.keys(self.charts).forEach(function (key) {
+                if (self.charts[key] && typeof self.charts[key].resize === 'function') {
+                    try {
+                        self.charts[key].resize();
+                    } catch (e) {}
+                }
+            });
+        },
+
         _destroyCharts: function () {
             var self = this;
+            if (self._resizeObserver) {
+                self._resizeObserver.disconnect();
+                self._resizeObserver = null;
+            }
             Object.keys(self.charts).forEach(function (key) {
                 if (self.charts[key]) {
                     self.charts[key].destroy();
@@ -688,6 +719,7 @@
                 data: { labels: [], datasets: [] },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     interaction: { mode: 'index', intersect: false },
                     scales: {
                         x: { grid: { color: gridColor }, ticks: { color: tickColor } },
