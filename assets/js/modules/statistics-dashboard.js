@@ -105,6 +105,11 @@
 
             var html = '<div class="stat-dashboard-wrap">';
 
+            // Toolbar — Yazdır Butonu
+            html += '<div class="stat-dashboard-toolbar">';
+            html += '<button class="stat-print-summary-btn" id="stat-print-summary-btn" title="Seçili tarih aralığının özet raporunu termal fişe yazdır">🖨️ Özet Fişi Yazdır</button>';
+            html += '</div>';
+
             // KPI Kartları — Hero Strip (2 Ana Metrik Kartı)
             html += '<div class="stat-kpi-hero-strip">';
             html += self._kpiCardHeroDual(
@@ -294,6 +299,14 @@
                     }
                 });
             });
+
+            // Yazdır Butonu Eventi
+            var printBtn = document.getElementById('stat-print-summary-btn');
+            if (printBtn) {
+                printBtn.addEventListener('click', function () {
+                    self._printSummaryReceipt();
+                });
+            }
 
             // Chart.js mevcut mu?
             if (typeof Chart === 'undefined') {
@@ -1281,6 +1294,141 @@
             }
 
             HK.ReportHub.kategoriAc('satis', 'tum-siparisler');
+        },
+
+        _printSummaryReceipt: function () {
+            var self = this;
+            if (!self.lastData) {
+                if (HK.UIRenderer && HK.UIRenderer.showToast) {
+                    HK.UIRenderer.showToast('Yazdırılacak rapor verisi bulunamadı.', 'warning');
+                }
+                return;
+            }
+
+            try {
+                var data = self.lastData;
+                var kpi = data.kpi || {};
+                var odeme = data.odeme_dagilimi || {};
+                var kasiy = data.kasiyerler || [];
+                var urunler = data.top_urunler || [];
+
+                var dateStart = (document.getElementById('rhub-tarih-bas') || {}).value || self._today();
+                var dateEnd   = (document.getElementById('rhub-tarih-bit') || {}).value || self._today();
+                var tarihLabel = (dateStart === dateEnd) ? dateStart : (dateStart + ' - ' + dateEnd);
+
+                var storeName = (window.kasaAyar && (window.kasaAyar.magazaAdi || window.kasaAyar.siteName)) ? (window.kasaAyar.magazaAdi || window.kasaAyar.siteName) : 'HIZLI KASA POS';
+                var depoName = '';
+                if (HK.DepoManager && typeof HK.DepoManager.getActiveDepoObj === 'function') {
+                    var depoObj = HK.DepoManager.getActiveDepoObj();
+                    if (depoObj && depoObj.adi) depoName = depoObj.adi;
+                }
+
+                var html = '<div class="hk-unified-print-container receipt-zreport" style="font-family:\'Courier New\', \'Consolas\', \'Lucida Console\', \'Monaco\', monospace; color:#000000 !important; background-color:#ffffff !important; width:100%; max-width:300px; margin:0 auto; padding:4px 8px; box-sizing:border-box; font-size:12px; line-height:1.25; letter-spacing:-0.2px; box-shadow:none !important; border:none !important; -webkit-font-smoothing:none !important; -moz-osx-font-smoothing:unset !important; font-smooth:never !important; text-rendering:pixelated !important;">';
+
+                // Header
+                html += '<div style="text-align:center; margin-bottom:8px; border-bottom:2px solid #000000; padding-bottom:8px;">';
+                html += '<h2 style="margin:0; font-size:16px; font-weight:bold; color:#000000; font-family:\'Courier New\', \'Consolas\', \'Lucida Console\', \'Monaco\', monospace;">' + self._esc(storeName) + '</h2>';
+                html += '<p style="margin:4px 0 2px 0; font-size:13px; font-weight:bold; color:#000000; font-family:\'Courier New\', \'Consolas\', \'Lucida Console\', \'Monaco\', monospace;">SATIŞ ÖZET RAPORU</p>';
+                html += '<p style="margin:2px 0 0 0; font-size:11px; color:#000000; font-family:\'Courier New\', \'Consolas\', \'Lucida Console\', \'Monaco\', monospace;">Tarih: ' + self._esc(tarihLabel) + '</p>';
+                if (depoName) {
+                    html += '<p style="margin:2px 0 0 0; font-size:11px; color:#000000; font-family:\'Courier New\', \'Consolas\', \'Lucida Console\', \'Monaco\', monospace;">Depo: ' + self._esc(depoName) + '</p>';
+                }
+                html += '</div>';
+
+                // Genel Özet
+                html += '<div style="margin-bottom:8px;">';
+                html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000000; padding-bottom:2px; color:#000000;">GENEL ÖZET</p>';
+                html += '<table style="width:100%; font-size:12px; border-collapse:collapse; color:#000000; table-layout:fixed;">';
+                html += '<tr><td>Sipariş Sayısı</td><td style="text-align:right; font-weight:bold;">' + (kpi.siparis_sayisi || 0) + ' ad.</td></tr>';
+                html += '<tr><td>Satılan Ürün</td><td style="text-align:right; font-weight:bold;">' + (kpi.toplam_urun_adedi || 0) + ' ad.</td></tr>';
+                html += '<tr><td>Sepet Ortalaması</td><td style="text-align:right; font-weight:bold;">' + self._currency(kpi.sepet_ortalamasi) + '</td></tr>';
+                html += '<tr><td>Ürün/Sepet Ort.</td><td style="text-align:right; font-weight:bold;">' + (kpi.sepet_urun_ortalamasi || 0) + ' ad.</td></tr>';
+                html += '</table></div>';
+
+                // Ciro Analizi
+                html += '<div style="margin-bottom:8px;">';
+                html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000000; padding-bottom:2px; color:#000000;">CİRO ANALİZİ</p>';
+                html += '<table style="width:100%; font-size:12px; border-collapse:collapse; color:#000000; table-layout:fixed;">';
+                html += '<tr><td>Toplam Ciro</td><td style="text-align:right; font-weight:bold;">' + self._currency(kpi.toplam_ciro) + '</td></tr>';
+                if ((parseFloat(kpi.toplam_iade) || 0) > 0) {
+                    html += '<tr><td>Toplam İade (' + (kpi.iade_sayisi || 0) + ' ad.)</td><td style="text-align:right; font-weight:bold;">-' + self._currency(kpi.toplam_iade) + '</td></tr>';
+                }
+                if ((parseFloat(kpi.toplam_iskonto) || 0) > 0) {
+                    html += '<tr><td>Toplam İskonto</td><td style="text-align:right; font-weight:bold;">-' + self._currency(kpi.toplam_iskonto) + '</td></tr>';
+                }
+                html += '<tr style="border-top:2px solid #000000;"><td style="font-weight:bold; font-size:13px; padding-top:3px;">NET CİRO</td><td style="text-align:right; font-weight:bold; font-size:13px; padding-top:3px;">' + self._currency(kpi.net_ciro) + '</td></tr>';
+                html += '</table></div>';
+
+                // Ödeme Dağılımı
+                var nakitVal = parseFloat(odeme.nakit) || 0;
+                var kartVal  = parseFloat(odeme.kart) || 0;
+                var ibanVal  = parseFloat(odeme.iban) || 0;
+                var qrVal    = parseFloat(odeme.qr_taksit) || 0;
+
+                html += '<div style="margin-bottom:8px;">';
+                html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000000; padding-bottom:2px; color:#000000;">ÖDEME DAĞILIMI</p>';
+                html += '<table style="width:100%; font-size:12px; border-collapse:collapse; color:#000000; table-layout:fixed;">';
+                html += '<tr><td>Nakit</td><td style="text-align:right;">' + self._currency(nakitVal) + '</td></tr>';
+                html += '<tr><td>Kredi Kartı</td><td style="text-align:right;">' + self._currency(kartVal) + '</td></tr>';
+                html += '<tr><td>IBAN / Havale</td><td style="text-align:right;">' + self._currency(ibanVal) + '</td></tr>';
+                if (qrVal > 0) {
+                    html += '<tr><td>QR / Taksit</td><td style="text-align:right;">' + self._currency(qrVal) + '</td></tr>';
+                }
+                html += '</table></div>';
+
+                // Kasiyer Performansı
+                if (kasiy && kasiy.length > 0) {
+                    html += '<div style="margin-bottom:8px;">';
+                    html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000000; padding-bottom:2px; color:#000000;">KASİYER PERFORMANSI</p>';
+                    html += '<table style="width:100%; font-size:11px; border-collapse:collapse; color:#000000; table-layout:fixed;">';
+                    html += '<tr style="border-bottom:1px solid #000000;"><th style="text-align:left;">Kasiyer</th><th style="text-align:right; width:50px;">Sip.</th><th style="text-align:right; width:80px;">Ciro</th></tr>';
+                    kasiy.forEach(function (k) {
+                        html += '<tr>';
+                        html += '<td style="padding:1px 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + self._esc(k.isim) + '</td>';
+                        html += '<td style="text-align:right; padding:1px 0;">' + (k.siparis_sayisi || 0) + ' sp.</td>';
+                        html += '<td style="text-align:right; padding:1px 0;">' + self._currency(k.toplam) + '</td>';
+                        html += '</tr>';
+                    });
+                    html += '</table></div>';
+                }
+
+                // En Çok Satan 5 Ürün
+                if (urunler && urunler.length > 0) {
+                    var top5 = urunler.slice(0, 5);
+                    html += '<div style="margin-bottom:8px;">';
+                    html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000000; padding-bottom:2px; color:#000000;">EN ÇOK SATAN 5 ÜRÜN</p>';
+                    html += '<table style="width:100%; font-size:11px; border-collapse:collapse; color:#000000; table-layout:fixed;">';
+                    html += '<tr style="border-bottom:1px solid #000000;"><th style="text-align:left;">Ürün</th><th style="text-align:right; width:45px;">Adet</th><th style="text-align:right; width:75px;">Tutar</th></tr>';
+                    top5.forEach(function (u, idx) {
+                        html += '<tr>';
+                        html += '<td style="padding:1px 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (idx + 1) + '. ' + self._esc(u.name) + '</td>';
+                        html += '<td style="text-align:right; padding:1px 0;">' + (u.qty || 0) + '</td>';
+                        html += '<td style="text-align:right; padding:1px 0;">' + self._currency(u.total) + '</td>';
+                        html += '</tr>';
+                    });
+                    html += '</table></div>';
+                }
+
+                // Footer
+                var simdi = new Date().toLocaleString('tr-TR');
+                html += '<div style="text-align:center; margin-top:10px; border-top:1px solid #000000; padding-top:8px; font-size:10px; color:#000000;">';
+                html += '<p style="margin:0;">Rapor Tarihi: ' + self._esc(simdi) + '</p>';
+                html += '<p style="margin:2px 0 0 0;">Hızlı Kasa POS İstatistik Sistemi</p>';
+                html += '</div>';
+
+                html += '</div>';
+
+                if (HK.PrintCore && typeof HK.PrintCore.print === 'function') {
+                    HK.PrintCore.print({ type: 'report', html: html });
+                } else {
+                    throw new Error('PrintCore modülü yüklü değil.');
+                }
+            } catch (err) {
+                console.error('HK.StatisticsDashboard: Print summary receipt error', err);
+                if (HK.UIRenderer && HK.UIRenderer.showToast) {
+                    HK.UIRenderer.showToast('Fiş yazdırılamadı: ' + (err.message || 'Bilinmeyen hata'), 'error', true);
+                }
+            }
         },
 
         _esc: function (s) {
