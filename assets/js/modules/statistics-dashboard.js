@@ -138,11 +138,12 @@
                 html += '<div class="stat-chart-card stat-chart-full">';
                 html += '<div class="stat-chart-header stat-main-trend-header">';
                 html += '<div>';
-                html += '<h4 class="stat-chart-title" id="stat-main-trend-title">📈 Satış ve Ürün Trendi</h4>';
+                html += '<h4 class="stat-chart-title" id="stat-main-trend-title">📈 Satış Trendi</h4>';
                 html += '<span class="stat-chart-badge" id="stat-main-trend-badge">Yükleniyor...</span>';
                 html += '</div>';
                 html += '<div class="stat-trend-toggle-wrap">';
-                html += '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'satis' ? ' active' : '') + '" data-mode="satis">📈 Satış & Ürün Trendi</button>';
+                html += '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'satis' ? ' active' : '') + '" data-mode="satis">📈 Satış Trendi</button>';
+                html += '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'urun' ? ' active' : '') + '" data-mode="urun">📦 Ürün Satış Trendi</button>';
                 html += '<button class="stat-trend-toggle-btn' + (self.activeTrendMode === 'iskonto' ? ' active' : '') + '" data-mode="iskonto">✂️ İskonto Analizi</button>';
                 html += '</div>';
                 html += '</div>';
@@ -231,13 +232,18 @@
                             HK.ReportSales.filterHasDiscount = true;
                         }
                         HK.ReportHub.kategoriAc('satis', 'tum-siparisler');
-                    } else if (card.classList.contains('kpi-urun') || card.classList.contains('kpi-sepet-adet')) {
+                    } else if (card.classList.contains('kpi-urun')) {
                         var mainCard = document.getElementById('stat-chart-main');
                         if (mainCard) {
                             mainCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                         var btn = panel.querySelector('.stat-trend-toggle-btn[data-mode="urun"]');
                         if (btn) btn.click();
+                    } else if (card.classList.contains('kpi-sepet-tutar') || card.classList.contains('kpi-sepet-adet')) {
+                        var ortCard = document.getElementById('stat-chart-ortalamalar');
+                        if (ortCard) {
+                            ortCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
                     } else {
                         if (HK.ReportSales) {
                             HK.ReportSales.filterHasDiscount = false;
@@ -858,25 +864,22 @@
             var iskNoktalar = iskonto.noktalar || [];
 
             if (mode === 'satis') {
-                if (titleEl) titleEl.innerText = '📈 Satış ve Ürün Trendi';
+                if (titleEl) titleEl.innerText = '📈 Satış Trendi';
 
                 var isSingleDay = (gunluk.length <= 1);
                 var labels = [];
                 var ciroData = [];
                 var adetData = [];
-                var urunData = [];
 
                 if (!isSingleDay) {
                     labels   = gunluk.map(function (g) { return g.tarih_kisa; });
                     ciroData = gunluk.map(function (g) { return g.toplam; });
                     adetData = gunluk.map(function (g) { return g.siparis_sayisi; });
-                    urunData = gunluk.map(function (g) { return g.urun_adedi || 0; });
                     if (badgeEl) badgeEl.innerText = gunluk.length + ' gün • Detay için noktaya tıklayın';
                 } else {
                     labels   = saatlik.map(function (s) { return s.saat; });
                     ciroData = saatlik.map(function (s) { return s.total; });
                     adetData = saatlik.map(function (s) { return s.count; });
-                    urunData = saatlik.map(function (s) { return s.items || 0; });
                     if (badgeEl) badgeEl.innerText = 'Saatlik Yoğunluk • 24 Saat';
                 }
 
@@ -904,20 +907,6 @@
                         fill: false,
                         tension: 0.4,
                         pointBackgroundColor: '#8b5cf6',
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        borderWidth: 2,
-                        yAxisID: 'ySiparis',
-                        hidden: true, // Varsayılan olarak kapalı! Lejanttan açılabilir
-                    },
-                    {
-                        label: 'Satılan Ürün Adedi',
-                        data: urunData,
-                        borderColor: '#06b6d4',
-                        backgroundColor: 'rgba(6,182,212,0.12)',
-                        fill: false,
-                        tension: 0.4,
-                        pointBackgroundColor: '#06b6d4',
                         pointRadius: 4,
                         pointHoverRadius: 6,
                         borderWidth: 2,
@@ -955,7 +944,96 @@
                             if (ctx.dataset.yAxisID === 'yCiro') {
                                 return ' Net Ciro: ₺ ' + self._num(ctx.parsed.y);
                             }
-                            if (ctx.dataset.label && ctx.dataset.label.indexOf('Ürün') !== -1) {
+                            return ' Sipariş Sayısı: ' + ctx.parsed.y + ' adet';
+                        }
+                    }
+                });
+
+                chart.options.onClick = function (evt, elements) {
+                    if (!isSingleDay && elements && elements.length > 0) {
+                        var index = elements[0].index;
+                        var item = gunluk[index];
+                        if (item && item.tarih) {
+                            self._showDayDetails(item.tarih);
+                        }
+                    }
+                };
+
+            } else if (mode === 'urun') {
+                if (titleEl) titleEl.innerText = '📦 Ürün Satış Trendi';
+
+                var isSingleDay = (gunluk.length <= 1);
+                var labels = [];
+                var urunData = [];
+                var siparisData = [];
+
+                if (!isSingleDay) {
+                    labels   = gunluk.map(function (g) { return g.tarih_kisa; });
+                    urunData = gunluk.map(function (g) { return g.urun_adedi || 0; });
+                    siparisData = gunluk.map(function (g) { return g.siparis_sayisi || 0; });
+                    if (badgeEl) badgeEl.innerText = gunluk.length + ' gün • Günlük Satılan Toplam Ürün Adetleri';
+                } else {
+                    labels   = saatlik.map(function (s) { return s.saat; });
+                    urunData = saatlik.map(function (s) { return s.items || 0; });
+                    siparisData = saatlik.map(function (s) { return s.count || 0; });
+                    if (badgeEl) badgeEl.innerText = 'Saatlik Yoğunluk • Satılan Ürün Adetleri';
+                }
+
+                chart.data.labels = labels;
+                chart.data.datasets = [
+                    {
+                        label: 'Satılan Ürün Adedi',
+                        data: urunData,
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6,182,212,0.15)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#06b6d4',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        borderWidth: 2.5,
+                        yAxisID: 'yUrun',
+                        hidden: false,
+                    },
+                    {
+                        label: 'Sipariş Sayısı',
+                        data: siparisData,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139,92,246,0.10)',
+                        fill: false,
+                        tension: 0.4,
+                        borderDash: [4, 4],
+                        pointBackgroundColor: '#8b5cf6',
+                        pointRadius: 3,
+                        borderWidth: 1.5,
+                        yAxisID: 'ySiparis',
+                        hidden: true, // Varsayılan olarak kapalı! Lejanttan açılabilir
+                    }
+                ];
+
+                chart.options.scales = {
+                    x: { grid: { color: gridColor }, ticks: { color: tickColor } },
+                    yUrun: {
+                        type: 'linear',
+                        position: 'left',
+                        grid: { color: gridColor },
+                        ticks: { color: tickColor, stepSize: 1 },
+                        beginAtZero: true,
+                    },
+                    ySiparis: {
+                        type: 'linear',
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: { color: tickColor, stepSize: 1 },
+                        beginAtZero: true,
+                    }
+                };
+
+                chart.options.plugins.legend = { display: true, position: 'top', labels: { color: tickColor, font: { size: 12 } } };
+                chart.options.plugins.tooltip = Object.assign({}, commonTooltip, {
+                    callbacks: {
+                        label: function (ctx) {
+                            if (ctx.dataset.yAxisID === 'yUrun') {
                                 return ' Satılan Ürün: ' + ctx.parsed.y + ' adet';
                             }
                             return ' Sipariş Sayısı: ' + ctx.parsed.y + ' adet';
