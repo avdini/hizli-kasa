@@ -227,7 +227,8 @@
     border: 1px solid var(--hk-border, rgba(0, 0, 0, 0.08));
 }
 
-.stat-trend-toggle-btn {
+.stat-trend-toggle-btn,
+.stat-dagilim-toggle-btn {
     background: transparent;
     border: none;
     padding: 5px 12px;
@@ -240,11 +241,13 @@
     user-select: none;
 }
 
-.stat-trend-toggle-btn:hover {
+.stat-trend-toggle-btn:hover,
+.stat-dagilim-toggle-btn:hover {
     color: var(--hk-text-main, #1e293b);
 }
 
-.stat-trend-toggle-btn.active {
+.stat-trend-toggle-btn.active,
+.stat-dagilim-toggle-btn.active {
     background: var(--hk-card-bg, #ffffff);
     color: var(--hk-primary, #3b82f6);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
@@ -256,7 +259,8 @@
     border-color: rgba(255, 255, 255, 0.1);
 }
 
-#hizli-kasa-app.theme-dark .stat-trend-toggle-btn.active {
+#hizli-kasa-app.theme-dark .stat-trend-toggle-btn.active,
+#hizli-kasa-app.theme-dark .stat-dagilim-toggle-btn.active {
     background: #334155;
     color: #38bdf8;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);

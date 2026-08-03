@@ -150,9 +150,21 @@
                 html += '</div>';
             }
 
-            // Sepet & Ürün Ortalamaları Grafiği
+            // Sepet Dağılım Analizi Grafiği (Eski Sepet & Ürün Ortalamaları)
+            if (!self.activeDagilimMode) {
+                self.activeDagilimMode = 'tutar';
+            }
             html += '<div class="stat-chart-card">';
-            html += '<div class="stat-chart-header"><h4 class="stat-chart-title">📊 Sepet & Ürün Ortalamaları</h4><span class="stat-chart-badge">Ortalama Tutar & Adet</span></div>';
+            html += '<div class="stat-chart-header stat-main-trend-header">';
+            html += '<div>';
+            html += '<h4 class="stat-chart-title">📊 Sepet Dağılım Analizi</h4>';
+            html += '<span class="stat-chart-badge" id="stat-dagilim-badge">Sepet Harcama Dilimleri</span>';
+            html += '</div>';
+            html += '<div class="stat-trend-toggle-wrap">';
+            html += '<button class="stat-dagilim-toggle-btn' + (self.activeDagilimMode === 'tutar' ? ' active' : '') + '" data-mode="tutar">💰 Tutar Aralığı</button>';
+            html += '<button class="stat-dagilim-toggle-btn' + (self.activeDagilimMode === 'adet' ? ' active' : '') + '" data-mode="adet">📦 Ürün Adedi</button>';
+            html += '</div>';
+            html += '</div>';
             html += '<div class="stat-chart-body"><canvas id="stat-chart-ortalamalar"></canvas></div>';
             html += '</div>';
 
@@ -300,102 +312,22 @@
                 });
             }
 
-            // --- Sepet & Ürün Ortalamaları Chart ---
+            // --- Sepet Dağılım Analizi Chart ---
             if (document.getElementById('stat-chart-ortalamalar')) {
-                var isSingleDay = (gunluk.length <= 1);
-                var ortLabels = [];
-                var ortTutarData = [];
-                var ortAdetData = [];
+                self._initDagilimChart(data, gridColor, tickColor, commonTooltip);
 
-                if (!isSingleDay) {
-                    ortLabels    = gunluk.map(function (g) { return g.tarih_kisa; });
-                    ortTutarData = gunluk.map(function (g) {
-                        var count = g.siparis_sayisi || 0;
-                        return count > 0 ? parseFloat((g.toplam / count).toFixed(2)) : 0;
-                    });
-                    ortAdetData = gunluk.map(function (g) {
-                        var count = g.siparis_sayisi || 0;
-                        return count > 0 ? parseFloat(((g.urun_adedi || 0) / count).toFixed(1)) : 0;
-                    });
-                } else {
-                    ortLabels    = saatlik.map(function (s) { return s.saat; });
-                    ortTutarData = saatlik.map(function (s) {
-                        var count = s.count || 0;
-                        return count > 0 ? parseFloat((s.total / count).toFixed(2)) : 0;
-                    });
-                    ortAdetData = saatlik.map(function (s) {
-                        var count = s.count || 0;
-                        return count > 0 ? parseFloat(((s.items || 0) / count).toFixed(1)) : 0;
-                    });
-                }
+                panel.querySelectorAll('.stat-dagilim-toggle-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var mode = this.dataset.mode;
+                        if (mode === self.activeDagilimMode) return;
+                        self.activeDagilimMode = mode;
 
-                self.charts.ortalamalar = new Chart(document.getElementById('stat-chart-ortalamalar'), {
-                    type: 'line',
-                    data: {
-                        labels: ortLabels,
-                        datasets: [
-                            {
-                                label: 'Ort. Sepet Tutarı (₺)',
-                                data: ortTutarData,
-                                borderColor: '#6366f1',
-                                backgroundColor: 'rgba(99,102,241,0.12)',
-                                fill: true,
-                                tension: 0.4,
-                                borderWidth: 2,
-                                pointRadius: 3,
-                                yAxisID: 'yTutar',
-                            },
-                            {
-                                label: 'Sepet Başı Ürün',
-                                data: ortAdetData,
-                                borderColor: '#ec4899',
-                                backgroundColor: 'rgba(236,72,153,0.10)',
-                                fill: false,
-                                tension: 0.4,
-                                borderWidth: 2,
-                                pointRadius: 3,
-                                yAxisID: 'yAdet',
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        interaction: { mode: 'index', intersect: false },
-                        plugins: {
-                            legend: { labels: { color: tickColor, font: { size: 12 } } },
-                            tooltip: Object.assign({}, commonTooltip, {
-                                callbacks: {
-                                    label: function (ctx) {
-                                        if (ctx.dataset.yAxisID === 'yTutar') {
-                                            return ' Ort. Sepet: ₺ ' + self._num(ctx.parsed.y);
-                                        }
-                                        return ' Ort. Ürün: ' + ctx.parsed.y + ' adet/sepet';
-                                    }
-                                }
-                            })
-                        },
-                        scales: {
-                            x: { grid: { display: false }, ticks: { color: tickColor } },
-                            yAdet: {
-                                type: 'linear',
-                                position: 'left',
-                                grid: { color: gridColor },
-                                ticks: { color: tickColor, stepSize: 0.5 },
-                                beginAtZero: true,
-                            },
-                            yTutar: {
-                                type: 'linear',
-                                position: 'right',
-                                grid: { drawOnChartArea: false },
-                                ticks: {
-                                    color: tickColor,
-                                    callback: function (v) { return '₺' + self._num(v); }
-                                },
-                                beginAtZero: true,
-                            }
-                        }
-                    }
+                        panel.querySelectorAll('.stat-dagilim-toggle-btn').forEach(function (b) {
+                            b.classList.toggle('active', b.dataset.mode === mode);
+                        });
+
+                        self._updateDagilimChart(data, gridColor, tickColor, commonTooltip);
+                    });
                 });
             }
 
@@ -1050,6 +982,100 @@
                 });
 
                 chart.options.onClick = null;
+            }
+
+            chart.update();
+        },
+
+        /* -------------------------------------------------
+           SEPET DAĞILIM ANALİZİ CHART (TUTAR / ÜRÜN ADEDİ)
+        ------------------------------------------------- */
+        _initDagilimChart: function (data, gridColor, tickColor, commonTooltip) {
+            var self = this;
+            var canvas = document.getElementById('stat-chart-ortalamalar');
+            if (!canvas) return;
+
+            self.charts.ortalamalar = new Chart(canvas, {
+                type: 'bar',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    borderRadius: 6,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: Object.assign({}, commonTooltip, {
+                            callbacks: {
+                                label: function (ctx) {
+                                    var dagilim = data.sepet_dagilimi || {};
+                                    var totalSip = (data.kpi || {}).siparis_sayisi || 0;
+                                    var mode = self.activeDagilimMode || 'tutar';
+                                    var list = dagilim[mode] || [];
+                                    var item = list[ctx.dataIndex];
+                                    if (!item) return '';
+
+                                    var cnt = item.count || 0;
+                                    var pct = totalSip > 0 ? ((cnt / totalSip) * 100).toFixed(1) : '0';
+                                    var lines = [' Sipariş: ' + cnt + ' adet (%' + pct + ')'];
+                                    if (mode === 'tutar' && item.total !== undefined) {
+                                        lines.push(' Toplam Ciro: ₺ ' + self._num(item.total));
+                                    }
+                                    return lines;
+                                }
+                            }
+                        })
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: tickColor } },
+                        y: {
+                            grid: { color: gridColor },
+                            ticks: {
+                                color: tickColor,
+                                precision: 0,
+                                callback: function (v) { return v + ' sp'; }
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            self._updateDagilimChart(data, gridColor, tickColor, commonTooltip);
+        },
+
+        _updateDagilimChart: function (data, gridColor, tickColor, commonTooltip) {
+            var self = this;
+            var chart = self.charts.ortalamalar;
+            if (!chart) return;
+
+            var mode = self.activeDagilimMode || 'tutar';
+            var badgeEl = document.getElementById('stat-dagilim-badge');
+            var dagilim = data.sepet_dagilimi || {};
+            var list = dagilim[mode] || [];
+
+            var labels = list.map(function (item) { return item.label; });
+            var counts = list.map(function (item) { return item.count || 0; });
+
+            if (mode === 'tutar') {
+                if (badgeEl) badgeEl.innerText = 'Sepet Harcama Dilimleri';
+                chart.data.labels = labels;
+                chart.data.datasets = [{
+                    label: 'Sipariş Sayısı',
+                    data: counts,
+                    backgroundColor: 'rgba(99, 102, 241, 0.85)',
+                    hoverBackgroundColor: '#4f46e5',
+                    borderRadius: 6,
+                }];
+            } else {
+                if (badgeEl) badgeEl.innerText = 'Sepetteki Ürün Sayısı';
+                chart.data.labels = labels;
+                chart.data.datasets = [{
+                    label: 'Sipariş Sayısı',
+                    data: counts,
+                    backgroundColor: 'rgba(236, 72, 153, 0.85)',
+                    hoverBackgroundColor: '#db2777',
+                    borderRadius: 6,
+                }];
             }
 
             chart.update();

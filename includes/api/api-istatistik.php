@@ -75,6 +75,22 @@ function hizli_kasa_statistics_summary($request) {
     $iskonto_saat_map = [];
     $iskonto_gun_map  = [];
 
+    // Sepet Dağılım Map'leri
+    $sepet_tutar_map = [
+        '0_100'     => ['label' => '0-100 ₺',     'count' => 0, 'total' => 0],
+        '100_250'   => ['label' => '100-250 ₺',   'count' => 0, 'total' => 0],
+        '250_500'   => ['label' => '250-500 ₺',   'count' => 0, 'total' => 0],
+        '500_1000'  => ['label' => '500-1.000 ₺', 'count' => 0, 'total' => 0],
+        '1000_plus' => ['label' => '1.000 ₺+',    'count' => 0, 'total' => 0],
+    ];
+
+    $sepet_adet_map = [
+        '1'      => ['label' => '1 Ürün',   'count' => 0],
+        '2_3'    => ['label' => '2-3 Ürün', 'count' => 0],
+        '4_5'    => ['label' => '4-5 Ürün', 'count' => 0],
+        '6_plus' => ['label' => '6+ Ürün',  'count' => 0],
+    ];
+
     foreach ($orders as $order) {
         $order_total = (float) $order->get_total();
         $is_refund   = ($order->get_meta('_hizli_kasa_is_refund') === 'yes');
@@ -118,6 +134,35 @@ function hizli_kasa_statistics_summary($request) {
         if ($order_discount > 0) {
             $toplam_iskonto += $order_discount;
             $iskonto_siparis_sayisi++;
+        }
+
+        // Sepet Tutar Aralığı Dağılımı
+        if ($order_total < 100) {
+            $sepet_tutar_map['0_100']['count']++;
+            $sepet_tutar_map['0_100']['total'] += $order_total;
+        } elseif ($order_total < 250) {
+            $sepet_tutar_map['100_250']['count']++;
+            $sepet_tutar_map['100_250']['total'] += $order_total;
+        } elseif ($order_total < 500) {
+            $sepet_tutar_map['250_500']['count']++;
+            $sepet_tutar_map['250_500']['total'] += $order_total;
+        } elseif ($order_total < 1000) {
+            $sepet_tutar_map['500_1000']['count']++;
+            $sepet_tutar_map['500_1000']['total'] += $order_total;
+        } else {
+            $sepet_tutar_map['1000_plus']['count']++;
+            $sepet_tutar_map['1000_plus']['total'] += $order_total;
+        }
+
+        // Sepet Ürün Adet Aralığı Dağılımı
+        if ($order_item_qty <= 1) {
+            $sepet_adet_map['1']['count']++;
+        } elseif ($order_item_qty <= 3) {
+            $sepet_adet_map['2_3']['count']++;
+        } elseif ($order_item_qty <= 5) {
+            $sepet_adet_map['4_5']['count']++;
+        } else {
+            $sepet_adet_map['6_plus']['count']++;
         }
 
         // Saatlik dağılım
@@ -360,6 +405,13 @@ function hizli_kasa_statistics_summary($request) {
         'iskonto_trend'   => $iskonto_trend,
         'kasiyerler'      => $kasiyerler,
         'top_urunler'     => $top_urunler,
+        'sepet_dagilimi'  => [
+            'tutar' => array_values(array_map(function($v) {
+                $v['total'] = round($v['total'], 2);
+                return $v;
+            }, $sepet_tutar_map)),
+            'adet' => array_values($sepet_adet_map),
+        ],
     ];
 
     if ($cache_aktif) {
