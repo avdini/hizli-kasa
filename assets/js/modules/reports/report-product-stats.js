@@ -373,9 +373,18 @@
                 html +=   '</div>';
 
                 if (vars.length > 1) {
-                    html += '<div class="psr-chart-wrap">';
+                    html += '<div class="psr-chart-wrap stat-odeme-card">';
                     html +=   '<div class="psr-chart-header"><h4 class="stat-chart-title">🎨 Varyasyon Dağılımı</h4><span class="stat-chart-badge">' + vars.length + ' varyasyon</span></div>';
-                    html +=   '<div class="psr-chart-body stat-doughnut-wrap"><canvas id="psr-chart-vars"></canvas></div>';
+                    html +=   '<div class="psr-chart-body stat-odeme-body">';
+                    html +=     '<div class="stat-odeme-chart-wrap">';
+                    html +=       '<canvas id="psr-chart-vars"></canvas>';
+                    html +=       '<div class="stat-odeme-center-text">';
+                    html +=         '<span class="stat-odeme-center-label">TOPLAM</span>';
+                    html +=         '<span class="stat-odeme-center-val" id="psr-vars-center-total">0 Adet</span>';
+                    html +=       '</div>';
+                    html +=     '</div>';
+                    html +=     '<div class="stat-odeme-legend-list" id="psr-vars-legend-list"></div>';
+                    html +=   '</div>';
                     html += '</div>';
                 }
                 html += '</div>';
@@ -553,9 +562,56 @@
                 });
             }
 
-            // Variation Doughnut
+            // Variation Doughnut (Side-by-side Layout with Custom Legend matching stat-odeme-card)
             if (vars.length > 1 && document.getElementById('psr-chart-vars')) {
                 var varColors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#06b6d4','#ec4899','#84cc16'];
+                var totalVarsAdet = vars.reduce(function (acc, v) { return acc + (parseInt(v.satis_adet, 10) || 0); }, 0);
+
+                var centerTotalEl = document.getElementById('psr-vars-center-total');
+                if (centerTotalEl) {
+                    centerTotalEl.innerText = totalVarsAdet + ' Adet';
+                }
+
+                var legendListEl = document.getElementById('psr-vars-legend-list');
+                if (legendListEl) {
+                    var legendHtml = '';
+                    vars.forEach(function (v, idx) {
+                        var color = varColors[idx % varColors.length];
+                        var vAdet = parseInt(v.satis_adet, 10) || 0;
+                        var pct = totalVarsAdet > 0 ? ((vAdet / totalVarsAdet) * 100).toFixed(1) : '0';
+                        legendHtml += '<div class="stat-odeme-legend-item" data-idx="' + idx + '">';
+                        legendHtml +=   '<div class="stat-odeme-item-left">';
+                        legendHtml +=     '<span class="stat-odeme-dot" style="background-color:' + color + '"></span>';
+                        legendHtml +=     '<span class="stat-odeme-item-name">' + self._esc(v.name) + '</span>';
+                        legendHtml +=   '</div>';
+                        legendHtml +=   '<div class="stat-odeme-item-right">';
+                        legendHtml +=     '<span class="stat-odeme-item-val">' + vAdet + ' adet</span>';
+                        legendHtml +=     '<span class="stat-odeme-item-pct">%' + pct + '</span>';
+                        legendHtml +=   '</div>';
+                        legendHtml += '</div>';
+                    });
+                    legendListEl.innerHTML = legendHtml;
+
+                    // Hover interaction (highlight doughnut segment on legend hover)
+                    legendListEl.querySelectorAll('.stat-odeme-legend-item').forEach(function (el) {
+                        el.addEventListener('mouseenter', function () {
+                            var idx = parseInt(this.dataset.idx, 10);
+                            if (self.charts.vars) {
+                                self.charts.vars.setActiveElements([{ datasetIndex: 0, index: idx }]);
+                                self.charts.vars.tooltip.setActiveElements([{ datasetIndex: 0, index: idx }]);
+                                self.charts.vars.update();
+                            }
+                        });
+                        el.addEventListener('mouseleave', function () {
+                            if (self.charts.vars) {
+                                self.charts.vars.setActiveElements([]);
+                                self.charts.vars.tooltip.setActiveElements([]);
+                                self.charts.vars.update();
+                            }
+                        });
+                    });
+                }
+
                 self.charts.vars = new Chart(document.getElementById('psr-chart-vars'), {
                     type: 'doughnut',
                     data: {
@@ -565,17 +621,25 @@
                             backgroundColor: vars.map(function (_, i) { return varColors[i % varColors.length]; }),
                             borderWidth: 0,
                             hoverOffset: 10,
+                            clip: false,
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '65%',
+                        cutout: '74%',
+                        layout: {
+                            padding: 4
+                        },
                         plugins: {
-                            legend: { position: 'bottom', labels: { color: tickColor, padding: 12, font: { size: 11 } } },
+                            legend: { display: false },
                             tooltip: Object.assign({}, commonTooltip, {
                                 callbacks: {
-                                    label: function (ctx) { return ' ' + ctx.parsed + ' adet'; }
+                                    label: function (ctx) {
+                                        var val = ctx.parsed;
+                                        var pct = totalVarsAdet > 0 ? ((val / totalVarsAdet) * 100).toFixed(1) : '0';
+                                        return ' ' + ctx.label + ': ' + val + ' adet (%' + pct + ')';
+                                    }
                                 }
                             })
                         }
