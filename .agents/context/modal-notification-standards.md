@@ -153,7 +153,11 @@ HK.UI = {
       "Enter": "Triggers #hk-global-dialog-confirm",
       "Escape": "Triggers #hk-global-dialog-cancel"
     },
-    "touch_target_min_height": "44px"
+    "touch_target_min_height": "44px",
+    "receipt_modal_focus": {
+      "display_focus": "#fis-yazdir-tetik (Fiş Yazdır - Enter)",
+      "afterprint_restore": "Restores window.focus() and #fis-yazdir-tetik focus on browser print completion so ESC closes modal without click requirement."
+    }
   },
   "sound_integration": {
     "source_state": "window.HK_DATA.soundSettings",

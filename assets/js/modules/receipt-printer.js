@@ -265,6 +265,15 @@
 
         currentOrderId: 0,
 
+        modalGoster: function() {
+            var modal = document.getElementById("fis-onay-modal");
+            if (modal) {
+                modal.style.display = "flex";
+                var printBtn = document.getElementById("fis-yazdir-tetik");
+                if (printBtn) printBtn.focus();
+            }
+        },
+
         /**
          * Yazdır/Kapat butonları ve klavye kısayollarını bağla
          */
@@ -306,7 +315,19 @@
                     modal.style.display = "none";
                 }
             });
+
+            window.addEventListener("afterprint", function() {
+                var modal = document.getElementById("fis-onay-modal");
+                if (!modal) return;
+                var isVisible = modal.style.display !== "none" && modal.style.display !== "" && window.getComputedStyle(modal).display !== "none";
+                if (isVisible) {
+                    window.focus();
+                    var printBtn = document.getElementById("fis-yazdir-tetik");
+                    if (printBtn) printBtn.focus();
+                }
+            });
         }
     };
 
 })(window.HizliKasa);
+

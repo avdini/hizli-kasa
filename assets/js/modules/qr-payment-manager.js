@@ -459,8 +459,16 @@
                     if (HK.ReceiptPrinter && typeof HK.ReceiptPrinter.fisHazirla === 'function') {
                         HK.ReceiptPrinter.fisHazirla(orderResult);
                     }
-                    var fisModal = document.getElementById("fis-onay-modal");
-                    if (fisModal) fisModal.style.display = "flex";
+                    if (HK.ReceiptPrinter && typeof HK.ReceiptPrinter.modalGoster === 'function') {
+                        HK.ReceiptPrinter.modalGoster();
+                    } else {
+                        var fisModal = document.getElementById("fis-onay-modal");
+                        if (fisModal) {
+                            fisModal.style.display = "flex";
+                            var printBtn = document.getElementById("fis-yazdir-tetik");
+                            if (printBtn) printBtn.focus();
+                        }
+                    }
                 }
             } catch (e) {
                 console.warn("Receipt fetch error", e);
