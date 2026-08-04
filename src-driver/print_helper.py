@@ -21,13 +21,18 @@ except ImportError:
     winreg = None
     pystray = None
 
-# Config location: %APPDATA%/HizliKasa/config.json
-APPDATA_DIR = os.path.join(os.environ.get('APPDATA', ''), 'HizliKasa')
+# Config location: %APPDATA%/WebPrintHelper/config.json
+APPDATA_DIR = os.path.join(os.environ.get('APPDATA', ''), 'WebPrintHelper')
 CONFIG_PATH = os.path.join(APPDATA_DIR, 'config.json')
+
+# Backward compatibility / migration path from legacy HizliKasa config
+OLD_APPDATA_DIR = os.path.join(os.environ.get('APPDATA', ''), 'HizliKasa')
+OLD_CONFIG_PATH = os.path.join(OLD_APPDATA_DIR, 'config.json')
 
 # Windows Startup Registry Configuration
 REG_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
-REG_NAME = "HizliKasaPrintHelper"
+REG_NAME = "WebPrintHelper"
+OLD_REG_NAME = "HizliKasaPrintHelper"
 
 def is_startup_enabled():
     if winreg is None:
@@ -50,6 +55,13 @@ def ensure_startup_registered():
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_KEY, 0, winreg.KEY_WRITE)
         exe_path = os.path.abspath(sys.argv[0])
         winreg.SetValueEx(key, REG_NAME, 0, winreg.REG_SZ, f'"{exe_path}"')
+        
+        # Cleanup legacy registry key if it exists
+        try:
+            winreg.DeleteValue(key, OLD_REG_NAME)
+        except Exception:
+            pass
+
         winreg.CloseKey(key)
     except Exception as e:
         print(f"Startup registration error: {e}")
@@ -77,20 +89,31 @@ def toggle_startup(icon, item):
     icon.update_menu()
 
 def load_config():
-    if not os.path.exists(CONFIG_PATH):
-        return {}
-    try:
-        with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except Exception:
-        return {}
+    if os.path.exists(CONFIG_PATH):
+        try:
+            with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
 
-def save_config(config):
+    # Migration from old config if available
+    if os.path.exists(OLD_CONFIG_PATH):
+        try:
+            with open(OLD_CONFIG_PATH, 'r', encoding='utf-8') as f:
+                cfg = json.load(f)
+                save_config(cfg)
+                return cfg
+        except Exception:
+            pass
+
+    return {}
+
+def save_config(config_data):
     if not os.path.exists(APPDATA_DIR):
         os.makedirs(APPDATA_DIR, exist_ok=True)
     try:
         with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
-            json.dump(config, f, ensure_ascii=False, indent=4)
+            json.dump(config_data, f, ensure_ascii=False, indent=4)
         return True
     except Exception as e:
         print(f"Error saving config: {e}")
@@ -158,6 +181,7 @@ class PrintHelperHandler(BaseHTTPRequestHandler):
             is_paired = 'token' in config and config['token']
             self.respond_json(200, {
                 'status': 'active',
+                'service': 'web-print-helper',
                 'paired': is_paired
             }, origin)
             return
@@ -215,7 +239,7 @@ class PrintHelperHandler(BaseHTTPRequestHandler):
             config['origin'] = origin_site
             
             if save_config(config):
-                self.respond_json(200, {'success': True, 'message': 'Successfully paired with Hızlı Kasa'}, origin)
+                self.respond_json(200, {'success': True, 'message': 'Successfully paired with Web Print Helper'}, origin)
             else:
                 self.respond_json(500, {'error': 'Failed to save pairing configuration'}, origin)
             return
@@ -259,7 +283,7 @@ class PrintHelperHandler(BaseHTTPRequestHandler):
                     hdc = win32ui.CreateDC()
                     hdc.CreatePrinterDC(printer_name)
                     
-                    hdc.StartDoc("Hizli Kasa Print Job")
+                    hdc.StartDoc("Web Print Helper Job")
                     hdc.StartPage()
                     
                     printable_width = hdc.GetDeviceCaps(win32con.HORZRES)
@@ -300,20 +324,20 @@ class PrintHelperHandler(BaseHTTPRequestHandler):
 
 
 def create_tray_icon_image():
-    image = Image.new('RGB', (64, 64), color='#00A32A')
+    image = Image.new('RGB', (64, 64), color='#2563EB')
     dc = ImageDraw.Draw(image)
     dc.rectangle([16, 24, 48, 52], fill='white')
     dc.line([20, 36, 44, 36], fill='black', width=3)
     dc.rectangle([22, 12, 42, 24], fill='white')
     dc.rectangle([24, 44, 40, 58], fill='white')
-    dc.ellipse([20, 28, 24, 32], fill='#00A32A')
+    dc.ellipse([20, 28, 24, 32], fill='#2563EB')
     return image
 
 httpd_server = None
 
 def exit_action(icon, item):
     global httpd_server
-    print("Exiting Print Helper...")
+    print("Exiting Web Print Helper...")
     if httpd_server:
         threading.Thread(target=httpd_server.shutdown).start()
     icon.stop()
@@ -344,19 +368,19 @@ def run(server_class=HTTPServer, handler_class=PrintHelperHandler, start_port=50
     server_thread.daemon = True
     server_thread.start()
     
-    print(f"Hızlı Kasa Print Helper active on http://127.0.0.1:{port}")
+    print(f"Web Print Helper active on http://127.0.0.1:{port}")
     
     if pystray is not None:
         try:
             icon_image = create_tray_icon_image()
             icon = pystray.Icon(
-                "hizli_kasa_print_helper",
+                "web_print_helper",
                 icon_image,
-                title=f"Hızlı Kasa Yazdırma Yardımcısı (Port: {port})",
+                title=f"Web Print Helper (Port: {port})",
                 menu=pystray.Menu(
-                    pystray.MenuItem(f"Durum: Çalışıyor (Port: {port})", lambda: None, enabled=False),
-                    pystray.MenuItem("Windows ile Birlikte Başlat", toggle_startup, checked=lambda item: is_startup_enabled()),
-                    pystray.MenuItem("Kapat / Çıkış", exit_action)
+                    pystray.MenuItem(f"Status: Running (Port: {port})", lambda: None, enabled=False),
+                    pystray.MenuItem("Run at Startup / Başlangıçta Çalıştır", toggle_startup, checked=lambda item: is_startup_enabled()),
+                    pystray.MenuItem("Exit / Çıkış", exit_action)
                 )
             )
             icon.run()
@@ -378,6 +402,7 @@ def run(server_class=HTTPServer, handler_class=PrintHelperHandler, start_port=50
 def kill_older_instances():
     my_pid = os.getpid()
     try:
+        subprocess.run(f'taskkill /F /IM web-print-helper.exe /FI "PID ne {my_pid}"', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(f'taskkill /F /IM hizli-kasa-print-helper.exe /FI "PID ne {my_pid}"', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         subprocess.run(f'taskkill /F /IM print_helper.exe /FI "PID ne {my_pid}"', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except Exception as e:

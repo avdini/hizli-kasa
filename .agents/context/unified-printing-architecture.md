@@ -25,8 +25,8 @@ Tüm yazdırma süreçleri 4 katmanlı bir yapı üzerinden yönetilir:
    - Sipariş hiç değişmediyse: **Orijinal POS Satış Fişi (`receipt-original.php`)** render edilir.
    - Sipariş iade, değişim, indirim veya kalem revizyonu gördüyse: **İşlem Görmüş Fiş (`receipt-modified.php`)** (eksi iadeler, net kalan ürünler, değişim farkı ve işlem tarihçesi rozeti) render edilir.
 4. **Sürücü Seçimi (Driver Strategy Pattern):**
-   - Yerel `hizli-kasa-print-helper.exe` servisi (port 5001-5010) aktif ise `HelperAppDriver` ile tarayıcı popup'ı olmadan sessiz basılır.
-   - Servis kapalıysa veya sessiz yazdırma pasifse `BrowserNativeDriver` ile tarayıcı `window.print()` ve `@page` dinamik CSS kuralları devreye girer.
+1. **Birincil (Sessiz Baskı):** Yerel `web-print-helper.exe` (Web Print Helper) servisi (port 5001-5010) aktif ise `HelperAppDriver` ile tarayıcı popup'ı olmadan sessiz basılır.
+2. **Yedek (Tarayıcı Popup):** Helper servisi bulunamazsa `NativePrintDriver` devreye girer ve standart `window.print()` ve `@page` dinamik CSS kuralları devreye girer.
 
 ---
 

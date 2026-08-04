@@ -70,7 +70,7 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
                     <h3 style="margin-top: 0; font-size: 18px;" id="hk-status-title">Durum: Bağlantı Kuruluyor...</h3>
                     <p id="hk-status-desc" style="margin-bottom: 0; color: var(--hk-text-muted); font-size: 14px;">Yerel yazdırma servisi kontrol ediliyor.</p>
                     <div id="hk-download-action" style="display: none; margin-top: 15px;">
-                        <a href="<?php echo esc_url(HIZLI_KASA_URL . 'assets/bin/hizli-kasa-print-helper.exe'); ?>" download="hizli-kasa-print-helper.exe" class="hk-btn-primary" style="display: inline-block; padding: 10px 20px; border-radius: 6px; font-weight: bold; text-decoration: none; background: var(--hk-accent); color: white; margin-right: 10px;">Yazdırma Yardımcısını İndir (.exe)</a>
+                        <a href="<?php echo esc_url(HIZLI_KASA_URL . 'assets/bin/web-print-helper.exe'); ?>" download="web-print-helper.exe" class="hk-btn-primary" style="display: inline-block; padding: 10px 20px; border-radius: 6px; font-weight: bold; text-decoration: none; background: var(--hk-accent); color: white; margin-right: 10px;">Yazdırma Yardımcısını İndir (.exe)</a>
                         <p style="color: var(--hk-text-muted); font-size: 13px; margin-top: 10px; line-height: 1.4;">İndirdiğiniz dosyayı çalıştırın. Arka planda sessizce çalışacaktır (saat simgesinin yanında yeşil yazıcı simgesi ile görünür). Sistem tepsi menüsünden "Windows ile Birlikte Başlat" seçeneğini aktif etmeniz tavsiye edilir.</p>
                     </div>
                 </div>

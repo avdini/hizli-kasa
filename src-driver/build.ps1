@@ -1,14 +1,14 @@
-# Hizli Kasa Print Helper Build Script
+# Web Print Helper Build Script
 $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $ProjectRoot = Resolve-Path "$ScriptDir\.."
 
-Write-Host "1. PyInstaller ile Hizli Kasa Print Helper derleniyor..." -ForegroundColor Yellow
-pyinstaller --noconfirm --onefile --windowed --version-file="$ScriptDir\version.txt" --name="hizli-kasa-print-helper" "$ScriptDir\print_helper.py"
+Write-Host "1. PyInstaller ile Web Print Helper derleniyor..." -ForegroundColor Yellow
+pyinstaller --noconfirm --onefile --windowed --icon="$ScriptDir\icon.ico" --version-file="$ScriptDir\version.txt" --name="web-print-helper" "$ScriptDir\print_helper.py"
 
-$BuiltExe = "$ProjectRoot\dist\hizli-kasa-print-helper.exe"
-$TargetExe = "$ProjectRoot\assets\bin\hizli-kasa-print-helper.exe"
+$BuiltExe = "$ProjectRoot\dist\web-print-helper.exe"
+$TargetExe = "$ProjectRoot\assets\bin\web-print-helper.exe"
 
 if (Test-Path $BuiltExe) {
     Write-Host "2. Derlenen .exe dosyasi assets/bin/ klasorune guncelleniyor..." -ForegroundColor Yellow

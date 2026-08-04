@@ -14,13 +14,13 @@ VSVersionInfo(
       [
         StringTable(
           u'040904B0',
-          [StringStruct(u'CompanyName', u'Hızlı Kasa POS'),
-           StringStruct(u'FileDescription', u'Hızlı Kasa POS Local Print Helper Service'),
+          [StringStruct(u'CompanyName', u'WebPrintHelper'),
+           StringStruct(u'FileDescription', u'Web Print Helper - Local Thermal Print Service'),
            StringStruct(u'FileVersion', u'1.0.0.0'),
-           StringStruct(u'InternalName', u'hizli-kasa-print-helper.exe'),
-           StringStruct(u'LegalCopyright', u'Copyright © 2026 Seyfullah Kurt'),
-           StringStruct(u'OriginalFilename', u'hizli-kasa-print-helper.exe'),
-           StringStruct(u'ProductName', u'Hızlı Kasa Print Helper'),
+           StringStruct(u'InternalName', u'web-print-helper.exe'),
+           StringStruct(u'LegalCopyright', u'Copyright (c) 2026 Seyfullah Kurt'),
+           StringStruct(u'OriginalFilename', u'web-print-helper.exe'),
+           StringStruct(u'ProductName', u'Web Print Helper'),
            StringStruct(u'ProductVersion', u'1.0.0.0')])
       ]
     ),
