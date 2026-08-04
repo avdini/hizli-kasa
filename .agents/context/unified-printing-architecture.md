@@ -121,10 +121,25 @@ await HK.PrintCore.print({
 
 ---
 
-## 7. Termal Z-Raporu & Fiş Baskı Standartları
+## 7. Termal Z-Raporu, Fiş Baskı & Tarayıcı Rasterizasyon Standartları
 
-1. **Font Yumuşatmayı Kapatma:** Termal yazıcı kafasında harflerin flu/bulanık görünmemesi için container üzerinde `-webkit-font-smoothing: none !important; font-smooth: never !important; text-rendering: pixelated !important;` kuralları zorunludur.
-2. **Saf Monochrome Renkler:** Arka plan saf beyaz (`#ffffff`), tüm metinler ve çizgiler saf siyah (`#000000`) olmalıdır. İnce gri (`#888`, `#ccc`) veya silik tonlar dither gürültüsüne sebep olduğu için kesinlikle kullanılmaz.
-3. **Keskin Kenarlıklar:** Ayraç ve çizgi alanlarında sub-pixel (ör. `0.5px`) kullanılmamalı, en az `1px solid #000000` ve ana bölüm separatörlerinde `2px solid #000000` tercih edilmelidir.
-4. **Monospace Font Ailesi:** Metin ve rakam sütun hizalamalarının bozulmaması için `'Courier New', 'Consolas', 'Lucida Console', 'Monaco', monospace` font ailesi ve `table-layout: fixed;` kullanılmalıdır.
+Termal yazıcılar (203 DPI) ve sessiz yazdırma kütüphaneleri (`html2canvas` -> PNG -> 1-bit Monochrome) mimarisinde çıktıların kapkara, net ve okunaklı basılması için aşağıdaki kurallara **kesinlikle uyulmalıdır**:
+
+1. **Font Çizgi Kalınlığı (Stroke Width) & Font Seçimi:**
+   - **`Courier New` Tuzağı:** Normal punto ve normal kalınlıktaki (weight 400) `Courier New` fontu harf gövde çizgilerinde ~1 piksel genişliğindedir. Termal yazıcı kafaları 1-pixel ince çizgilere yeterli ısı yoğunluğu veremez; bu durum `e`, `a`, `0` gibi harflerin eksik veya silik basılmasına sebep olur.
+   - **Doğru Font Stack:** Fiş ve rapor çıktılarında font ailesi önceliği `Consolas, "Segoe UI Mono", "Courier New", Courier, monospace, sans-serif` olmalıdır. `Consolas` ve modern monospace/sans-serif fontlar daha kalın ve dolgun harf gövdelerine sahiptir.
+
+2. **html2canvas Anti-Aliasing (Gri Kenar) Önleme & Bold Zorunluluk:**
+   - `html2canvas` HTML elemanlarını 2D Canvas'a çizerken harf kenarlarına gri anti-aliasing pikselleri (`#555`, `#888`, `#aaa`) yerleştirir. Termal yazıcı sürücüsü bu PNG'yi 1-bit monochrome baskıya dönüştürürken gri pikseller nokta eksilmesine ve flulaşmaya yol açar.
+   - **Çözüm:** Tüm metinler, tablo sol etiketleri (`td`) ve veriler varsayılan olarak `font-weight: 600` veya `font-weight: bold` ile tanımlanmalıdır. Kalın harf gövdesi anti-aliasing piksellerinin baskıyı bozmasını engeller ve kapkara çıktı alınmasını sağlar.
+
+3. **%100 Mutlak Siyah Renk (#000000) & Gri Ton Yasakları:**
+   - Şablonlarda veya inline stillerde asla `#333`, `#666`, `#888`, `gray`, `rgba(...)` veya şeffaf renkler kullanılamaz. Tüm metin, kenarlık ve tablolarda `color: #000000 !important; background-color: #ffffff !important;` zorunludur.
+
+4. **Minimum Punto & Büyük Harf (Uppercase) Yoğunluğu:**
+   - Tablo içi detay metinlerinde punto `11px` altına düşürülmemeli (`11px - 14px` aralığı tercih edilmeli).
+   - Küçük punto kullanılacak alanlarda `text-transform: uppercase;` uygulanarak harf matrisinin piksel yoğunluğu ve okunabilirliği artırılmalıdır.
+
+5. **Keskin Kenarlıklar (Border Thickening):**
+   - Çizgi ayraçlarında sub-pixel (`0.5px`) kullanılmamalı, alt/üst kenarlıklarda en az `1px solid #000000` ve ana bölüm ayrıcılarında `2px solid #000000` tercih edilmelidir.
 

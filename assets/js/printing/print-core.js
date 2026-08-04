@@ -173,13 +173,14 @@
                 '.price-old::after { display: none !important; } ' +
                 '.price-new { font-size: 13.5pt; font-weight: 900; letter-spacing: -0.8px; line-height: 1; } ' :
                 '@page { size: auto; margin: 0; } ' +
-                'html, body { margin: 0; padding: 0; background: #ffffff; color: #000000; font-family: "Courier New", Courier, monospace; width: ' + width + '; box-sizing: border-box; } ' +
-                '.hk-unified-print-container { padding: 4px 8px !important; box-sizing: border-box !important; } ' +
+                'html, body { margin: 0; padding: 0; background: #ffffff; color: #000000; font-family: Consolas, "Segoe UI Mono", "Courier New", Courier, monospace, sans-serif; font-weight: 600; width: ' + width + '; box-sizing: border-box; } ' +
+                '.hk-unified-print-container { padding: 4px 8px !important; box-sizing: border-box !important; color: #000000 !important; font-family: Consolas, "Segoe UI Mono", "Courier New", Courier, monospace, sans-serif !important; } ' +
+                '.hk-unified-print-container * { color: #000000 !important; font-family: Consolas, "Segoe UI Mono", "Courier New", Courier, monospace, sans-serif !important; } ' +
                 'table { border-collapse: collapse; width: 100%; border: none; margin: 0; padding: 0; } ' +
-                'td, th { padding: 2px 0; border: none; color: #000000; font-family: "Courier New", Courier, monospace; } ' +
+                'td, th { padding: 2px 0; border: none; color: #000000 !important; font-weight: 600; font-family: Consolas, "Segoe UI Mono", "Courier New", Courier, monospace, sans-serif; } ' +
                 '.fis-item-td-left { padding: 1px 0; line-height: 1.1; } ' +
                 '.fis-item-name { font-weight: bold; font-size: 12px; text-transform: uppercase; } ' +
-                '.fis-item-sku-qty { font-size: 10px; } ' +
+                '.fis-item-sku-qty { font-size: 10px; font-weight: bold; } ' +
                 '.fis-item-td-right { text-align: right; padding: 1px 0 1px 10px; vertical-align: middle; white-space: nowrap; } ' +
                 '.fis-item-price { font-weight: bold; font-size: 13px; } ';
 

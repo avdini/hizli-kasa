@@ -451,7 +451,13 @@
 
                 var dateStart = (document.getElementById('rhub-tarih-bas') || {}).value || self._today();
                 var dateEnd   = (document.getElementById('rhub-tarih-bit') || {}).value || self._today();
-                var tarihLabel = (dateStart === dateEnd) ? dateStart : (dateStart + ' - ' + dateEnd);
+                var fmtD = function(str) {
+                    var p = String(str || '').split('-');
+                    return (p.length === 3 && p[0].length === 4) ? (p[2] + '.' + p[1] + '.' + p[0]) : str;
+                };
+                var dStartFmt = fmtD(dateStart);
+                var dEndFmt   = fmtD(dateEnd);
+                var tarihLabel = (dateStart === dateEnd) ? dStartFmt : (dStartFmt + ' - ' + dEndFmt);
 
                 var storeName = (window.kasaAyar && (window.kasaAyar.magazaAdi || window.kasaAyar.siteName)) ? (window.kasaAyar.magazaAdi || window.kasaAyar.siteName) : 'HIZLI KASA POS';
                 var depoName = '';
@@ -460,15 +466,16 @@
                     if (depoObj && depoObj.adi) depoName = depoObj.adi;
                 }
 
-                var html = '<div class="hk-unified-print-container receipt-zreport" style="font-family:\'Courier New\', \'Consolas\', \'Lucida Console\', \'Monaco\', monospace; color:#000000 !important; background-color:#ffffff !important; width:100%; max-width:300px; margin:0 auto; padding:4px 8px; box-sizing:border-box; font-size:12px; line-height:1.25; letter-spacing:-0.2px; box-shadow:none !important; border:none !important; -webkit-font-smoothing:none !important; -moz-osx-font-smoothing:unset !important; font-smooth:never !important; text-rendering:pixelated !important;">';
+                var fontStack = "Consolas, 'Segoe UI Mono', 'Courier New', Courier, monospace, sans-serif";
+                var html = '<div class="hk-unified-print-container receipt-zreport" style="font-family:' + fontStack + '; font-weight:600; color:#000000 !important; background-color:#ffffff !important; width:100%; max-width:300px; margin:0 auto; padding:4px 8px; box-sizing:border-box; font-size:12px; line-height:1.25; letter-spacing:-0.2px; box-shadow:none !important; border:none !important;">';
 
                 // Header
                 html += '<div style="text-align:center; margin-bottom:8px; border-bottom:2px solid #000000; padding-bottom:8px;">';
-                html += '<h2 style="margin:0; font-size:16px; font-weight:bold; color:#000000; font-family:\'Courier New\', \'Consolas\', \'Lucida Console\', \'Monaco\', monospace;">' + self._esc(storeName) + '</h2>';
-                html += '<p style="margin:4px 0 2px 0; font-size:13px; font-weight:bold; color:#000000; font-family:\'Courier New\', \'Consolas\', \'Lucida Console\', \'Monaco\', monospace;">KASA MASRAF RAPORU</p>';
-                html += '<p style="margin:2px 0 0 0; font-size:11px; color:#000000; font-family:\'Courier New\', \'Consolas\', \'Lucida Console\', \'Monaco\', monospace;">Tarih: ' + self._esc(tarihLabel) + '</p>';
+                html += '<h2 style="margin:0; font-size:16px; font-weight:bold; color:#000000; font-family:' + fontStack + ';">' + self._esc(storeName) + '</h2>';
+                html += '<p style="margin:4px 0 2px 0; font-size:13px; font-weight:bold; color:#000000; font-family:' + fontStack + ';">KASA MASRAF RAPORU</p>';
+                html += '<p style="margin:2px 0 0 0; font-size:11px; font-weight:bold; color:#000000; font-family:' + fontStack + ';">Tarih: ' + self._esc(tarihLabel) + '</p>';
                 if (depoName) {
-                    html += '<p style="margin:2px 0 0 0; font-size:11px; color:#000000; font-family:\'Courier New\', \'Consolas\', \'Lucida Console\', \'Monaco\', monospace;">Depo: ' + self._esc(depoName) + '</p>';
+                    html += '<p style="margin:2px 0 0 0; font-size:11px; font-weight:bold; color:#000000; font-family:' + fontStack + ';">Depo: ' + self._esc(depoName) + '</p>';
                 }
                 html += '</div>';
 
@@ -476,9 +483,9 @@
                 html += '<div style="margin-bottom:8px;">';
                 html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000000; padding-bottom:2px; color:#000000;">ÖZET GİDER</p>';
                 html += '<table style="width:100%; font-size:12px; border-collapse:collapse; color:#000000; table-layout:fixed;">';
-                html += '<tr><td>Harcama Kaydı</td><td style="text-align:right; font-weight:bold;">' + (kpi.toplam_kayit_sayisi || 0) + ' ad.</td></tr>';
-                html += '<tr><td>Nakit Masraf</td><td style="text-align:right; font-weight:bold;">' + self._currency(kpi.nakit_masraf) + '</td></tr>';
-                html += '<tr><td>Kart / IBAN Masrafı</td><td style="text-align:right; font-weight:bold;">' + self._currency(kpi.kart_iban_masraf) + '</td></tr>';
+                html += '<tr><td style="font-weight:600;">Harcama Kaydı</td><td style="text-align:right; font-weight:bold;">' + (kpi.toplam_kayit_sayisi || 0) + ' ad.</td></tr>';
+                html += '<tr><td style="font-weight:600;">Nakit Masraf</td><td style="text-align:right; font-weight:bold;">' + self._currency(kpi.nakit_masraf) + '</td></tr>';
+                html += '<tr><td style="font-weight:600;">Kart / IBAN Masrafı</td><td style="text-align:right; font-weight:bold;">' + self._currency(kpi.kart_iban_masraf) + '</td></tr>';
                 html += '<tr style="border-top:2px solid #000000;"><td style="font-weight:bold; font-size:13px; padding-top:3px;">TOPLAM MASRAF</td><td style="text-align:right; font-weight:bold; font-size:13px; padding-top:3px;">' + self._currency(kpi.toplam_masraf) + '</td></tr>';
                 html += '</table></div>';
 
@@ -487,12 +494,12 @@
                     html += '<div style="margin-bottom:8px;">';
                     html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000000; padding-bottom:2px; color:#000000;">KATEGORİ DAĞILIMI</p>';
                     html += '<table style="width:100%; font-size:11px; border-collapse:collapse; color:#000000; table-layout:fixed;">';
-                    html += '<tr style="border-bottom:1px solid #000000;"><th style="text-align:left;">Kategori</th><th style="text-align:right; width:45px;">Adet</th><th style="text-align:right; width:75px;">Tutar</th></tr>';
+                    html += '<tr style="border-bottom:1px solid #000000;"><th style="text-align:left; font-weight:bold;">Kategori</th><th style="text-align:right; width:45px; font-weight:bold;">Adet</th><th style="text-align:right; width:75px; font-weight:bold;">Tutar</th></tr>';
                     kategoriler.forEach(function (c) {
                         html += '<tr>';
-                        html += '<td style="padding:1px 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + self._esc(c.category) + ' (%' + c.percentage + ')</td>';
-                        html += '<td style="text-align:right; padding:1px 0;">' + (c.count || 0) + '</td>';
-                        html += '<td style="text-align:right; padding:1px 0;">' + self._currency(c.total) + '</td>';
+                        html += '<td style="padding:1px 0; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + self._esc(c.category) + ' (%' + c.percentage + ')</td>';
+                        html += '<td style="text-align:right; padding:1px 0; font-weight:600;">' + (c.count || 0) + '</td>';
+                        html += '<td style="text-align:right; padding:1px 0; font-weight:bold;">' + self._currency(c.total) + '</td>';
                         html += '</tr>';
                     });
                     html += '</table></div>';
@@ -503,16 +510,16 @@
                     html += '<div style="margin-bottom:8px;">';
                     html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000000; padding-bottom:2px; color:#000000;">MASRAF KAYITLARI (' + masraflar.length + ')</p>';
                     html += '<table style="width:100%; font-size:11px; border-collapse:collapse; color:#000000; table-layout:fixed;">';
-                    html += '<tr style="border-bottom:1px solid #000000;"><th style="text-align:left;">Kat / Açıklama</th><th style="text-align:right; width:75px;">Tutar</th></tr>';
+                    html += '<tr style="border-bottom:1px solid #000000;"><th style="text-align:left; font-weight:bold;">Kat / Açıklama</th><th style="text-align:right; width:75px; font-weight:bold;">Tutar</th></tr>';
                     masraflar.forEach(function (m) {
                         var dt = m.created_at ? new Date(m.created_at).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
                         var methodStr = m.payment_method === 'nakit' ? 'Nakit' : (m.payment_method === 'kart' ? 'Kart' : 'IBAN');
-                        html += '<tr style="border-bottom:1px stroke #eee;">';
-                        html += '<td style="padding:2px 0; word-break:break-all;">';
+                        html += '<tr style="border-bottom:1px solid #000000;">';
+                        html += '<td style="padding:2px 0; word-break:break-all; font-weight:600; color:#000000;">';
                         html += '<strong>[' + self._esc(m.category) + ']</strong> ' + self._esc(m.description || '') + '<br>';
-                        html += '<small style="font-size:9px; color:#333;">' + dt + ' • ' + methodStr + ' • ' + self._esc(m.user_name || '') + '</small>';
+                        html += '<span style="font-size:10px; font-weight:600; color:#000000;">' + dt + ' • ' + methodStr + ' • ' + self._esc(m.user_name || '') + '</span>';
                         html += '</td>';
-                        html += '<td style="text-align:right; padding:2px 0; vertical-align:top; font-weight:bold;">' + self._currency(m.amount) + '</td>';
+                        html += '<td style="text-align:right; padding:2px 0; vertical-align:top; font-weight:bold; color:#000000;">' + self._currency(m.amount) + '</td>';
                         html += '</tr>';
                     });
                     html += '</table></div>';
@@ -520,7 +527,7 @@
 
                 // Footer
                 var simdi = new Date().toLocaleString('tr-TR');
-                html += '<div style="text-align:center; margin-top:10px; border-top:1px solid #000000; padding-top:8px; font-size:10px; color:#000000;">';
+                html += '<div style="text-align:center; margin-top:10px; border-top:1px solid #000000; padding-top:8px; font-size:10px; font-weight:600; color:#000000;">';
                 html += '<p style="margin:0;">Rapor Tarihi: ' + self._esc(simdi) + '</p>';
                 html += '<p style="margin:2px 0 0 0;">Hızlı Kasa POS Masraf Yönetimi</p>';
                 html += '</div>';

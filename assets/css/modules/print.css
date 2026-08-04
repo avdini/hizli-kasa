@@ -22,7 +22,8 @@
     max-width: 300px !important;
     background: #ffffff !important;
     color: #000000 !important;
-    font-family: 'Courier New', Courier, monospace !important;
+    font-family: Consolas, 'Segoe UI Mono', 'Courier New', Courier, monospace, sans-serif !important;
+    font-weight: 600 !important;
     box-sizing: border-box !important;
     box-shadow: none !important;
     border: none !important;
@@ -33,7 +34,7 @@
     color: #000000 !important;
     border-color: #000000 !important;
     box-shadow: none !important;
-    font-family: 'Courier New', Courier, monospace !important;
+    font-family: Consolas, 'Segoe UI Mono', 'Courier New', Courier, monospace, sans-serif !important;
 }
 
 .hk-unified-print-container table {

@@ -27,12 +27,12 @@ $depo_name = $options['depo_name'] ?? ($rapor['depo_adi'] ?? '');
 $date_label = $rapor['tarih_okunabilir'] ?? ($header['tarih'] ?? '');
 $report_time = $rapor['rapor_zamani'] ?? ($header['report_time'] ?? '');
 ?>
-<div class="hk-unified-print-container receipt-zreport" style="font-family:'Courier New', 'Consolas', 'Lucida Console', 'Monaco', monospace; color:#000000 !important; background-color:#ffffff !important; width:100%; max-width:300px; margin:0 auto; padding:4px 8px; box-sizing:border-box; font-size:12px; line-height:1.25; letter-spacing:-0.2px; box-shadow:none !important; border:none !important; -webkit-font-smoothing:none !important; -moz-osx-font-smoothing:unset !important; font-smooth:never !important; text-rendering:pixelated !important;">
+<div class="hk-unified-print-container receipt-zreport" style="font-family:Consolas, 'Segoe UI Mono', 'Courier New', Courier, monospace, sans-serif; font-weight:600; color:#000000 !important; background-color:#ffffff !important; width:100%; max-width:300px; margin:0 auto; padding:4px 8px; box-sizing:border-box; font-size:12px; line-height:1.25; letter-spacing:-0.2px; box-shadow:none !important; border:none !important;">
     <div style="text-align:center; margin-bottom:8px; border-bottom:2px solid #000000; padding-bottom:8px;">
-        <h2 style="margin:0; font-size:18px; font-weight:bold; color:#000000; font-family:'Courier New', 'Consolas', 'Lucida Console', 'Monaco', monospace;"><?php echo esc_html($header['store_name'] ?? get_bloginfo('name')); ?></h2>
-        <p style="margin:4px 0 2px 0; font-size:13px; font-weight:bold; color:#000000; font-family:'Courier New', 'Consolas', 'Lucida Console', 'Monaco', monospace;">GÜN SONU RAPORU</p>
-        <p style="margin:0; font-size:11px; color:#000000; font-family:'Courier New', 'Consolas', 'Lucida Console', 'Monaco', monospace;">Kasa: <?php echo esc_html($kasa_no . ($depo_name ? ' / ' . $depo_name : '')); ?></p>
-        <p style="margin:2px 0 0 0; font-size:11px; color:#000000; font-family:'Courier New', 'Consolas', 'Lucida Console', 'Monaco', monospace;"><?php echo esc_html(!empty($report_time) ? $report_time : $date_label); ?></p>
+        <h2 style="margin:0; font-size:18px; font-weight:bold; color:#000000; font-family:Consolas, 'Segoe UI Mono', 'Courier New', Courier, monospace, sans-serif;"><?php echo esc_html($header['store_name'] ?? get_bloginfo('name')); ?></h2>
+        <p style="margin:4px 0 2px 0; font-size:13px; font-weight:bold; color:#000000; font-family:Consolas, 'Segoe UI Mono', 'Courier New', Courier, monospace, sans-serif;">GÜN SONU RAPORU</p>
+        <p style="margin:0; font-size:11px; font-weight:bold; color:#000000; font-family:Consolas, 'Segoe UI Mono', 'Courier New', Courier, monospace, sans-serif;">Kasa: <?php echo esc_html($kasa_no . ($depo_name ? ' / ' . $depo_name : '')); ?></p>
+        <p style="margin:2px 0 0 0; font-size:11px; font-weight:bold; color:#000000; font-family:Consolas, 'Segoe UI Mono', 'Courier New', Courier, monospace, sans-serif;"><?php echo esc_html(!empty($report_time) ? $report_time : $date_label); ?></p>
     </div>
     <?php if ($format === 'basit'):
         $gross_kart  = (float) $value($ozet, 'kart_toplam') - (float) $value($ozet, 'iade_kart');

@@ -86,3 +86,38 @@ GitHub üzerindeki yönetimsel süreçleri (PR, Release, Issue vb.) yürütürke
   gh issue list
   ```
   *(Not: Eğer ajanların çalıştığı yerel ortamda `gh` yetkilendirmesi (login) yapılmamışsa veya `gh` yüklü değilse, ajanlar hata vermeden güvenli bir şekilde standart Git komutlarına veya kullanıcıyı bilgilendirme yöntemine geri dönmelidir.)*
+
+---
+
+## 5. Otomatik Güncelleme ve Kısayol Komut Yönergesi (AI Ajan Standartları)
+
+Kullanıcı **"güncelle"**, **"sürüm yayınla"**, **"versiyon yükselt ve güncelle"** veya benzeri tek kelimelik / kısa talimatlar verdiğinde, tüm AI ajanları ek açıklama veya komut detayı istemeksizin aşağıdaki 5 adımı sırayla ve tam otomasyonla yürütmelidir:
+
+1. **İş Analizi & SemVer Versiyon Yükseltme:**
+   - Yapılan son değişikliklerin niteliğini (hata düzeltmesi: `PATCH`, yeni özellik: `MINOR`, breaking change: `MAJOR`) analiz eder.
+   - `hizli-kasa.php` dosyasındaki `Version:` başlığını ve `define('HIZLI_KASA_VERSION', '...');` sabitini yeni versiyona yükseltir.
+
+2. **Semantik Commit (Conventional Commits):**
+   - Değişiklikleri tam kapsayacak şekilde `feat`, `fix`, `docs`, `refactor` vb. ön ekli Türkçe/İngilizce açıklayıcı commit mesajı oluşturur:
+     ```bash
+     git add -A
+     git commit -m "feat(print): simplify summary receipt and improve thermal print contrast"
+     ```
+
+3. **Özel Depoya Push (`origin main`):**
+   - Yapılan commit'i ana depoya gönderir:
+     ```bash
+     git push origin main
+     ```
+
+4. **Halka Açık Depoya Otomatik Patch (`public master`):**
+   - Projedeki otomatik yamalama betiğini çalıştırır:
+     ```powershell
+     powershell -ExecutionPolicy Bypass -File scripts/patch-public.ps1
+     ```
+
+5. **GitHub Release Yayınlama:**
+   - GitHub CLI yüklü ise yeni versiyon için otomatik release notları ile sürüm yayınlar:
+     ```bash
+     gh release create vX.Y.Z --title "vX.Y.Z" --notes "..."
+     ```
