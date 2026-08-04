@@ -29,6 +29,16 @@ class Hizli_Kasa_API_Print extends Hizli_Kasa_API_Controller_Base {
             'callback'            => [$this, 'get_barcode_print_callback'],
             'permission_callback' => [$this, 'check_permission'],
         ]);
+
+        register_rest_route($this->namespace, '/print/shipment/(?P<id>\d+)', [
+            'methods'             => WP_REST_Server::READABLE,
+            'callback'            => [$this, 'get_shipment_print_callback'],
+            'permission_callback' => [$this, 'check_permission'],
+        ]);
+    }
+
+    public function get_shipment_print_callback($request) {
+        return $this->handle_request([$this, 'get_shipment_print'], $request);
     }
 
     public function get_order_print_callback($request) {
@@ -115,5 +125,28 @@ class Hizli_Kasa_API_Print extends Hizli_Kasa_API_Controller_Base {
         } catch (Exception $e) {
             return Hizli_Kasa_API_Response::error([$e->getMessage()], 400);
         }
+    }
+
+    protected function get_shipment_print($request) {
+        $id = intval($request->get_param('id'));
+        if (!$id) {
+            return Hizli_Kasa_API_Response::error(['Sevk ID geçerli değil.'], 400);
+        }
+
+        require_once HIZLI_KASA_PATH . 'includes/printing/builder/class-shipment-print-builder.php';
+        $payload = Hizli_Kasa_Shipment_Print_Builder::build($id);
+        if (!$payload) {
+            return Hizli_Kasa_API_Response::error(['Sevk bulunamadı.'], 404);
+        }
+
+        ob_start();
+        include HIZLI_KASA_PATH . 'includes/printing/templates/receipt-shipment.php';
+        $html = ob_get_clean();
+
+        return Hizli_Kasa_API_Response::success([
+            'rendered_html' => $html,
+            'html'          => $html,
+            'payload'       => $payload,
+        ]);
     }
 }

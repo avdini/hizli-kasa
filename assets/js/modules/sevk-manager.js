@@ -630,10 +630,12 @@
             }
 
             var isReceiptEditable = ['gonderildi', 'teslim_kontrol', 'uyusmazlik'].includes(sevk.durum);
+            var printBtnHtml = '<div style="margin-top:12px;"><button type="button" class="sevk-btn secondary" data-print-shipment="' + sevk.id + '">🖨️ Sevk Fişi Yazdır</button></div>';
+
             panel.innerHTML = '<div class="sevk-panel-title"><div><h3>' + escapeHtml(sevk.sevk_no) + '</h3><p>' + escapeHtml(sevk.kaynak_depo_adi) + ' → ' + escapeHtml(sevk.hedef_depo_adi) + '</p></div>' + statusBadge(sevk) + '</div>' +
                 barcodeHtml +
                 '<div class="sevk-table-wrap compact" style="margin:14px 0;">' + this.renderCompareTable(sevk.kalemler || [], sevk, isReceiptEditable) + '</div>' +
-                actions;
+                actions + printBtnHtml;
 
             var newTableWrap = panel.querySelector('.sevk-table-wrap');
             if (newTableWrap) {
@@ -641,6 +643,14 @@
             }
 
             var self = this;
+            panel.querySelectorAll('[data-print-shipment]').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var id = parseInt(btn.dataset.printShipment);
+                    if (window.HizliKasa && window.HizliKasa.PrintCore) {
+                        window.HizliKasa.PrintCore.print({ type: 'shipment', id: id });
+                    }
+                });
+            });
             panel.querySelectorAll('[data-action]').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     self.handleIncomingAction(sevk, btn.dataset.action);
@@ -754,8 +764,19 @@
                         '<button type="button" class="sevk-btn secondary" id="sevk-modal-taslak-sil-btn">Taslağı Sil</button>' +
                         '</div>';
                 }
-                body.innerHTML = '<h3>' + escapeHtml(sevk.sevk_no) + '</h3><p>' + escapeHtml(sevk.kaynak_depo_adi) + ' → ' + escapeHtml(sevk.hedef_depo_adi) + ' ' + statusBadge(sevk) + '</p><div class="sevk-table-wrap">' + this.renderCompareTable(sevk.kalemler || [], sevk, false) + '</div>' + shipAction;
+                var printActionHtml = '<div style="margin-top:14px; display:flex; justify-content:space-between; align-items:center; gap:8px;">' +
+                    '<button type="button" class="sevk-btn secondary" id="sevk-modal-yazdir-btn">🖨️ Sevk Fişi Yazdır</button>' +
+                    '</div>';
+                body.innerHTML = '<h3>' + escapeHtml(sevk.sevk_no) + '</h3><p>' + escapeHtml(sevk.kaynak_depo_adi) + ' → ' + escapeHtml(sevk.hedef_depo_adi) + ' ' + statusBadge(sevk) + '</p><div class="sevk-table-wrap">' + this.renderCompareTable(sevk.kalemler || [], sevk, false) + '</div>' + printActionHtml + shipAction;
                 modal.style.display = 'flex';
+                var modalPrintBtn = document.getElementById('sevk-modal-yazdir-btn');
+                if (modalPrintBtn) {
+                    modalPrintBtn.addEventListener('click', function() {
+                        if (window.HizliKasa && window.HizliKasa.PrintCore) {
+                            window.HizliKasa.PrintCore.print({ type: 'shipment', id: sevk.id });
+                        }
+                    });
+                }
                 var shipBtn = document.getElementById('sevk-yola-cikart-btn');
                 if (shipBtn) {
                     var self = this;

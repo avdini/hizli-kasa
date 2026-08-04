@@ -72,11 +72,15 @@
             var endpoint = type;
             if (type === 'zreport' || type === 'z-report') {
                 endpoint = 'z-report';
+            } else if (type === 'sevk') {
+                endpoint = 'shipment';
             }
             var url = kasaAyar.rootApiUrl + 'hizli-kasa/v2/print/' + endpoint;
 
             if (type === 'order') {
                 url += '/' + (options.id || options.order_id || 0);
+            } else if (type === 'shipment' || type === 'sevk') {
+                url += '/' + (options.id || options.sevk_id || 0);
             } else if (type === 'zreport' || type === 'z-report') {
                 var formatVal = options.format || (options.include_details === true ? 'detayli' : (options.include_details === 'basit' ? 'basit' : 'ozet'));
                 url += '?kasa_no=' + encodeURIComponent(options.kasa_no || '1') +
