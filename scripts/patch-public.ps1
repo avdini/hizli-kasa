@@ -22,26 +22,34 @@ try {
     git checkout -b $TempBranch public/master
     
     Write-Host "Cherry-picking commit $ResolvedCommit..." -ForegroundColor Cyan
-    git cherry-pick $ResolvedCommit
+    $gitResult = & git cherry-pick $ResolvedCommit 2>&1
     
-    # Strip private-only src-driver folder if present in public patch
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Conflict detected on cherry-pick. Filtering out private-only files..." -ForegroundColor Yellow
+        & git rm -rf src-driver --ignore-unmatch 2>&1 | Out-Null
+        & git rm -rf scripts --ignore-unmatch 2>&1 | Out-Null
+        & git add -A
+        $env:GIT_EDITOR = 'true'
+        & git cherry-pick --continue --no-edit 2>&1 | Out-Null
+    }
+    
+    # Ensure src-driver is never in public patch
     if (Test-Path "src-driver") {
         Write-Host "Filtering out private-only 'src-driver' folder from public patch..." -ForegroundColor Yellow
-        git rm -rf src-driver --ignore-unmatch | Out-Null
-        git commit --amend --no-edit --allow-empty | Out-Null
+        & git rm -rf src-driver --ignore-unmatch 2>&1 | Out-Null
+        & git commit --amend --no-edit --allow-empty 2>&1 | Out-Null
     }
 
     Write-Host "Pushing changes to public master..." -ForegroundColor Cyan
-    git push public "${TempBranch}:master"
+    & git push public "${TempBranch}:master"
     
     Write-Host "Successfully patched public repository!" -ForegroundColor Green
 }
 catch {
     Write-Host "An error occurred: $_" -ForegroundColor Red
-    # If in the middle of a cherry-pick, abort it
     $Status = git status
     if ($Status -match "cherry-pick") {
-        Write-Host "Aborting cherry-pick due to conflicts..." -ForegroundColor Yellow
+        Write-Host "Aborting cherry-pick due to unresolvable conflicts..." -ForegroundColor Yellow
         git cherry-pick --abort
     }
 }
