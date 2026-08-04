@@ -505,26 +505,6 @@
                     html += '</table></div>';
                 }
 
-                // Masraf Kayıtları Detayı
-                if (masraflar && masraflar.length > 0) {
-                    html += '<div style="margin-bottom:8px;">';
-                    html += '<p style="font-weight:bold; margin:0 0 4px; font-size:12px; border-bottom:1px solid #000000; padding-bottom:2px; color:#000000;">MASRAF KAYITLARI (' + masraflar.length + ')</p>';
-                    html += '<table style="width:100%; font-size:11px; border-collapse:collapse; color:#000000; table-layout:fixed;">';
-                    html += '<tr style="border-bottom:1px solid #000000;"><th style="text-align:left; font-weight:bold;">Kat / Açıklama</th><th style="text-align:right; width:75px; font-weight:bold;">Tutar</th></tr>';
-                    masraflar.forEach(function (m) {
-                        var dt = m.created_at ? new Date(m.created_at).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
-                        var methodStr = m.payment_method === 'nakit' ? 'Nakit' : (m.payment_method === 'kart' ? 'Kart' : 'IBAN');
-                        html += '<tr style="border-bottom:1px solid #000000;">';
-                        html += '<td style="padding:2px 0; word-break:break-all; font-weight:600; color:#000000;">';
-                        html += '<strong>[' + self._esc(m.category) + ']</strong> ' + self._esc(m.description || '') + '<br>';
-                        html += '<span style="font-size:10px; font-weight:600; color:#000000;">' + dt + ' • ' + methodStr + ' • ' + self._esc(m.user_name || '') + '</span>';
-                        html += '</td>';
-                        html += '<td style="text-align:right; padding:2px 0; vertical-align:top; font-weight:bold; color:#000000;">' + self._currency(m.amount) + '</td>';
-                        html += '</tr>';
-                    });
-                    html += '</table></div>';
-                }
-
                 // Footer
                 var simdi = new Date().toLocaleString('tr-TR');
                 html += '<div style="text-align:center; margin-top:10px; border-top:1px solid #000000; padding-top:8px; font-size:10px; font-weight:600; color:#000000;">';
