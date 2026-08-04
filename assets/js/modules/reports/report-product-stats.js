@@ -538,7 +538,7 @@
                         },
                         scales: {
                             x: { grid: { display: false }, ticks: { color: tickColor } },
-                            y: { grid: { color: gridColor }, ticks: { color: tickColor, stepSize: 1 }, beginAtZero: true }
+                            y: { grid: { color: gridColor }, ticks: { color: tickColor, precision: 0 }, beginAtZero: true }
                         }
                     }
                 });
@@ -1184,7 +1184,7 @@
                         position: 'left',
                         display: 'auto',
                         grid: { color: gridColor },
-                        ticks: { color: tickColor, stepSize: 1 },
+                        ticks: { color: tickColor, precision: 0 },
                         beginAtZero: true,
                     },
                     yCiro: {

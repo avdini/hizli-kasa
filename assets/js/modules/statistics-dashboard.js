@@ -412,7 +412,7 @@
                             x: { grid: { display: false }, ticks: { color: tickColor, maxTicksLimit: 12 } },
                             y: {
                                 grid: { color: gridColor },
-                                ticks: { color: tickColor, stepSize: 1 },
+                                ticks: { color: tickColor, precision: 0 },
                                 beginAtZero: true,
                             }
                         }
@@ -572,7 +572,7 @@
                                 type: 'linear',
                                 position: 'left',
                                 grid: { color: gridColor },
-                                ticks: { color: tickColor, stepSize: 1, padding: 4 },
+                                ticks: { color: tickColor, precision: 0, padding: 4 },
                                 beginAtZero: true,
                             },
                             yCiro: {
@@ -1052,7 +1052,7 @@
                         position: 'left',
                         display: 'auto',
                         grid: { color: gridColor },
-                        ticks: { color: tickColor, stepSize: 1 },
+                        ticks: { color: tickColor, precision: 0 },
                         beginAtZero: true,
                     },
                     yCiro: {
