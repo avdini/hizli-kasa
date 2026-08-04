@@ -24,6 +24,13 @@ try {
     Write-Host "Cherry-picking commit $ResolvedCommit..." -ForegroundColor Cyan
     git cherry-pick $ResolvedCommit
     
+    # Strip private-only src-driver folder if present in public patch
+    if (Test-Path "src-driver") {
+        Write-Host "Filtering out private-only 'src-driver' folder from public patch..." -ForegroundColor Yellow
+        git rm -rf src-driver --ignore-unmatch | Out-Null
+        git commit --amend --no-edit --allow-empty | Out-Null
+    }
+
     Write-Host "Pushing changes to public master..." -ForegroundColor Cyan
     git push public "${TempBranch}:master"
     

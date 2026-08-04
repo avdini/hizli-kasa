@@ -3,3 +3,7 @@
 .phpunit.result.cache
 /scratch/
 /.vscode/
+/build/
+/dist/
+*.spec
+
