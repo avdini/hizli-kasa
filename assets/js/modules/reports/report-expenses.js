@@ -115,13 +115,22 @@
             html +=     self._kpiCard('💳', 'KART & IBAN MASRAFI', self._currency(kpi.kart_iban_masraf), 'Harici Banka / Hesaptan', 'kpi-masraf-kart');
             html +=     self._kpiCard('📊', 'EN YÜKSEK GİDER', enYuksek.category, self._currency(enYuksek.total) + ' harcama', 'kpi-masraf-yuksek');
             html +=   '</div>';
-            // Kategori Doughnut Grafiği
-            html +=   '<div class="stat-chart-card re-chart-card">';
+            // Kategori Doughnut Grafiği (Yan Yana Sol/Sağ Düzen + Özel Legend)
+            html +=   '<div class="stat-chart-card stat-odeme-card re-chart-card">';
             html +=     '<div class="stat-chart-header">';
             html +=       '<h4 class="stat-chart-title">🍩 Kategori Dağılımı</h4>';
-            html +=       '<span class="stat-chart-badge">' + kategoriler.length + ' kategori</span>';
+            html +=       '<span class="stat-chart-badge" id="re-cat-total-badge">' + kategoriler.length + ' kategori</span>';
             html +=     '</div>';
-            html +=     '<div class="stat-chart-body re-doughnut-wrap"><canvas id="re-chart-category" height="240"></canvas></div>';
+            html +=     '<div class="stat-chart-body stat-odeme-body">';
+            html +=       '<div class="stat-odeme-chart-wrap">';
+            html +=         '<canvas id="re-chart-category"></canvas>';
+            html +=         '<div class="stat-odeme-center-text">';
+            html +=           '<span class="stat-odeme-center-label">TOPLAM GİDER</span>';
+            html +=           '<span class="stat-odeme-center-val" id="re-cat-center-total">₺ 0</span>';
+            html +=         '</div>';
+            html +=       '</div>';
+            html +=       '<div class="stat-odeme-legend-list" id="re-cat-legend-list"></div>';
+            html +=     '</div>';
             html +=   '</div>';
             html += '</div>';
 
@@ -284,18 +293,21 @@
                                 label: 'Nakit Masraf (₺)',
                                 data: trend.map(function (g) { return g.nakit; }),
                                 backgroundColor: '#10b981',
-                                borderRadius: 4,
+                                borderRadius: 6,
+                                maxBarThickness: 32,
                             },
                             {
                                 label: 'Kart & IBAN Masrafı (₺)',
                                 data: trend.map(function (g) { return g.kart_iban; }),
                                 backgroundColor: '#3b82f6',
-                                borderRadius: 4,
+                                borderRadius: 6,
+                                maxBarThickness: 32,
                             }
                         ]
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         interaction: { mode: 'index', intersect: false },
                         scales: {
                             x: { grid: { color: gridColor }, ticks: { color: tickColor } },
@@ -309,7 +321,7 @@
                             }
                         },
                         plugins: {
-                            legend: { position: 'top', labels: { color: tickColor, font: { size: 12 } } },
+                            legend: { position: 'top', labels: { color: tickColor, font: { size: 12, weight: '600' } } },
                             tooltip: Object.assign({}, commonTooltip, {
                                 callbacks: {
                                     label: function (ctx) {
@@ -322,11 +334,59 @@
                 });
             }
 
-            // 2. Kategori Pasta / Doughnut Grafiği
+            // 2. Kategori Doughnut Grafiği (Yan Yana Sol/Sağ Düzen + Özel Legend & Hover)
             var catCanvas = document.getElementById('re-chart-category');
             var kategoriler = data.kategori_dagilim || [];
             if (catCanvas && kategoriler.length > 0) {
                 var colors = ['#f59e0b', '#ec4899', '#8b5cf6', '#3b82f6', '#10b981', '#06b6d4', '#f97316', '#64748b'];
+
+                var totalCat = 0;
+                kategoriler.forEach(function (c) { totalCat += parseFloat(c.total) || 0; });
+
+                var centerTotalEl = document.getElementById('re-cat-center-total');
+                if (centerTotalEl) {
+                    centerTotalEl.innerText = self._currency(totalCat);
+                }
+
+                // Özel Yan Legend Listesini Oluştur
+                var legendListEl = document.getElementById('re-cat-legend-list');
+                if (legendListEl) {
+                    var legendHtml = '';
+                    kategoriler.forEach(function (cat, idx) {
+                        var color = colors[idx % colors.length];
+                        var pct = totalCat > 0 ? ((cat.total / totalCat) * 100).toFixed(1) : '0';
+                        legendHtml += '<div class="stat-odeme-legend-item" data-idx="' + idx + '">';
+                        legendHtml += '<div class="stat-odeme-item-left">';
+                        legendHtml += '<span class="stat-odeme-dot" style="background-color:' + color + '"></span>';
+                        legendHtml += '<span class="stat-odeme-item-name">' + self._esc(cat.category) + '</span>';
+                        legendHtml += '</div>';
+                        legendHtml += '<div class="stat-odeme-item-right">';
+                        legendHtml += '<span class="stat-odeme-item-val">' + self._currency(cat.total) + '</span>';
+                        legendHtml += '<span class="stat-odeme-item-pct">%' + pct + '</span>';
+                        legendHtml += '</div>';
+                        legendHtml += '</div>';
+                    });
+                    legendListEl.innerHTML = legendHtml;
+
+                    // Hover Etkileşimi
+                    legendListEl.querySelectorAll('.stat-odeme-legend-item').forEach(function (el) {
+                        el.addEventListener('mouseenter', function () {
+                            var idx = parseInt(this.dataset.idx, 10);
+                            if (self.charts.category) {
+                                self.charts.category.setActiveElements([{ datasetIndex: 0, index: idx }]);
+                                self.charts.category.tooltip.setActiveElements([{ datasetIndex: 0, index: idx }]);
+                                self.charts.category.update();
+                            }
+                        });
+                        el.addEventListener('mouseleave', function () {
+                            if (self.charts.category) {
+                                self.charts.category.setActiveElements([]);
+                                self.charts.category.tooltip.setActiveElements([]);
+                                self.charts.category.update();
+                            }
+                        });
+                    });
+                }
 
                 self.charts.category = new Chart(catCanvas, {
                     type: 'doughnut',
@@ -335,32 +395,24 @@
                         datasets: [{
                             data: kategoriler.map(function (c) { return c.total; }),
                             backgroundColor: colors.slice(0, kategoriler.length),
-                            borderWidth: 2,
-                            borderColor: isDark ? '#1e293b' : '#ffffff',
-                            hoverOffset: 6,
+                            borderWidth: 0,
+                            hoverOffset: 10,
+                            clip: false,
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        cutout: '60%',
+                        cutout: '74%',
+                        layout: { padding: 4 },
                         plugins: {
-                            legend: {
-                                position: 'right',
-                                labels: {
-                                    color: tickColor,
-                                    font: { size: 12, weight: '600' },
-                                    padding: 14,
-                                    boxWidth: 12,
-                                    usePointStyle: true,
-                                }
-                            },
+                            legend: { display: false },
                             tooltip: Object.assign({}, commonTooltip, {
                                 callbacks: {
                                     label: function (ctx) {
                                         var val = ctx.parsed;
-                                        var catObj = kategoriler[ctx.dataIndex];
-                                        return ' ' + ctx.label + ': ₺ ' + self._num(val) + ' (%' + (catObj ? catObj.percentage : 0) + ')';
+                                        var pct = totalCat > 0 ? ((val / totalCat) * 100).toFixed(1) : '0';
+                                        return ' ' + ctx.label + ': ₺ ' + self._num(val) + ' (%' + pct + ')';
                                     }
                                 }
                             })
