@@ -917,8 +917,25 @@ class Hizli_Kasa_API_Shipments extends Hizli_Kasa_API_Controller_Base {
             $pids      = array_unique(array_map(fn($i) => (int) ($i->variation_id ?: $i->product_id), $items));
             $image_map = $this->get_product_image_map($pids);
 
-            $row['kalemler'] = array_map(function ($item) use ($image_map) {
+            $stock_map = [];
+            $kaynak_depo_id = (int) ($sevk->kaynak_depo_id ?? 0);
+            if (!empty($items) && $kaynak_depo_id > 0) {
+                $stok_table = $tables['stok_konumlari'];
+                $stock_rows = $wpdb->get_results($wpdb->prepare(
+                    "SELECT product_id, variation_id, quantity FROM {$stok_table} WHERE location_id = %d",
+                    $kaynak_depo_id
+                ));
+                if (!empty($stock_rows)) {
+                    foreach ($stock_rows as $sr) {
+                        $key = ((int) $sr->product_id) . '_' . ((int) $sr->variation_id);
+                        $stock_map[$key] = (float) $sr->quantity;
+                    }
+                }
+            }
+
+            $row['kalemler'] = array_map(function ($item) use ($image_map, $stock_map) {
                 $pid = (int) ($item->variation_id ?: $item->product_id);
+                $key = ((int) $item->product_id) . '_' . ((int) $item->variation_id);
                 return [
                     'id'                 => (int) $item->id,
                     'product_id'         => (int) $item->product_id,
@@ -928,6 +945,7 @@ class Hizli_Kasa_API_Shipments extends Hizli_Kasa_API_Controller_Base {
                     'gonderilen_adet'    => (float) $item->gonderilen_adet,
                     'teslim_alinan_adet' => $item->teslim_alinan_adet === null ? null : (float) $item->teslim_alinan_adet,
                     'image'              => $image_map[$pid] ?? '',
+                    'depo_stok'          => isset($stock_map[$key]) ? (float) $stock_map[$key] : 0.0,
                 ];
             }, $items);
         }

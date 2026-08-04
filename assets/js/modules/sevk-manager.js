@@ -321,8 +321,17 @@
                     '<input type="number" class="sevk-qty-input" data-qty-input="' + item.id + '" value="' + item.gonderilen_adet + '" min="0" step="any">' +
                     '<button type="button" class="sevk-qty-btn inc" data-qty-inc="' + item.id + '">+</button>' +
                     '</div>';
-                return '<tr>' +
-                    '<td><div class="sevk-product-cell">' + img + '<strong>' + escapeHtml(item.urun_adi) + '</strong></div></td>' +
+
+                var gonderilen = parseFloat(item.gonderilen_adet || 0);
+                var depoStok = parseFloat(item.depo_stok !== undefined ? item.depo_stok : 0);
+                var isWarning = gonderilen > depoStok;
+                var rowClass = isWarning ? ' class="sevk-row-stok-uyari"' : '';
+                var tooltipMsg = isWarning ? 'Depoda bu kadar stok bulunmuyor! (Mevcut Depo Stoğu: ' + depoStok + ', Çıkış Yapılacak: ' + gonderilen + ')' : '';
+                var titleAttr = isWarning ? ' title="' + escapeHtml(tooltipMsg) + '"' : '';
+                var warningIcon = isWarning ? ' <span class="sevk-stok-warning-icon" title="' + escapeHtml(tooltipMsg) + '">⚠️ Depo Stoğu Yetersiz (Stok: ' + depoStok + ')</span>' : '';
+
+                return '<tr' + rowClass + titleAttr + '>' +
+                    '<td><div class="sevk-product-cell">' + img + '<div><strong>' + escapeHtml(item.urun_adi) + '</strong>' + warningIcon + '</div></div></td>' +
                     '<td>' + escapeHtml(item.sku) + '</td>' +
                     '<td>' + qtyHtml + '</td>' +
                     '<td><button type="button" class="sevk-btn secondary" data-delete-item="' + item.id + '">Sil</button></td>' +
