@@ -109,15 +109,19 @@
 
             panel.innerHTML = [
                 '<div class="psr-wrap">',
-                  '<div class="psr-search-bar">',
-                    '<div class="psr-sku-field">',
-                      '<label class="psr-label">SKU Girin</label>',
-                      '<div class="psr-input-row">',
-                        '<input type="text" id="psr-sku-input" class="hk-input psr-sku-input" placeholder="Örn: ABC-001" autocomplete="off">',
-                        '<button id="psr-sorgula-btn" class="hk-btn-primary psr-sorgula-btn">Analiz Et</button>',
+                  '<div class="psr-product-bar">',
+                    '<div class="psr-bar-search-row">',
+                      '<div class="psr-sku-field">',
+                        '<label class="psr-label">SKU Girin</label>',
+                        '<div class="psr-input-row">',
+                          '<input type="text" id="psr-sku-input" class="hk-input psr-sku-input" placeholder="Örn: ABC-001" autocomplete="off">',
+                          '<button id="psr-sorgula-btn" class="hk-btn-primary psr-sorgula-btn">Analiz Et</button>',
+                        '</div>',
+                        '<div id="psr-product-preview" class="psr-product-preview" style="display:none;"></div>',
                       '</div>',
-                      '<div id="psr-product-preview" class="psr-product-preview" style="display:none;"></div>',
                     '</div>',
+                    '<div id="psr-bar-info" class="psr-bar-info" style="display:none;"></div>',
+                    '<div id="psr-bar-relations" class="psr-bar-relations" style="display:none;"></div>',
                   '</div>',
                   '<div id="psr-dashboard" class="psr-dashboard" style="display:none;"></div>',
                 '</div>'
@@ -276,32 +280,13 @@
 
             var html = '<div class="stat-dashboard-wrap">';
 
-            html += '<div class="psr-product-header">';
-            html +=   '<div class="psr-product-header-left">';
-            if (p.image_url) {
-                html +=     '<div class="psr-header-img-wrap" data-full-src="' + p.image_full_url_real + '" title="Resmi Büyüt">';
-                html +=       '<img src="' + p.image_url + '" class="psr-header-img" alt="' + self._esc(p.name) + '">';
-                html +=       '<span class="psr-zoom-overlay">🔍</span>';
-                html +=     '</div>';
-            }
-            html +=     '<div class="psr-product-title-group">';
-            html +=       '<div class="psr-product-title">';
-            html +=         '<h3>' + self._esc(p.name) + '</h3>';
-            html +=         '<span class="psr-type-badge">' + (typeLabel[p.type] || p.type) + '</span>';
-            html +=       '</div>';
-            html +=       '<span class="psr-sku-chip">SKU: ' + self._esc(p.sku) + '</span>';
-            html +=     '</div>';
-            html +=   '</div>';
-            html += '</div>';
-
-            // Add interactive relation tree
-            html += self._renderRelationTree(p);
+            // Update top product bar with product details and relations
+            self._updateProductBar(p);
 
             if (!kpi.toplam_satis_adet && !kpi.toplam_iade_adet) {
                 html += '<div class="psr-empty"><span>📦</span><p>Seçili tarih aralığında bu ürün için kayıt bulunamadı.</p></div>';
                 html += '</div>';
                 dashboard.innerHTML = html;
-                self._bindRelationEvents();
                 return;
             }
 
@@ -313,19 +298,7 @@
             if (kpi.toplam_iskonto_tutar > 0) {
                 html += self._kpiCard('✂️', 'TOPLAM İSKONTO', self._currency(kpi.toplam_iskonto_tutar), 'Liste Fiyatı Düşüşü', 'kpi-kar-pozitif');
             }
-
-            if (kpi.brut_kar !== null && kpi.brut_kar !== undefined) {
-                var karClass = kpi.brut_kar >= 0 ? 'kpi-kar-pozitif' : 'kpi-kar-negatif';
-                html += self._kpiCard('💰', 'BRÜT KÂR', self._currency(kpi.brut_kar), 'Maliyet: ' + self._currency(kpi.maliyet_birim) + '/adet', karClass);
-            } else {
-                html += self._kpiCard('💰', 'BRÜT KÂR', '—', 'Maliyet verisi girilmemiş', 'kpi-kar-yok');
-            }
             html += '</div>';
-
-            if (kpi.maliyet_kaynak && kpi.maliyet_kaynak !== 'yok') {
-                var kaynakLabel = kpi.maliyet_kaynak === 'wc_cog' ? 'WooCommerce COG eklentisi' : 'HK Alım Siparişleri (ort. maliyet)';
-                html += '<div class="psr-cost-source-note">📌 Maliyet kaynağı: <strong>' + kaynakLabel + '</strong></div>';
-            }
 
             // Main Trend Line Chart & Distribution Charts Grid
             html += '<div class="stat-charts-grid">';
@@ -859,33 +832,133 @@
             accordion.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         },
 
-        _bindRelationEvents: function () {
+        _updateProductBar: function (p) {
             var self = this;
-            var dashEl = document.getElementById('psr-dashboard');
-            if (!dashEl) return;
+            var barInfo = document.getElementById('psr-bar-info');
+            var barRelations = document.getElementById('psr-bar-relations');
+            if (!barInfo) return;
 
-            // Bind collapse toggle button
-            var toggleBtn = dashEl.querySelector('#psr-toggle-siblings');
-            var panelEl = dashEl.querySelector('#psr-siblings-panel');
-            if (toggleBtn && panelEl) {
+            var typeLabel = { simple: 'Basit Ürün', variable: 'Varyasyonlu Ürün', variation: 'Varyasyon' };
+            var relations = p.relations || {};
+
+            var html = '';
+
+            // Product image
+            if (p.image_url) {
+                html += '<div class="psr-bar-img-wrap" data-full-src="' + (p.image_full_url_real || p.image_url) + '" title="Resmi Büyüt">';
+                html +=   '<img src="' + p.image_url + '" class="psr-bar-img" alt="' + self._esc(p.name) + '">';
+                html +=   '<span class="psr-zoom-overlay-small">🔍</span>';
+                html += '</div>';
+            }
+
+            // Details (Title, SKU, Type Badge)
+            html += '<div class="psr-bar-details">';
+            html +=   '<div class="psr-bar-name">' + self._esc(p.name) + '</div>';
+            html +=   '<div class="psr-bar-meta">';
+            html +=     '<span class="psr-sku-chip">SKU: ' + self._esc(p.sku) + '</span>';
+            html +=     '<span class="psr-type-badge">' + (typeLabel[p.type] || p.type) + '</span>';
+
+            // Relation meta links in info row
+            if (p.type === 'variation' && relations.parent) {
+                html += '<span class="psr-parent-link psr-clickable-card" data-sku="' + self._esc(relations.parent.sku) + '" title="Parent Ürüne Git">';
+                html +=   '🔗 Parent: ' + self._esc(relations.parent.name) + ' (' + self._esc(relations.parent.sku) + ') ▸';
+                html += '</span>';
+            }
+
+            html +=   '</div>';
+            html += '</div>';
+
+            // Action buttons on the right side of info row (Toggle siblings/children)
+            var hasRelationsList = false;
+            var relCardsHtml = '';
+            var toggleBtnHtml = '';
+
+            if (p.type === 'variation' && relations.siblings && relations.siblings.length > 0) {
+                hasRelationsList = true;
+                toggleBtnHtml = '<button class="psr-toggle-siblings-btn" id="psr-toggle-siblings">🎨 Diğer Varyasyonlar (' + relations.siblings.length + ') ▾</button>';
+                
+                relCardsHtml += '<div class="psr-collapse-title">Diğer Varyasyonlar</div>';
+                relCardsHtml += '<div class="psr-node-list scrollable-x">';
+                relations.siblings.forEach(function (sib) {
+                    relCardsHtml += '<div class="psr-node-card psr-clickable-card" data-sku="' + self._esc(sib.sku) + '">';
+                    relCardsHtml +=   '<div class="psr-node-img-wrap" data-full-src="' + (sib.image_full_url || sib.image_url) + '">';
+                    relCardsHtml +=     '<img src="' + sib.image_url + '" class="psr-node-img">';
+                    relCardsHtml +=     '<span class="psr-zoom-overlay-small">🔍</span>';
+                    relCardsHtml +=   '</div>';
+                    relCardsHtml +=   '<div class="psr-node-info">';
+                    relCardsHtml +=     '<span class="psr-node-name">' + self._esc(sib.name) + '</span>';
+                    relCardsHtml +=     '<span class="psr-node-sku">SKU: ' + self._esc(sib.sku) + '</span>';
+                    relCardsHtml +=   '</div>';
+                    relCardsHtml += '</div>';
+                });
+                relCardsHtml += '</div>';
+            } else if (p.type === 'variable' && relations.children && relations.children.length > 0) {
+                hasRelationsList = true;
+                toggleBtnHtml = '<button class="psr-toggle-siblings-btn" id="psr-toggle-siblings">🎨 Alt Varyasyonlar (' + relations.children.length + ') ▾</button>';
+
+                relCardsHtml += '<div class="psr-collapse-title">Alt Varyasyonlar</div>';
+                relCardsHtml += '<div class="psr-node-list scrollable-x">';
+                relations.children.forEach(function (child) {
+                    relCardsHtml += '<div class="psr-node-card psr-clickable-card" data-sku="' + self._esc(child.sku) + '">';
+                    relCardsHtml +=   '<div class="psr-node-img-wrap" data-full-src="' + (child.image_full_url || child.image_url) + '">';
+                    relCardsHtml +=     '<img src="' + child.image_url + '" class="psr-node-img">';
+                    relCardsHtml +=     '<span class="psr-zoom-overlay-small">🔍</span>';
+                    relCardsHtml +=   '</div>';
+                    relCardsHtml +=   '<div class="psr-node-info">';
+                    relCardsHtml +=     '<span class="psr-node-name">' + self._esc(child.name) + '</span>';
+                    relCardsHtml +=     '<span class="psr-node-sku">SKU: ' + self._esc(child.sku) + '</span>';
+                    relCardsHtml +=   '</div>';
+                    relCardsHtml += '</div>';
+                });
+                relCardsHtml += '</div>';
+            }
+
+            if (toggleBtnHtml) {
+                html += '<div class="psr-bar-actions">' + toggleBtnHtml + '</div>';
+            }
+
+            barInfo.innerHTML = html;
+            barInfo.style.display = 'flex';
+
+            if (barRelations) {
+                if (hasRelationsList) {
+                    barRelations.innerHTML = relCardsHtml;
+                    barRelations.style.display = 'none';
+                } else {
+                    barRelations.innerHTML = '';
+                    barRelations.style.display = 'none';
+                }
+            }
+
+            self._bindBarEvents();
+        },
+
+        _bindBarEvents: function () {
+            var self = this;
+            var productBar = document.querySelector('.psr-product-bar');
+            if (!productBar) return;
+
+            var toggleBtn = productBar.querySelector('#psr-toggle-siblings');
+            var relEl = productBar.querySelector('#psr-bar-relations');
+            if (toggleBtn && relEl) {
                 toggleBtn.addEventListener('click', function () {
-                    var isHidden = panelEl.style.display === 'none';
+                    var isHidden = relEl.style.display === 'none';
                     if (isHidden) {
-                        panelEl.style.display = 'block';
+                        relEl.style.display = 'block';
                         toggleBtn.classList.add('active');
-                        toggleBtn.textContent = toggleBtn.textContent.replace('Göster', 'Gizle').replace('▾', '▴');
-                        panelEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        toggleBtn.textContent = toggleBtn.textContent.replace('▾', '▴');
+                        relEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
                     } else {
-                        panelEl.style.display = 'none';
+                        relEl.style.display = 'none';
                         toggleBtn.classList.remove('active');
-                        toggleBtn.textContent = toggleBtn.textContent.replace('Gizle', 'Göster').replace('▴', '▾');
+                        toggleBtn.textContent = toggleBtn.textContent.replace('▴', '▾');
                     }
                 });
             }
 
-            dashEl.querySelectorAll('.psr-clickable-card').forEach(function (card) {
+            productBar.querySelectorAll('.psr-clickable-card').forEach(function (card) {
                 card.addEventListener('click', function (e) {
-                    if (e.target.closest('.psr-node-img-wrap')) {
+                    if (e.target.closest('.psr-node-img-wrap, .psr-bar-img-wrap')) {
                         return;
                     }
                     var clickedSku = this.dataset.sku;
@@ -900,7 +973,7 @@
                 });
             });
 
-            dashEl.querySelectorAll('.psr-node-img-wrap, .psr-header-img-wrap').forEach(function (wrap) {
+            document.querySelectorAll('.psr-bar-img-wrap, .psr-node-img-wrap').forEach(function (wrap) {
                 wrap.addEventListener('click', function (e) {
                     e.stopPropagation();
                     var fullSrc = this.dataset.fullSrc;
@@ -909,138 +982,6 @@
                     }
                 });
             });
-        },
-
-        _renderRelationTree: function (p) {
-            var self = this;
-            var relations = p.relations;
-            if (!relations) return '';
-
-            var typeLabel = { simple: 'Basit Ürün', variable: 'Varyasyonlu Ürün', variation: 'Varyasyon' };
-            var html = '';
-
-            if (p.type === 'variation') {
-                html += '<div class="psr-relation-section">';
-                html +=   '<div class="psr-relation-header-row">';
-                html +=     '<div class="psr-relation-title">🔗 Ürün Varyasyon İlişkileri</div>';
-                if (relations.siblings && relations.siblings.length > 0) {
-                    html += '<button class="psr-toggle-siblings-btn" id="psr-toggle-siblings">🎨 Diğer Varyasyonları Göster (' + relations.siblings.length + ') ▾</button>';
-                }
-                html +=   '</div>';
-                html +=   '<div class="psr-relation-tree">';
-                
-                // Render Parent Card
-                if (relations.parent) {
-                    var parentNode = relations.parent;
-                    html += '<div class="psr-node psr-node-parent">';
-                    html +=   '<div class="psr-node-card psr-clickable-card" data-sku="' + self._esc(parentNode.sku) + '">';
-                    html +=     '<div class="psr-node-img-wrap" data-full-src="' + parentNode.image_full_url + '">';
-                    html +=       '<img src="' + parentNode.image_url + '" class="psr-node-img">';
-                    html +=       '<span class="psr-zoom-overlay-small">🔍</span>';
-                    html +=     '</div>';
-                    html +=     '<div class="psr-node-info">';
-                    html +=       '<span class="psr-node-role">Ebeveyn (Parent)</span>';
-                    html +=       '<span class="psr-node-name">' + self._esc(parentNode.name) + '</span>';
-                    html +=       '<span class="psr-node-sku">SKU: ' + self._esc(parentNode.sku) + '</span>';
-                    html +=     '</div>';
-                    html +=   '</div>';
-                    html += '</div>';
-
-                    // Arrow
-                    html += '<div class="psr-relation-arrow">➡️</div>';
-                }
-
-                // Render Active Variation Card
-                html += '<div class="psr-node">';
-                html +=   '<div class="psr-node-card psr-active-node-card">';
-                html +=     '<div class="psr-node-img-wrap" data-full-src="' + p.image_full_url_real + '">';
-                html +=       '<img src="' + p.image_url + '" class="psr-node-img">';
-                html +=       '<span class="psr-zoom-overlay-small">🔍</span>';
-                html +=     '</div>';
-                html +=     '<div class="psr-node-info">';
-                html +=       '<span class="psr-node-role active">Aktif Varyasyon</span>';
-                html +=       '<span class="psr-node-name">' + self._esc(p.name) + '</span>';
-                html +=       '<span class="psr-node-sku">SKU: ' + self._esc(p.sku) + '</span>';
-                html +=     '</div>';
-                html +=   '</div>';
-                html += '</div>';
-
-                html += '</div>'; // psr-relation-tree
-
-                // Collapsible Siblings List
-                if (relations.siblings && relations.siblings.length > 0) {
-                    html += '<div class="psr-siblings-collapse-panel" id="psr-siblings-panel" style="display:none;">';
-                    html +=   '<div class="psr-collapse-title">Diğer Varyasyonlar</div>';
-                    html +=   '<div class="psr-node-list scrollable-x">';
-                    relations.siblings.forEach(function (sib) {
-                        html +=     '<div class="psr-node-card psr-clickable-card" data-sku="' + self._esc(sib.sku) + '">';
-                        html +=       '<div class="psr-node-img-wrap" data-full-src="' + sib.image_full_url + '">';
-                        html +=         '<img src="' + sib.image_url + '" class="psr-node-img">';
-                        html +=         '<span class="psr-zoom-overlay-small">🔍</span>';
-                        html +=       '</div>';
-                        html +=       '<div class="psr-node-info">';
-                        html +=         '<span class="psr-node-name">' + self._esc(sib.name) + '</span>';
-                        html +=         '<span class="psr-node-sku">SKU: ' + self._esc(sib.sku) + '</span>';
-                        html +=       '</div>';
-                        html +=     '</div>';
-                    });
-                    html +=   '</div>';
-                    html += '</div>';
-                }
-
-                html += '</div>'; // psr-relation-section
-            } else if (p.type === 'variable') {
-                html += '<div class="psr-relation-section">';
-                html +=   '<div class="psr-relation-header-row">';
-                html +=     '<div class="psr-relation-title">🔗 Ürün Varyasyon İlişkileri</div>';
-                if (relations.children && relations.children.length > 0) {
-                    html += '<button class="psr-toggle-siblings-btn" id="psr-toggle-siblings">🎨 Varyasyonları Göster (' + relations.children.length + ') ▾</button>';
-                }
-                html +=   '</div>';
-                html +=   '<div class="psr-relation-tree">';
-
-                // Render Parent Card (Active Variable product)
-                html += '<div class="psr-node">';
-                html +=   '<div class="psr-node-card psr-active-node-card">';
-                html +=     '<div class="psr-node-img-wrap" data-full-src="' + p.image_full_url_real + '">';
-                html +=       '<img src="' + p.image_url + '" class="psr-node-img">';
-                html +=       '<span class="psr-zoom-overlay-small">🔍</span>';
-                html +=     '</div>';
-                html +=     '<div class="psr-node-info">';
-                html +=       '<span class="psr-node-role active">Ebeveyn (Parent)</span>';
-                html +=       '<span class="psr-node-name">' + self._esc(p.name) + '</span>';
-                html +=       '<span class="psr-node-sku">SKU: ' + self._esc(p.sku) + '</span>';
-                html +=     '</div>';
-                html +=   '</div>';
-                html += '</div>';
-
-                html += '</div>'; // psr-relation-tree
-
-                // Collapsible Child Variations List
-                if (relations.children && relations.children.length > 0) {
-                    html += '<div class="psr-siblings-collapse-panel" id="psr-siblings-panel" style="display:none;">';
-                    html +=   '<div class="psr-collapse-title">Alt Varyasyonlar</div>';
-                    html +=   '<div class="psr-node-list scrollable-x">';
-                    relations.children.forEach(function (child) {
-                        html +=     '<div class="psr-node-card psr-clickable-card" data-sku="' + self._esc(child.sku) + '">';
-                        html +=       '<div class="psr-node-img-wrap" data-full-src="' + child.image_full_url + '">';
-                        html +=         '<img src="' + child.image_url + '" class="psr-node-img">';
-                        html +=         '<span class="psr-zoom-overlay-small">🔍</span>';
-                        html +=       '</div>';
-                        html +=       '<div class="psr-node-info">';
-                        html +=         '<span class="psr-node-name">' + self._esc(child.name) + '</span>';
-                        html +=         '<span class="psr-node-sku">SKU: ' + self._esc(child.sku) + '</span>';
-                        html +=       '</div>';
-                        html +=     '</div>';
-                    });
-                    html +=   '</div>';
-                    html += '</div>';
-                }
-
-                html += '</div>'; // psr-relation-section
-            }
-
-            return html;
         },
 
         _renderVarTable: function (vars) {
