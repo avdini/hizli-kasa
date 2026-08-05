@@ -121,18 +121,24 @@
             var base64Image = canvas.toDataURL('image/png');
             var rotateAngle = (options.type === 'barcode') ? 270 : 0;
 
+            var payload = {
+                printer_name: printerName,
+                image: base64Image,
+                rotate: rotateAngle,
+                fit_mode: (options.type === 'barcode') ? 'fit' : 'auto'
+            };
+
+            if (options.orientation) payload.orientation = options.orientation;
+            if (options.copies) payload.copies = options.copies;
+            if (options.paperSize) payload.paper_size = options.paperSize;
+
             var res = await fetch('http://127.0.0.1:' + port + '/print', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + token
                 },
-                body: JSON.stringify({
-                    printer_name: printerName,
-                    image: base64Image,
-                    rotate: rotateAngle,
-                    fit_mode: (options.type === 'barcode') ? 'fit' : 'auto'
-                })
+                body: JSON.stringify(payload)
             });
 
             if (!res.ok) {
