@@ -8,7 +8,7 @@ if (!defined('HIZLI_KASA_BOOT_TIME')) {
     define('HIZLI_KASA_BOOT_TIME', microtime(true));
 }
 
-define('HIZLI_KASA_VERSION', '12.56.0');
+define('HIZLI_KASA_VERSION', '12.56.1');
 
 // Harici İndirme ve Servis URL'leri
 define('HIZLI_KASA_HELPER_DOWNLOAD_URL', 'https://github.com/Seyfullahkurt9/web-print-helper/releases/latest/download/web-print-helper.exe');

@@ -247,15 +247,41 @@
             img.src = fullSrc;
         },
 
+        itemMetaLabelMap: {
+            '_hk_cikis_depo_id': 'Depo ID',
+            '_hk_cikis_depo_adi': 'Depo',
+            'Çıkış Deposu': 'Depo',
+            'Cikis Depo Adet': 'Depo Adet',
+            'Item Discount': 'İskonto',
+            '_hk_item_discount': 'İskonto'
+        },
+
         renderItemMetaTags: function(meta) {
             var self = this;
             if (!meta || typeof meta !== 'object') return '';
 
             return Object.keys(meta).map(function(key) {
-                var field = self.formatMetaField(key, meta[key]);
-                if (!field) return '';
-                return '<span class="meta-tag" title="' + self.escapeHtml(field.label) + '">' + self.escapeHtml(field.label) + ': ' + field.value + '</span>';
-            }).join('');
+                var val = meta[key];
+                if (val === null || val === undefined || val === '' || val === '0' || val === 0 || val === '0.00') return '';
+
+                var numVal = parseFloat(val);
+                if (!isNaN(numVal) && Math.abs(numVal) < 0.001) return '';
+
+                var fieldLabel = self.itemMetaLabelMap[key] || (self.fieldLabelMap[key] || key);
+                
+                var displayVal = val;
+                if (key === 'Item Discount' || key === '_hk_item_discount') {
+                    displayVal = self.formatCurrency(numVal);
+                } else {
+                    displayVal = self.escapeHtml(val);
+                }
+
+                var badgeClass = 'meta-tag';
+                if (key.indexOf('Depo') !== -1 || key.indexOf('depo') !== -1) badgeClass += ' meta-tag-depo';
+                else if (key.indexOf('Discount') !== -1 || key.indexOf('iskonto') !== -1 || key.indexOf('İskonto') !== -1) badgeClass += ' meta-tag-discount';
+
+                return '<span class="' + badgeClass + '" title="' + self.escapeHtml(fieldLabel) + '">' + self.escapeHtml(fieldLabel) + ': ' + displayVal + '</span>';
+            }).filter(Boolean).join('');
         },
 
         renderOrderItemRow: function(item) {
@@ -269,13 +295,17 @@
             var qty = Number(item.qty || 0);
             var metaStr = this.renderItemMetaTags(item.meta);
 
+            var calcText = (qty > 1) 
+                ? 'Adet: ' + qty + ' <span class="item-price-calc">(' + priceFormatted + ' x ' + qty + ' = ' + subtotalFormatted + ')</span>'
+                : 'Adet: 1 · <span class="item-price-calc">' + subtotalFormatted + '</span>';
+
             return (
                 '<li class="order-item-row">' +
                     '<div class="report-item-media">' + imageHtml + '</div>' +
                     '<div class="report-item-content">' +
                         '<strong>' + this.escapeHtml(item.name || 'Ürün') + '</strong>' +
                         (item.sku ? ' <span class="report-item-sku">[' + this.escapeHtml(item.sku) + ']</span>' : '') +
-                        '<div class="report-item-subline">Adet: ' + this.escapeHtml(qty) + ' <span class="item-price-calc">(' + priceFormatted + ' x ' + this.escapeHtml(qty) + ' = ' + subtotalFormatted + ')</span></div>' +
+                        '<div class="report-item-subline">' + calcText + '</div>' +
                         (metaStr ? '<div class="report-item-meta-tags">' + metaStr + '</div>' : '') +
                     '</div>' +
                 '</li>'

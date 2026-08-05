@@ -286,8 +286,16 @@
 
 .report-action-buttons {
     display: flex;
-    align-items: center;
-    gap: 6px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    min-width: 90px;
+    flex-shrink: 0;
+}
+
+.btn-detail, .btn-reprint {
+    justify-content: center;
+    width: 100%;
 }
 
 .meta-details-row {
@@ -682,23 +690,50 @@
 }
 
 .report-item-meta-tags {
-    margin-top: 5px;
+    margin-top: 4px;
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
 }
 
 .meta-tag {
-    display: inline-block;
-    padding: 1px 4px;
-    background: var(--hk-bg-body);
-    border: 1px solid var(--hk-border);
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    background: var(--hk-bg-body, #f8fafc);
+    border: 1px solid var(--hk-border-color, #cbd5e1);
     border-radius: 4px;
-    font-size: 10.5px;
+    font-size: 10px;
+    font-weight: 600;
     margin: 0;
-    color: var(--hk-text-muted);
+    color: var(--hk-text-muted, #475569);
     max-width: 100%;
-    overflow-wrap: anywhere;
+    white-space: nowrap;
+    line-height: 1.3;
+}
+
+.meta-tag-depo {
+    background: rgba(59, 130, 246, 0.08);
+    color: #2563eb;
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.meta-tag-discount {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+#hizli-kasa-app.theme-dark .meta-tag-depo {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+#hizli-kasa-app.theme-dark .meta-tag-discount {
+    background: rgba(245, 158, 11, 0.18);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.35);
 }
 
 .item-price-calc {
