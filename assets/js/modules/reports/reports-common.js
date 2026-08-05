@@ -38,6 +38,9 @@
             _hizli_kasa_manual_refund: 'Manuel İade',
             _verilen_kupon_kodu: 'Verilen Kupon Kodu',
             _hk_toplam_iskonto: 'Ürün İskontoları',
+            _hk_cikis_depo_adet: 'Çıkış Depo Adeti',
+            _hk_reservations: 'Stok Rezervasyonları',
+            _hk_restocked_on_cancel: 'İptalde Stok Yükleme',
             _order_total: 'Sipariş Toplamı',
             _order_tax: 'Vergi Toplamı',
             _order_shipping: 'Kargo Tutarı'
@@ -79,53 +82,28 @@
             if (Math.abs(iban) > 0.01) activeMethods.push({ type: 'iban', name: 'IBAN', amount: iban });
             if (Math.abs(qrTaksit) > 0.01) activeMethods.push({ type: 'qr_taksit', name: 'QR Taksit', amount: qrTaksit });
             if (Math.abs(kupon) > 0.01) activeMethods.push({ type: 'kupon', name: 'Kupon', amount: kupon });
-            
-            var nonCouponMethods = [];
-            if (Math.abs(nakit) > 0.01) nonCouponMethods.push({ type: 'nakit', name: 'Nakit', amount: nakit });
-            if (Math.abs(kart) > 0.01) nonCouponMethods.push({ type: 'kart', name: 'Kart', amount: kart });
-            if (Math.abs(iban) > 0.01) nonCouponMethods.push({ type: 'iban', name: 'IBAN', amount: iban });
-            if (Math.abs(qrTaksit) > 0.01) nonCouponMethods.push({ type: 'qr_taksit', name: 'QR Taksit', amount: qrTaksit });
-            
-            var badges = [];
-            var icons = { nakit: '💵', kart: '💳', iban: '🏦', qr_taksit: '📱', kupon: '🎟️' };
 
-            if (Math.abs(kupon) > 0.01) {
-                badges.push('<div class="payment-badge payment-kupon" title="Kupon Ödeme: ' + this.escapeHtml(this.formatCurrency(kupon)) + '">🎟️ Kupon</div>');
+            if (!activeMethods.length) {
+                var rawMethod = order.payment || 'Nakit';
+                return '<div class="payment-badge payment-belirsiz" title="' + this.escapeHtml(rawMethod) + '">💳 ' + this.escapeHtml(rawMethod) + '</div>';
             }
 
-            if (nonCouponMethods.length > 1) {
-                var tooltipText = nonCouponMethods.map(m => m.name + ': ' + this.formatCurrency(m.amount)).join(' | ');
-                badges.push('<div class="payment-badge payment-bolunmus" title="' + this.escapeHtml(tooltipText) + '">🔀 Bölünmüş</div>');
-            } else if (nonCouponMethods.length === 1) {
-                var method = nonCouponMethods[0];
-                badges.push('<div class="payment-badge payment-' + method.type + '" title="' + method.name + ' Ödeme: ' + this.escapeHtml(this.formatCurrency(method.amount)) + '">' + (icons[method.type] || '') + ' ' + method.name + '</div>');
+            if (activeMethods.length === 1) {
+                var method = activeMethods[0];
+                var icon = '💳';
+                if (method.type === 'nakit') icon = '💵';
+                else if (method.type === 'iban') icon = '🏦';
+                else if (method.type === 'qr_taksit') icon = '📱';
+                else if (method.type === 'kupon') icon = '🎟️';
+                return '<div class="payment-badge payment-' + method.type + '" title="' + this.escapeHtml(method.name) + '">' + icon + ' ' + this.escapeHtml(method.name) + '</div>';
             }
 
-            if (badges.length === 0) {
-                var paymentTitle = order.payment || 'Belirsiz';
-                var paymentType = 'belirsiz';
-                var icon = '❓';
-                var normalized = paymentTitle.toLowerCase();
-                if (normalized.indexOf('qr') !== -1 || normalized.indexOf('sanal') !== -1) {
-                    paymentType = 'qr_taksit';
-                    icon = '📱';
-                } else if (normalized.indexOf('nakit') !== -1 || normalized.indexOf('cash') !== -1) {
-                    paymentType = 'nakit';
-                    icon = '💵';
-                } else if (normalized.indexOf('kart') !== -1 || normalized.indexOf('card') !== -1 || normalized.indexOf('kredi') !== -1) {
-                    paymentType = 'kart';
-                    icon = '💳';
-                } else if (normalized.indexOf('iban') !== -1 || normalized.indexOf('havale') !== -1 || normalized.indexOf('transfer') !== -1) {
-                    paymentType = 'iban';
-                    icon = '📱';
-                } else if (normalized.indexOf('kupon') !== -1) {
-                    paymentType = 'kupon';
-                    icon = '🎟️';
-                }
-                badges.push('<div class="payment-badge payment-' + paymentType + '" title="' + this.escapeHtml(paymentTitle) + '">' + icon + ' ' + paymentTitle + '</div>');
-            }
+            var parts = activeMethods.map(function(m) {
+                return m.name + ': ' + '₺' + m.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+            });
+            var tooltipText = parts.join(' | ');
 
-            return '<div style="display: flex; gap: 5px; flex-wrap: wrap;">' + badges.join('') + '</div>';
+            return '<div class="payment-badge payment-bolunmus" title="' + this.escapeHtml(tooltipText) + '">🔀 Bölünmüş</div>';
         },
 
         humanizeKey: function(key) {
@@ -151,25 +129,29 @@
                     display = this.formatCurrency(raw);
                 } else if (normalizedKey === '_hk_cikis_depo_id') {
                     return null;
-                } else if (normalizedKey === '_hizli_kasa_is_refund' || normalizedKey === '_hk_has_refund' || normalizedKey === '_hk_is_fully_refunded') {
-                    display = (String(raw) === 'yes') ? 'Evet' : 'Hayır';
+                } else if (normalizedKey === '_hizli_kasa_is_refund' || normalizedKey === '_hk_has_refund' || normalizedKey === '_hk_is_fully_refunded' || normalizedKey === '_hk_restocked_on_cancel' || normalizedKey === '_hizli_kasa_manual_refund') {
+                    display = (String(raw) === 'yes') ? 'Evet' : ((String(raw) === 'no') ? 'Hayır' : this.escapeHtml(raw));
                 } else if (normalizedKey === '_hk_kaynak' || normalizedKey === '_hizli_kasa_kaynak') {
                     if (raw === 'pos_satis') display = 'Kasa Satışı';
                     else if (raw === 'pos_iade') display = 'Kasa İadesi';
                     else display = this.escapeHtml(raw);
-                } else if (normalizedKey === '_hk_iade_depo_ozet') {
+                } else if (normalizedKey === '_hk_iade_depo_ozet' || normalizedKey === '_hk_reservations') {
                     try {
                         var obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
-                        var parts = [];
-                        for (var id in obj) {
-                            parts.push('Depo #' + id + ': ' + obj[id] + ' adet');
+                        if (typeof obj === 'object' && obj !== null) {
+                            var parts = [];
+                            for (var id in obj) {
+                                parts.push('Depo #' + id + ': ' + obj[id] + ' adet');
+                            }
+                            display = parts.join(', ') || '-';
+                        } else {
+                            display = this.escapeHtml(raw);
                         }
-                        display = parts.join(', ');
                     } catch (e) {
                         display = this.escapeHtml(raw);
                     }
                 } else {
-                    display = this.escapeHtml(raw);
+                    display = (typeof raw === 'object') ? JSON.stringify(raw) : this.escapeHtml(raw);
                 }
             }
 
@@ -358,7 +340,7 @@
             var processKeys = ['_hk_kaynak', '_hizli_kasa_kaynak', '_hizli_kasa_original_order', '_hizli_kasa_is_refund', '_hizli_kasa_manual_refund', '_hk_has_refund', '_hk_refunded_qty', '_hk_is_fully_refunded', '_hk_iade_depo_ozet', '_verilen_kupon_kodu', '_payment_method_title', '_hizli_kasa_siparis_notu', '_hizli_kasa_base_odeme_tipi'];
 
             // Her zaman 2. katmana düşmesi gereken teknik/gereksiz anahtarlar
-            var alwaysExtraKeys = ['_hk_cikis_depo_id', '_hizli_kasa_kasiyer_id', '_hk_idempotency', '_hk_idemp', '_hk_key', '_transaction_id', '_created_via', '_cart_hash', '_order_key', '_edit_lock', '_edit_last', '_wp_old_date'];
+            var alwaysExtraKeys = ['_hk_cikis_depo_id', '_hizli_kasa_kasiyer_id', '_hk_idempotency', '_hk_idemp', '_hk_key', '_transaction_id', '_created_via', '_cart_hash', '_order_key', '_edit_lock', '_edit_last', '_wp_old_date', '_hk_cikis_depo_adet', '_hk_reservations', '_hk_restocked_on_cancel'];
 
             var financeItems = [];
             var userItems = [];
