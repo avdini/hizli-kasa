@@ -118,14 +118,14 @@
                 useCORS: true
             });
 
-            var base64Image = canvas.toDataURL('image/png');
-            var rotateAngle = (options.type === 'barcode') ? 270 : 0;
+            var rotateAngle = (options.rotate !== undefined) ? options.rotate : 0;
+            var fitMode = options.fitMode || ((options.type === 'barcode') ? 'stretch' : 'auto');
 
             var payload = {
                 printer_name: printerName,
                 image: base64Image,
                 rotate: rotateAngle,
-                fit_mode: (options.type === 'barcode') ? 'fit' : 'auto'
+                fit_mode: fitMode
             };
 
             if (options.orientation) payload.orientation = options.orientation;
