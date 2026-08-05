@@ -148,88 +148,145 @@
     display: block;
 }
 
+/* Modern Tablo Genel Yapısı */
+.gs-tablo {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
 #all-orders-table th,
+#internet-orders-table th,
 #refund-list-table th,
-#edit-logs-table th {
+#edit-logs-table th,
+#day-end-history-table th,
+#sayim-history-table th,
+.gs-tablo th {
     text-align: left;
-    padding: 8px 12px;
-    background: var(--hk-bg-body);
-    border-bottom: 2px solid var(--hk-border);
+    padding: 10px 14px;
+    background: linear-gradient(180deg, var(--hk-bg-body, #f8fafc) 0%, var(--hk-bg-card, #f1f5f9) 100%);
+    border-bottom: 2px solid var(--hk-border-color, #e2e8f0);
+    color: var(--hk-text-muted, #64748b);
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     position: sticky;
     top: -20px;
     z-index: 10;
+    white-space: nowrap;
 }
 
 #all-orders-table td,
+#internet-orders-table td,
 #refund-list-table td,
-#edit-logs-table td {
-    padding: 6px 12px;
-    border-bottom: 1px solid var(--hk-border);
-    font-size: 13.5px;
-    vertical-align: top;
+#edit-logs-table td,
+#day-end-history-table td,
+#sayim-history-table td,
+.gs-tablo td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--hk-border-color, #f1f5f9);
+    font-size: 13px;
+    vertical-align: middle;
+    transition: background 0.15s ease;
 }
 
+.gs-tablo tbody tr:not(.meta-details-row):hover {
+    background: rgba(59, 130, 246, 0.03);
+}
+
+/* Pagination Premium Tasarım */
 .hk-pagination {
     display: flex;
     justify-content: center;
-    gap: 5px;
-    margin-top: 20px;
+    align-items: center;
+    gap: 6px;
+    margin-top: 24px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--hk-border-color, #e2e8f0);
 }
 
 .hk-page-btn {
-    padding: 5px 12px;
-    border: 1px solid var(--hk-border);
-    background: var(--hk-bg-card);
-    color: var(--hk-text-main);
-    border-radius: 4px;
+    padding: 6px 13px;
+    border: 1px solid var(--hk-border-color, #cbd5e1);
+    background: var(--hk-bg-card, #ffffff);
+    color: var(--hk-text-main, #334155);
+    border-radius: 6px;
     cursor: pointer;
-    transition: all 0.2s;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 
 .hk-page-btn.aktif {
-    background: var(--hk-accent);
-    color: #fff;
-    border-color: var(--hk-accent);
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: #ffffff;
+    border-color: #2563eb;
+    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
+    font-weight: 700;
 }
 
 .hk-page-btn:hover:not(.aktif) {
-    background: var(--hk-bg-hover);
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--hk-accent, #2563eb);
+    border-color: rgba(59, 130, 246, 0.3);
+    transform: translateY(-1px);
 }
 
+/* Rapor Butonları Premium Tasarım */
 .btn-detail {
-    padding: 4px 8px;
-    background: var(--hk-bg-body);
-    border: 1px solid var(--hk-border);
-    border-radius: 4px;
+    padding: 5px 11px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border: 1px solid #2563eb;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 12px;
-    color: var(--hk-text-main);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 5px rgba(59, 130, 246, 0.25);
+    transition: all 0.15s ease;
+    white-space: nowrap;
 }
 
 .btn-detail:hover {
-    background: var(--hk-accent);
-    color: #fff;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.35);
+    transform: translateY(-1px);
 }
 
 .btn-reprint {
-    padding: 4px 8px;
-    background: var(--hk-bg-body);
-    border: 1px solid var(--hk-border);
-    border-radius: 4px;
+    padding: 5px 11px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: 1px solid #059669;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 12px;
-    color: var(--hk-text-main);
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 5px rgba(16, 185, 129, 0.25);
+    transition: all 0.15s ease;
+    white-space: nowrap;
 }
 
 .btn-reprint:hover {
-    background: var(--hk-success);
-    color: #fff;
-    border-color: var(--hk-success);
+    background: linear-gradient(135deg, #059669, #047857);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);
+    transform: translateY(-1px);
 }
 
 .report-action-buttons {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 6px;
 }
 
@@ -813,22 +870,41 @@
 }
 
 .rapor-kart {
-    background: var(--hk-bg-card);
+    background: var(--hk-bg-card, #ffffff);
+    border: 1px solid var(--hk-border-color, #e2e8f0);
     border-radius: 12px;
-    padding: 20px;
-    box-shadow: var(--hk-shadow-md);
+    padding: 20px 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    transition: box-shadow 0.2s ease;
 }
 
 .rapor-kart-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--hk-border-color, #e2e8f0);
 }
 
 .rapor-kart-title {
     margin: 0;
-    color: var(--hk-accent);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--hk-text-main, #1e293b);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -0.2px;
+}
+
+.rapor-kart-title::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 16px;
+    background: linear-gradient(180deg, #3b82f6, #1d4ed8);
+    border-radius: 2px;
 }
 
 .rapor-arama-input {
@@ -994,5 +1070,63 @@
     background-color: rgba(245, 158, 11, 0.15);
     border-color: rgba(245, 158, 11, 0.25);
 }
+
+/* Dark mode theme overrides for Report Containers & Tables */
+#hizli-kasa-app.theme-dark .rapor-kart {
+    background: var(--hk-dark-card, #1e293b);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+#hizli-kasa-app.theme-dark .rapor-kart-header {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+#hizli-kasa-app.theme-dark .rapor-kart-title {
+    color: #f1f5f9;
+}
+
+#hizli-kasa-app.theme-dark .gs-tablo th,
+#hizli-kasa-app.theme-dark #all-orders-table th,
+#hizli-kasa-app.theme-dark #internet-orders-table th,
+#hizli-kasa-app.theme-dark #refund-list-table th,
+#hizli-kasa-app.theme-dark #edit-logs-table th,
+#hizli-kasa-app.theme-dark #day-end-history-table th,
+#hizli-kasa-app.theme-dark #sayim-history-table th {
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+}
+
+#hizli-kasa-app.theme-dark .gs-tablo td,
+#hizli-kasa-app.theme-dark #all-orders-table td,
+#hizli-kasa-app.theme-dark #internet-orders-table td,
+#hizli-kasa-app.theme-dark #refund-list-table td,
+#hizli-kasa-app.theme-dark #edit-logs-table td,
+#hizli-kasa-app.theme-dark #day-end-history-table td,
+#hizli-kasa-app.theme-dark #sayim-history-table td {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+#hizli-kasa-app.theme-dark .gs-tablo tbody tr:not(.meta-details-row):hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+#hizli-kasa-app.theme-dark .hk-pagination {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+#hizli-kasa-app.theme-dark .hk-page-btn {
+    background: #1e293b;
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+}
+
+#hizli-kasa-app.theme-dark .hk-page-btn:hover:not(.aktif) {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
 
 
