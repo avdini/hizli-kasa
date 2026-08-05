@@ -131,7 +131,7 @@ public static function get_list() {
         }
 
         // Toplam sayıyı bul
-        $total_items = $wpdb->get_var($wpdb->prepare("SELECT COUNT(DISTINCT main_id) FROM ($base_sql) as t", $params));
+        $total_items = $wpdb->get_var($params === [] ? "SELECT COUNT(DISTINCT main_id) FROM ($base_sql) as t" : $wpdb->prepare("SELECT COUNT(DISTINCT main_id) FROM ($base_sql) as t", $params));
         
         // Sayfalanmış ana ID'leri çek
         $main_ids = $wpdb->get_col($wpdb->prepare("SELECT DISTINCT main_id FROM ($base_sql) as ids ORDER BY main_id DESC LIMIT %d OFFSET %d", array_merge($params, [$per_page, $offset])));

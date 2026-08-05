@@ -42,11 +42,15 @@ class Hizli_Kasa_Catalog_Public_Handler {
         $tables       = Hizli_Kasa_Database::get_tables();
         $warehouses   = $wpdb->get_results("SELECT id, name FROM {$tables['depolar']} ORDER BY priority DESC, id ASC");
 
-        $placeholders = implode(',', array_fill(0, count($product_ids), '%d'));
-        $stock_rows   = $wpdb->get_results($wpdb->prepare(
-            "SELECT product_id, variation_id, location_id, quantity FROM {$tables['stok_konumlari']} WHERE product_id IN ($placeholders)",
-            ...$product_ids
-        ));
+        if (!empty($product_ids)) {
+            $placeholders = implode(',', array_fill(0, count($product_ids), '%d'));
+            $stock_rows   = $wpdb->get_results($wpdb->prepare(
+                "SELECT product_id, variation_id, location_id, quantity FROM {$tables['stok_konumlari']} WHERE product_id IN ($placeholders)",
+                ...$product_ids
+            ));
+        } else {
+            $stock_rows = [];
+        }
 
         $stock_map = [];
         foreach ($stock_rows as $row) {

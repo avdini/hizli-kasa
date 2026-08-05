@@ -75,7 +75,8 @@ class Hizli_Kasa_Database {
             PRIMARY KEY  (id),
             KEY product_id (product_id),
             KEY variation_id (variation_id),
-            KEY location_id (location_id)
+            KEY location_id (location_id),
+            KEY idx_prod_var (product_id, variation_id)
         ) $charset_collate;";
         dbDelta($sql2);
         if ($wpdb->last_error) {

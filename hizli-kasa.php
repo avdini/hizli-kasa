@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 12.54.2
+ * Version: 12.54.3
  * Author: Seyfullah Kurt
  * Requires Plugins: woocommerce
  * Requires at least: 5.8

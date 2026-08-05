@@ -84,34 +84,23 @@ class Hizli_Kasa_Mismatch_Notifier {
         
         $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
         
-        // Daha güvenilir ve test edilmiş alt sorgu mantığı
+        // JOIN ve GROUP BY tabanlı yüksek performanslı uyuşmazlık sorgusu
         $query = "
-            SELECT item_id, total_wh, wc_stock, post_title, post_type
-            FROM (
-                SELECT 
-                    p.ID as item_id,
-                    p.post_title,
-                    p.post_type,
-                    (SELECT COALESCE(SUM(sk.quantity - sk.reserved), 0) 
-                     FROM $stok_table sk 
-                     WHERE (p.post_type = 'product_variation' AND sk.variation_id = p.ID) 
-                        OR (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0)
-                    ) as total_wh,
-                    (SELECT COALESCE(MIN(sk.quantity - sk.reserved), 0) 
-                     FROM $stok_table sk 
-                     WHERE (p.post_type = 'product_variation' AND sk.variation_id = p.ID) 
-                        OR (p.post_type = 'product' AND sk.product_id = p.ID AND sk.variation_id = 0)
-                    ) as min_wh,
-                    (SELECT COALESCE(meta_value, 0) 
-                     FROM {$wpdb->postmeta} 
-                     WHERE post_id = p.ID AND meta_key = '_stock' 
-                     LIMIT 1
-                    ) as wc_stock
-                FROM {$wpdb->posts} p
-                WHERE (p.post_type = 'product_variation' OR (p.post_type = 'product' AND NOT EXISTS (SELECT 1 FROM {$wpdb->posts} as p_child WHERE p_child.post_parent = p.ID AND p_child.post_type = 'product_variation'))) 
-                  AND p.post_status IN ('publish', 'private')
-            ) as stock_summary
-            WHERE ROUND(CAST(total_wh AS DECIMAL(15,4)), 4) != ROUND(CAST(wc_stock AS DECIMAL(15,4)), 4) OR min_wh < 0
+            SELECT 
+                p.ID as item_id,
+                p.post_title,
+                p.post_type,
+                COALESCE(SUM(sk.quantity - sk.reserved), 0) as total_wh,
+                COALESCE(MIN(sk.quantity - sk.reserved), 0) as min_wh,
+                COALESCE(CAST(pm_stock.meta_value AS DECIMAL(15,4)), 0) as wc_stock
+            FROM {$wpdb->posts} p
+            LEFT JOIN {$wpdb->postmeta} pm_stock ON (pm_stock.post_id = p.ID AND pm_stock.meta_key = '_stock')
+            LEFT JOIN $stok_table sk ON sk.variation_id = IF(p.post_type = 'product_variation', p.ID, 0)
+                AND sk.product_id = IF(p.post_type = 'product_variation', p.post_parent, p.ID)
+            WHERE (p.post_type = 'product_variation' OR (p.post_type = 'product' AND NOT EXISTS (SELECT 1 FROM {$wpdb->posts} as p_child WHERE p_child.post_parent = p.ID AND p_child.post_type = 'product_variation')))
+              AND p.post_status IN ('publish', 'private')
+            GROUP BY p.ID
+            HAVING ROUND(total_wh, 4) != ROUND(wc_stock, 4) OR min_wh < 0
             LIMIT 5";
             
         $mismatches = $wpdb->get_results($query);

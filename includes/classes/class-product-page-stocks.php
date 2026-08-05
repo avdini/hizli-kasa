@@ -116,6 +116,14 @@ class Hizli_Kasa_Product_Page_Stocks {
         $stok_table = $tables['stok_konumlari'];
 
         $allowed_depo_ids = array_map('intval', $allowed_depo_ids);
+        if (empty($allowed_depo_ids)) {
+            wp_send_json_success([
+                'is_variable' => false,
+                'warehouses'  => [],
+                'variations'  => []
+            ]);
+        }
+
         $placeholders = implode(',', array_fill(0, count($allowed_depo_ids), '%d'));
 
         $warehouses = $wpdb->get_results(
