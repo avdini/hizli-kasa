@@ -130,7 +130,8 @@
                 body: JSON.stringify({
                     printer_name: printerName,
                     image: base64Image,
-                    rotate: rotateAngle
+                    rotate: rotateAngle,
+                    fit_mode: (options.type === 'barcode') ? 'fit' : 'auto'
                 })
             });
 
