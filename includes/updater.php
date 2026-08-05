@@ -21,8 +21,8 @@ function hizli_kasa_init_updater($plugin_file)
             return $strategies;
         });
 
-        $repo_url   = defined('HIZLI_KASA_UPDATE_REPO') ? HIZLI_KASA_UPDATE_REPO : 'https://github.com/Seyfullahkurt9/hizli-kasa/';
-        $repo_branch = defined('HIZLI_KASA_UPDATE_BRANCH') ? HIZLI_KASA_UPDATE_BRANCH : 'main';
+        $repo_url   = defined('HIZLI_KASA_UPDATE_REPO') ? HIZLI_KASA_UPDATE_REPO : 'https://github.com/Seyfullahkurt9/woo-quick-pos/';
+        $repo_branch = defined('HIZLI_KASA_UPDATE_BRANCH') ? HIZLI_KASA_UPDATE_BRANCH : 'master';
 
         $hizli_kasa_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
             $repo_url,
