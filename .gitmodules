@@ -1,8 +1,11 @@
 [submodule "src-driver/web-print-helper"]
 	path = src-driver/web-print-helper
 	url = https://github.com/Seyfullahkurt9/web-print-helper.git
+	fetchRecurseSubmodules = true
 
 [submodule "src-driver/easy-returns"]
 	path = src-driver/easy-returns
 	url = https://github.com/Seyfullahkurt9/easy-returns.git
+	fetchRecurseSubmodules = true
+
 
