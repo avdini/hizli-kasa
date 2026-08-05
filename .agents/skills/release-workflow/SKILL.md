@@ -17,9 +17,9 @@ Kullanıcı **"güncelle"**, **"sürüm yayınla"**, **"versiyon yükselt ve gü
    - Hata Düzeltmesi (Bugfix): `PATCH` (örn: 12.46.2 -> 12.46.3)
    - Yeni Özellik (Feature): `MINOR` (örn: 12.46.0 -> 12.47.0)
    - Breaking Change: `MAJOR` (örn: 12.46.0 -> 13.0.0)
-3. `hizli-kasa.php` dosyasındaki:
-   - Header `Version:` başlığını
-   - `define('HIZLI_KASA_VERSION', '...');` sabitini yeni versiyona yükselt.
+3. Versiyon numaralarını yükselt:
+   - `hizli-kasa.php` dosyasındaki Header `Version:` başlığını
+   - `includes/constants.php` içerisindeki `define('HIZLI_KASA_VERSION', '...');` sabitini yeni versiyona güncelle.
 
 ---
 

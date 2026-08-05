@@ -95,7 +95,7 @@ Kullanıcı **"güncelle"**, **"sürüm yayınla"**, **"versiyon yükselt ve gü
 
 1. **İş Analizi & SemVer Versiyon Yükseltme:**
    - Yapılan son değişikliklerin niteliğini (hata düzeltmesi: `PATCH`, yeni özellik: `MINOR`, breaking change: `MAJOR`) analiz eder.
-   - `hizli-kasa.php` dosyasındaki `Version:` başlığını ve `define('HIZLI_KASA_VERSION', '...');` sabitini yeni versiyona yükseltir.
+   - `hizli-kasa.php` dosyasındaki `Version:` başlığını ve `includes/constants.php` içindeki `define('HIZLI_KASA_VERSION', '...');` sabitini yeni versiyona yükseltir.
 
 2. **Semantik Commit (Conventional Commits):**
    - Değişiklikleri tam kapsayacak şekilde `feat`, `fix`, `docs`, `refactor` vb. ön ekli Türkçe/İngilizce açıklayıcı commit mesajı oluşturur:
