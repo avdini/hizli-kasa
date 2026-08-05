@@ -3,7 +3,7 @@
 /**
  * Plugin Name: Hızlı Kasa
  * Description: avdini için hızlı POS sistemi.
- * Version: 12.51.1
+ * Version: 12.52.0
  * Author: Seyfullah Kurt
  * Requires Plugins: woocommerce
  * Requires at least: 5.8
@@ -14,49 +14,14 @@
 if (!defined('ABSPATH'))
     exit;
 
-// Sabitler
-if (!defined('HIZLI_KASA_BOOT_TIME')) {
-    define('HIZLI_KASA_BOOT_TIME', microtime(true));
-}
-define('HIZLI_KASA_VERSION', '12.51.1');
+// Temel Yol Sabitleri (__FILE__ bağlamlı)
 define('HIZLI_KASA_PATH', plugin_dir_path(__FILE__));
 define('HIZLI_KASA_URL', plugin_dir_url(__FILE__));
 
-function hizli_kasa_log($message, $filename = 'hizli-kasa-debug.log')
-{
-    $context = [];
-    if (is_array($message) || is_object($message)) {
-        $context = (array) $message;
-        $message = wp_json_encode($message, JSON_UNESCAPED_UNICODE);
-    }
-
-    if (class_exists('Hizli_Kasa_Logger')) {
-        $channel = 'system';
-        $msg_lower = mb_strtolower((string) $message);
-        if (strpos($msg_lower, 'stok') !== false || strpos($msg_lower, 'depo') !== false || strpos($msg_lower, 'rezervasyon') !== false) {
-            $channel = 'stock';
-        } elseif (strpos($msg_lower, 'sipariş') !== false || strpos($msg_lower, 'iade') !== false || strpos($msg_lower, 'kasiyer') !== false) {
-            $channel = 'pos';
-        } elseif (strpos($msg_lower, 'sku') !== false || strpos($msg_lower, 'barkod') !== false) {
-            $channel = 'sku';
-        }
-
-        $level = 'info';
-        if (strpos($msg_lower, 'hata') !== false || strpos($msg_lower, 'error') !== false || strpos($msg_lower, 'çatışma') !== false || strpos($msg_lower, 'çakışma') !== false || strpos($msg_lower, 'uyarı') !== false) {
-            $level = 'warning';
-        }
-
-        Hizli_Kasa_Logger::log($message, $channel, $level, $context);
-    }
-}
-
-/**
- * Admin işlemleri için ayrı log
- */
-function hizli_kasa_admin_log($message)
-{
-    hizli_kasa_log($message, 'hizli-kasa-admin.log');
-}
+// Modül Dosyalarını Yükle
+require_once HIZLI_KASA_PATH . 'includes/constants.php';
+require_once HIZLI_KASA_PATH . 'includes/helpers.php';
+require_once HIZLI_KASA_PATH . 'includes/updater.php';
 
 // Sınıfları Yükle ve Başlat (WooCommerce Yüklendikten Sonra)
 add_action('plugins_loaded', 'hizli_kasa_init');
@@ -149,42 +114,5 @@ function hizli_kasa_db_activation() {
     }
 }
 
-// Otomatik Güncelleme Sistemi (Plugin Update Checker)
-// POS AJAX ve REST isteklerinde GitHub cURL kilitlenmesini önlemek için PUC'ı sadece WP Admin, Cron veya WP Eklenti Güncelleme AJAX isteğinde çalıştırıyoruz.
-$is_wp_update_ajax = wp_doing_ajax() && isset($_REQUEST['action']) && $_REQUEST['action'] === 'update-plugin';
-
-if ((!wp_doing_ajax() || $is_wp_update_ajax) && (!defined('REST_REQUEST') || !REST_REQUEST)) {
-    require_once HIZLI_KASA_PATH . 'includes/plugin-update-checker/plugin-update-checker.php';
-
-    // PUC'ın Release/Tag aramayı bırakıp doğrudan hedef branch'i (main/master) takip etmesini sağlıyoruz
-    add_filter('puc_vcs_update_detection_strategies-hizli-kasa', function ($strategies) {
-        unset($strategies['latest_release']);
-        unset($strategies['latest_tag']);
-        return $strategies;
-    });
-
-    $repo_url   = defined('HIZLI_KASA_UPDATE_REPO') ? HIZLI_KASA_UPDATE_REPO : 'https://github.com/Seyfullahkurt9/hizli-kasa/';
-    $repo_branch = defined('HIZLI_KASA_UPDATE_BRANCH') ? HIZLI_KASA_UPDATE_BRANCH : 'main';
-
-    $hizli_kasa_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
-        $repo_url,
-        __FILE__,
-        'hizli-kasa'
-    );
-
-    $hizli_kasa_update_checker->setBranch($repo_branch);
-
-    // WP Admin'de "Güncellemeleri Kontrol Et" isteğinde önbelleği temizleyip zorla kontrol ettiriyoruz
-    if (is_admin() && isset($_GET['force-check'])) {
-        $hizli_kasa_update_checker->requestUpdate();
-    }
-
-    // DNS ve yavaş ağ kilitlenmelerine karşı 15 saniyelik dengeli cURL zaman aşımı
-    add_filter('http_request_args', function ($args, $url) {
-        if (strpos($url, 'api.github.com') !== false || strpos($url, 'github.com') !== false || strpos($url, 'codeload.github.com') !== false) {
-            $args['timeout'] = 15;
-        }
-        return $args;
-    }, 10, 2);
-}
-
+// Otomatik Güncelleme Sistemini Başlat (PUC)
+hizli_kasa_init_updater(__FILE__);

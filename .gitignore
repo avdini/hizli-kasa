@@ -7,4 +7,8 @@
 *.spec
 /src-driver/standalone/
 
+# Executable binaries (distributed via GitHub Releases)
+assets/bin/*.exe
+
+
 

@@ -143,3 +143,15 @@ Termal yazıcılar (203 DPI) ve sessiz yazdırma kütüphaneleri (`html2canvas` 
 5. **Keskin Kenarlıklar (Border Thickening):**
    - Çizgi ayraçlarında sub-pixel (`0.5px`) kullanılmamalı, alt/üst kenarlıklarda en az `1px solid #000000` ve ana bölüm ayrıcılarında `2px solid #000000` tercih edilmelidir.
 
+---
+
+## 8. Sürücü Dağıtım Modeli & GitHub Releases
+
+Yazdırma yardımcısı `web-print-helper.exe` doğrudan eklenti dosyaları (ZIP) içinde gömülü **değildir**.
+
+1. **Dağıtım Kanalı:** Binary sürücü, [web-print-helper GitHub Releases](https://github.com/Seyfullahkurt9/web-print-helper/releases) üzerinden bağımsız olarak dağıtılır.
+2. **Sabit URL:** Eklenti içerisindeki `HIZLI_KASA_HELPER_DOWNLOAD_URL` sabiti her zaman GitHub'ın `/releases/latest/download/web-print-helper.exe` bağlantısını işaret eder.
+3. **Güvenlik & Kod İmzalama:** CI/CD sürecinde otomatik build edilen binary SignPath.io altyapısı ile dijital olarak imzalanır.
+4. **Eklenti Boyutu:** Exe dosyaları plugin reposundan çıkarıldığı için eklenti ZIP paketi ~40 MB hafiflemiştir.
+
+
