@@ -137,7 +137,7 @@
 
             if (!res.ok) {
                 var errJson = await res.json().catch(function() { return {}; });
-                throw new Error(errJson.message || 'Yazıcı servisi yazdırma işlemini reddetti.');
+                throw new Error(errJson.error || errJson.message || 'Yazıcı servisi yazdırma işlemini reddetti.');
             }
 
             return true;
