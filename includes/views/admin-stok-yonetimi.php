@@ -872,6 +872,14 @@ jQuery(document).ready(function($) {
             
             const isExpanded = isVariable && autoExpand ? 'expanded' : '';
 
+            const priceFormatter = (n) => parseFloat(n).toFixed(2);
+            let pPriceBadge = '';
+            if (p.sale_price !== null && p.sale_price !== undefined && p.sale_price < p.regular_price) {
+                pPriceBadge = `<span class="hk-price-badge" style="font-size:11px; font-weight:600; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; padding:1px 6px; border-radius:4px; margin-left:8px;" title="İndirimli Satış Fiyatı"><s style="opacity:0.65; margin-right:3px;">₺${priceFormatter(p.regular_price)}</s> <strong>₺${priceFormatter(p.sale_price)}</strong></span>`;
+            } else if (p.price || p.regular_price) {
+                pPriceBadge = `<span class="hk-price-badge" style="font-size:11px; font-weight:600; color:var(--hk-text-muted); background:#f8fafc; border:1px solid #e2e8f0; padding:1px 6px; border-radius:4px; margin-left:8px;">₺${priceFormatter(p.price || p.regular_price)}</span>`;
+            }
+
             let row = `<tr class="${isVariable ? 'row-variable' : ''} ${stripeClass} ${isExpanded}" data-id="${p.id}">
                 <td style="text-align:center;"><input type="checkbox" class="${isVariable ? 'hk-parent-cb' : 'hk-row-cb'}" value="${p.id}"></td>
                 <td style="text-align:center;"><img src="${p.thumbnail}" style="width:38px; height:38px; border-radius:6px; object-fit:cover; cursor:pointer;" onclick="openImagePreview('${p.thumbnail}')"></td>
@@ -881,7 +889,10 @@ jQuery(document).ready(function($) {
                         <strong style="color:var(--hk-text-main);">${p.name}</strong>
                         <span class="hk-stock-badge ${badgeClass}">${badgeText}</span>
                     </div>
-                    <code style="font-size:10.5px; color:var(--hk-text-muted); margin-left:${isVariable ? '24px' : '0'}; font-weight:600;">SKU: ${p.sku || 'N/A'}</code>
+                    <div style="display:flex; align-items:center; margin-top:2px;">
+                        <code style="font-size:10.5px; color:var(--hk-text-muted); margin-left:${isVariable ? '24px' : '0'}; font-weight:600;">SKU: ${p.sku || 'N/A'}</code>
+                        ${pPriceBadge}
+                    </div>
                 </td>
                 <td style="font-weight:700; color:var(--hk-text-main); vertical-align:middle; text-align:center; ${p.has_mismatch ? 'color:#dc2626;' : ''}">
                     ${isVariable ? '—' : `
@@ -925,6 +936,13 @@ jQuery(document).ready(function($) {
                     const exactMatchBadge = isExactSkuMatch ? `<span class="hk-stock-badge" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; margin-left:4px;">🎯 Tam Eşleşen SKU</span>` : '';
                     const highlightClass = isExactSkuMatch ? 'style="background-color:#f0fdf4 !important;"' : '';
 
+                    let vPriceBadge = '';
+                    if (v.sale_price !== null && v.sale_price !== undefined && v.sale_price < v.regular_price) {
+                        vPriceBadge = `<span class="hk-price-badge" style="font-size:10.5px; font-weight:600; background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; padding:1px 5px; border-radius:4px; margin-left:6px;" title="İndirimli Satış Fiyatı"><s style="opacity:0.65; margin-right:3px;">₺${priceFormatter(v.regular_price)}</s> <strong>₺${priceFormatter(v.sale_price)}</strong></span>`;
+                    } else if (v.price || v.regular_price) {
+                        vPriceBadge = `<span class="hk-price-badge" style="font-size:10.5px; font-weight:600; color:var(--hk-text-muted); background:#f8fafc; border:1px solid #e2e8f0; padding:1px 5px; border-radius:4px; margin-left:6px;">₺${priceFormatter(v.price || v.regular_price)}</span>`;
+                    }
+
                     let vRow = `<tr class="row-variation child-of-${p.id} ${hiddenClass}" data-id="${p.id}" data-vid="${v.variation_id}" ${highlightClass}>
                         <td style="text-align:center;"><input type="checkbox" class="hk-row-cb" value="${v.variation_id}"></td>
                         <td style="text-align:center;"><img src="${v.thumbnail}" style="width:30px; height:30px; border-radius:6px; object-fit:cover; cursor:pointer;" onclick="openImagePreview('${v.thumbnail}')"></td>
@@ -934,7 +952,10 @@ jQuery(document).ready(function($) {
                                 <span class="hk-stock-badge badge-variation">Varyasyon</span>
                                 ${exactMatchBadge}
                             </div>
-                            <code style="font-size:10px; color:var(--hk-text-muted); font-weight:600;">SKU: ${v.sku || 'N/A'}</code>
+                            <div style="display:flex; align-items:center; margin-top:2px;">
+                                <code style="font-size:10px; color:var(--hk-text-muted); font-weight:600;">SKU: ${v.sku || 'N/A'}</code>
+                                ${vPriceBadge}
+                            </div>
                         </td>
                         <td style="font-weight:700; color:var(--hk-text-main); vertical-align:middle; text-align:center; ${v.has_mismatch ? 'color:#dc2626;' : ''}">
                             <div class="stock-qty-control" data-pid="${p.id}" data-vid="${v.variation_id}" data-did="0" data-type="wc_stock">

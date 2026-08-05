@@ -161,11 +161,11 @@ public static function get_list() {
         $all_target_ids = array_unique(array_merge($main_ids, $variation_ids));
         $all_placeholders = implode(',', array_fill(0, count($all_target_ids), '%d'));
 
-        // Metataları çek (Nitelikler dahil)
+        // Metataları çek (Nitelikler ve Fiyatlar dahil)
         $meta_results = $wpdb->get_results($wpdb->prepare("
             SELECT post_id, meta_key, meta_value FROM {$wpdb->postmeta} 
             WHERE post_id IN ($all_placeholders) 
-            AND (meta_key IN ('_sku', '_stock', '_thumbnail_id', '_product_attributes') OR meta_key LIKE 'attribute_%%')
+            AND (meta_key IN ('_sku', '_stock', '_price', '_regular_price', '_sale_price', '_thumbnail_id', '_product_attributes') OR meta_key LIKE 'attribute_%%')
         ", $all_target_ids));
         
         $metas_by_id = [];
@@ -253,6 +253,9 @@ public static function get_list() {
                 'variation_id' => $v_id,
                 'name' => $v_post->post_title,
                 'sku' => $vm['_sku'] ?? '',
+                'price' => (float)($vm['_price'] ?? 0),
+                'regular_price' => (float)($vm['_regular_price'] ?? $vm['_price'] ?? 0),
+                'sale_price' => (isset($vm['_sale_price']) && $vm['_sale_price'] !== '') ? (float)$vm['_sale_price'] : null,
                 'wc_stock' => (float)($vm['_stock'] ?? 0),
                 'thumbnail' => $v_thumbnail,
                 'attributes' => $clean_attrs,
@@ -288,6 +291,9 @@ public static function get_list() {
             'variation_id' => 0,
             'name' => $parent->post_title,
             'sku' => $m['_sku'] ?? '',
+            'price' => (float)($m['_price'] ?? 0),
+            'regular_price' => (float)($m['_regular_price'] ?? $m['_price'] ?? 0),
+            'sale_price' => (isset($m['_sale_price']) && $m['_sale_price'] !== '') ? (float)$m['_sale_price'] : null,
             'wc_stock' => (float)($m['_stock'] ?? 0),
             'thumbnail' => $thumbnail,
             'type' => $children === [] ? 'simple' : 'variable',
