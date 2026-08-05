@@ -311,9 +311,13 @@
                 return '<div class="meta-empty-notice">Detay bilgisi yok.</div>';
             }
 
+            // Kategori tanımları
             var financeKeys = ['_odeme_nakit', '_odeme_kart', '_odeme_iban', '_odeme_qr_taksit', '_odeme_coupon', '_ara_toplam', '_etiket_toplami', '_hk_refunded_discount', '_order_total', '_order_tax', '_order_shipping'];
-            var userKeys = ['_hizli_kasa_kasiyer', '_hizli_kasa_kasiyer_id', '_hizli_kasa_kasa_no', '_hizli_kasa_musteri_telefon', '_hk_cikis_depo_id', '_hk_cikis_depo_adi', '_billing_first_name', '_billing_last_name', '_billing_phone', '_billing_email'];
+            var userKeys = ['_hizli_kasa_kasiyer', '_hizli_kasa_kasa_no', '_hizli_kasa_musteri_telefon', '_hk_cikis_depo_adi', '_billing_first_name', '_billing_last_name', '_billing_phone', '_billing_email'];
             var processKeys = ['_hk_kaynak', '_hizli_kasa_kaynak', '_hizli_kasa_original_order', '_hizli_kasa_is_refund', '_hk_has_refund', '_hk_refunded_qty', '_hk_is_fully_refunded', '_hk_iade_depo_ozet', '_payment_method_title'];
+
+            // Her zaman 2. katmana düşmesi gereken teknik/gereksiz anahtarlar
+            var alwaysExtraKeys = ['_hk_cikis_depo_id', '_hizli_kasa_kasiyer_id', '_hk_idempotency', '_hk_idemp', '_hk_key', '_transaction_id', '_created_via', '_cart_hash', '_order_key', '_edit_lock', '_edit_last', '_wp_old_date'];
 
             var financeItems = [];
             var userItems = [];
@@ -322,35 +326,60 @@
 
             Object.keys(meta).forEach(function(key) {
                 var field = self.formatMetaField(key, meta[key]);
-                if (!field || field.value === null || field.value === undefined || field.value === '' || field.value === '-') return;
+                if (!field) return;
+                
+                var rawVal = meta[key];
+                var displayVal = field.value;
 
-                var itemRowHtml = '<div class="meta-item-row"><span class="meta-item-label">' + self.escapeHtml(field.label) + ':</span> <span class="meta-item-val">' + field.value + '</span></div>';
+                // Boş/null kontrol
+                if (displayVal === null || displayVal === undefined || displayVal === '' || displayVal === '-') return;
+
+                // Para birimi alanlarında sıfır değerini filtreleme
+                if (self.currencyFieldKeys.indexOf(key) !== -1 || key.indexOf('_odeme_') === 0) {
+                    var numVal = parseFloat(rawVal);
+                    if (isNaN(numVal) || Math.abs(numVal) < 0.01) return;
+                }
+
+                // Teknik/ID anahtarlarını her zaman extra'ya at
+                var isAlwaysExtra = alwaysExtraKeys.indexOf(key) !== -1 
+                    || key.indexOf('_idemp') !== -1 
+                    || key.indexOf('_edit_') !== -1
+                    || key.indexOf('_cart_') !== -1
+                    || key.indexOf('_order_key') !== -1
+                    || key.indexOf('_transaction') !== -1;
+
+                if (isAlwaysExtra) {
+                    extraItems.push('<span class="meta-extra-chip" title="' + self.escapeHtml(key) + '"><strong>' + self.escapeHtml(field.label) + ':</strong> ' + displayVal + '</span>');
+                    return;
+                }
+
+                var itemRowHtml = '<div class="meta-item-row"><span class="meta-item-label">' + self.escapeHtml(field.label) + '</span><span class="meta-item-val">' + displayVal + '</span></div>';
 
                 if (financeKeys.indexOf(key) !== -1 || key.indexOf('_odeme_') === 0) {
                     financeItems.push(itemRowHtml);
-                } else if (userKeys.indexOf(key) !== -1 || key.indexOf('_hizli_kasa_kasiyer') !== -1 || key.indexOf('_billing_') === 0 || key.indexOf('_depo_') !== -1) {
+                } else if (userKeys.indexOf(key) !== -1 || key.indexOf('_billing_') === 0) {
                     userItems.push(itemRowHtml);
-                } else if (processKeys.indexOf(key) !== -1 || key.indexOf('_hk_') === 0 || key.indexOf('_hizli_kasa_') === 0) {
+                } else if (processKeys.indexOf(key) !== -1) {
                     processItems.push(itemRowHtml);
                 } else {
-                    extraItems.push('<span class="meta-extra-chip" title="' + self.escapeHtml(key) + '"><strong>' + self.escapeHtml(field.label) + ':</strong> ' + field.value + '</span>');
+                    extraItems.push('<span class="meta-extra-chip" title="' + self.escapeHtml(key) + '"><strong>' + self.escapeHtml(field.label) + ':</strong> ' + displayVal + '</span>');
                 }
             });
 
             var cardsHtml = '';
 
             if (financeItems.length) {
-                cardsHtml += '<div class="meta-card meta-card-finance"><div class="meta-card-title">💳 Finans Özeti</div><div class="meta-card-body">' + financeItems.join('') + '</div></div>';
+                cardsHtml += '<div class="meta-card meta-card-finance"><div class="meta-card-header"><span class="meta-card-icon">💳</span><span class="meta-card-title">Finans Özeti</span></div><div class="meta-card-body">' + financeItems.join('') + '</div></div>';
             }
             if (userItems.length) {
-                cardsHtml += '<div class="meta-card meta-card-user"><div class="meta-card-title">👤 Kasiyer & Müşteri</div><div class="meta-card-body">' + userItems.join('') + '</div></div>';
+                cardsHtml += '<div class="meta-card meta-card-user"><div class="meta-card-header"><span class="meta-card-icon">👤</span><span class="meta-card-title">Kasiyer & Müşteri</span></div><div class="meta-card-body">' + userItems.join('') + '</div></div>';
             }
             if (processItems.length) {
-                cardsHtml += '<div class="meta-card meta-card-process"><div class="meta-card-title">ℹ️ İşlem Detayları</div><div class="meta-card-body">' + processItems.join('') + '</div></div>';
+                cardsHtml += '<div class="meta-card meta-card-process"><div class="meta-card-header"><span class="meta-card-icon">ℹ️</span><span class="meta-card-title">İşlem Detayları</span></div><div class="meta-card-body">' + processItems.join('') + '</div></div>';
             }
 
-            if (!cardsHtml) {
-                cardsHtml = '<div class="meta-card"><div class="meta-card-title">📋 Genel Bilgiler</div><div class="meta-card-body">' + (extraItems.length ? extraItems.slice(0, 4).join('') : 'Ek detay bulunamadı.') + '</div></div>';
+            if (!cardsHtml && !extraItems.length) {
+                return '<div class="meta-empty-notice">Detay bilgisi yok.</div>';
             }
 
             var extraSectionHtml = '';
@@ -358,7 +387,7 @@
                 extraSectionHtml = `
                     <div class="meta-extra-wrapper">
                         <button type="button" class="btn-toggle-meta-extra">
-                            <span class="toggle-icon">⚙️</span> Diğer Teknik Detayları Göster (+${extraItems.length})
+                            <span class="toggle-icon">⚙️</span> Diğer Teknik Detaylar <span class="meta-extra-count">(+${extraItems.length})</span>
                         </button>
                         <div class="meta-extra-container" style="display:none;">
                             ${extraItems.join('')}
@@ -369,9 +398,7 @@
 
             return `
                 <div class="meta-details-layout">
-                    <div class="meta-grid">
-                        ${cardsHtml}
-                    </div>
+                    <div class="meta-grid">${cardsHtml}</div>
                     ${extraSectionHtml}
                 </div>
             `;
