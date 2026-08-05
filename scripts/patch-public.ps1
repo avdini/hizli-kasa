@@ -29,10 +29,23 @@ try {
     $ErrorActionPreference = $oldPreference
     
     if ($cherryCode -ne 0) {
-        Write-Host "Conflict detected on cherry-pick. Filtering out private-only files..." -ForegroundColor Yellow
+        Write-Host "Conflict detected on cherry-pick. Resolving conflicts and filtering private files..." -ForegroundColor Yellow
         foreach ($item in $PrivateItems) {
             & git rm -rf $item --ignore-unmatch 2>&1 | Out-Null
         }
+
+        # Automatically resolve remaining conflicts by taking incoming commit changes
+        $conflictedFiles = & git diff --name-only --diff-filter=U 2>&1
+        if ($conflictedFiles) {
+            foreach ($file in $conflictedFiles) {
+                if (Test-Path $file) {
+                    Write-Host "Resolving conflict in $file (using incoming change)..." -ForegroundColor Yellow
+                    & git checkout --theirs $file 2>&1 | Out-Null
+                    & git add $file
+                }
+            }
+        }
+
         & git add -A
         $env:GIT_EDITOR = 'true'
         & git -c core.editor=true cherry-pick --continue --no-edit 2>&1 | Out-Null
