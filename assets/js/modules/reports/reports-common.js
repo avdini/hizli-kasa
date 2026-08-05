@@ -7,26 +7,38 @@
     HK.ReportsCommon = {
         fieldLabelMap: {
             _hk_cikis_depo_id: 'Depo ID',
-            _hk_cikis_depo_adi: 'Depo',
+            _hk_cikis_depo_adi: 'Çıkış Deposu',
             _hizli_kasa_kasa_no: 'Kasa No',
             _hizli_kasa_kasiyer: 'Kasiyer',
-            _hizli_kasa_musteri_telefon: 'Telefon',
-            _hizli_kasa_original_order: 'Orijinal Sipariş',
+            _hizli_kasa_kasiyer_id: 'Kasiyer ID',
+            _hizli_kasa_musteri_telefon: 'Müşteri Telefonu',
+            _hizli_kasa_original_order: 'Orijinal Sipariş ID',
             _hizli_kasa_is_refund: 'İade Kaydı',
             _odeme_nakit: 'Nakit Ödeme',
             _odeme_kart: 'Kart Ödeme',
             _odeme_iban: 'IBAN Ödeme',
+            _odeme_qr_taksit: 'QR Taksit Ödeme',
+            _odeme_coupon: 'Kupon Ödeme',
             _ara_toplam: 'Ara Toplam',
             _etiket_toplami: 'Etiket Toplamı',
-            _hk_kaynak: 'Kaynak',
+            _hk_kaynak: 'İşlem Kaynağı',
+            _hizli_kasa_kaynak: 'İşlem Kaynağı',
             _hk_has_refund: 'İade Durumu',
             _hk_refunded_qty: 'İade Edilen Adet',
             _hk_is_fully_refunded: 'Tam İade',
             _hk_iade_depo_ozet: 'İade Edilen Depolar',
-            _hk_refunded_discount: 'İade Edilen İskonto'
+            _hk_refunded_discount: 'İade İskontosu',
+            _billing_first_name: 'Müşteri Adı',
+            _billing_last_name: 'Müşteri Soyadı',
+            _billing_phone: 'Müşteri Telefonu',
+            _billing_email: 'Müşteri E-Posta',
+            _payment_method_title: 'Ödeme Yöntemi',
+            _order_total: 'Sipariş Toplamı',
+            _order_tax: 'Vergi Toplamı',
+            _order_shipping: 'Kargo Tutarı'
         },
 
-        currencyFieldKeys: ['_odeme_nakit', '_odeme_kart', '_odeme_iban', '_ara_toplam', '_etiket_toplami', '_hk_refunded_discount'],
+        currencyFieldKeys: ['_odeme_nakit', '_odeme_kart', '_odeme_iban', '_odeme_qr_taksit', '_odeme_coupon', '_ara_toplam', '_etiket_toplami', '_hk_refunded_discount', '_order_total', '_order_tax', '_order_shipping'],
 
         escapeHtml: function(value) {
             return String(value === null || value === undefined ? '' : value)
@@ -296,14 +308,73 @@
         renderOrderMetaDetails: function(meta) {
             var self = this;
             if (!meta || typeof meta !== 'object' || !Object.keys(meta).length) {
-                return 'Detay bilgisi yok.';
+                return '<div class="meta-empty-notice">Detay bilgisi yok.</div>';
             }
 
-            return Object.keys(meta).map(function(key) {
+            var financeKeys = ['_odeme_nakit', '_odeme_kart', '_odeme_iban', '_odeme_qr_taksit', '_odeme_coupon', '_ara_toplam', '_etiket_toplami', '_hk_refunded_discount', '_order_total', '_order_tax', '_order_shipping'];
+            var userKeys = ['_hizli_kasa_kasiyer', '_hizli_kasa_kasiyer_id', '_hizli_kasa_kasa_no', '_hizli_kasa_musteri_telefon', '_hk_cikis_depo_id', '_hk_cikis_depo_adi', '_billing_first_name', '_billing_last_name', '_billing_phone', '_billing_email'];
+            var processKeys = ['_hk_kaynak', '_hizli_kasa_kaynak', '_hizli_kasa_original_order', '_hizli_kasa_is_refund', '_hk_has_refund', '_hk_refunded_qty', '_hk_is_fully_refunded', '_hk_iade_depo_ozet', '_payment_method_title'];
+
+            var financeItems = [];
+            var userItems = [];
+            var processItems = [];
+            var extraItems = [];
+
+            Object.keys(meta).forEach(function(key) {
                 var field = self.formatMetaField(key, meta[key]);
-                if (!field) return '';
-                return '<div class="meta-item"><span class="meta-key">' + self.escapeHtml(field.label) + ':</span><span class="meta-value">' + field.value + '</span></div>';
-            }).join('');
+                if (!field || field.value === null || field.value === undefined || field.value === '' || field.value === '-') return;
+
+                var itemRowHtml = '<div class="meta-item-row"><span class="meta-item-label">' + self.escapeHtml(field.label) + ':</span> <span class="meta-item-val">' + field.value + '</span></div>';
+
+                if (financeKeys.indexOf(key) !== -1 || key.indexOf('_odeme_') === 0) {
+                    financeItems.push(itemRowHtml);
+                } else if (userKeys.indexOf(key) !== -1 || key.indexOf('_hizli_kasa_kasiyer') !== -1 || key.indexOf('_billing_') === 0 || key.indexOf('_depo_') !== -1) {
+                    userItems.push(itemRowHtml);
+                } else if (processKeys.indexOf(key) !== -1 || key.indexOf('_hk_') === 0 || key.indexOf('_hizli_kasa_') === 0) {
+                    processItems.push(itemRowHtml);
+                } else {
+                    extraItems.push('<span class="meta-extra-chip" title="' + self.escapeHtml(key) + '"><strong>' + self.escapeHtml(field.label) + ':</strong> ' + field.value + '</span>');
+                }
+            });
+
+            var cardsHtml = '';
+
+            if (financeItems.length) {
+                cardsHtml += '<div class="meta-card meta-card-finance"><div class="meta-card-title">💳 Finans Özeti</div><div class="meta-card-body">' + financeItems.join('') + '</div></div>';
+            }
+            if (userItems.length) {
+                cardsHtml += '<div class="meta-card meta-card-user"><div class="meta-card-title">👤 Kasiyer & Müşteri</div><div class="meta-card-body">' + userItems.join('') + '</div></div>';
+            }
+            if (processItems.length) {
+                cardsHtml += '<div class="meta-card meta-card-process"><div class="meta-card-title">ℹ️ İşlem Detayları</div><div class="meta-card-body">' + processItems.join('') + '</div></div>';
+            }
+
+            if (!cardsHtml) {
+                cardsHtml = '<div class="meta-card"><div class="meta-card-title">📋 Genel Bilgiler</div><div class="meta-card-body">' + (extraItems.length ? extraItems.slice(0, 4).join('') : 'Ek detay bulunamadı.') + '</div></div>';
+            }
+
+            var extraSectionHtml = '';
+            if (extraItems.length) {
+                extraSectionHtml = `
+                    <div class="meta-extra-wrapper">
+                        <button type="button" class="btn-toggle-meta-extra">
+                            <span class="toggle-icon">⚙️</span> Diğer Teknik Detayları Göster (+${extraItems.length})
+                        </button>
+                        <div class="meta-extra-container" style="display:none;">
+                            ${extraItems.join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="meta-details-layout">
+                    <div class="meta-grid">
+                        ${cardsHtml}
+                    </div>
+                    ${extraSectionHtml}
+                </div>
+            `;
         },
 
         renderTable: function(tbody, orders, type) {
@@ -356,13 +427,13 @@
                     
                     tr.innerHTML = `
                         <td>${this.escapeHtml(order.date || '-')}</td>
-                        <td>
-                            <span class="report-order-id">#${this.escapeHtml(order.id || '-')}</span>
-                            <div class="report-payment-container">${paymentBadge}</div>
-                        </td>
+                        <td><span class="report-order-id">#${this.escapeHtml(order.id || '-')}</span></td>
                         <td>${this.escapeHtml(order.cashier || '-')} <br><small class="report-kasa-no">${kasaNoLabel}</small></td>
                         <td>${itemsHtml}</td>
-                        <td class="report-total-cell">${orderTotal}</td>
+                        <td class="report-total-cell">
+                            <div class="report-total-amount">${orderTotal}</div>
+                            <div class="report-payment-container">${paymentBadge}</div>
+                        </td>
                         <td><div class="report-action-buttons">${actionButtons}</div></td>
                     `;
                 }
@@ -390,6 +461,25 @@
                     var row = document.getElementById(`meta-row-${id}`);
                     if (row) {
                         row.style.display = (row.style.display === "table-row") ? "none" : "table-row";
+                    }
+                });
+            });
+
+            tbody.querySelectorAll(".btn-toggle-meta-extra").forEach(btn => {
+                btn.addEventListener("click", function(e) {
+                    e.stopPropagation();
+                    var wrapper = this.closest(".meta-extra-wrapper");
+                    if (!wrapper) return;
+                    var container = wrapper.querySelector(".meta-extra-container");
+                    if (container) {
+                        var isHidden = (container.style.display === "none" || !container.style.display);
+                        container.style.display = isHidden ? "flex" : "none";
+                        this.classList.toggle("is-active", isHidden);
+                        var chips = container.querySelectorAll(".meta-extra-chip");
+                        var count = chips ? chips.length : 0;
+                        this.innerHTML = isHidden 
+                            ? `<span class="toggle-icon">🔼</span> Diğer Teknik Detayları Gizle` 
+                            : `<span class="toggle-icon">⚙️</span> Diğer Teknik Detayları Göster (+${count})`;
                     }
                 });
             });
