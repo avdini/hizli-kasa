@@ -17,6 +17,8 @@ git fetch public
 $RandomSuffix = Get-Random
 $TempBranch = "temp-public-patch-$RandomSuffix"
 
+$PrivateItems = @("src-driver", "scripts", ".agents", ".codegraph", "docs/superpowers", "AGENTS.md", "scratch")
+
 try {
     Write-Host "Creating temporary branch from public/master..." -ForegroundColor Cyan
     git checkout -b $TempBranch public/master
@@ -26,17 +28,31 @@ try {
     
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Conflict detected on cherry-pick. Filtering out private-only files..." -ForegroundColor Yellow
-        & git rm -rf src-driver --ignore-unmatch 2>&1 | Out-Null
-        & git rm -rf scripts --ignore-unmatch 2>&1 | Out-Null
+        foreach ($item in $PrivateItems) {
+            & git rm -rf $item --ignore-unmatch 2>&1 | Out-Null
+        }
         & git add -A
         $env:GIT_EDITOR = 'true'
         & git cherry-pick --continue --no-edit 2>&1 | Out-Null
     }
     
-    # Ensure src-driver is never in public patch
-    if (Test-Path "src-driver") {
-        Write-Host "Filtering out private-only 'src-driver' folder from public patch..." -ForegroundColor Yellow
-        & git rm -rf src-driver --ignore-unmatch 2>&1 | Out-Null
+    # Ensure private-only items are never in public patch
+    $hasPrivateItems = $false
+    foreach ($item in $PrivateItems) {
+        if (Test-Path $item) {
+            Write-Host "Filtering out private-only '$item' from public patch..." -ForegroundColor Yellow
+            & git rm -rf $item --ignore-unmatch 2>&1 | Out-Null
+            $hasPrivateItems = $true
+        }
+    }
+
+    # Clean up empty docs directory if superpowers was the only item inside it
+    if ((Test-Path "docs") -and ((Get-ChildItem -Path "docs" -Recurse | Measure-Object).Count -eq 0)) {
+        & git rm -rf docs --ignore-unmatch 2>&1 | Out-Null
+        $hasPrivateItems = $true
+    }
+
+    if ($hasPrivateItems) {
         & git commit --amend --no-edit --allow-empty 2>&1 | Out-Null
     }
 
@@ -63,3 +79,4 @@ finally {
         git branch -D $TempBranch
     }
 }
+

@@ -1,10 +1,10 @@
 /vendor/
 /node_modules/
 .phpunit.result.cache
-/scratch/
 /.vscode/
 /build/
 /dist/
 *.spec
 /src-driver/standalone/
+
 
