@@ -264,6 +264,12 @@
                 var val = meta[key];
                 if (val === null || val === undefined || val === '' || val === '0' || val === 0 || val === '0.00') return '';
 
+                // Depo ID ve gereksiz depo adet etiketlerini ana ürün görünümünden gizle
+                var lowerKey = key.toLowerCase();
+                if (lowerKey === '_hk_cikis_depo_id' || lowerKey === 'depo id' || lowerKey === 'cikis depo id' || lowerKey.indexOf('depo_id') !== -1 || lowerKey === 'cikis depo adet') {
+                    return '';
+                }
+
                 var numVal = parseFloat(val);
                 if (!isNaN(numVal) && Math.abs(numVal) < 0.001) return '';
 
