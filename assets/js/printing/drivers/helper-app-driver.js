@@ -126,10 +126,10 @@
                 printer_name: printerName,
                 image: base64Image,
                 rotate: rotateAngle,
-                fit_mode: fitMode
+                fit_mode: fitMode,
+                orientation: options.orientation || (options.type === 'barcode' ? 'landscape' : undefined)
             };
 
-            if (options.orientation) payload.orientation = options.orientation;
             if (options.copies) payload.copies = options.copies;
             if (options.paperSize) payload.paper_size = options.paperSize;
 

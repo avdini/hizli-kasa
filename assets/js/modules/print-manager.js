@@ -149,7 +149,8 @@
                         printer_name: printerName,
                         image: imageData,
                         rotate: rotate,
-                        fit_mode: fitMode
+                        fit_mode: fitMode,
+                        orientation: isBarcode ? 'landscape' : undefined
                     }));
                 });
 
