@@ -23,6 +23,14 @@ require_once HIZLI_KASA_PATH . 'includes/constants.php';
 require_once HIZLI_KASA_PATH . 'includes/helpers.php';
 require_once HIZLI_KASA_PATH . 'includes/updater.php';
 
+// WooCommerce HPOS (High-Performance Order Storage) Compatibility
+add_action('before_woocommerce_init', function () {
+    if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('custom_order_tables', __FILE__, true);
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility('cart_checkout_blocks', __FILE__, true);
+    }
+});
+
 // Sınıfları Yükle ve Başlat (WooCommerce Yüklendikten Sonra)
 add_action('plugins_loaded', 'hizli_kasa_init');
 
