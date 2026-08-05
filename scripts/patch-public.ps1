@@ -17,7 +17,7 @@ git fetch public
 $RandomSuffix = Get-Random
 $TempBranch = "temp-public-patch-$RandomSuffix"
 
-$PrivateItems = @("src-driver", "scripts", ".agents", ".codegraph", "docs/superpowers", "AGENTS.md", "scratch")
+$PrivateItems = @("src-driver", "scripts", ".agents", ".codegraph", "docs/superpowers", "AGENTS.md", "scratch", ".gitattributes")
 
 try {
     Write-Host "Creating temporary branch from public/master..." -ForegroundColor Cyan
