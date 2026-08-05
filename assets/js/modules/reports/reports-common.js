@@ -375,14 +375,14 @@
 
             var cardsHtml = '';
 
-            if (financeItems.length) {
-                cardsHtml += '<div class="meta-card meta-card-finance"><div class="meta-card-header"><span class="meta-card-icon">💳</span><span class="meta-card-title">Finans Özeti</span></div><div class="meta-card-body">' + financeItems.join('') + '</div></div>';
-            }
             if (userItems.length) {
                 cardsHtml += '<div class="meta-card meta-card-user"><div class="meta-card-header"><span class="meta-card-icon">👤</span><span class="meta-card-title">Kasiyer & Müşteri</span></div><div class="meta-card-body">' + userItems.join('') + '</div></div>';
             }
             if (processItems.length) {
                 cardsHtml += '<div class="meta-card meta-card-process"><div class="meta-card-header"><span class="meta-card-icon">ℹ️</span><span class="meta-card-title">İşlem Detayları</span></div><div class="meta-card-body">' + processItems.join('') + '</div></div>';
+            }
+            if (financeItems.length) {
+                cardsHtml += '<div class="meta-card meta-card-finance"><div class="meta-card-header"><span class="meta-card-icon">💳</span><span class="meta-card-title">Finans Özeti</span></div><div class="meta-card-body">' + financeItems.join('') + '</div></div>';
             }
 
             if (!cardsHtml && !extraItems.length) {
