@@ -886,7 +886,9 @@ jQuery(document).ready(function($) {
                 <td style="font-weight:700; color:var(--hk-text-main); vertical-align:middle; text-align:center; ${p.has_mismatch ? 'color:#dc2626;' : ''}">
                     ${isVariable ? '—' : `
                     <div class="stock-qty-control" data-pid="${p.id}" data-vid="0" data-did="0" data-type="wc_stock">
+                        <button class="btn-qty minus" onclick="updateStock(this, -1)">-</button>
                         <span class="qty-value">${p.wc_stock}</span>
+                        <button class="btn-qty plus" onclick="updateStock(this, 1)">+</button>
                     </div>
                     ${mismatchBadge}
                     `}
@@ -936,7 +938,9 @@ jQuery(document).ready(function($) {
                         </td>
                         <td style="font-weight:700; color:var(--hk-text-main); vertical-align:middle; text-align:center; ${v.has_mismatch ? 'color:#dc2626;' : ''}">
                             <div class="stock-qty-control" data-pid="${p.id}" data-vid="${v.variation_id}" data-did="0" data-type="wc_stock">
+                                <button class="btn-qty minus" onclick="updateStock(this, -1)">-</button>
                                 <span class="qty-value">${v.wc_stock}</span>
+                                <button class="btn-qty plus" onclick="updateStock(this, 1)">+</button>
                             </div>
                             ${vMismatchBadge}
                         </td>`;

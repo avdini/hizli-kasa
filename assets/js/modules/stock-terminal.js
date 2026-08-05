@@ -1165,6 +1165,10 @@
                     ? ((p.all_stocks && p.all_stocks[String(depoId)] != null) ? parseFloat(p.all_stocks[String(depoId)]) : (p.warehouse_stock !== undefined ? parseFloat(p.warehouse_stock) : 0)) 
                     : parseFloat(p.warehouse_stock !== undefined ? p.warehouse_stock : (p.stock_quantity || 0));
 
+                var pDepoReserved = (depoId > 0)
+                    ? ((p.all_reserved && p.all_reserved[String(depoId)] != null) ? parseFloat(p.all_reserved[String(depoId)]) : (p.reserved_stock !== undefined ? parseFloat(p.reserved_stock) : 0))
+                    : parseFloat(p.reserved_stock !== undefined ? p.reserved_stock : 0);
+
                 // Stok durumunu belirle (Grup toplamı)
                 var totalGroupStock = isVariable 
                     ? p.variations.reduce(function(sum, v) {
@@ -1245,7 +1249,10 @@
                             </div>
                             <div class="stok-ayirici" style="width: 2px; height: 35px; background: var(--hk-border); opacity: 0.4; border-radius: 2px;"></div>
                             <div class="urun-stok ${isStockOut ? 'stok-bitti' : (isCritical ? 'stok-kritik' : 'stok-tamam')}" style="min-width: 85px; text-align: right;">
-                                <span class="stok-sayi">${pDepoStock}</span>
+                                <div style="display:inline-flex; align-items:center; gap:4px;">
+                                    <span class="stok-sayi">${pDepoStock}</span>
+                                    ${pDepoReserved > 0 ? `<span class="hk-reserved-badge" style="background:#fffbe8; color:#d97706; border:1px solid #fde68a; border-radius:6px; padding:2px 5px; font-size:10.5px; font-weight:700; cursor:help; line-height:1;" title="🔒 ${pDepoReserved} Adet Online Siparişe Kilitli (Net Satılabilir: ${pDepoStock - pDepoReserved})">🔒 ${pDepoReserved}</span>` : ''}
+                                </div>
                                 <span class="stok-etiket">MEVCUT STOK</span>
                             </div>
                             ` : ''}
@@ -1271,6 +1278,9 @@
                         var vDepoStock = (v.all_stocks && depoId && v.all_stocks[String(depoId)] != null) 
                             ? parseFloat(v.all_stocks[String(depoId)]) 
                             : parseFloat(v.warehouse_stock !== undefined ? v.warehouse_stock : (v.stock_quantity || 0));
+                        var vDepoReserved = (v.all_reserved && depoId && v.all_reserved[String(depoId)] != null)
+                            ? parseFloat(v.all_reserved[String(depoId)])
+                            : parseFloat(v.reserved_stock !== undefined ? v.reserved_stock : 0);
                         var vCritical = vDepoStock > 0 && vDepoStock <= threshold;
                         var vImg = (v.images && v.images[0] && v.images[0].src) ? v.images[0].src : (v.image_url || img);
                         var vName = v.name || v.title || ('Varyasyon #' + v.id);
@@ -1329,7 +1339,10 @@
                                     </div>
                                     <div class="stok-ayirici" style="width: 2px; height: 35px; background: var(--hk-border); opacity: 0.4; border-radius: 2px;"></div>
                                     <div class="urun-stok ${vDepoStock <= 0 ? 'stok-bitti' : (vCritical ? 'stok-kritik' : 'stok-tamam')}" style="min-width: 85px; text-align: right;">
-                                        <span class="stok-sayi">${vDepoStock}</span>
+                                        <div style="display:inline-flex; align-items:center; gap:4px;">
+                                            <span class="stok-sayi">${vDepoStock}</span>
+                                            ${vDepoReserved > 0 ? `<span class="hk-reserved-badge" style="background:#fffbe8; color:#d97706; border:1px solid #fde68a; border-radius:6px; padding:2px 5px; font-size:10.5px; font-weight:700; cursor:help; line-height:1;" title="🔒 ${vDepoReserved} Adet Online Siparişe Kilitli (Net Satılabilir: ${vDepoStock - vDepoReserved})">🔒 ${vDepoReserved}</span>` : ''}
+                                        </div>
                                         <span class="stok-etiket">STOK</span>
                                     </div>
                                 </div>

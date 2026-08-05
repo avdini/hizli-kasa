@@ -696,25 +696,26 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
 
         // Warehouse Stock & Shelf Codes Map
         $stok_table = $wpdb->prefix . 'hizli_kasa_stok_konumlari';
-        $all_stocks = [];
-        $all_codes  = [];
+        $all_stocks   = [];
+        $all_reserved = [];
+        $all_codes    = [];
         if ($wpdb->get_var("SHOW TABLES LIKE '{$stok_table}'") === $stok_table) {
             if ($is_variable) {
                 $stock_rows = $wpdb->get_results($wpdb->prepare("
-                    SELECT location_id, SUM(quantity) as quantity 
+                    SELECT location_id, SUM(quantity) as quantity, SUM(reserved) as reserved 
                     FROM {$stok_table}
                     WHERE product_id = %d AND variation_id > 0
                     GROUP BY location_id
                 ", $post_id));
             } elseif ($is_variation) {
                 $stock_rows = $wpdb->get_results($wpdb->prepare("
-                    SELECT location_id, quantity, depo_kodu 
+                    SELECT location_id, quantity, reserved, depo_kodu 
                     FROM {$stok_table}
                     WHERE variation_id = %d
                 ", $post_id));
             } else {
                 $stock_rows = $wpdb->get_results($wpdb->prepare("
-                    SELECT location_id, quantity, depo_kodu 
+                    SELECT location_id, quantity, reserved, depo_kodu 
                     FROM {$stok_table}
                     WHERE product_id = %d AND variation_id = 0
                 ", $post_id));
@@ -722,6 +723,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             if (!empty($stock_rows)) {
                 foreach ($stock_rows as $sr) {
                     $all_stocks[(string)$sr->location_id] = floatval($sr->quantity);
+                    $all_reserved[(string)$sr->location_id] = floatval($sr->reserved ?? 0);
                     if (!empty($sr->depo_kodu)) {
                         $all_codes[(string)$sr->location_id] = $sr->depo_kodu;
                     }
@@ -752,15 +754,17 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                     $c_img_id  = $child_var->get_image_id() ?: $image_id;
                     $c_img_url = $c_img_id ? wp_get_attachment_image_url($c_img_id, 'thumbnail') : $image_url;
 
-                    $c_all_stocks = [];
-                    $c_all_codes  = [];
+                    $c_all_stocks   = [];
+                    $c_all_reserved = [];
+                    $c_all_codes    = [];
                     if ($wpdb->get_var("SHOW TABLES LIKE '{$stok_table}'") === $stok_table) {
                         $c_stock_rows = $wpdb->get_results($wpdb->prepare("
-                            SELECT location_id, quantity, depo_kodu FROM {$stok_table} WHERE variation_id = %d", $cid
+                            SELECT location_id, quantity, reserved, depo_kodu FROM {$stok_table} WHERE variation_id = %d", $cid
                         ));
                         if (!empty($c_stock_rows)) {
                             foreach ($c_stock_rows as $csr) {
                                 $c_all_stocks[(string)$csr->location_id] = floatval($csr->quantity);
+                                $c_all_reserved[(string)$csr->location_id] = floatval($csr->reserved ?? 0);
                                 if (!empty($csr->depo_kodu)) {
                                     $c_all_codes[(string)$csr->location_id] = $csr->depo_kodu;
                                 }
@@ -784,8 +788,10 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
                         'price'           => floatval($child_var->get_price()),
                         'regular_price'   => floatval($child_var->get_regular_price() ?: $child_var->get_price()),
                         'warehouse_stock' => ($depo_id > 0) ? (isset($c_all_stocks[(string)$depo_id]) ? floatval($c_all_stocks[(string)$depo_id]) : 0.0) : floatval($child_var->get_stock_quantity() ?: 0),
+                        'reserved_stock'  => ($depo_id > 0) ? (isset($c_all_reserved[(string)$depo_id]) ? floatval($c_all_reserved[(string)$depo_id]) : 0.0) : (float)array_sum($c_all_reserved),
                         'stock_quantity'  => floatval($child_var->get_stock_quantity() ?: 0),
                         'all_stocks'      => (object)$c_all_stocks,
+                        'all_reserved'    => (object)$c_all_reserved,
                         'all_codes'       => (object)$c_all_codes,
                         'images'          => [['src' => $c_img_url]],
                         'image_url'       => $c_img_url,
@@ -806,6 +812,10 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             ? (isset($all_stocks[(string)$depo_id]) ? floatval($all_stocks[(string)$depo_id]) : 0.0)
             : $stock_qty;
 
+        $active_reserved_stock = ($depo_id > 0)
+            ? (isset($all_reserved[(string)$depo_id]) ? floatval($all_reserved[(string)$depo_id]) : 0.0)
+            : (float)array_sum($all_reserved);
+
         return [
             'id'                   => $post_id,
             'parent_id'            => $parent_id,
@@ -818,6 +828,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             'regular_price'        => $regular_price,
             'stock_quantity'       => $stock_qty,
             'warehouse_stock'      => $active_warehouse_stock,
+            'reserved_stock'       => $active_reserved_stock,
             'stock_status'         => $product->get_stock_status(),
             'categories'           => $categories,
             'brands'               => $brands,
@@ -825,6 +836,7 @@ class Hizli_Kasa_API_Stock_Search extends Hizli_Kasa_API_Controller_Base {
             'image_url'            => $image_url,
             'images'               => [['src' => $image_url]],
             'all_stocks'           => (object)$all_stocks,
+            'all_reserved'         => (object)$all_reserved,
             'all_codes'            => (object)$all_codes,
             'permalink'            => get_permalink($post_id),
             'is_variable'          => $is_variable,

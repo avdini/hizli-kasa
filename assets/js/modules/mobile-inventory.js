@@ -1035,6 +1035,9 @@
             // all_stocks içinden de doğrulanabilir ama tip uyumsuzluklarına karşı warehouse_stock daha sağlamdır.
             const currentQty = (p.warehouse_stock != null) ? parseFloat(p.warehouse_stock) : (parseFloat(allStocks[aktifDepoIdStr]) || 0);
             
+            const allReserved = p.all_reserved || {};
+            const currentReserved = (p.reserved_stock != null) ? parseFloat(p.reserved_stock) : (parseFloat(allReserved[aktifDepoIdStr]) || 0);
+
             const aktifDepoName = this.state.depolar.find(d => d.id == this.state.aktifDepoId)?.name || "Depo";
             
             let otherTotal = 0;
@@ -1082,7 +1085,7 @@
                             </div>
                             <div class="card-side-stocks">
                                 <div class="side-stock-item highlight" title="${aktifDepoName}">
-                                    <span class="ss-val">${currentQty}</span>
+                                    <span class="ss-val">${currentQty} ${currentReserved > 0 ? `<span style="font-size:9.5px; color:#d97706; display:block; line-height:1;" title="🔒 ${currentReserved} Rezerve">🔒${currentReserved}</span>` : ''}</span>
                                     <span class="ss-label">DEP</span>
                                 </div>
                                 <div class="side-stock-item" title="Diğer Depolar">
@@ -1116,7 +1119,10 @@
                     <div class="stock-grid">
                         <div class="stock-box highlight full-width">
                             <span class="sb-label">${aktifDepoName}</span>
-                            <span class="sb-val">${currentQty}</span>
+                            <span class="sb-val">
+                                ${currentQty}
+                                ${currentReserved > 0 ? `<span style="font-size:11px; background:#fffbe8; color:#d97706; border:1px solid #fde68a; border-radius:4px; padding:1px 5px; font-weight:700; margin-left:6px; display:inline-flex; align-items:center; gap:2px;" title="🔒 ${currentReserved} Adet Online Sipariş Rezerve (Net Satılabilir: ${currentQty - currentReserved})">🔒 ${currentReserved} Rezerve</span>` : ''}
+                            </span>
                         </div>
                         <div class="stock-box">
                             <span class="sb-label">Diğer</span>
