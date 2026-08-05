@@ -35,6 +35,9 @@
             _payment_method_title: 'Ödeme Yöntemi',
             _hizli_kasa_siparis_notu: 'Sipariş Notu',
             _hizli_kasa_base_odeme_tipi: 'Ödeme Tipi',
+            _hizli_kasa_manual_refund: 'Manuel İade',
+            _verilen_kupon_kodu: 'Verilen Kupon Kodu',
+            _hk_toplam_iskonto: 'Ürün İskontoları',
             _order_total: 'Sipariş Toplamı',
             _order_tax: 'Vergi Toplamı',
             _order_shipping: 'Kargo Tutarı'
@@ -314,9 +317,9 @@
             }
 
             // Kategori tanımları
-            var financeKeys = ['_odeme_nakit', '_odeme_kart', '_odeme_iban', '_odeme_qr_taksit', '_odeme_coupon', '_ara_toplam', '_etiket_toplami', '_hk_refunded_discount', '_order_total', '_order_tax', '_order_shipping'];
+            var financeKeys = ['_odeme_nakit', '_odeme_kart', '_odeme_iban', '_odeme_qr_taksit', '_odeme_coupon', '_ara_toplam', '_etiket_toplami', '_hk_toplam_iskonto', '_hk_refunded_discount', '_order_total', '_order_tax', '_order_shipping'];
             var userKeys = ['_hizli_kasa_kasiyer', '_hizli_kasa_kasa_no', '_hizli_kasa_musteri_telefon', '_hk_cikis_depo_adi', '_billing_first_name', '_billing_last_name', '_billing_phone', '_billing_email'];
-            var processKeys = ['_hk_kaynak', '_hizli_kasa_kaynak', '_hizli_kasa_original_order', '_hizli_kasa_is_refund', '_hk_has_refund', '_hk_refunded_qty', '_hk_is_fully_refunded', '_hk_iade_depo_ozet', '_payment_method_title', '_hizli_kasa_siparis_notu', '_hizli_kasa_base_odeme_tipi'];
+            var processKeys = ['_hk_kaynak', '_hizli_kasa_kaynak', '_hizli_kasa_original_order', '_hizli_kasa_is_refund', '_hizli_kasa_manual_refund', '_hk_has_refund', '_hk_refunded_qty', '_hk_is_fully_refunded', '_hk_iade_depo_ozet', '_verilen_kupon_kodu', '_payment_method_title', '_hizli_kasa_siparis_notu', '_hizli_kasa_base_odeme_tipi'];
 
             // Her zaman 2. katmana düşmesi gereken teknik/gereksiz anahtarlar
             var alwaysExtraKeys = ['_hk_cikis_depo_id', '_hizli_kasa_kasiyer_id', '_hk_idempotency', '_hk_idemp', '_hk_key', '_transaction_id', '_created_via', '_cart_hash', '_order_key', '_edit_lock', '_edit_last', '_wp_old_date'];
@@ -337,9 +340,11 @@
                 if (displayVal === null || displayVal === undefined || displayVal === '' || displayVal === '-') return;
 
                 // Para birimi alanlarında sıfır değerini filtreleme
-                if (self.currencyFieldKeys.indexOf(key) !== -1 || key.indexOf('_odeme_') === 0) {
-                    var numVal = parseFloat(rawVal);
+                if (self.currencyFieldKeys.indexOf(key) !== -1 || key.indexOf('_odeme_') === 0 || key.indexOf('Ödeme (') === 0) {
+                    var numVal = parseFloat(String(rawVal).replace(/[^0-9.,-]/g, '').replace(',', '.'));
                     if (isNaN(numVal) || Math.abs(numVal) < 0.01) return;
+                    // Eğer Ödeme (X) metni ise ve _odeme_X zaten varsa çift basmasın
+                    if (key.indexOf('Ödeme (') === 0) return;
                 }
 
                 // Teknik/ID anahtarlarını her zaman extra'ya at
