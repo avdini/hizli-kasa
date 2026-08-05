@@ -452,7 +452,12 @@
                         checkHelperStatus();
                     },
                     error: function(xhr) {
-                        HK.UI.alert('Eşleştirme başarısız: ' + (xhr.responseJSON ? xhr.responseJSON.error : 'Sunucu yanıt vermedi.'));
+                        var errMessage = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : 'Sunucu yanıt vermedi.';
+                        if (errMessage.indexOf('Already paired') !== -1) {
+                            HK.UI.alert('Eşleştirme Başarısız: Yazıcı yardımcısı bilgisayarınızda önceden farklı bir token ile eşleştirilmiş.<br><br><strong>Çözüm:</strong> Sağ alt köşedeki (saat simgesinin yanındaki) <strong>Web Print Helper</strong> simgesine sağ tıklayıp <strong>"Reset Pairing / Eşleştirmeyi Sıfırla"</strong> seçeneğine tıklayın, ardından bu butona tekrar basın.');
+                        } else {
+                            HK.UI.alert('Eşleştirme başarısız: ' + errMessage);
+                        }
                     },
                     complete: function() {
                         selfBtn.prop('disabled', false).text('Yeniden Eşleştir').css({
