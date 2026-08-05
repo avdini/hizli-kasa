@@ -107,12 +107,45 @@ class Hizli_Kasa_Order_Print_Builder {
         }
         $payload->set_items($items);
 
-        // Totals
+        // Gross Total fallback check (if meta exists)
+        $meta_gross = $order->get_meta('_etiket_toplami');
+        if ($meta_gross !== '' && $meta_gross !== null) {
+            $gross_total = (float)$meta_gross;
+        }
+
+        // Coupon / İade Çeki tutarı
+        $coupon_discount = 0.0;
+        $coupon_meta = $order->get_meta('_hizli_kasa_used_coupon_amount') ?: $order->get_meta('_odeme_coupon');
+        if ($coupon_meta !== '' && $coupon_meta !== null && (float)$coupon_meta > 0) {
+            $coupon_discount = (float)$coupon_meta;
+        } else {
+            // Fee satırlarında İade Çeki / Kupon kontrolü
+            foreach ($order->get_fees() as $fee) {
+                $fee_name = (string)$fee->get_name();
+                if (mb_strpos($fee_name, 'İade Çeki') !== false || mb_strpos($fee_name, 'Kupon') !== false) {
+                    $coupon_discount += abs((float)$fee->get_total());
+                }
+            }
+            // Fee satırı yoksa ve siparişte gerçek kupon kodları tanımlıysa
+            if ($coupon_discount == 0 && !empty($order->get_coupon_codes())) {
+                $coupon_discount = (float)$order->get_discount_total();
+            }
+        }
+
         $order_total = (float)$order->get_total();
         $total_refunded = (float)$order->get_total_refunded();
         $auto_discount = (float)($order->get_meta('_hk_otomatik_indirim') ?: 0);
-        $coupon_discount = (float)$order->get_discount_total();
         $exchange_diff = (float)($order->get_meta('_hk_exchange_refund_total') ?: 0);
+        $customer_paid_meta = $order->get_meta('_hk_customer_paid_total');
+
+        if ($customer_paid_meta !== '' && $customer_paid_meta !== null) {
+            $net_paid = max(0, (float)$customer_paid_meta - $total_refunded);
+        } elseif ($exchange_diff > 0) {
+            $net_paid = max(0, $order_total - $exchange_diff - $total_refunded);
+        } else {
+            $net_paid = max(0, $order_total - $total_refunded);
+        }
+
         $totals = [
             'gross_total'         => $gross_total,
             'item_discount_total' => $total_item_discount,
@@ -121,7 +154,7 @@ class Hizli_Kasa_Order_Print_Builder {
             'exchange_diff'       => $exchange_diff,
             'order_total'         => $order_total,
             'refunded_total'      => $total_refunded,
-            'net_paid'            => max(0, $order_total - $total_refunded)
+            'net_paid'            => $net_paid
         ];
         $payload->set_totals($totals);
 

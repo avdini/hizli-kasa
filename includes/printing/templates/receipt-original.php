@@ -68,7 +68,7 @@ $totals = $data['totals'] ?? [];
 
     <!-- Totals Breakdown -->
     <div style="border-top:1px solid #000000; padding-top:6px; font-size:12px; margin-bottom:8px; font-family:'Courier New', Courier, monospace;">
-        <?php if (($totals['gross_total'] ?? 0) > ($totals['net_paid'] ?? $totals['order_total'] ?? 0)): ?>
+        <?php if (($totals['gross_total'] ?? 0) > ($totals['order_total'] ?? 0) + 0.01): ?>
             <div style="display:flex; justify-content:space-between; margin-bottom:2px; color:#000000;">
                 <span>Etiket Toplamı:</span>
                 <span><?php echo hk_format_price($totals['gross_total']); ?></span>
