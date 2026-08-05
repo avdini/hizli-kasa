@@ -41,6 +41,8 @@
             _hk_cikis_depo_adet: 'Çıkış Depo Adeti',
             _hk_reservations: 'Stok Rezervasyonları',
             _hk_restocked_on_cancel: 'İptalde Stok Yükleme',
+            _hk_order_exchange_history: 'Değişim / Takas Geçmişi',
+            _hk_order_edits: 'Sipariş Düzenleme Kayıtları',
             _order_total: 'Sipariş Toplamı',
             _order_tax: 'Vergi Toplamı',
             _order_shipping: 'Kargo Tutarı'
@@ -135,10 +137,12 @@
                     if (raw === 'pos_satis') display = 'Kasa Satışı';
                     else if (raw === 'pos_iade') display = 'Kasa İadesi';
                     else display = this.escapeHtml(raw);
-                } else if (normalizedKey === '_hk_iade_depo_ozet' || normalizedKey === '_hk_reservations') {
+                } else if (normalizedKey === '_hk_iade_depo_ozet' || normalizedKey === '_hk_reservations' || normalizedKey === '_hk_order_exchange_history' || normalizedKey === '_hk_order_edits') {
                     try {
                         var obj = typeof raw === 'string' ? JSON.parse(raw) : raw;
-                        if (typeof obj === 'object' && obj !== null) {
+                        if (Array.isArray(obj)) {
+                            display = obj.length + ' adet kayıt var';
+                        } else if (typeof obj === 'object' && obj !== null) {
                             var parts = [];
                             for (var id in obj) {
                                 parts.push('Depo #' + id + ': ' + obj[id] + ' adet');
