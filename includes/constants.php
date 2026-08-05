@@ -10,15 +10,8 @@ if (!defined('HIZLI_KASA_BOOT_TIME')) {
 
 // Sürüm Sabiti (Ana hizli-kasa.php başlığından otomatik okunur)
 if (!defined('HIZLI_KASA_VERSION')) {
-    $hk_main_file = dirname(__DIR__) . '/hizli-kasa.php';
-    $hk_ver = '1.0.0';
-    if (file_exists($hk_main_file)) {
-        $hk_header = file_get_contents($hk_main_file, false, null, 0, 500);
-        if (preg_match('/Version:\s*([0-9\.]+)/i', $hk_header, $hk_matches)) {
-            $hk_ver = trim($hk_matches[1]);
-        }
-    }
-    define('HIZLI_KASA_VERSION', $hk_ver);
+    $hk_header = function_exists('get_file_data') ? get_file_data(dirname(__DIR__) . '/hizli-kasa.php', ['Version' => 'Version']) : [];
+    define('HIZLI_KASA_VERSION', !empty($hk_header['Version']) ? $hk_header['Version'] : '12.53.0');
 }
 
 // Harici İndirme ve Servis URL'leri
