@@ -33,7 +33,7 @@ try {
         }
         & git add -A
         $env:GIT_EDITOR = 'true'
-        & git cherry-pick --continue --no-edit 2>&1 | Out-Null
+        & git -c core.editor=true cherry-pick --continue --no-edit 2>&1 | Out-Null
     }
     
     # Ensure private-only items are never in public patch
