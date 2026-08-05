@@ -154,8 +154,11 @@
     border-collapse: separate;
     border-spacing: 0;
     font-size: 13px;
-    border-radius: 8px;
+    background: var(--hk-bg-card, #ffffff);
+    border: 1px solid var(--hk-border-color, #e2e8f0);
+    border-radius: 12px;
     overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
 }
 
 #all-orders-table th,
@@ -905,26 +908,29 @@
 }
 
 .rapor-kart {
-    background: var(--hk-bg-card, #ffffff);
-    border: 1px solid var(--hk-border-color, #e2e8f0);
-    border-radius: 12px;
-    padding: 20px 24px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
-    transition: box-shadow 0.2s ease;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    width: 100%;
 }
 
 .rapor-kart-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--hk-border-color, #e2e8f0);
+    margin-bottom: 14px;
+    padding: 12px 18px;
+    background: var(--hk-bg-card, #ffffff);
+    border: 1px solid var(--hk-border-color, #e2e8f0);
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
 }
 
 .rapor-kart-title {
     margin: 0;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--hk-text-main, #1e293b);
     display: flex;
@@ -1108,13 +1114,21 @@
 
 /* Dark mode theme overrides for Report Containers & Tables */
 #hizli-kasa-app.theme-dark .rapor-kart {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+#hizli-kasa-app.theme-dark .rapor-kart-header {
     background: var(--hk-dark-card, #1e293b);
     border-color: rgba(255, 255, 255, 0.08);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
-#hizli-kasa-app.theme-dark .rapor-kart-header {
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+#hizli-kasa-app.theme-dark .gs-tablo {
+    background: var(--hk-dark-card, #1e293b);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 #hizli-kasa-app.theme-dark .rapor-kart-title {
