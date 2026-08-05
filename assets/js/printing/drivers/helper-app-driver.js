@@ -118,6 +118,7 @@
                 useCORS: true
             });
 
+            var base64Image = canvas.toDataURL('image/png');
             var rotateAngle = (options.rotate !== undefined) ? options.rotate : 0;
             var fitMode = options.fitMode || ((options.type === 'barcode') ? 'stretch' : 'auto');
 

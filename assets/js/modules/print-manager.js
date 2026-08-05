@@ -108,8 +108,9 @@
 
                 var imageData = canvas.toDataURL('image/png');
                 
-                // Barkodlar için resmi 90 derece saat yönünde çevir (Pillow için 270 derece)
-                var rotate = isBarcode ? 270 : 0;
+                // Barkodlar için orijinal yönü koru (0 derece) ve stretch fit_mode ekle
+                var rotate = 0;
+                var fitMode = isBarcode ? 'stretch' : 'auto';
 
                 // Dinamik aktif portu bul ve servise gönder
                 self.findActivePort(function(activePort) {
@@ -147,7 +148,8 @@
                     xhr.send(JSON.stringify({
                         printer_name: printerName,
                         image: imageData,
-                        rotate: rotate
+                        rotate: rotate,
+                        fit_mode: fitMode
                     }));
                 });
 
