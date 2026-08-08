@@ -1,15 +1,15 @@
 ---
 name: release-workflow
-description: Kullanıcı "güncelle", "sürüm yayınla", "versiyon yükselt" veya benzeri otomatik dağıtım talimatları verdiğinde 5 adımlı otomatik sürüm yayınlama iş akışını çalıştırır.
+description: Kullanıcı "güncelle", "sürüm yayınla", "versiyon yükselt" veya benzeri otomatik dağıtım talimatları verdiğinde 4 adımlı otomatik sürüm yayınlama iş akışını çalıştırır.
 ---
 
 # Hızlı Kasa Automated Release Workflow Skill
 
-Kullanıcı **"güncelle"**, **"sürüm yayınla"**, **"versiyon yükselt ve güncelle"** veya benzeri tek kelimelik / kısa talimatlar verdiğinde, tüm AI ajanları ek açıklama veya komut detayı istemeksizin aşağıdaki 5 adımı sırayla ve tam otomasyonla yürütmelidir:
+Kullanıcı **"güncelle"**, **"sürüm yayınla"**, **"versiyon yükselt ve güncelle"** veya benzeri tek kelimelik / kısa talimatlar verdiğinde, tüm AI ajanları ek açıklama veya komut detayı istemeksizin aşağıdaki 4 adımı sırayla ve tam otomasyonla yürütmelidir:
 
 ---
 
-## 5 Adımlı Yayınlama Akışı
+## 4 Adımlı Yayınlama Akışı
 
 ### Adım 1: İş Analizi & SemVer Versiyon Yükseltme
 1. `git status` ve `git diff` çıktılarını analiz et.
@@ -32,23 +32,15 @@ git commit -m "fix(pos): resolve order tax rounding issue and bump version to 12
 
 ---
 
-### Adım 3: Özel Depoya Push (`origin main`)
-Yapılan commit'i ana depoya gönder:
+### Adım 3: Depoya Push (`avdini main`)
+Yapılan commit'i GitHub üzerindeki halka açık depoya gönder:
 ```bash
-git push origin main
+git push avdini main
 ```
 
 ---
 
-### Adım 4: Halka Açık Depoya Otomatik Patch (`public master`)
-Otomatik yamalama betiğini çalıştır:
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/patch-public.ps1
-```
-
----
-
-### Adım 5: GitHub Release Yayınlama
+### Adım 4: GitHub Release Yayınlama
 GitHub CLI (`gh`) kullanarak yeni versiyon için otomatik release yayınla:
 ```bash
 gh release create vX.Y.Z --title "vX.Y.Z" --notes "Sürüm notları..."

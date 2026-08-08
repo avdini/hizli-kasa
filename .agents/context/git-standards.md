@@ -1,44 +1,29 @@
 # Git Repository Yapısı, Sürüm Kontrolü ve Dağıtım Standartları
 
-Bu kılavuz, Hızlı Kasa eklentisinin çoklu depo yapısını (multi-remote), versiyonlama kurallarını ve GitHub CLI kullanımını tanımlar. Geliştiriciler ve yapay zeka ajanları yama veya sürüm göndermeden önce bu standartları uygulamalıdır.
+Bu kılavuz, Hızlı Kasa eklentisinin Git depo yapısını, versiyonlama kurallarını ve GitHub CLI kullanımını tanımlar. Geliştiriciler ve yapay zeka ajanları yama veya sürüm göndermeden önce bu standartları uygulamalıdır.
 
 ---
 
-## 1. Git Repository Yapısı ve Çoklu Remote Yönetimi
+## 1. Git Repository Yapısı ve Remote Yönetimi
 
-Hızlı Kasa eklentisi, tek bir yerel dizin üzerinden iki farklı GitHub deposuna (remote) bağlı olarak geliştirilmektedir:
+Hızlı Kasa eklentisi, GitHub üzerindeki halka açık (Public) depo üzerinden geliştirilmektedir:
 
-- **`origin`**: Özel (Private) depo (`https://github.com/Seyfullahkurt9/hizli-kasa.git`). Ana geliştirme dalı **`main`**'dir.
-- **`public`**: Halka açık (Public) depo (`https://github.com/Seyfullahkurt9/woo-quick-pos.git`). Ana dalı **`master`**'dır.
+- **`avdini` / `origin`**: Halka açık (Public) depo (`https://github.com/avdini/hizli-kasa.git`). Ana geliştirme dalı **`main`**'dir.
 
-### 1.1. Değişiklikleri Yayma ve Patch Yönetimi
+### 1.1. Değişiklikleri Yayma
 
-Yerel olarak `main` dalında yapılan bir geliştirme veya hata çözümü test edildikten sonra her iki depoya da yansıtılmalıdır:
+Yerel olarak `main` dalında yapılan bir geliştirme veya hata çözümü test edildikten sonra depoya gönderilir:
 
-1. Değişiklikleri önce `main` dalında commit'leyip `origin` deposuna gönderin:
-   ```bash
-   git push origin main
-   ```
-2. Bu değişikliği otomatik olarak `public` (Woo Quick POS) deposunun `master` dalına aktarmak (patch) için, projedeki hazır PowerShell betiğini çalıştırın:
-   ```powershell
-   powershell -ExecutionPolicy Bypass -File scripts/patch-public.ps1 <commit-hash>
-   ```
-   *(Eğer `<commit-hash>` parametresi belirtilmezse, varsayılan olarak son commit (`HEAD`) baz alınır.)*
-   
-   Bu betik arka planda otomatik olarak:
-   - Uzak sunucudan (`public`) son değişiklikleri çeker.
-   - `public/master` tabanlı geçici bir dal açar.
-   - Belirttiğiniz commit'i bu dala cherry-pick yapar.
-   - Değişikliği `public` remote'un `master` dalına push'lar.
-   - Eski yerel dalınıza geri dönerek geçici dalı siler ve temizlik yapar.
+```bash
+git push avdini main
+```
 
-### 1.2. Kritik Konfigürasyon Farkı (Update Checker)
+### 1.2. Otomatik Güncelleme Konfigürasyonu (Update Checker)
 
-İki depo arasında otomatik güncelleme kontrolü (`hizli-kasa.php` içindeki `Plugin Update Checker`) için kritik bir yapılandırma farkı vardır:
+Eklenti içerisindeki `Plugin Update Checker` (`includes/updater.php`), güncellemeleri doğrudan bu halka açık depodan çeker:
 
-- **Private (`main`) Sürümünde:** `PucFactory::buildUpdateChecker` adresi `https://github.com/Seyfullahkurt9/hizli-kasa/` olmalı ve dal `main` olarak ayarlanmalıdır.
-- **Public (`master`) Sürümünde:** `PucFactory::buildUpdateChecker` adresi `https://github.com/Seyfullahkurt9/woo-quick-pos/` olmalı ve dal `master` olarak ayarlanmalıdır. 
-  *(Aksi takdirde, public sürümü kullanan siteler özel depoya erişemediği için GitHub API'sinden 404 hatası alacaktır.)*
+- **Güncelleme Adresi:** `https://github.com/avdini/hizli-kasa/`
+- **Hedef Dal:** `main`
 
 ---
 
@@ -59,39 +44,34 @@ Mesajlar olabildiğince kısa, öz ve net olmalıdır.
 
 ## 3. Semantik Versiyonlama (SemVer) ve Commit İlişkisi
 
-Eklenti versiyon numaraları (**`MAJOR.MINOR.PATCH`** formatında, örn: `11.5.1`), semantik commit'lerle uyumlu olarak artırılmalıdır:
+Eklenti versiyon numaraları (**`MAJOR.MINOR.PATCH`** formatında, örn: `12.46.3`), semantik commit'lerle uyumlu olarak artırılmalıdır:
 
-- **`PATCH` (En Sağdaki Hane - örn: `11.5.0` -> `11.5.1`):** Sadece geriye dönük uyumlu hata düzeltmeleri yapıldığında artırılır. Bu artış, **`fix:`** commit'leriyle tetiklenir.
-- **`MINOR` (Ortadaki Hane - örn: `11.5.0` -> `11.6.0`):** Geriye dönük uyumlu yeni özellikler/fonksiyonlar eklendiğinde artırılır. Bu artış, **`feat:`** commit'leriyle tetiklenir.
-- **`MAJOR` (En Soldaki Hane - örn: `11.5.0` -> `12.0.0`):** Geriye dönük uyumsuz API/altyapı değişiklikleri yapıldığında artırılır. Bu artış, commit mesajında **`BREAKING CHANGE`** uyarısı veya **`feat!:`** / **`fix!:`** etiketleri kullanıldığında tetiklenir.
+- **`PATCH` (En Sağdaki Hane - örn: `12.46.2` -> `12.46.3`):** Sadece geriye dönük uyumlu hata düzeltmeleri yapıldığında artırılır. Bu artış, **`fix:`** commit'leriyle tetiklenir.
+- **`MINOR` (Ortadaki Hane - örn: `12.46.0` -> `12.47.0`):** Geriye dönük uyumlu yeni özellikler/fonksiyonlar eklendiğinde artırılır. Bu artış, **`feat:`** commit'leriyle tetiklenir.
+- **`MAJOR` (En Soldaki Hane - örn: `12.46.0` -> `13.0.0`):** Geriye dönük uyumsuz API/altyapı değişiklikleri yapıldığında artırılır. Bu artış, commit mesajında **`BREAKING CHANGE`** uyarısı veya **`feat!:`** / **`fix!:`** etiketleri kullanıldığında tetiklenir.
 
 Geliştiriciler ve yapay zeka ajanları, yaptıkları değişikliğin türüne göre `hizli-kasa.php` içerisindeki `Version` başlığını ve `HIZLI_KASA_VERSION` sabitini bu kurallara göre güncellemelidir.
 
 ---
 
-## 4. GitHub Süreçleri ve GitHub CLI (gh) Teşviki
+## 4. GitHub Süreçleri ve GitHub CLI (gh) Kullanımı
 
-GitHub üzerindeki yönetimsel süreçleri (PR, Release, Issue vb.) yürütürken API isteklerini ve sayfa karmaşasını azaltmak için **GitHub CLI (`gh`)** kullanımı teşvik edilmektedir. Geliştiriciler ve yapay zeka ajanları şu kurallara uymalıdır:
+GitHub üzerindeki yönetimsel süreçleri (Release, Issue vb.) yürütürken **GitHub CLI (`gh`)** kullanımı teşvik edilmektedir:
 
 - **Sürüm Yayınlama (Release):** Eklenti versiyonu güncellenip ana depoda yayınlandıktan sonra, GitHub üzerinde yeni bir sürüm (Release) oluşturmak için `gh release` kullanılmalıdır:
   ```bash
-  gh release create v11.5.1 --title "v11.5.1" --notes "Sürüm detayları ve hata düzeltmeleri..."
-  ```
-- **Çekme İstekleri (Pull Request):** Public depoya doğrudan push yapmak yerine bir inceleme (code review) süreci işletilecekse, `gh pr` ile hızlıca PR oluşturulmalıdır:
-  ```bash
-  gh pr create --repo Seyfullahkurt9/woo-quick-pos --title "fix(stock): resolve user_id warning" --body "Açıklama..."
+  gh release create v12.46.3 --title "v12.46.3" --notes "Sürüm detayları ve hata düzeltmeleri..."
   ```
 - **Hata Kayıtları (Issues):** Depolardaki açık hata kayıtlarını veya yapılacak işleri listelemek için:
   ```bash
   gh issue list
   ```
-  *(Not: Eğer ajanların çalıştığı yerel ortamda `gh` yetkilendirmesi (login) yapılmamışsa veya `gh` yüklü değilse, ajanlar hata vermeden güvenli bir şekilde standart Git komutlarına veya kullanıcıyı bilgilendirme yöntemine geri dönmelidir.)*
 
 ---
 
 ## 5. Otomatik Güncelleme ve Kısayol Komut Yönergesi (AI Ajan Standartları)
 
-Kullanıcı **"güncelle"**, **"sürüm yayınla"**, **"versiyon yükselt ve güncelle"** veya benzeri tek kelimelik / kısa talimatlar verdiğinde, tüm AI ajanları ek açıklama veya komut detayı istemeksizin aşağıdaki 5 adımı sırayla ve tam otomasyonla yürütmelidir:
+Kullanıcı **"güncelle"**, **"sürüm yayınla"**, **"versiyon yükselt ve güncelle"** veya benzeri tek kelimelik / kısa talimatlar verdiğinde, tüm AI ajanları ek açıklama veya komut detayı istemeksizin aşağıdaki 4 adımı sırayla ve tam otomasyonla yürütmelidir:
 
 1. **İş Analizi & SemVer Versiyon Yükseltme:**
    - Yapılan son değişikliklerin niteliğini (hata düzeltmesi: `PATCH`, yeni özellik: `MINOR`, breaking change: `MAJOR`) analiz eder.
@@ -104,19 +84,13 @@ Kullanıcı **"güncelle"**, **"sürüm yayınla"**, **"versiyon yükselt ve gü
      git commit -m "feat(print): simplify summary receipt and improve thermal print contrast"
      ```
 
-3. **Özel Depoya Push (`origin main`):**
-   - Yapılan commit'i ana depoya gönderir:
+3. **Depoya Push (`avdini main`):**
+   - Yapılan commit'i depoya gönderir:
      ```bash
-     git push origin main
+     git push avdini main
      ```
 
-4. **Halka Açık Depoya Otomatik Patch (`public master`):**
-   - Projedeki otomatik yamalama betiğini çalıştırır:
-     ```powershell
-     powershell -ExecutionPolicy Bypass -File scripts/patch-public.ps1
-     ```
-
-5. **GitHub Release Yayınlama:**
+4. **GitHub Release Yayınlama:**
    - GitHub CLI yüklü ise yeni versiyon için otomatik release notları ile sürüm yayınlar:
      ```bash
      gh release create vX.Y.Z --title "vX.Y.Z" --notes "..."
