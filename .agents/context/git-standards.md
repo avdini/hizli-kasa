@@ -6,16 +6,16 @@ Bu kılavuz, Hızlı Kasa eklentisinin Git depo yapısını, versiyonlama kurall
 
 ## 1. Git Repository Yapısı ve Remote Yönetimi
 
-Hızlı Kasa eklentisi, GitHub üzerindeki halka açık (Public) depo üzerinden geliştirilmektedir:
+Hızlı Kasa eklentisi, GitHub üzerindeki halka açık (Public) **avdini/hizli-kasa** deposu üzerinden geliştirilmektedir:
 
-- **`avdini` / `origin`**: Halka açık (Public) depo (`https://github.com/avdini/hizli-kasa.git`). Ana geliştirme dalı **`main`**'dir.
+- **`origin`**: Halka açık (Public) depo (`https://github.com/avdini/hizli-kasa.git`). Ana geliştirme dalı **`main`**'dir.
 
 ### 1.1. Değişiklikleri Yayma
 
 Yerel olarak `main` dalında yapılan bir geliştirme veya hata çözümü test edildikten sonra depoya gönderilir:
 
 ```bash
-git push avdini main
+git push origin main
 ```
 
 ### 1.2. Otomatik Güncelleme Konfigürasyonu (Update Checker)
@@ -84,10 +84,10 @@ Kullanıcı **"güncelle"**, **"sürüm yayınla"**, **"versiyon yükselt ve gü
      git commit -m "feat(print): simplify summary receipt and improve thermal print contrast"
      ```
 
-3. **Depoya Push (`avdini main`):**
+3. **Depoya Push (`origin main`):**
    - Yapılan commit'i depoya gönderir:
      ```bash
-     git push avdini main
+     git push origin main
      ```
 
 4. **GitHub Release Yayınlama:**

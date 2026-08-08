@@ -32,10 +32,10 @@ git commit -m "fix(pos): resolve order tax rounding issue and bump version to 12
 
 ---
 
-### Adım 3: Depoya Push (`avdini main`)
+### Adım 3: Depoya Push (`origin main`)
 Yapılan commit'i GitHub üzerindeki halka açık depoya gönder:
 ```bash
-git push avdini main
+git push origin main
 ```
 
 ---
