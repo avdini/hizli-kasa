@@ -42,7 +42,54 @@ $user_theme = get_user_meta($current_user_id, '_hizli_kasa_tema', true) ?: 'ligh
         <div style="background: var(--hk-bg-card); padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--hk-border);">
             <h2 style="margin-top: 0; border-bottom: 2px solid var(--hk-border); padding-bottom: 10px; margin-bottom: 20px; font-size: 20px;">Sistem Bilgileri</h2>
             <p style="margin: 8px 0; font-size: 15px;"><strong>Kullanıcı:</strong> <?php echo wp_get_current_user()->display_name; ?></p>
-            <p style="margin: 8px 0; font-size: 15px;"><strong>Versiyon:</strong> <?php echo HIZLI_KASA_VERSION; ?></p>
+            <p style="margin: 8px 0; font-size: 15px;">
+                <strong>Versiyon:</strong> <?php echo HIZLI_KASA_VERSION; ?>
+                <button id="hk-force-update-check-btn"
+                    style="margin-left:12px; padding:3px 12px; font-size:12px; border-radius:6px; border:1px solid var(--hk-border); background:var(--hk-bg-body); color:var(--hk-text-muted); cursor:pointer; vertical-align:middle;"
+                    data-nonce="<?php echo wp_create_nonce('hizli_kasa_force_check_nonce'); ?>">
+                    🔄 Şimdi Kontrol Et
+                </button>
+                <span id="hk-force-update-result" style="margin-left:8px; font-size:12px; color:var(--hk-text-muted);"></span>
+            </p>
+            <script>
+            (function(){
+                var btn = document.getElementById('hk-force-update-check-btn');
+                var result = document.getElementById('hk-force-update-result');
+                if (!btn) return;
+                btn.addEventListener('click', function(){
+                    btn.disabled = true;
+                    btn.textContent = '⏳ Kontrol ediliyor...';
+                    result.textContent = '';
+                    var fd = new FormData();
+                    fd.append('action', 'hizli_kasa_force_update_check');
+                    fd.append('nonce', btn.dataset.nonce);
+                    fetch(ajaxurl, { method: 'POST', body: fd, credentials: 'same-origin' })
+                        .then(function(r){ return r.json(); })
+                        .then(function(data){
+                            btn.disabled = false;
+                            btn.textContent = '🔄 Şimdi Kontrol Et';
+                            if (data.success) {
+                                if (data.data.new_version) {
+                                    result.style.color = '#27ae60';
+                                    result.textContent = '✅ Güncelleme var: v' + data.data.new_version + ' — Eklentiler sayfasından güncelleyebilirsiniz.';
+                                } else {
+                                    result.style.color = 'var(--hk-text-muted)';
+                                    result.textContent = '✓ Eklenti güncel.';
+                                }
+                            } else {
+                                result.style.color = '#e74c3c';
+                                result.textContent = '❌ Hata: ' + (data.data ? data.data.message : 'Bilinmeyen hata');
+                            }
+                        })
+                        .catch(function(e){
+                            btn.disabled = false;
+                            btn.textContent = '🔄 Şimdi Kontrol Et';
+                            result.style.color = '#e74c3c';
+                            result.textContent = '❌ Bağlantı hatası.';
+                        });
+                });
+            })();
+            </script>
         </div>
     </div>
 
