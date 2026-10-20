@@ -306,6 +306,7 @@
          * Filtrelenmiş listeyi HTML olarak basar.
          */
         renderBulkList: function(variations) {
+            var self = this;
             var container = document.getElementById('barkod-urun-listesi-konteynir');
             var parentProduct = this.state.currentProduct;
             
@@ -313,17 +314,45 @@
                 container.innerHTML = '<p class="barkod-empty-msg">Filtrelere uygun varyasyon bulunamadı.</p>';
                 return;
             }
+
+            // Seri doldur paneli
+            var serialPanel = `
+                <div class="seri-doldur-panel" id="seri-doldur-panel">
+                    <div class="seri-doldur-sol">
+                        <span class="seri-doldur-ikon">⚡</span>
+                        <label class="seri-doldur-label">Seri Doldur:</label>
+                        <input type="text" id="seri-doldur-input" class="seri-doldur-input"
+                            placeholder="örn: s3 m3 l3 xl3 xxl3 veya 36 2 37 3"
+                            autocomplete="off" spellcheck="false">
+                    </div>
+                    <div class="seri-doldur-sag">
+                        <button id="seri-doldur-btn" class="seri-doldur-btn">Uygula</button>
+                        <button id="seri-sifirla-btn" class="seri-sifirla-btn" title="Tümünü sıfırla">Sıfırla</button>
+                    </div>
+                </div>
+            `;
             
             var html = '';
-            variations.forEach(v => {
+            variations.forEach(function(v) {
                 var actualSku = v.sku && v.sku.trim() !== '';
                 var fallbackEnabled = typeof kasaAyar !== 'undefined' && kasaAyar.fallbackSkuToId === '1';
                 var hasSku = actualSku || fallbackEnabled;
                 var displaySku = actualSku ? v.sku : (fallbackEnabled ? v.id : 'SKU TANIMLANMAMIŞ');
                 var defaultQty = hasSku ? Math.max(0, Math.ceil(v.warehouse_stock)) : 0;
 
+                // Beden verisini data-size attribute'a yaz (seri eşleme için)
+                var sizeVal = '';
+                if (v.attributes) {
+                    Object.keys(v.attributes).forEach(function(k) {
+                        var kl = k.toLowerCase();
+                        if (kl.indexOf('beden') !== -1 || kl.indexOf('size') !== -1 || kl.indexOf('numara') !== -1) {
+                            sizeVal = (v.attributes[k] || '').toString().trim().toLowerCase();
+                        }
+                    });
+                }
+
                 html += `
-                    <div class="barkod-item-row ${!hasSku ? 'missing-sku' : ''}" data-id="${parentProduct.id}" data-vid="${v.id}">
+                    <div class="barkod-item-row ${!hasSku ? 'missing-sku' : ''}" data-id="${parentProduct.id}" data-vid="${v.id}" data-size="${sizeVal}">
                         <div class="item-info">
                             <span class="item-name">${v.name} ${!hasSku ? '<span class="sku-warning-badge">SKU EKSİK</span>' : ''}</span>
                             <span class="item-sku">${displaySku} | Stok: ${v.warehouse_stock}</span>
@@ -336,7 +365,91 @@
                 `;
             });
             
-            container.innerHTML = html;
+            container.innerHTML = serialPanel + html;
+
+            // Seri Doldur event listener'ları
+            var uygulaBtns = document.getElementById('seri-doldur-btn');
+            var sifirlaBtn = document.getElementById('seri-sifirla-btn');
+            var seriInput = document.getElementById('seri-doldur-input');
+
+            if (uygulaBtns) {
+                uygulaBtns.onclick = function() { self.applySerialFill(); };
+            }
+            if (sifirlaBtn) {
+                sifirlaBtn.onclick = function() {
+                    document.querySelectorAll('.barkod-item-row .print-qty').forEach(function(inp) {
+                        if (!inp.disabled) inp.value = 0;
+                    });
+                    if (seriInput) { seriInput.value = ''; seriInput.focus(); }
+                };
+            }
+            if (seriInput) {
+                seriInput.onkeydown = function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); self.applySerialFill(); }
+                };
+            }
+        },
+
+        /**
+         * Seri doldur input'unu parse edip eşleşen varyasyonların adet kutularını doldurur.
+         * Desteklenen formatlar:
+         *   s3 m3 l3 xl3 xxl3
+         *   s 3 m 3 xl 3
+         *   36 2 37 3 38 2
+         *   s,3 m,3
+         */
+        applySerialFill: function() {
+            var input = document.getElementById('seri-doldur-input');
+            if (!input || !input.value.trim()) return;
+
+            var raw = input.value.trim();
+
+            // Virgül ve birden fazla boşluğu normalize et
+            raw = raw.replace(/,/g, ' ');
+
+            // Çiftleri parse et: (beden)(adet)
+            // Beden: xxl, 2xl, 3xl, xl, xs, s, m, l veya sayı (36,37...)
+            // Adet: sayı
+            var pairs = [];
+            var regex = /\b(xxl|3xl|4xl|2xl|xs|xl|s|m|l|t|[0-9]+(?:[.,][0-9]+)?)\s*([0-9]+)/gi;
+            var match;
+
+            while ((match = regex.exec(raw)) !== null) {
+                var sizeKey = match[1].trim().toLowerCase().replace(',', '.');
+                var qty = parseInt(match[2], 10);
+                if (!isNaN(qty) && qty >= 0) {
+                    pairs.push({ size: sizeKey, qty: qty });
+                }
+            }
+
+            if (pairs.length === 0) {
+                HK.UI.alert('Geçerli bir format giriniz.\nÖrnek: s3 m3 l3 xl3 xxl3 veya 36 2 37 3');
+                return;
+            }
+
+            var rows = document.querySelectorAll('.barkod-item-row[data-size]');
+            var matched = 0;
+
+            pairs.forEach(function(pair) {
+                rows.forEach(function(row) {
+                    var rowSize = (row.dataset.size || '').toLowerCase();
+                    if (rowSize === pair.size) {
+                        var inp = row.querySelector('.print-qty');
+                        if (inp && !inp.disabled) {
+                            inp.value = pair.qty;
+                            // Flash animasyonu
+                            inp.classList.remove('seri-fill-flash');
+                            void inp.offsetWidth; // reflow
+                            inp.classList.add('seri-fill-flash');
+                            matched++;
+                        }
+                    }
+                });
+            });
+
+            if (matched === 0) {
+                HK.UI.alert('Hiçbir varyasyon eşleşmedi.\nGirdiğiniz beden/numara değerlerini kontrol edin.');
+            }
         },
 
         /**
