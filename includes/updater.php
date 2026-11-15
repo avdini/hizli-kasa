@@ -15,14 +15,10 @@ function hizli_kasa_init_updater($plugin_file)
     if ((!wp_doing_ajax() || $is_wp_update_ajax || $is_hk_force_check) && (!defined('REST_REQUEST') || !REST_REQUEST)) {
         require_once HIZLI_KASA_PATH . 'includes/plugin-update-checker/plugin-update-checker.php';
 
-        // PUC'ın Release/Tag aramayı bırakıp doğrudan hedef branch'i (main/master) takip etmesini sağlıyoruz
-        add_filter('puc_vcs_update_detection_strategies-hizli-kasa', function ($strategies) {
-            unset($strategies['latest_release']);
-            unset($strategies['latest_tag']);
-            return $strategies;
-        });
+        // latest_release stratejisi AÇIK — PUC GitHub Release ZIP'ini kullanır (en güvenilir yöntem)
+        // latest_tag da açık kalıyor; sadece branch fallback olarak çalışır
 
-        $repo_url   = defined('HIZLI_KASA_UPDATE_REPO') ? HIZLI_KASA_UPDATE_REPO : 'https://github.com/avdini/hizli-kasa/';
+        $repo_url    = defined('HIZLI_KASA_UPDATE_REPO') ? HIZLI_KASA_UPDATE_REPO : 'https://github.com/avdini/hizli-kasa/';
         $repo_branch = defined('HIZLI_KASA_UPDATE_BRANCH') ? HIZLI_KASA_UPDATE_BRANCH : 'main';
 
         $hizli_kasa_update_checker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
